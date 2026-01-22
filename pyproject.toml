@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "picviewer"
+version = "0.1.0"
+description = "A desktop photo viewer."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Proprietary" }
+authors = [{ name = "PicViewer Team" }]
+dependencies = [
+  "PyQt5>=5.15",
+  "opencv-python>=4.7",
+  "numpy>=1.23",
+  "Pillow>=10.0",
+]
+
+[project.optional-dependencies]
+raw = ["rawpy>=0.17"]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
