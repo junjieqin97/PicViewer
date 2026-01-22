@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.analysis_view_service import AnalysisViewService
 from pic_viewer.app.services.image_service import ImageService
@@ -86,6 +86,17 @@ class MainWindowUI:
 
         self.actModeLuma.setChecked(True)
         self.actChannelAll.setChecked(True)
+        self._apply_shortcuts()
+
+    def _apply_shortcuts(self) -> None:
+        """Assign platform-specific shortcuts for common menu actions."""
+
+        # Qt swaps Ctrl/Meta on macOS by default, so "Ctrl" maps to Command there.
+        modifier = "Ctrl"
+        self.actOpenFile.setShortcut(QtGui.QKeySequence(f"{modifier}+O"))
+        self.actOpenFolder.setShortcut(QtGui.QKeySequence(f"{modifier}+Shift+O"))
+        self.actToggleInfoPanel.setShortcut(QtGui.QKeySequence(f"{modifier}+Right"))
+        self.actToggleFilmstrip.setShortcut(QtGui.QKeySequence(f"{modifier}+Down"))
 
     def create_menus(self) -> None:
         menu_bar = self._main_window.menuBar()
