@@ -23,7 +23,7 @@ from pic_viewer.config.settings import AppSettings, load_settings
 from pic_viewer.domain.rules.analysis import ImageAnalyzer
 from pic_viewer.infra.adapters.image_reader import ImageReader
 from pic_viewer.infra.adapters.metadata_reader import MetadataReader
-from pic_viewer.ui.main_window import MainWindow
+from pic_viewer.ui.windows.main_window import MainWindow
 
 
 def configure_logging(settings: AppSettings) -> None:

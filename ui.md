@@ -163,7 +163,7 @@ Actions（命名必须一致，文案可中英混排但建议一致）：
 
 必须按以下结构输出代码（或等价拆分）：
 
-- ui/main_window.py
+- ui/windows/main_window.py
 - class MainWindowUI:
 - setup_ui(main_window)
 - create_actions()

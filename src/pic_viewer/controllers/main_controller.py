@@ -509,4 +509,4 @@ class MainController(QtCore.QObject):
 
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pic_viewer.ui.main_window import MainWindowUI
+    from pic_viewer.ui.windows.main_window import MainWindowUI
