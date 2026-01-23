@@ -42,8 +42,14 @@ class MainController(QtCore.QObject):
         self._view_settings = AnalysisViewSettings(mode=LumaRgbMode.LUMA, channel=RgbChannel.ALL)
         self._last_splitter_sizes: Optional[list[int]] = None
         self._last_metadata_path: Optional[str] = None
+        self._cursor_boundary_margin = 4
+        self._cursor_override_target: Optional[QtWidgets.QWidget] = None
+        self._filmstrip_icon_side = self._ui.listFilmstrip.iconSize().width() or 96
+        self._filmstrip_resize_timer = QtCore.QTimer(self)
 
         self._connect_signals()
+        self._install_cursor_tracking()
+        self._configure_filmstrip_resize()
         self._apply_initial_visibility()
         self._sync_view_actions()
         self._refresh_actions_state()
@@ -73,6 +79,92 @@ class MainController(QtCore.QObject):
         self._ui.tabsImages.tabCloseRequested.connect(self.close_tab)
         self._ui.listFilmstrip.currentRowChanged.connect(self._on_filmstrip_row_changed)
 
+    def _configure_filmstrip_resize(self) -> None:
+        """Configure dynamic filmstrip icon resizing."""
+
+        self._filmstrip_resize_timer.setSingleShot(True)
+        self._filmstrip_resize_timer.setInterval(120)
+        self._filmstrip_resize_timer.timeout.connect(self._apply_filmstrip_icon_size)
+        self._ui.splitVertical.splitterMoved.connect(self._on_vertical_splitter_moved)
+
+    def _install_cursor_tracking(self) -> None:
+        """Enable cursor hints near split boundaries."""
+
+        self._set_splitter_handle_cursor()
+        self._track_cursor_widget(self._ui.central)
+        for widget in self._ui.central.findChildren(QtWidgets.QWidget):
+            self._track_cursor_widget(widget)
+
+    def _track_cursor_widget(self, widget: QtWidgets.QWidget) -> None:
+        if widget.property("_cursor_tracking") is True:
+            return
+        widget.setProperty("_cursor_tracking", True)
+        widget.setMouseTracking(True)
+        widget.installEventFilter(self)
+
+    def _set_splitter_handle_cursor(self) -> None:
+        self._set_splitter_cursor(self._ui.splitMain, QtCore.Qt.SplitHCursor)
+        self._set_splitter_cursor(self._ui.splitVertical, QtCore.Qt.SplitVCursor)
+
+    def _set_splitter_cursor(self, splitter: QtWidgets.QSplitter, cursor: QtCore.Qt.CursorShape) -> None:
+        for index in range(1, splitter.count()):
+            handle = splitter.handle(index)
+            handle.setCursor(cursor)
+
+    def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:  # type: ignore[override]
+        if event.type() in (QtCore.QEvent.MouseMove, QtCore.QEvent.Enter, QtCore.QEvent.Leave):
+            self._update_boundary_cursor()
+        return super().eventFilter(watched, event)
+
+    def _update_boundary_cursor(self) -> None:
+        """Show resize cursor when hovering over the filmstrip boundary."""
+
+        if not self._ui.frameFilmstrip.isVisible():
+            self._clear_cursor_override()
+            return
+
+        global_pos = QtGui.QCursor.pos()
+        if not self._is_near_filmstrip_boundary(global_pos):
+            self._clear_cursor_override()
+            return
+
+        target = QtWidgets.QApplication.widgetAt(global_pos)
+        if target is None or target.window() is not self._main_window:
+            self._clear_cursor_override()
+            return
+
+        self._apply_cursor_override(target, QtCore.Qt.SplitVCursor)
+
+    def _is_near_filmstrip_boundary(self, global_pos: QtCore.QPoint) -> bool:
+        """Return True when the cursor is near the top edge of the filmstrip."""
+
+        split_bottom = self._ui.splitMain.mapToGlobal(
+            QtCore.QPoint(0, self._ui.splitMain.height())
+        ).y()
+        film_top = self._ui.frameFilmstrip.mapToGlobal(QtCore.QPoint(0, 0)).y()
+        y = global_pos.y()
+        if y < split_bottom - self._cursor_boundary_margin:
+            return False
+        if y > film_top + self._cursor_boundary_margin:
+            return False
+
+        left = self._ui.central.mapToGlobal(QtCore.QPoint(0, 0)).x()
+        right = left + self._ui.central.width()
+        return left <= global_pos.x() <= right
+
+    def _apply_cursor_override(self, widget: QtWidgets.QWidget, cursor: QtCore.Qt.CursorShape) -> None:
+        if self._cursor_override_target is widget and widget.cursor().shape() == cursor:
+            return
+        self._clear_cursor_override()
+        widget.setCursor(cursor)
+        self._cursor_override_target = widget
+
+    def _clear_cursor_override(self) -> None:
+        if self._cursor_override_target is None:
+            return
+        self._cursor_override_target.unsetCursor()
+        self._cursor_override_target = None
+
     def _apply_initial_visibility(self) -> None:
         """Sync initial panel visibility with menu action states."""
 
@@ -100,6 +192,9 @@ class MainController(QtCore.QObject):
 
     def _toggle_filmstrip(self, visible: bool) -> None:
         self._ui.frameFilmstrip.setVisible(visible)
+        self._update_boundary_cursor()
+        if visible:
+            self._schedule_filmstrip_resize()
 
     def _change_view_mode(self, mode: LumaRgbMode) -> None:
         if self._view_settings.mode == mode:
@@ -198,6 +293,7 @@ class MainController(QtCore.QObject):
         lbl_image.setObjectName("lblImage")
         lbl_image.setAlignment(QtCore.Qt.AlignCenter)
         lbl_image.setStyleSheet("background:#222;color:#ddd;")
+        self._track_cursor_widget(lbl_image)
         layout.addWidget(lbl_image)
 
         tab_index = self._ui.tabsImages.addTab(tab_container, "")
@@ -285,6 +381,7 @@ class MainController(QtCore.QObject):
         self._refresh_tab_pixmap(image_path, data.analysis)
 
     def on_main_window_resized(self) -> None:
+        self._schedule_filmstrip_resize()
         path = self._current_image_path()
         if path is None:
             return
@@ -411,7 +508,10 @@ class MainController(QtCore.QObject):
         item = self._find_filmstrip_item_by_path(path)
         if item is None:
             return
-        pix = to_qpixmap(analysis.preview_rgb, QtCore.QSize(96, 96))
+        icon_size = self._ui.listFilmstrip.iconSize()
+        if icon_size.width() <= 0 or icon_size.height() <= 0:
+            icon_size = QtCore.QSize(self._filmstrip_icon_side, self._filmstrip_icon_side)
+        pix = to_qpixmap(analysis.preview_rgb, icon_size)
         item.setIcon(QtGui.QIcon(pix))
 
     def _sync_filmstrip_selection_from_tab(self, path: Optional[Path]) -> None:
@@ -506,6 +606,65 @@ class MainController(QtCore.QObject):
         if item is None:
             return
         self._apply_display_name_to_item(item, path)
+
+    def _on_vertical_splitter_moved(self, _: int, __: int) -> None:
+        """Handle vertical splitter changes for filmstrip resizing."""
+
+        self._schedule_filmstrip_resize()
+
+    def _schedule_filmstrip_resize(self) -> None:
+        """Debounce filmstrip icon size updates during resize."""
+
+        if not self._ui.frameFilmstrip.isVisible():
+            return
+        self._filmstrip_resize_timer.stop()
+        self._filmstrip_resize_timer.start()
+
+    def _apply_filmstrip_icon_size(self) -> None:
+        """Resize filmstrip thumbnails based on available height."""
+
+        if not self._ui.frameFilmstrip.isVisible():
+            return
+        icon_side = self._calculate_filmstrip_icon_side()
+        if icon_side <= 0 or icon_side == self._filmstrip_icon_side:
+            return
+
+        self._filmstrip_icon_side = icon_side
+        icon_size = QtCore.QSize(icon_side, icon_side)
+        self._ui.listFilmstrip.setIconSize(icon_size)
+
+        font_height = self._ui.listFilmstrip.fontMetrics().height()
+        grid_height = icon_side + font_height + 16
+        grid_width = icon_side + 20
+        self._ui.listFilmstrip.setGridSize(QtCore.QSize(grid_width, grid_height))
+        self._refresh_filmstrip_icons()
+
+    def _calculate_filmstrip_icon_side(self) -> int:
+        """Calculate the target side length for filmstrip thumbnails."""
+
+        viewport_height = self._ui.listFilmstrip.viewport().height()
+        if viewport_height <= 0:
+            return self._filmstrip_icon_side
+
+        font_height = self._ui.listFilmstrip.fontMetrics().height()
+        available = viewport_height - font_height - 12
+        if available <= 0:
+            return self._filmstrip_icon_side
+        return max(24, min(available, 256))
+
+    def _refresh_filmstrip_icons(self) -> None:
+        """Regenerate filmstrip icons using the current thumbnail size."""
+
+        icon_size = self._ui.listFilmstrip.iconSize()
+        if icon_size.width() <= 0 or icon_size.height() <= 0:
+            return
+
+        for path_str, data in self._images_by_path.items():
+            item = self._find_filmstrip_item_by_path(Path(path_str))
+            if item is None:
+                continue
+            pix = to_qpixmap(data.analysis.preview_rgb, icon_size)
+            item.setIcon(QtGui.QIcon(pix))
 
 
 if TYPE_CHECKING:  # pragma: no cover

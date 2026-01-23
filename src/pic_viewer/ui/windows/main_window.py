@@ -140,7 +140,10 @@ class MainWindowUI:
         self.central.setObjectName("central")
         self._main_window.setCentralWidget(self.central)
 
-        self.splitMain = QtWidgets.QSplitter(QtCore.Qt.Horizontal, self.central)
+        self.splitVertical = QtWidgets.QSplitter(QtCore.Qt.Vertical, self.central)
+        self.splitVertical.setObjectName("splitVertical")
+
+        self.splitMain = QtWidgets.QSplitter(QtCore.Qt.Horizontal, self.splitVertical)
         self.splitMain.setObjectName("splitMain")
 
         self.tabsImages = QtWidgets.QTabWidget(self.splitMain)
@@ -218,10 +221,10 @@ class MainWindowUI:
         meta_layout.addWidget(self.tabsMetadata)
         self.tabsInfo.addTab(self.tabMetadata, "元数据")
 
-        self.frameFilmstrip = QtWidgets.QFrame(self.central)
+        self.frameFilmstrip = QtWidgets.QFrame(self.splitVertical)
         self.frameFilmstrip.setObjectName("frameFilmstrip")
         self.frameFilmstrip.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frameFilmstrip.setFixedHeight(140)
+        self.frameFilmstrip.setMinimumHeight(100)
         film_layout = QtWidgets.QVBoxLayout(self.frameFilmstrip)
         film_layout.setContentsMargins(8, 6, 8, 6)
 
@@ -244,12 +247,16 @@ class MainWindowUI:
         self.layoutMain.setContentsMargins(8, 8, 8, 8)
         self.layoutMain.setSpacing(8)
 
-        self.layoutMain.addWidget(self.splitMain, 1)
-        self.layoutMain.addWidget(self.frameFilmstrip, 0)
+        self.layoutMain.addWidget(self.splitVertical, 1)
 
         self.splitMain.setStretchFactor(0, 3)
         self.splitMain.setStretchFactor(1, 1)
         self.splitMain.setSizes([1, 380])
+
+        self.splitVertical.setStretchFactor(0, 3)
+        self.splitVertical.setStretchFactor(1, 1)
+        default_filmstrip = 140
+        self.splitVertical.setSizes([max(self._main_window.height() - default_filmstrip, 1), default_filmstrip])
 
     def _create_metadata_table(
         self, parent: QtWidgets.QWidget, object_name: str
