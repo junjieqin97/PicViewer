@@ -51,6 +51,10 @@ class MainController(QtCore.QObject):
         self._zoom_step = 1.25
         self._zoom_min = 0.1
         self._zoom_max = 6.0
+        self._image_dragging = False
+        self._image_drag_start_pos: Optional[QtCore.QPoint] = None
+        self._image_drag_start_scroll: Optional[QtCore.QPoint] = None
+        self._image_drag_scroll_area: Optional[QtWidgets.QScrollArea] = None
 
         self._connect_signals()
         self._install_cursor_tracking()
@@ -117,9 +121,119 @@ class MainController(QtCore.QObject):
             handle.setCursor(cursor)
 
     def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:  # type: ignore[override]
+        if self._handle_image_drag_event(watched, event):
+            return True
         if event.type() in (QtCore.QEvent.MouseMove, QtCore.QEvent.Enter, QtCore.QEvent.Leave):
             self._update_boundary_cursor()
+            self._refresh_image_cursor(watched, event)
         return super().eventFilter(watched, event)
+
+    def _handle_image_drag_event(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        """Handle drag-to-pan interactions inside image scroll areas."""
+
+        if not isinstance(watched, QtWidgets.QWidget):
+            return False
+        if watched.property("_image_drag_area") is not True:
+            return False
+        scroll_area = self._resolve_image_scroll_area(watched)
+        if scroll_area is None:
+            return False
+
+        event_type = event.type()
+        if event_type in (
+            QtCore.QEvent.MouseButtonPress,
+            QtCore.QEvent.MouseButtonRelease,
+            QtCore.QEvent.MouseMove,
+        ):
+            if not isinstance(event, QtGui.QMouseEvent):
+                return False
+
+        if event_type == QtCore.QEvent.MouseButtonPress:
+            if event.button() != QtCore.Qt.LeftButton:
+                return False
+            if not self._can_drag_image(scroll_area):
+                return False
+            self._image_dragging = True
+            self._image_drag_start_pos = event.globalPos()
+            self._image_drag_start_scroll = QtCore.QPoint(
+                scroll_area.horizontalScrollBar().value(),
+                scroll_area.verticalScrollBar().value(),
+            )
+            self._image_drag_scroll_area = scroll_area
+            scroll_area.viewport().grabMouse()
+            self._set_image_drag_cursor(scroll_area, True)
+            return True
+
+        if event_type == QtCore.QEvent.MouseMove and self._image_dragging:
+            if self._image_drag_scroll_area is None or self._image_drag_start_pos is None:
+                return False
+            delta = event.globalPos() - self._image_drag_start_pos
+            hbar = self._image_drag_scroll_area.horizontalScrollBar()
+            vbar = self._image_drag_scroll_area.verticalScrollBar()
+            start = self._image_drag_start_scroll or QtCore.QPoint(hbar.value(), vbar.value())
+            hbar.setValue(start.x() - delta.x())
+            vbar.setValue(start.y() - delta.y())
+            return True
+
+        if event_type == QtCore.QEvent.MouseButtonRelease and self._image_dragging:
+            if event.button() != QtCore.Qt.LeftButton:
+                return False
+            self._image_dragging = False
+            if self._image_drag_scroll_area is not None:
+                self._image_drag_scroll_area.viewport().releaseMouse()
+                self._set_image_drag_cursor(self._image_drag_scroll_area, False)
+            self._image_drag_start_pos = None
+            self._image_drag_start_scroll = None
+            self._image_drag_scroll_area = None
+            return True
+
+        return False
+
+    def _refresh_image_cursor(self, watched: QtCore.QObject, event: QtCore.QEvent) -> None:
+        """Ensure the hand cursor appears over the image area."""
+
+        if self._image_dragging:
+            return
+        if self._cursor_override_target is not None:
+            return
+        if event.type() not in (QtCore.QEvent.MouseMove, QtCore.QEvent.Enter):
+            return
+        if not isinstance(watched, QtWidgets.QWidget):
+            return
+        if watched.property("_image_drag_area") is not True:
+            return
+        scroll_area = self._resolve_image_scroll_area(watched)
+        if scroll_area is None:
+            watched.setCursor(QtCore.Qt.OpenHandCursor)
+            return
+        self._set_image_drag_cursor(scroll_area, False)
+
+    def _resolve_image_scroll_area(self, widget: QtWidgets.QWidget) -> Optional[QtWidgets.QScrollArea]:
+        """Resolve the image scroll area from any child widget."""
+
+        current: Optional[QtWidgets.QWidget] = widget
+        while current is not None:
+            if isinstance(current, QtWidgets.QScrollArea) and current.objectName() == "scrollImage":
+                return current
+            current = current.parentWidget()
+        return None
+
+    def _can_drag_image(self, scroll_area: QtWidgets.QScrollArea) -> bool:
+        """Return True when the image is larger than the viewport."""
+
+        hbar = scroll_area.horizontalScrollBar()
+        vbar = scroll_area.verticalScrollBar()
+        return hbar.maximum() > 0 or vbar.maximum() > 0
+
+    def _set_image_drag_cursor(self, scroll_area: QtWidgets.QScrollArea, dragging: bool) -> None:
+        """Update the cursor for image drag interactions."""
+
+        cursor = QtCore.Qt.ClosedHandCursor if dragging else QtCore.Qt.OpenHandCursor
+        scroll_area.setCursor(cursor)
+        scroll_area.viewport().setCursor(cursor)
+        widget = scroll_area.widget()
+        if widget is not None:
+            widget.setCursor(cursor)
 
     def _update_boundary_cursor(self) -> None:
         """Show resize cursor when hovering over the filmstrip boundary."""
@@ -326,12 +440,28 @@ class MainController(QtCore.QObject):
         layout = QtWidgets.QVBoxLayout(tab_container)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        lbl_image = QtWidgets.QLabel("加载中…", tab_container)
+        scroll_area = QtWidgets.QScrollArea(tab_container)
+        scroll_area.setObjectName("scrollImage")
+        scroll_area.setWidgetResizable(False)
+        scroll_area.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
+        scroll_area.setAlignment(QtCore.Qt.AlignCenter)
+        scroll_area.setCursor(QtCore.Qt.OpenHandCursor)
+        scroll_area.setProperty("_image_drag_area", True)
+        layout.addWidget(scroll_area)
+
+        lbl_image = QtWidgets.QLabel("加载中…")
         lbl_image.setObjectName("lblImage")
         lbl_image.setAlignment(QtCore.Qt.AlignCenter)
         lbl_image.setStyleSheet("background:#222;color:#ddd;")
+        lbl_image.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
+        lbl_image.setCursor(QtCore.Qt.OpenHandCursor)
+        lbl_image.setProperty("_image_drag_area", True)
+        scroll_area.setWidget(lbl_image)
+        scroll_area.viewport().setCursor(QtCore.Qt.OpenHandCursor)
+        scroll_area.viewport().setProperty("_image_drag_area", True)
+        self._track_cursor_widget(scroll_area)
+        self._track_cursor_widget(scroll_area.viewport())
         self._track_cursor_widget(lbl_image)
-        layout.addWidget(lbl_image)
 
         tab_index = self._ui.tabsImages.addTab(tab_container, "")
         self._update_tab_title(tab_index, path)
@@ -482,16 +612,24 @@ class MainController(QtCore.QObject):
         tab = self._ui.tabsImages.widget(tab_index)
         if tab is None:
             return
+        scroll_area = tab.findChild(QtWidgets.QScrollArea, "scrollImage")
         lbl = tab.findChild(QtWidgets.QLabel, "lblImage")
         if lbl is None:
             return
-        target_size = self._target_pixmap_size(path, lbl.size())
+        base_size = lbl.size()
+        if scroll_area is not None:
+            base_size = scroll_area.viewport().size()
+        target_size = self._target_pixmap_size(path, base_size)
         if target_size.width() <= 0 or target_size.height() <= 0:
             return
         existing = lbl.pixmap()
         if existing is not None and existing.size() == target_size:
             return
-        lbl.setPixmap(to_qpixmap(analysis.preview_rgb, target_size))
+        pixmap = to_qpixmap(analysis.preview_rgb, target_size)
+        lbl.setPixmap(pixmap)
+        lbl.setText("")
+        if not pixmap.isNull():
+            lbl.resize(pixmap.size())
 
     def _target_pixmap_size(self, path: Path, base_size: QtCore.QSize) -> QtCore.QSize:
         """Calculate the target pixmap size based on zoom settings."""

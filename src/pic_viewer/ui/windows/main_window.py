@@ -97,6 +97,9 @@ class MainWindowUI:
         self.actOpenFolder.setShortcut(QtGui.QKeySequence(f"{modifier}+Shift+O"))
         self.actToggleInfoPanel.setShortcut(QtGui.QKeySequence(f"{modifier}+Right"))
         self.actToggleFilmstrip.setShortcut(QtGui.QKeySequence(f"{modifier}+Down"))
+        self.actZoomIn.setShortcut(QtGui.QKeySequence(f"{modifier}++"))
+        self.actZoomOut.setShortcut(QtGui.QKeySequence(f"{modifier}+-"))
+        self.actFitToWindow.setShortcut(QtGui.QKeySequence(f"{modifier}+0"))
 
     def create_menus(self) -> None:
         menu_bar = self._main_window.menuBar()
