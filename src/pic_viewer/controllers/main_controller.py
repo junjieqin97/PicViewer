@@ -46,6 +46,11 @@ class MainController(QtCore.QObject):
         self._cursor_override_target: Optional[QtWidgets.QWidget] = None
         self._filmstrip_icon_side = self._ui.listFilmstrip.iconSize().width() or 96
         self._filmstrip_resize_timer = QtCore.QTimer(self)
+        self._zoom_by_path: Dict[str, float] = {}
+        self._fit_to_window_by_path: Dict[str, bool] = {}
+        self._zoom_step = 1.25
+        self._zoom_min = 0.1
+        self._zoom_max = 6.0
 
         self._connect_signals()
         self._install_cursor_tracking()
@@ -62,9 +67,9 @@ class MainController(QtCore.QObject):
         self._ui.actExit.triggered.connect(self._main_window.close)
         self._ui.actAbout.triggered.connect(self._show_about)
 
-        self._ui.actZoomIn.triggered.connect(self._todo_not_implemented)
-        self._ui.actZoomOut.triggered.connect(self._todo_not_implemented)
-        self._ui.actFitToWindow.triggered.connect(self._todo_not_implemented)
+        self._ui.actZoomIn.triggered.connect(self._zoom_in)
+        self._ui.actZoomOut.triggered.connect(self._zoom_out)
+        self._ui.actFitToWindow.triggered.connect(self._fit_to_window)
 
         self._ui.actToggleInfoPanel.toggled.connect(self._toggle_info_panel)
         self._ui.actToggleFilmstrip.toggled.connect(self._toggle_filmstrip)
@@ -170,6 +175,38 @@ class MainController(QtCore.QObject):
 
         self._toggle_info_panel(self._ui.actToggleInfoPanel.isChecked())
         self._toggle_filmstrip(self._ui.actToggleFilmstrip.isChecked())
+
+    def _zoom_in(self) -> None:
+        """Zoom in the current image by a fixed step."""
+
+        self._adjust_zoom(self._zoom_step)
+
+    def _zoom_out(self) -> None:
+        """Zoom out the current image by a fixed step."""
+
+        self._adjust_zoom(1 / self._zoom_step)
+
+    def _fit_to_window(self) -> None:
+        """Fit the current image to the available view size."""
+
+        path = self._current_image_path()
+        if path is None:
+            return
+        self._set_zoom_state(path, 1.0, True)
+        self._refresh_current_image_pixmap()
+
+    def _adjust_zoom(self, factor: float) -> None:
+        """Apply a zoom factor for the current image."""
+
+        path = self._current_image_path()
+        if path is None:
+            return
+        zoom, fit = self._get_zoom_state(path)
+        if fit:
+            zoom = 1.0
+        zoom = max(self._zoom_min, min(self._zoom_max, zoom * factor))
+        self._set_zoom_state(path, zoom, False)
+        self._refresh_current_image_pixmap()
 
     def _todo_not_implemented(self) -> None:
         QtWidgets.QMessageBox.information(self._main_window, "提示", "该功能尚未实现（TODO）")
@@ -299,6 +336,7 @@ class MainController(QtCore.QObject):
         tab_index = self._ui.tabsImages.addTab(tab_container, "")
         self._update_tab_title(tab_index, path)
         self._ui.tabsImages.setCurrentIndex(tab_index)
+        self._set_zoom_state(path, 1.0, True)
 
         item = QtWidgets.QListWidgetItem()
         item.setData(QtCore.Qt.UserRole, str(path))
@@ -329,6 +367,8 @@ class MainController(QtCore.QObject):
             self._remove_filmstrip_item(path)
             self._images_by_path.pop(str(path), None)
             self._stop_thread_if_running(path)
+            self._zoom_by_path.pop(str(path), None)
+            self._fit_to_window_by_path.pop(str(path), None)
 
         self._refresh_actions_state()
         self.update_info_for_image(self._current_image_path())
@@ -422,7 +462,20 @@ class MainController(QtCore.QObject):
             table.setItem(0, 1, QtWidgets.QTableWidgetItem(""))
         table.resizeColumnsToContents()
 
+    def _refresh_current_image_pixmap(self) -> None:
+        """Refresh the current image pixmap using the stored zoom settings."""
+
+        path = self._current_image_path()
+        if path is None:
+            return
+        data = self._images_by_path.get(str(path))
+        if data is None:
+            return
+        self._refresh_tab_pixmap(path, data.analysis)
+
     def _refresh_tab_pixmap(self, path: Path, analysis: ImageAnalysis) -> None:
+        """Render the image preview inside the tab for the given path."""
+
         tab_index = self._find_tab_index_by_path(path)
         if tab_index is None:
             return
@@ -432,11 +485,47 @@ class MainController(QtCore.QObject):
         lbl = tab.findChild(QtWidgets.QLabel, "lblImage")
         if lbl is None:
             return
-        target_size = lbl.size()
+        target_size = self._target_pixmap_size(path, lbl.size())
+        if target_size.width() <= 0 or target_size.height() <= 0:
+            return
         existing = lbl.pixmap()
         if existing is not None and existing.size() == target_size:
             return
         lbl.setPixmap(to_qpixmap(analysis.preview_rgb, target_size))
+
+    def _target_pixmap_size(self, path: Path, base_size: QtCore.QSize) -> QtCore.QSize:
+        """Calculate the target pixmap size based on zoom settings."""
+
+        if base_size.width() <= 0 or base_size.height() <= 0:
+            return base_size
+        zoom, fit_to_window = self._get_zoom_state(path)
+        if fit_to_window:
+            return base_size
+        return QtCore.QSize(
+            max(1, int(base_size.width() * zoom)),
+            max(1, int(base_size.height() * zoom)),
+        )
+
+    def _get_zoom_state(self, path: Path) -> tuple[float, bool]:
+        """Return zoom factor and fit flag for the given image path."""
+
+        key = str(path)
+        zoom = self._zoom_by_path.get(key)
+        fit = self._fit_to_window_by_path.get(key)
+        if zoom is None:
+            zoom = 1.0
+            self._zoom_by_path[key] = zoom
+        if fit is None:
+            fit = True
+            self._fit_to_window_by_path[key] = fit
+        return zoom, fit
+
+    def _set_zoom_state(self, path: Path, zoom: float, fit_to_window: bool) -> None:
+        """Persist zoom state for the given image path."""
+
+        key = str(path)
+        self._zoom_by_path[key] = zoom
+        self._fit_to_window_by_path[key] = fit_to_window
 
     def _start_load(self, path: Path) -> None:
         if str(path) in self._threads_by_path:
@@ -581,7 +670,11 @@ class MainController(QtCore.QObject):
         return self._ui.listFilmstrip.item(row)
 
     def _refresh_actions_state(self) -> None:
-        self._ui.actCloseTab.setEnabled(self._ui.tabsImages.count() > 0)
+        has_tab = self._ui.tabsImages.count() > 0
+        self._ui.actCloseTab.setEnabled(has_tab)
+        self._ui.actZoomIn.setEnabled(has_tab)
+        self._ui.actZoomOut.setEnabled(has_tab)
+        self._ui.actFitToWindow.setEnabled(has_tab)
 
     def _format_display_name(self, filename: str) -> str:
         """Shorten long filenames for tab and filmstrip display."""
