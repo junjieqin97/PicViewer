@@ -46,6 +46,7 @@ class MainController(QtCore.QObject):
         self._cursor_override_target: Optional[QtWidgets.QWidget] = None
         self._filmstrip_icon_side = self._ui.listFilmstrip.iconSize().width() or 96
         self._filmstrip_resize_timer = QtCore.QTimer(self)
+        self._analysis_refresh_timer = QtCore.QTimer(self)
         self._zoom_by_path: Dict[str, float] = {}
         self._fit_to_window_by_path: Dict[str, bool] = {}
         self._zoom_step = 1.25
@@ -59,6 +60,7 @@ class MainController(QtCore.QObject):
         self._connect_signals()
         self._install_cursor_tracking()
         self._configure_filmstrip_resize()
+        self._configure_analysis_refresh()
         self._apply_initial_visibility()
         self._sync_view_actions()
         self._refresh_actions_state()
@@ -87,6 +89,8 @@ class MainController(QtCore.QObject):
         self._ui.tabsImages.currentChanged.connect(self._on_tab_changed)
         self._ui.tabsImages.tabCloseRequested.connect(self.close_tab)
         self._ui.listFilmstrip.currentRowChanged.connect(self._on_filmstrip_row_changed)
+        self._ui.tabsInfo.currentChanged.connect(self._on_info_tab_changed)
+        self._ui.splitMain.splitterMoved.connect(self._on_main_splitter_moved)
 
     def _configure_filmstrip_resize(self) -> None:
         """Configure dynamic filmstrip icon resizing."""
@@ -95,6 +99,14 @@ class MainController(QtCore.QObject):
         self._filmstrip_resize_timer.setInterval(120)
         self._filmstrip_resize_timer.timeout.connect(self._apply_filmstrip_icon_size)
         self._ui.splitVertical.splitterMoved.connect(self._on_vertical_splitter_moved)
+
+    def _configure_analysis_refresh(self) -> None:
+        """Debounce analysis panel refreshes until layout sizes stabilize."""
+
+        self._analysis_refresh_timer.setSingleShot(True)
+        # 轻量节流：避免在 splitter 拖动或 tab 切换时反复渲染。
+        self._analysis_refresh_timer.setInterval(40)
+        self._analysis_refresh_timer.timeout.connect(self._refresh_view_for_current_image)
 
     def _install_cursor_tracking(self) -> None:
         """Enable cursor hints near split boundaries."""
@@ -521,6 +533,28 @@ class MainController(QtCore.QObject):
         tab_index = self._find_tab_index_by_path(Path(str(path_str)))
         if tab_index is not None:
             self._ui.tabsImages.setCurrentIndex(tab_index)
+
+    def _on_info_tab_changed(self, _: int) -> None:
+        """Refresh analysis views when the info tab becomes visible."""
+
+        self._schedule_analysis_refresh()
+
+    def _on_main_splitter_moved(self, _: int, __: int) -> None:
+        """Refresh analysis views after the info panel is resized."""
+
+        self._schedule_analysis_refresh()
+
+    def _schedule_analysis_refresh(self) -> None:
+        """Schedule a debounced refresh for histogram and waveform views."""
+
+        path = self._current_image_path()
+        if path is None:
+            return
+        if str(path) not in self._images_by_path:
+            return
+        # 重启 single-shot timer：保证在布局稳定后再渲染。
+        self._analysis_refresh_timer.stop()
+        self._analysis_refresh_timer.start()
 
     def update_info_for_image(self, image_path: Optional[Path]) -> None:
         """右侧信息区刷新接口（本版允许占位刷新）。"""
