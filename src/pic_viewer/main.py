@@ -12,7 +12,7 @@ import logging
 import sys
 from pathlib import Path
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 if __name__ == "__main__" and __package__ is None:
     sys.path.append(str(Path(__file__).resolve().parents[1]))
@@ -48,6 +48,9 @@ def main() -> None:
     settings = load_settings()
     configure_logging(settings)
 
+    # 必须在 QApplication 创建前启用 High-DPI 支持。
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
     app = QtWidgets.QApplication(sys.argv)
     service = build_services(settings)
     view_service = AnalysisViewService()

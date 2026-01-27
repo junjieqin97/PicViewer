@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_HIST_SIZE = (320, 512)
 DEFAULT_WAVE_SIZE = (320, 640)
+DEFAULT_MAX_DISPLAY_EDGE = 4096
+DEFAULT_MAX_ANALYSIS_EDGE = 4096
 WAVE_INTENSITY_PERCENTILE = 99.5
 WAVE_LOG_GAIN = 6.0
 WAVE_GAMMA = 0.7
@@ -40,6 +42,7 @@ class AnalysisResult:
     """Computed image analysis artifacts.
 
     Attributes:
+        analysis_bgr: Downscaled BGR source used for analysis re-rendering.
         preview_rgb: Downscaled RGB preview for UI display.
         source_size: Original image size (height, width).
         histogram_rgb: RGB histogram plot image.
@@ -54,6 +57,7 @@ class AnalysisResult:
         waveform_b: Blue channel waveform plot image.
     """
 
+    analysis_bgr: np.ndarray
     preview_rgb: np.ndarray
     source_size: tuple[int, int]
     histogram_rgb: np.ndarray
@@ -68,6 +72,29 @@ class AnalysisResult:
     waveform_b: np.ndarray
 
 
+@dataclass(frozen=True)
+class HistogramGeometry:
+    """Resolved histogram canvas parameters."""
+
+    height: int
+    width: int
+    thickness: int
+
+
+@dataclass(frozen=True)
+class WaveformGeometry:
+    """Resolved waveform canvas parameters."""
+
+    height: int
+    width: int
+    axis_margin: int
+    plot_width: int
+    axis_text_x: int
+    axis_font_scale: float
+    axis_thickness: int
+    axis_tick_length: int
+
+
 class ImageAnalyzer:
     """Compute histogram and waveform images for a given image."""
 
@@ -75,7 +102,8 @@ class ImageAnalyzer:
         self,
         hist_size: tuple[int, int] = DEFAULT_HIST_SIZE,
         wave_size: tuple[int, int] = DEFAULT_WAVE_SIZE,
-        max_display_edge: int = 2048,
+        max_display_edge: int = DEFAULT_MAX_DISPLAY_EDGE,
+        max_analysis_edge: int = DEFAULT_MAX_ANALYSIS_EDGE,
     ) -> None:
         """Create analyzer with configurable output resolutions.
 
@@ -83,24 +111,25 @@ class ImageAnalyzer:
             hist_size: (height, width) for histogram canvases.
             wave_size: (height, width) for waveform canvases.
             max_display_edge: Max edge length for preview_rgb to avoid UI卡顿.
+            max_analysis_edge: Max edge length for stored analysis_bgr.
         """
 
         self._hist_height, self._hist_width = hist_size
         self._wave_height, self._wave_width = wave_size
-        self._max_display_edge = max_display_edge
+        self._max_display_edge = max(1, int(max_display_edge))
+        self._max_analysis_edge = max(self._max_display_edge, int(max_analysis_edge))
         self._wave_intensity_percentile = WAVE_INTENSITY_PERCENTILE
         self._wave_log_gain = WAVE_LOG_GAIN
         self._wave_gamma = WAVE_GAMMA
         self._wave_blur_sigma = WAVE_BLUR_SIGMA
-        self._wave_axis_margin = min(WAVE_AXIS_MARGIN, max(0, self._wave_width - 1))
+        self._wave_axis_margin_base = WAVE_AXIS_MARGIN
         self._wave_axis_labels = WAVE_AXIS_LABELS
         self._wave_axis_ticks = set(WAVE_AXIS_TICKS)
         self._wave_axis_color_bgr = WAVE_AXIS_COLOR_BGR
-        self._wave_axis_tick_length = WAVE_AXIS_TICK_LENGTH
-        self._wave_axis_font_scale = WAVE_AXIS_FONT_SCALE
-        self._wave_axis_thickness = WAVE_AXIS_THICKNESS
-        self._wave_axis_text_x = WAVE_AXIS_TEXT_X
-        self._wave_plot_width = max(1, self._wave_width - self._wave_axis_margin)
+        self._wave_axis_tick_length_base = WAVE_AXIS_TICK_LENGTH
+        self._wave_axis_font_scale_base = WAVE_AXIS_FONT_SCALE
+        self._wave_axis_thickness_base = WAVE_AXIS_THICKNESS
+        self._wave_axis_text_x_base = WAVE_AXIS_TEXT_X
 
     def analyze(self, bgr: np.ndarray) -> AnalysisResult:
         """Generate analysis artifacts from BGR input.
@@ -116,24 +145,26 @@ class ImageAnalyzer:
         """
 
         try:
-            rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
-            source_size = (rgb.shape[0], rgb.shape[1])
-            preview_rgb = self._build_preview_rgb(rgb)
-            histogram_rgb = self._render_histogram_channels(bgr, [0, 1, 2])
-            histogram_luma = self._render_histogram_luma(bgr)
-            histogram_b = self._render_histogram_channels(bgr, [0])
-            histogram_g = self._render_histogram_channels(bgr, [1])
-            histogram_r = self._render_histogram_channels(bgr, [2])
-            waveform_rgb = self._render_waveform_channels(bgr, [0, 1, 2])
-            waveform_luma = self._render_waveform_luma(bgr)
-            waveform_b = self._render_waveform_channels(bgr, [0])
-            waveform_g = self._render_waveform_channels(bgr, [1])
-            waveform_r = self._render_waveform_channels(bgr, [2])
+            source_size = (int(bgr.shape[0]), int(bgr.shape[1]))
+            analysis_bgr = self._build_analysis_source_bgr(bgr)
+            analysis_rgb = cv2.cvtColor(analysis_bgr, cv2.COLOR_BGR2RGB)
+            preview_rgb = self._build_preview_rgb(analysis_rgb)
+            histogram_rgb = self.render_histogram_channels(analysis_bgr, [0, 1, 2])
+            histogram_luma = self.render_histogram_luma(analysis_bgr)
+            histogram_b = self.render_histogram_channels(analysis_bgr, [0])
+            histogram_g = self.render_histogram_channels(analysis_bgr, [1])
+            histogram_r = self.render_histogram_channels(analysis_bgr, [2])
+            waveform_rgb = self.render_waveform_channels(analysis_bgr, [0, 1, 2])
+            waveform_luma = self.render_waveform_luma(analysis_bgr)
+            waveform_b = self.render_waveform_channels(analysis_bgr, [0])
+            waveform_g = self.render_waveform_channels(analysis_bgr, [1])
+            waveform_r = self.render_waveform_channels(analysis_bgr, [2])
         except Exception as exc:  # pragma: no cover - defensive safety net
             logger.exception("图像分析失败")
             raise ImageProcessError("图像分析失败") from exc
 
         return AnalysisResult(
+            analysis_bgr=analysis_bgr,
             preview_rgb=preview_rgb,
             source_size=source_size,
             histogram_rgb=histogram_rgb,
@@ -148,6 +179,18 @@ class ImageAnalyzer:
             waveform_b=waveform_b,
         )
 
+    def _build_analysis_source_bgr(self, bgr: np.ndarray) -> np.ndarray:
+        """Downscale large images for analysis stability and re-rendering."""
+
+        height, width = int(bgr.shape[0]), int(bgr.shape[1])
+        max_edge = max(height, width)
+        if max_edge <= self._max_analysis_edge:
+            return bgr
+
+        scale = self._max_analysis_edge / float(max_edge)
+        new_size = (max(1, int(round(width * scale))), max(1, int(round(height * scale))))
+        return cv2.resize(bgr, new_size, interpolation=cv2.INTER_AREA)
+
     def _build_preview_rgb(self, rgb: np.ndarray) -> np.ndarray:
         """Downscale large images to a UI-friendly size."""
 
@@ -160,74 +203,159 @@ class ImageAnalyzer:
         new_size = (max(1, int(width * scale)), max(1, int(height * scale)))
         return cv2.resize(rgb, new_size, interpolation=cv2.INTER_AREA)
 
+    def render_histogram_channels(
+        self,
+        bgr: np.ndarray,
+        channels: list[int],
+        hist_size: tuple[int, int] | None = None,
+        pixel_ratio: float = 1.0,
+    ) -> np.ndarray:
+        """Render histogram image for selected BGR channels."""
+
+        geometry = self._resolve_histogram_geometry(hist_size, pixel_ratio)
+        hist_img = np.zeros((geometry.height, geometry.width, 3), dtype=np.uint8)
+        for channel in channels:
+            values = bgr[:, :, channel]
+            self._draw_histogram(hist_img, values, CHANNEL_COLORS[channel], geometry)
+        return cv2.cvtColor(hist_img, cv2.COLOR_BGR2RGB)
+
+    def render_histogram_luma(
+        self,
+        bgr: np.ndarray,
+        hist_size: tuple[int, int] | None = None,
+        pixel_ratio: float = 1.0,
+    ) -> np.ndarray:
+        """Render luminance histogram image."""
+
+        geometry = self._resolve_histogram_geometry(hist_size, pixel_ratio)
+        hist_img = np.zeros((geometry.height, geometry.width, 3), dtype=np.uint8)
+        luma = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+        self._draw_histogram(hist_img, luma, LUMA_COLOR, geometry)
+        return cv2.cvtColor(hist_img, cv2.COLOR_BGR2RGB)
+
+    def _resolve_histogram_geometry(
+        self,
+        hist_size: tuple[int, int] | None,
+        pixel_ratio: float,
+    ) -> HistogramGeometry:
+        """Resolve histogram geometry using defaults and DPR."""
+
+        if hist_size is None:
+            hist_height, hist_width = self._hist_height, self._hist_width
+        else:
+            hist_height, hist_width = hist_size
+        hist_height = max(1, int(hist_height))
+        hist_width = max(1, int(hist_width))
+        dpr = max(1.0, float(pixel_ratio))
+        thickness = max(1, int(round(dpr)))
+        return HistogramGeometry(height=hist_height, width=hist_width, thickness=thickness)
+
     def _draw_histogram(
         self,
         hist_img: np.ndarray,
         values: np.ndarray,
         color: tuple[int, int, int],
+        geometry: HistogramGeometry,
     ) -> None:
         """Draw a histogram curve on the given canvas."""
 
-        hist = cv2.calcHist([values], [0], None, [self._hist_width], [0, 256])
-        cv2.normalize(hist, hist, 0, self._hist_height - 1, cv2.NORM_MINMAX)
+        hist = cv2.calcHist([values], [0], None, [geometry.width], [0, 256])
+        cv2.normalize(hist, hist, 0, geometry.height - 1, cv2.NORM_MINMAX)
         hist = hist.flatten().astype(np.int32)
-        for x in range(1, self._hist_width):
-            y1 = self._hist_height - 1 - hist[x - 1]
-            y2 = self._hist_height - 1 - hist[x]
-            cv2.line(hist_img, (x - 1, y1), (x, y2), color, 1, lineType=cv2.LINE_AA)
+        for x in range(1, geometry.width):
+            y1 = geometry.height - 1 - hist[x - 1]
+            y2 = geometry.height - 1 - hist[x]
+            cv2.line(
+                hist_img,
+                (x - 1, y1),
+                (x, y2),
+                color,
+                geometry.thickness,
+                lineType=cv2.LINE_AA,
+            )
 
-    def _render_histogram_channels(self, bgr: np.ndarray, channels: list[int]) -> np.ndarray:
-        """Render histogram image for selected BGR channels."""
-
-        hist_img = np.zeros((self._hist_height, self._hist_width, 3), dtype=np.uint8)
-        for channel in channels:
-            values = bgr[:, :, channel]
-            self._draw_histogram(hist_img, values, CHANNEL_COLORS[channel])
-        return cv2.cvtColor(hist_img, cv2.COLOR_BGR2RGB)
-
-    def _render_histogram_luma(self, bgr: np.ndarray) -> np.ndarray:
-        """Render luminance histogram image."""
-
-        hist_img = np.zeros((self._hist_height, self._hist_width, 3), dtype=np.uint8)
-        luma = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
-        self._draw_histogram(hist_img, luma, LUMA_COLOR)
-        return cv2.cvtColor(hist_img, cv2.COLOR_BGR2RGB)
-
-    def _render_waveform_channels(self, bgr: np.ndarray, channels: list[int]) -> np.ndarray:
+    def render_waveform_channels(
+        self,
+        bgr: np.ndarray,
+        channels: list[int],
+        wave_size: tuple[int, int] | None = None,
+        pixel_ratio: float = 1.0,
+    ) -> np.ndarray:
         """Render waveform image for selected BGR channels."""
 
-        resized = self._resize_for_waveform(bgr)
-        wave = np.zeros((self._wave_height, self._wave_width, 3), dtype=np.float32)
-        xs = (
-            np.repeat(np.arange(self._wave_plot_width), resized.shape[0]) + self._wave_axis_margin
-        )
+        geometry = self._resolve_waveform_geometry(wave_size, pixel_ratio)
+        resized = self._resize_for_waveform(bgr, geometry.plot_width)
+        wave = np.zeros((geometry.height, geometry.width, 3), dtype=np.float32)
+        xs = np.repeat(np.arange(geometry.plot_width), resized.shape[0]) + geometry.axis_margin
         for channel in channels:
             values = resized[:, :, channel].astype(np.int32)
-            ys = self._wave_height - 1 - (values * (self._wave_height - 1) // 255)
+            ys = geometry.height - 1 - (values * (geometry.height - 1) // 255)
             ys_flat = ys.T.reshape(-1)
             np.add.at(wave[:, :, channel], (ys_flat, xs), 1.0)
-        return self._normalize_waveform_color(wave)
+        return self._normalize_waveform_color(wave, geometry)
 
-    def _render_waveform_luma(self, bgr: np.ndarray) -> np.ndarray:
+    def render_waveform_luma(
+        self,
+        bgr: np.ndarray,
+        wave_size: tuple[int, int] | None = None,
+        pixel_ratio: float = 1.0,
+    ) -> np.ndarray:
         """Render luminance waveform image."""
 
+        geometry = self._resolve_waveform_geometry(wave_size, pixel_ratio)
         luma = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
-        resized = self._resize_for_waveform(luma)
-        wave = np.zeros((self._wave_height, self._wave_width), dtype=np.float32)
-        xs = (
-            np.repeat(np.arange(self._wave_plot_width), resized.shape[0]) + self._wave_axis_margin
-        )
+        resized = self._resize_for_waveform(luma, geometry.plot_width)
+        wave = np.zeros((geometry.height, geometry.width), dtype=np.float32)
+        xs = np.repeat(np.arange(geometry.plot_width), resized.shape[0]) + geometry.axis_margin
         values = resized.astype(np.int32)
-        ys = self._wave_height - 1 - (values * (self._wave_height - 1) // 255)
+        ys = geometry.height - 1 - (values * (geometry.height - 1) // 255)
         ys_flat = ys.T.reshape(-1)
         np.add.at(wave, (ys_flat, xs), 1.0)
-        return self._normalize_waveform_gray(wave)
+        return self._normalize_waveform_gray(wave, geometry)
 
-    def _resize_for_waveform(self, image: np.ndarray) -> np.ndarray:
-        """Resize image to waveform width while preserving aspect ratio."""
+    def _resolve_waveform_geometry(
+        self,
+        wave_size: tuple[int, int] | None,
+        pixel_ratio: float,
+    ) -> WaveformGeometry:
+        """Resolve waveform geometry using defaults and DPR."""
 
-        height = max(1, image.shape[0] * self._wave_plot_width // max(1, image.shape[1]))
-        return cv2.resize(image, (self._wave_plot_width, height), interpolation=cv2.INTER_AREA)
+        if wave_size is None:
+            wave_height, wave_width = self._wave_height, self._wave_width
+        else:
+            wave_height, wave_width = wave_size
+        wave_height = max(1, int(wave_height))
+        wave_width = max(1, int(wave_width))
+
+        dpr = max(1.0, float(pixel_ratio))
+        axis_margin = int(round(self._wave_axis_margin_base * dpr))
+        axis_margin = min(wave_width - 1, max(0, axis_margin)) if wave_width > 1 else 0
+        plot_width = max(1, wave_width - axis_margin)
+
+        axis_text_x = max(1, int(round(self._wave_axis_text_x_base * dpr)))
+        axis_font_scale = max(0.1, self._wave_axis_font_scale_base * dpr)
+        axis_thickness = max(1, int(round(self._wave_axis_thickness_base * dpr)))
+        if self._wave_axis_tick_length_base > 0:
+            axis_tick_length = int(round(self._wave_axis_tick_length_base * dpr))
+        else:
+            axis_tick_length = self._wave_axis_tick_length_base
+
+        return WaveformGeometry(
+            height=wave_height,
+            width=wave_width,
+            axis_margin=axis_margin,
+            plot_width=plot_width,
+            axis_text_x=axis_text_x,
+            axis_font_scale=axis_font_scale,
+            axis_thickness=axis_thickness,
+            axis_tick_length=axis_tick_length,
+        )
+
+    def _resize_for_waveform(self, image: np.ndarray, plot_width: int) -> np.ndarray:
+        """Resize image to waveform plot width while preserving aspect ratio."""
+
+        height = max(1, image.shape[0] * plot_width // max(1, image.shape[1]))
+        return cv2.resize(image, (plot_width, height), interpolation=cv2.INTER_AREA)
 
     def _normalize_single_wave(self, wave: np.ndarray) -> np.ndarray:
         """Apply percentile-based scaling and tone boost to a single-channel wave."""
@@ -255,35 +383,35 @@ class ImageAnalyzer:
 
         return np.clip(boosted * 255.0, 0, 255).astype(np.uint8)
 
-    def _normalize_waveform_color(self, wave: np.ndarray) -> np.ndarray:
+    def _normalize_waveform_color(self, wave: np.ndarray, geometry: WaveformGeometry) -> np.ndarray:
         """Normalize a multi-channel waveform into an RGB image."""
 
         normalized_channels = [
             self._normalize_single_wave(wave[:, :, idx]) for idx in range(wave.shape[2])
         ]
         stacked_bgr = np.stack(normalized_channels, axis=2)
-        self._apply_waveform_axis(stacked_bgr)
+        self._apply_waveform_axis(stacked_bgr, geometry)
         return cv2.cvtColor(stacked_bgr, cv2.COLOR_BGR2RGB)
 
-    def _normalize_waveform_gray(self, wave: np.ndarray) -> np.ndarray:
+    def _normalize_waveform_gray(self, wave: np.ndarray, geometry: WaveformGeometry) -> np.ndarray:
         """Normalize a grayscale waveform into an RGB image."""
 
         normalized = self._normalize_single_wave(wave)
         stacked_bgr = np.repeat(normalized[:, :, None], 3, axis=2)
-        self._apply_waveform_axis(stacked_bgr)
+        self._apply_waveform_axis(stacked_bgr, geometry)
         return cv2.cvtColor(stacked_bgr, cv2.COLOR_BGR2RGB)
 
-    def _exposure_to_y(self, exposure_value: int) -> int:
+    def _exposure_to_y(self, exposure_value: int, wave_height: int) -> int:
         """Map an exposure value in [0, 100] to a waveform Y coordinate."""
 
         clamped = min(100, max(0, exposure_value))
-        return int(round((1.0 - clamped / 100.0) * (self._wave_height - 1)))
+        return int(round((1.0 - clamped / 100.0) * (wave_height - 1)))
 
-    def _apply_waveform_axis(self, canvas_bgr: np.ndarray) -> None:
+    def _apply_waveform_axis(self, canvas_bgr: np.ndarray, geometry: WaveformGeometry) -> None:
         """Draw the left exposure axis with yellow labels and tick marks."""
 
         height, width, _ = canvas_bgr.shape
-        axis_x = min(width - 1, max(0, self._wave_axis_margin - 1))
+        axis_x = min(width - 1, max(0, geometry.axis_margin - 1))
         axis_color = self._wave_axis_color_bgr
 
         cv2.line(
@@ -291,26 +419,26 @@ class ImageAnalyzer:
             (axis_x, 0),
             (axis_x, height - 1),
             axis_color,
-            self._wave_axis_thickness,
+            geometry.axis_thickness,
             lineType=cv2.LINE_8,
         )
 
         for exposure_value in self._wave_axis_labels:
-            y = self._exposure_to_y(exposure_value)
+            y = self._exposure_to_y(exposure_value, height)
 
             if exposure_value in self._wave_axis_ticks:
-                if self._wave_axis_tick_length <= 0:
+                if geometry.axis_tick_length <= 0:
                     tick_start_x = axis_x
                     tick_end_x = width - 1
                 else:
                     tick_start_x = axis_x
-                    tick_end_x = min(width - 1, axis_x + self._wave_axis_tick_length)
+                    tick_end_x = min(width - 1, axis_x + geometry.axis_tick_length)
                 cv2.line(
                     canvas_bgr,
                     (tick_start_x, y),
                     (tick_end_x, y),
                     axis_color,
-                    self._wave_axis_thickness,
+                    geometry.axis_thickness,
                     lineType=cv2.LINE_8,
                 )
 
@@ -318,19 +446,19 @@ class ImageAnalyzer:
             (text_w, text_h), baseline = cv2.getTextSize(
                 label,
                 cv2.FONT_HERSHEY_SIMPLEX,
-                self._wave_axis_font_scale,
-                self._wave_axis_thickness,
+                geometry.axis_font_scale,
+                geometry.axis_thickness,
             )
             baseline_y = y + text_h // 2
             baseline_y = max(text_h + 2, min(height - baseline - 2, baseline_y))
-            text_x = max(0, axis_x - self._wave_axis_text_x - text_w)
+            text_x = max(0, axis_x - geometry.axis_text_x - text_w)
             cv2.putText(
                 canvas_bgr,
                 label,
                 (text_x, baseline_y),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                self._wave_axis_font_scale,
+                geometry.axis_font_scale,
                 axis_color,
-                self._wave_axis_thickness,
+                geometry.axis_thickness,
                 lineType=cv2.LINE_AA,
             )

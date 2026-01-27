@@ -49,6 +49,7 @@ class MainController(QtCore.QObject):
         self._analysis_refresh_timer = QtCore.QTimer(self)
         self._zoom_by_path: Dict[str, float] = {}
         self._fit_to_window_by_path: Dict[str, bool] = {}
+        self._analysis_render_key_by_path: Dict[str, tuple] = {}
         self._zoom_step = 1.25
         self._zoom_min = 0.1
         self._zoom_max = 6.0
@@ -511,6 +512,7 @@ class MainController(QtCore.QObject):
             self._stop_thread_if_running(path)
             self._zoom_by_path.pop(str(path), None)
             self._fit_to_window_by_path.pop(str(path), None)
+            self._analysis_render_key_by_path.pop(str(path), None)
 
         self._refresh_actions_state()
         self.update_info_for_image(self._current_image_path())
@@ -576,11 +578,42 @@ class MainController(QtCore.QObject):
             self._ui.tabsMetadata.setCurrentIndex(0)
         self._last_metadata_path = str(image_path)
 
-        view = self._view_service.build_view(data.analysis, self._view_settings)
+        hist_logical = self._ui.widgetHistogram.size()
+        wave_logical = self._ui.widgetWaveform.size()
+        dpr = self._device_pixel_ratio_for(self._ui.widgetHistogram)
+        hist_size = self._analysis_size(hist_logical, dpr)
+        wave_size = self._analysis_size(wave_logical, dpr)
+        render_key = (
+            hist_size,
+            wave_size,
+            round(dpr, 2),
+            self._view_settings.mode.value,
+            self._view_settings.channel.value,
+        )
+        path_key = str(image_path)
+        if self._analysis_render_key_by_path.get(path_key) == render_key and self._has_analysis_pixmaps():
+            self._fill_metadata_tables(data.metadata)
+            self._refresh_tab_pixmap(image_path, data.analysis)
+            return
+
+        fallback_view = self._view_service.build_view(data.analysis, self._view_settings)
         self._ui.widgetHistogram.setText("")
         self._ui.widgetWaveform.setText("")
-        self._ui.widgetHistogram.setPixmap(to_qpixmap(view.histogram_rgb, self._ui.widgetHistogram.size()))
-        self._ui.widgetWaveform.setPixmap(to_qpixmap(view.waveform_rgb, self._ui.widgetWaveform.size()))
+        if hist_logical.width() <= 0 or hist_logical.height() <= 0:
+            view = fallback_view
+        elif wave_logical.width() <= 0 or wave_logical.height() <= 0:
+            view = fallback_view
+        else:
+            view = self._image_service.render_analysis_view(
+                data.analysis,
+                self._view_settings,
+                hist_size,
+                wave_size,
+                dpr,
+            )
+        self._ui.widgetHistogram.setPixmap(to_qpixmap(view.histogram_rgb, hist_logical, device_pixel_ratio=dpr))
+        self._ui.widgetWaveform.setPixmap(to_qpixmap(view.waveform_rgb, wave_logical, device_pixel_ratio=dpr))
+        self._analysis_render_key_by_path[path_key] = render_key
         self._fill_metadata_tables(data.metadata)
         self._refresh_tab_pixmap(image_path, data.analysis)
 
@@ -656,14 +689,15 @@ class MainController(QtCore.QObject):
         target_size = self._target_pixmap_size(path, base_size)
         if target_size.width() <= 0 or target_size.height() <= 0:
             return
+        dpr = self._device_pixel_ratio_for(lbl)
         existing = lbl.pixmap()
-        if existing is not None and existing.size() == target_size:
+        if existing is not None and self._pixmap_matches_target(existing, target_size, dpr):
             return
-        pixmap = to_qpixmap(analysis.preview_rgb, target_size)
+        pixmap = to_qpixmap(analysis.preview_rgb, target_size, device_pixel_ratio=dpr)
         lbl.setPixmap(pixmap)
         lbl.setText("")
         if not pixmap.isNull():
-            lbl.resize(pixmap.size())
+            lbl.resize(self._pixmap_logical_size(pixmap))
 
     def _target_pixmap_size(self, path: Path, base_size: QtCore.QSize) -> QtCore.QSize:
         """Calculate the target pixmap size based on zoom settings."""
@@ -677,6 +711,75 @@ class MainController(QtCore.QObject):
             max(1, int(base_size.width() * zoom)),
             max(1, int(base_size.height() * zoom)),
         )
+
+    def _device_pixel_ratio_for(self, widget: QtWidgets.QWidget) -> float:
+        """Best-effort device pixel ratio resolution for the widget's screen."""
+
+        screen: Optional[QtGui.QScreen] = None
+        window = widget.window().windowHandle()
+        if window is not None:
+            screen = window.screen()
+        if screen is None:
+            screen = QtWidgets.QApplication.primaryScreen()
+        if screen is None:
+            return 1.0
+        dpr = getattr(screen, "devicePixelRatioF", screen.devicePixelRatio)()
+        try:
+            return max(1.0, float(dpr))
+        except (TypeError, ValueError):
+            return 1.0
+
+    def _physical_size(self, logical_size: QtCore.QSize, dpr: float) -> QtCore.QSize:
+        """Scale a logical size into physical pixels using DPR."""
+
+        return QtCore.QSize(
+            max(1, int(round(logical_size.width() * dpr))),
+            max(1, int(round(logical_size.height() * dpr))),
+        )
+
+    def _analysis_size(self, logical_size: QtCore.QSize, dpr: float) -> tuple[int, int]:
+        """Convert a logical QSize into (height, width) physical pixels."""
+
+        physical = self._physical_size(logical_size, dpr)
+        return (physical.height(), physical.width())
+
+    def _has_analysis_pixmaps(self) -> bool:
+        """Return True when histogram and waveform pixmaps are present."""
+
+        hist_pix = self._ui.widgetHistogram.pixmap()
+        wave_pix = self._ui.widgetWaveform.pixmap()
+        if hist_pix is None or hist_pix.isNull():
+            return False
+        if wave_pix is None or wave_pix.isNull():
+            return False
+        return True
+
+    def _pixmap_logical_size(self, pixmap: QtGui.QPixmap) -> QtCore.QSize:
+        """Return pixmap size in device-independent pixels."""
+
+        dpr = pixmap.devicePixelRatio()
+        dpr = dpr if dpr and dpr > 0 else 1.0
+        return QtCore.QSize(
+            max(1, int(round(pixmap.width() / dpr))),
+            max(1, int(round(pixmap.height() / dpr))),
+        )
+
+    def _pixmap_matches_target(
+        self,
+        pixmap: QtGui.QPixmap,
+        target_size: QtCore.QSize,
+        dpr: float,
+    ) -> bool:
+        """Check whether an existing pixmap already matches the logical target."""
+
+        if pixmap.isNull():
+            return False
+        logical_size = self._pixmap_logical_size(pixmap)
+        if logical_size != target_size:
+            return False
+        existing_dpr = pixmap.devicePixelRatio()
+        existing_dpr = existing_dpr if existing_dpr and existing_dpr > 0 else 1.0
+        return abs(existing_dpr - max(1.0, dpr)) < 0.01
 
     def _get_zoom_state(self, path: Path) -> tuple[float, bool]:
         """Return zoom factor and fit flag for the given image path."""
@@ -737,6 +840,8 @@ class MainController(QtCore.QObject):
 
     def _on_loaded(self, path: Path, result: ImageLoadResult) -> None:
         self._images_by_path[str(path)] = result
+        # 强制下一次刷新使用最新分析结果重渲染。
+        self._analysis_render_key_by_path.pop(str(path), None)
         self._update_filmstrip_icon(path, result.analysis)
 
         if self._current_image_path() == path:
@@ -772,7 +877,8 @@ class MainController(QtCore.QObject):
         icon_size = self._ui.listFilmstrip.iconSize()
         if icon_size.width() <= 0 or icon_size.height() <= 0:
             icon_size = QtCore.QSize(self._filmstrip_icon_side, self._filmstrip_icon_side)
-        pix = to_qpixmap(analysis.preview_rgb, icon_size)
+        dpr = self._device_pixel_ratio_for(self._ui.listFilmstrip)
+        pix = to_qpixmap(analysis.preview_rgb, icon_size, device_pixel_ratio=dpr)
         item.setIcon(QtGui.QIcon(pix))
 
     def _sync_filmstrip_selection_from_tab(self, path: Optional[Path]) -> None:
@@ -923,12 +1029,13 @@ class MainController(QtCore.QObject):
         icon_size = self._ui.listFilmstrip.iconSize()
         if icon_size.width() <= 0 or icon_size.height() <= 0:
             return
+        dpr = self._device_pixel_ratio_for(self._ui.listFilmstrip)
 
         for path_str, data in self._images_by_path.items():
             item = self._find_filmstrip_item_by_path(Path(path_str))
             if item is None:
                 continue
-            pix = to_qpixmap(data.analysis.preview_rgb, icon_size)
+            pix = to_qpixmap(data.analysis.preview_rgb, icon_size, device_pixel_ratio=dpr)
             item.setIcon(QtGui.QIcon(pix))
 
 

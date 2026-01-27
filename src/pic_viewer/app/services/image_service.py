@@ -5,6 +5,9 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+import numpy as np
+
+from pic_viewer.app.dto.analysis_view import AnalysisView, AnalysisViewSettings, LumaRgbMode, RgbChannel
 from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
 from pic_viewer.common.errors import ImageLoadError
@@ -47,6 +50,7 @@ class ImageService:
 
         result = self._analyzer.analyze(bgr)
         analysis = ImageAnalysis(
+            analysis_bgr=result.analysis_bgr,
             preview_rgb=result.preview_rgb,
             source_size=result.source_size,
             histogram_rgb=result.histogram_rgb,
@@ -71,6 +75,108 @@ class ImageService:
         )
 
         return ImageLoadResult(analysis=analysis, metadata=metadata)
+
+    def render_analysis_view(
+        self,
+        analysis: ImageAnalysis,
+        settings: AnalysisViewSettings,
+        hist_size: tuple[int, int],
+        wave_size: tuple[int, int],
+        pixel_ratio: float,
+    ) -> AnalysisView:
+        """Render a DPR-aware analysis view for the given settings and sizes.
+
+        This keeps the domain renderer free of Qt types by accepting pure
+        (height, width) pixel sizes and a scalar DPR.
+        """
+
+        hist_height, hist_width = hist_size
+        wave_height, wave_width = wave_size
+        if hist_height <= 0 or hist_width <= 0 or wave_height <= 0 or wave_width <= 0:
+            return self._select_precomputed_view(analysis, settings)
+
+        try:
+            source_bgr = analysis.analysis_bgr
+            if getattr(source_bgr, "size", 0) == 0:
+                return self._select_precomputed_view(analysis, settings)
+            histogram_rgb, waveform_rgb = self._render_with_settings(
+                source_bgr,
+                settings,
+                hist_size,
+                wave_size,
+                pixel_ratio,
+            )
+            return AnalysisView(histogram_rgb=histogram_rgb, waveform_rgb=waveform_rgb)
+        except Exception:  # pragma: no cover - defensive fallback
+            logger.exception("渲染分析视图失败")
+            return self._select_precomputed_view(analysis, settings)
+
+    def _render_with_settings(
+        self,
+        source_bgr: np.ndarray,
+        settings: AnalysisViewSettings,
+        hist_size: tuple[int, int],
+        wave_size: tuple[int, int],
+        pixel_ratio: float,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Render histogram and waveform using the current view settings."""
+
+        if settings.mode == LumaRgbMode.LUMA:
+            histogram_rgb = self._analyzer.render_histogram_luma(
+                source_bgr,
+                hist_size=hist_size,
+                pixel_ratio=pixel_ratio,
+            )
+            waveform_rgb = self._analyzer.render_waveform_luma(
+                source_bgr,
+                wave_size=wave_size,
+                pixel_ratio=pixel_ratio,
+            )
+            return histogram_rgb, waveform_rgb
+
+        channels = self._channels_for(settings.channel)
+        histogram_rgb = self._analyzer.render_histogram_channels(
+            source_bgr,
+            channels=channels,
+            hist_size=hist_size,
+            pixel_ratio=pixel_ratio,
+        )
+        waveform_rgb = self._analyzer.render_waveform_channels(
+            source_bgr,
+            channels=channels,
+            wave_size=wave_size,
+            pixel_ratio=pixel_ratio,
+        )
+        return histogram_rgb, waveform_rgb
+
+    def _channels_for(self, channel: RgbChannel) -> list[int]:
+        """Map view channel selection to BGR channel indices."""
+
+        if channel == RgbChannel.RED:
+            return [2]
+        if channel == RgbChannel.GREEN:
+            return [1]
+        if channel == RgbChannel.BLUE:
+            return [0]
+        return [0, 1, 2]
+
+    def _select_precomputed_view(
+        self,
+        analysis: ImageAnalysis,
+        settings: AnalysisViewSettings,
+    ) -> AnalysisView:
+        """Select the precomputed view as a safe fallback."""
+
+        if settings.mode == LumaRgbMode.LUMA:
+            return AnalysisView(histogram_rgb=analysis.histogram_luma, waveform_rgb=analysis.waveform_luma)
+
+        if settings.channel == RgbChannel.RED:
+            return AnalysisView(histogram_rgb=analysis.histogram_r, waveform_rgb=analysis.waveform_r)
+        if settings.channel == RgbChannel.GREEN:
+            return AnalysisView(histogram_rgb=analysis.histogram_g, waveform_rgb=analysis.waveform_g)
+        if settings.channel == RgbChannel.BLUE:
+            return AnalysisView(histogram_rgb=analysis.histogram_b, waveform_rgb=analysis.waveform_b)
+        return AnalysisView(histogram_rgb=analysis.histogram_rgb, waveform_rgb=analysis.waveform_rgb)
 
     def _build_general_metadata(self, path: Path, analysis: ImageAnalysis) -> MetadataSection:
         """Assemble general metadata similar to macOS 预览."""
