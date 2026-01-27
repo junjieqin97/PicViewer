@@ -60,13 +60,18 @@ class WaveformAxisTests(unittest.TestCase):
         waveform = self.analyzer.analyze(self.image_bgr).waveform_luma
         height, width, _ = waveform.shape
         axis_x = min(width - 1, max(0, WAVE_AXIS_MARGIN - 1))
-        sample_x = min(width - 1, axis_x + 3)
+        sample_x_left = min(width - 1, axis_x + 3)
+        sample_x_right = max(0, width - 3)
 
         for exposure_value in WAVE_AXIS_TICKS:
             y = exposure_to_y(exposure_value, height)
             self.assertTrue(
-                is_yellow_rgb(waveform[y, sample_x]),
-                msg=f"Expected yellow tick at exposure={exposure_value}, y={y}",
+                is_yellow_rgb(waveform[y, sample_x_left]),
+                msg=f"Expected yellow tick near axis at exposure={exposure_value}, y={y}",
+            )
+            self.assertTrue(
+                is_yellow_rgb(waveform[y, sample_x_right]),
+                msg=f"Expected full-width yellow tick at exposure={exposure_value}, y={y}",
             )
 
     def test_waveform_axis_labels_exist_left_of_axis(self) -> None:

@@ -22,7 +22,8 @@ WAVE_AXIS_MARGIN = 56
 WAVE_AXIS_LABELS = (0, 20, 40, 60, 80, 100)
 WAVE_AXIS_TICKS = (20, 40, 60, 80)
 WAVE_AXIS_COLOR_BGR = (0, 255, 255)
-WAVE_AXIS_TICK_LENGTH = 10
+# <= 0 表示刻度线贯穿整张波形图
+WAVE_AXIS_TICK_LENGTH = 0
 WAVE_AXIS_FONT_SCALE = 0.4
 WAVE_AXIS_THICKNESS = 1
 WAVE_AXIS_TEXT_X = 4
@@ -298,10 +299,15 @@ class ImageAnalyzer:
             y = self._exposure_to_y(exposure_value)
 
             if exposure_value in self._wave_axis_ticks:
-                tick_end_x = min(width - 1, axis_x + self._wave_axis_tick_length)
+                if self._wave_axis_tick_length <= 0:
+                    tick_start_x = 0
+                    tick_end_x = width - 1
+                else:
+                    tick_start_x = axis_x
+                    tick_end_x = min(width - 1, axis_x + self._wave_axis_tick_length)
                 cv2.line(
                     canvas_bgr,
-                    (axis_x, y),
+                    (tick_start_x, y),
                     (tick_end_x, y),
                     axis_color,
                     self._wave_axis_thickness,
