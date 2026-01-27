@@ -18,6 +18,14 @@ WAVE_INTENSITY_PERCENTILE = 99.5
 WAVE_LOG_GAIN = 6.0
 WAVE_GAMMA = 0.7
 WAVE_BLUR_SIGMA = 0.8
+WAVE_AXIS_MARGIN = 56
+WAVE_AXIS_LABELS = (0, 20, 40, 60, 80, 100)
+WAVE_AXIS_TICKS = (20, 40, 60, 80)
+WAVE_AXIS_COLOR_BGR = (0, 255, 255)
+WAVE_AXIS_TICK_LENGTH = 10
+WAVE_AXIS_FONT_SCALE = 0.4
+WAVE_AXIS_THICKNESS = 1
+WAVE_AXIS_TEXT_X = 4
 LUMA_COLOR = (200, 200, 200)
 CHANNEL_COLORS = {
     0: (255, 0, 0),
@@ -83,6 +91,15 @@ class ImageAnalyzer:
         self._wave_log_gain = WAVE_LOG_GAIN
         self._wave_gamma = WAVE_GAMMA
         self._wave_blur_sigma = WAVE_BLUR_SIGMA
+        self._wave_axis_margin = min(WAVE_AXIS_MARGIN, max(0, self._wave_width - 1))
+        self._wave_axis_labels = WAVE_AXIS_LABELS
+        self._wave_axis_ticks = set(WAVE_AXIS_TICKS)
+        self._wave_axis_color_bgr = WAVE_AXIS_COLOR_BGR
+        self._wave_axis_tick_length = WAVE_AXIS_TICK_LENGTH
+        self._wave_axis_font_scale = WAVE_AXIS_FONT_SCALE
+        self._wave_axis_thickness = WAVE_AXIS_THICKNESS
+        self._wave_axis_text_x = WAVE_AXIS_TEXT_X
+        self._wave_plot_width = max(1, self._wave_width - self._wave_axis_margin)
 
     def analyze(self, bgr: np.ndarray) -> AnalysisResult:
         """Generate analysis artifacts from BGR input.
@@ -180,7 +197,9 @@ class ImageAnalyzer:
 
         resized = self._resize_for_waveform(bgr)
         wave = np.zeros((self._wave_height, self._wave_width, 3), dtype=np.float32)
-        xs = np.repeat(np.arange(self._wave_width), resized.shape[0])
+        xs = (
+            np.repeat(np.arange(self._wave_plot_width), resized.shape[0]) + self._wave_axis_margin
+        )
         for channel in channels:
             values = resized[:, :, channel].astype(np.int32)
             ys = self._wave_height - 1 - (values * (self._wave_height - 1) // 255)
@@ -194,7 +213,9 @@ class ImageAnalyzer:
         luma = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
         resized = self._resize_for_waveform(luma)
         wave = np.zeros((self._wave_height, self._wave_width), dtype=np.float32)
-        xs = np.repeat(np.arange(self._wave_width), resized.shape[0])
+        xs = (
+            np.repeat(np.arange(self._wave_plot_width), resized.shape[0]) + self._wave_axis_margin
+        )
         values = resized.astype(np.int32)
         ys = self._wave_height - 1 - (values * (self._wave_height - 1) // 255)
         ys_flat = ys.T.reshape(-1)
@@ -204,8 +225,8 @@ class ImageAnalyzer:
     def _resize_for_waveform(self, image: np.ndarray) -> np.ndarray:
         """Resize image to waveform width while preserving aspect ratio."""
 
-        height = max(1, image.shape[0] * self._wave_width // max(1, image.shape[1]))
-        return cv2.resize(image, (self._wave_width, height), interpolation=cv2.INTER_AREA)
+        height = max(1, image.shape[0] * self._wave_plot_width // max(1, image.shape[1]))
+        return cv2.resize(image, (self._wave_plot_width, height), interpolation=cv2.INTER_AREA)
 
     def _normalize_single_wave(self, wave: np.ndarray) -> np.ndarray:
         """Apply percentile-based scaling and tone boost to a single-channel wave."""
@@ -239,11 +260,71 @@ class ImageAnalyzer:
         normalized_channels = [
             self._normalize_single_wave(wave[:, :, idx]) for idx in range(wave.shape[2])
         ]
-        stacked = np.stack(normalized_channels, axis=2)
-        return cv2.cvtColor(stacked, cv2.COLOR_BGR2RGB)
+        stacked_bgr = np.stack(normalized_channels, axis=2)
+        self._apply_waveform_axis(stacked_bgr)
+        return cv2.cvtColor(stacked_bgr, cv2.COLOR_BGR2RGB)
 
     def _normalize_waveform_gray(self, wave: np.ndarray) -> np.ndarray:
         """Normalize a grayscale waveform into an RGB image."""
 
         normalized = self._normalize_single_wave(wave)
-        return np.repeat(normalized[:, :, None], 3, axis=2)
+        stacked_bgr = np.repeat(normalized[:, :, None], 3, axis=2)
+        self._apply_waveform_axis(stacked_bgr)
+        return cv2.cvtColor(stacked_bgr, cv2.COLOR_BGR2RGB)
+
+    def _exposure_to_y(self, exposure_value: int) -> int:
+        """Map an exposure value in [0, 100] to a waveform Y coordinate."""
+
+        clamped = min(100, max(0, exposure_value))
+        return int(round((1.0 - clamped / 100.0) * (self._wave_height - 1)))
+
+    def _apply_waveform_axis(self, canvas_bgr: np.ndarray) -> None:
+        """Draw the left exposure axis with yellow labels and tick marks."""
+
+        height, width, _ = canvas_bgr.shape
+        axis_x = min(width - 1, max(0, self._wave_axis_margin - 1))
+        axis_color = self._wave_axis_color_bgr
+
+        cv2.line(
+            canvas_bgr,
+            (axis_x, 0),
+            (axis_x, height - 1),
+            axis_color,
+            self._wave_axis_thickness,
+            lineType=cv2.LINE_8,
+        )
+
+        for exposure_value in self._wave_axis_labels:
+            y = self._exposure_to_y(exposure_value)
+
+            if exposure_value in self._wave_axis_ticks:
+                tick_end_x = min(width - 1, axis_x + self._wave_axis_tick_length)
+                cv2.line(
+                    canvas_bgr,
+                    (axis_x, y),
+                    (tick_end_x, y),
+                    axis_color,
+                    self._wave_axis_thickness,
+                    lineType=cv2.LINE_8,
+                )
+
+            label = str(exposure_value)
+            (text_w, text_h), baseline = cv2.getTextSize(
+                label,
+                cv2.FONT_HERSHEY_SIMPLEX,
+                self._wave_axis_font_scale,
+                self._wave_axis_thickness,
+            )
+            baseline_y = y + text_h // 2
+            baseline_y = max(text_h + 2, min(height - baseline - 2, baseline_y))
+            text_x = max(0, axis_x - self._wave_axis_text_x - text_w)
+            cv2.putText(
+                canvas_bgr,
+                label,
+                (text_x, baseline_y),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                self._wave_axis_font_scale,
+                axis_color,
+                self._wave_axis_thickness,
+                lineType=cv2.LINE_AA,
+            )
