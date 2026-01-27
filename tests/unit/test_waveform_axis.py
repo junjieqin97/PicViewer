@@ -45,7 +45,6 @@ def has_yellow_left_of_axis(image: np.ndarray, y_center: int, axis_x: int) -> bo
     return bool(mask.any())
 
 
-@unittest.skip("waveform tick start position fix pending")
 class WaveformAxisTests(unittest.TestCase):
     """Validate exposure axis rendering on waveform previews."""
 

@@ -22,7 +22,7 @@ WAVE_AXIS_MARGIN = 56
 WAVE_AXIS_LABELS = (0, 20, 40, 60, 80, 100)
 WAVE_AXIS_TICKS = (20, 40, 60, 80)
 WAVE_AXIS_COLOR_BGR = (0, 255, 255)
-# <= 0 表示刻度线贯穿整张波形图
+# <= 0 表示刻度线从 Y 轴贯穿到波形图右侧
 WAVE_AXIS_TICK_LENGTH = 0
 WAVE_AXIS_FONT_SCALE = 0.4
 WAVE_AXIS_THICKNESS = 1
@@ -300,7 +300,7 @@ class ImageAnalyzer:
 
             if exposure_value in self._wave_axis_ticks:
                 if self._wave_axis_tick_length <= 0:
-                    tick_start_x = 0
+                    tick_start_x = axis_x
                     tick_end_x = width - 1
                 else:
                     tick_start_x = axis_x
