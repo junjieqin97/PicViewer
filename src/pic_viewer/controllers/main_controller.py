@@ -52,6 +52,10 @@ class MainController(QtCore.QObject):
         self._analysis_resize_interval_ms = 180
         self._analysis_preview_scale = 0.6
         self._analysis_preview_min_side = 180
+        hist_size = getattr(self._ui, "info_panel_histogram_size", self._ui.widgetHistogram.size())
+        wave_size = getattr(self._ui, "info_panel_waveform_size", self._ui.widgetWaveform.size())
+        self._analysis_histogram_size = QtCore.QSize(hist_size.width(), hist_size.height())
+        self._analysis_waveform_size = QtCore.QSize(wave_size.width(), wave_size.height())
         self._zoom_by_path: Dict[str, float] = {}
         self._fit_to_window_by_path: Dict[str, bool] = {}
         self._analysis_render_key_by_path: Dict[str, tuple] = {}
@@ -368,7 +372,6 @@ class MainController(QtCore.QObject):
         self._update_boundary_cursor()
         if visible:
             self._schedule_filmstrip_resize()
-        self._schedule_analysis_refresh()
 
     def _change_view_mode(self, mode: LumaRgbMode) -> None:
         if self._view_settings.mode == mode:
@@ -547,15 +550,12 @@ class MainController(QtCore.QObject):
             self._ui.tabsImages.setCurrentIndex(tab_index)
 
     def _on_info_tab_changed(self, _: int) -> None:
-        """Refresh analysis views when the info tab becomes visible."""
-
-        self._schedule_analysis_refresh()
+        """Info tabs use fixed-size renders; no resize refresh needed."""
+        return
 
     def _on_main_splitter_moved(self, _: int, __: int) -> None:
-        """Refresh analysis views after the info panel is resized."""
-
-        self._mark_analysis_resizing()
-        self._schedule_analysis_refresh()
+        """Info panel uses fixed sizes; avoid refresh during splitter drag."""
+        return
 
     def _schedule_analysis_refresh(self) -> None:
         """Schedule a debounced refresh for histogram and waveform views."""
@@ -604,14 +604,12 @@ class MainController(QtCore.QObject):
             self._ui.tabsMetadata.setCurrentIndex(0)
         self._last_metadata_path = str(image_path)
 
-        hist_logical = self._ui.widgetHistogram.size()
-        wave_logical = self._ui.widgetWaveform.size()
+        hist_logical = self._analysis_histogram_size
+        wave_logical = self._analysis_waveform_size
         dpr = self._device_pixel_ratio_for(self._ui.widgetHistogram)
         hist_size = self._analysis_render_size(hist_logical, dpr)
         wave_size = self._analysis_render_size(wave_logical, dpr)
         render_key = (
-            (hist_logical.width(), hist_logical.height()),
-            (wave_logical.width(), wave_logical.height()),
             hist_size,
             wave_size,
             round(dpr, 2),
@@ -652,8 +650,6 @@ class MainController(QtCore.QObject):
             return
         if str(path) not in self._images_by_path:
             return
-        self._mark_analysis_resizing()
-        self._schedule_analysis_refresh()
 
     def _set_info_placeholders(self) -> None:
         self._ui.widgetHistogram.setText("Histogram Placeholder")
@@ -1041,8 +1037,6 @@ class MainController(QtCore.QObject):
         """Handle vertical splitter changes for filmstrip resizing."""
 
         self._schedule_filmstrip_resize()
-        self._mark_analysis_resizing()
-        self._schedule_analysis_refresh()
 
     def _schedule_filmstrip_resize(self) -> None:
         """Debounce filmstrip icon size updates during resize."""

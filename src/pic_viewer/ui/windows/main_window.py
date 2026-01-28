@@ -11,6 +11,12 @@ from pic_viewer.app.services.image_service import ImageService
 class MainWindowUI:
     """根据 ui.md 规范构建主窗口UI（仅负责UI结构与控件命名）。"""
 
+    # Fixed sizes are defined in logical pixels; Qt DPI scaling keeps proportions across screens.
+    INFO_PANEL_HISTOGRAM_SIZE = QtCore.QSize(256, 100)
+    INFO_PANEL_WAVEFORM_SIZE = QtCore.QSize(256, 256)
+    INFO_PANEL_METADATA_HEIGHT = 320
+    INFO_PANEL_MIN_WIDTH = 320
+
     def setup_ui(self, main_window: QtWidgets.QMainWindow) -> None:
         self._main_window = main_window
         main_window.setWindowTitle("PicViewer")
@@ -139,6 +145,17 @@ class MainWindowUI:
         self.menuHelp.addAction(self.actAbout)
 
     def create_widgets(self) -> None:
+        self.info_panel_histogram_size = QtCore.QSize(
+            self.INFO_PANEL_HISTOGRAM_SIZE.width(),
+            self.INFO_PANEL_HISTOGRAM_SIZE.height(),
+        )
+        self.info_panel_waveform_size = QtCore.QSize(
+            self.INFO_PANEL_WAVEFORM_SIZE.width(),
+            self.INFO_PANEL_WAVEFORM_SIZE.height(),
+        )
+        self.info_panel_metadata_height = int(self.INFO_PANEL_METADATA_HEIGHT)
+        self.info_panel_min_width = int(self.INFO_PANEL_MIN_WIDTH)
+
         self.central = QtWidgets.QWidget(self._main_window)
         self.central.setObjectName("central")
         self._main_window.setCentralWidget(self.central)
@@ -156,6 +173,7 @@ class MainWindowUI:
 
         self.scrollInfo = QtWidgets.QWidget(self.splitMain)
         self.scrollInfo.setObjectName("scrollInfo")
+        self.scrollInfo.setMinimumWidth(self.info_panel_min_width)
 
         self.layoutInfo = QtWidgets.QVBoxLayout(self.scrollInfo)
         self.layoutInfo.setObjectName("layoutInfo")
@@ -172,8 +190,14 @@ class MainWindowUI:
         self.widgetHistogram = QtWidgets.QLabel("Histogram Placeholder", self.tabHistogram)
         self.widgetHistogram.setObjectName("widgetHistogram")
         self.widgetHistogram.setAlignment(QtCore.Qt.AlignCenter)
-        self.widgetHistogram.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        hist_layout.addWidget(self.widgetHistogram)
+        self.widgetHistogram.setFixedSize(self.info_panel_histogram_size)
+        self.widgetHistogram.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        hist_layout.addWidget(
+            self.widgetHistogram,
+            0,
+            QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop,
+        )
+        hist_layout.addStretch(1)
         self.tabsInfo.addTab(self.tabHistogram, "直方图")
 
         self.tabWaveform = QtWidgets.QWidget(self.tabsInfo)
@@ -182,8 +206,14 @@ class MainWindowUI:
         self.widgetWaveform = QtWidgets.QLabel("Waveform Placeholder", self.tabWaveform)
         self.widgetWaveform.setObjectName("widgetWaveform")
         self.widgetWaveform.setAlignment(QtCore.Qt.AlignCenter)
-        self.widgetWaveform.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        wave_layout.addWidget(self.widgetWaveform)
+        self.widgetWaveform.setFixedSize(self.info_panel_waveform_size)
+        self.widgetWaveform.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        wave_layout.addWidget(
+            self.widgetWaveform,
+            0,
+            QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop,
+        )
+        wave_layout.addStretch(1)
         self.tabsInfo.addTab(self.tabWaveform, "波形图")
 
         self.tabMetadata = QtWidgets.QWidget(self.tabsInfo)
@@ -191,7 +221,8 @@ class MainWindowUI:
         meta_layout = QtWidgets.QVBoxLayout(self.tabMetadata)
         self.tabsMetadata = QtWidgets.QTabWidget(self.tabMetadata)
         self.tabsMetadata.setObjectName("tabsMetadata")
-        self.tabsMetadata.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.tabsMetadata.setFixedHeight(self.info_panel_metadata_height)
+        self.tabsMetadata.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
 
         self.tabMetadataGeneral = QtWidgets.QWidget(self.tabsMetadata)
         self.tabMetadataGeneral.setObjectName("tabMetadataGeneral")
@@ -221,7 +252,8 @@ class MainWindowUI:
         tiff_layout.addWidget(self.tableMetadataTiff)
         self.tabsMetadata.addTab(self.tabMetadataTiff, "TIFF")
 
-        meta_layout.addWidget(self.tabsMetadata)
+        meta_layout.addWidget(self.tabsMetadata, 0, QtCore.Qt.AlignTop)
+        meta_layout.addStretch(1)
         self.tabsInfo.addTab(self.tabMetadata, "元数据")
 
         self.frameFilmstrip = QtWidgets.QFrame(self.splitVertical)
@@ -254,7 +286,9 @@ class MainWindowUI:
 
         self.splitMain.setStretchFactor(0, 3)
         self.splitMain.setStretchFactor(1, 1)
-        self.splitMain.setSizes([1, 380])
+        self.splitMain.setCollapsible(1, False)
+        default_info_width = max(self.info_panel_min_width, 380)
+        self.splitMain.setSizes([1, default_info_width])
 
         self.splitVertical.setStretchFactor(0, 3)
         self.splitVertical.setStretchFactor(1, 1)
