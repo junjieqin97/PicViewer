@@ -61,10 +61,10 @@ CentralWidget 使用 QVBoxLayout，上下两块：
 
 ### 3.2 右侧信息区（Info Panel）
 
-右侧信息区是一个可滚动面板，包含三类信息：直方图、波形图、元数据。
+右侧信息区是一个不可滚动面板，包含三类信息：直方图、波形图、元数据（内容随面板大小自适应）。
 
-- 容器：scrollInfo: QScrollArea（内容超出时可滚动）
-- 内容根控件：panelInfo: QWidget + QVBoxLayout
+- 容器：scrollInfo: QWidget（外层不滚动）
+- 内容布局：layoutInfo: QVBoxLayout
 
 信息区内部使用 QTabWidget 或 QToolBox（二选一，推荐 QTabWidget）：
 
@@ -74,7 +74,7 @@ CentralWidget 使用 QVBoxLayout，上下两块：
   - tabWaveform 标题：波形图
   - tabMetadata 标题：元数据
 
-每个信息 Tab 内部先用占位控件实现：
+每个信息 Tab 内部先用占位控件实现（元数据表允许内部滚动）：
 
 - 直方图：widgetHistogram（可先是 QLabel “Histogram Placeholder”）
 - 波形图：widgetWaveform（可先是 QLabel “Waveform Placeholder”）
@@ -114,8 +114,7 @@ CentralWidget 使用 QVBoxLayout，上下两块：
 - layoutMain: QVBoxLayout
 - splitMain: QSplitter(Qt.Horizontal)
 - tabsImages: QTabWidget
-- scrollInfo: QScrollArea
-- panelInfo: QWidget
+- scrollInfo: QWidget
 - layoutInfo: QVBoxLayout
 - tabsInfo: QTabWidget
 - frameFilmstrip: QFrame

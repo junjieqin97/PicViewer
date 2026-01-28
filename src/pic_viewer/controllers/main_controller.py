@@ -359,6 +359,7 @@ class MainController(QtCore.QObject):
         self._update_boundary_cursor()
         if visible:
             self._schedule_filmstrip_resize()
+        self._schedule_analysis_refresh()
 
     def _change_view_mode(self, mode: LumaRgbMode) -> None:
         if self._view_settings.mode == mode:
@@ -982,6 +983,7 @@ class MainController(QtCore.QObject):
         """Handle vertical splitter changes for filmstrip resizing."""
 
         self._schedule_filmstrip_resize()
+        self._schedule_analysis_refresh()
 
     def _schedule_filmstrip_resize(self) -> None:
         """Debounce filmstrip icon size updates during resize."""

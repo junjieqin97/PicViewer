@@ -154,20 +154,17 @@ class MainWindowUI:
         self.tabsImages.setTabsClosable(True)
         self.tabsImages.setMovable(True)
 
-        self.scrollInfo = QtWidgets.QScrollArea(self.splitMain)
+        self.scrollInfo = QtWidgets.QWidget(self.splitMain)
         self.scrollInfo.setObjectName("scrollInfo")
-        self.scrollInfo.setWidgetResizable(True)
 
-        self.panelInfo = QtWidgets.QWidget(self.scrollInfo)
-        self.panelInfo.setObjectName("panelInfo")
-        self.layoutInfo = QtWidgets.QVBoxLayout(self.panelInfo)
+        self.layoutInfo = QtWidgets.QVBoxLayout(self.scrollInfo)
         self.layoutInfo.setObjectName("layoutInfo")
         self.layoutInfo.setContentsMargins(8, 8, 8, 8)
 
-        self.tabsInfo = QtWidgets.QTabWidget(self.panelInfo)
+        self.tabsInfo = QtWidgets.QTabWidget(self.scrollInfo)
         self.tabsInfo.setObjectName("tabsInfo")
+        self.tabsInfo.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.layoutInfo.addWidget(self.tabsInfo)
-        self.scrollInfo.setWidget(self.panelInfo)
 
         self.tabHistogram = QtWidgets.QWidget(self.tabsInfo)
         self.tabHistogram.setObjectName("tabHistogram")
@@ -175,6 +172,7 @@ class MainWindowUI:
         self.widgetHistogram = QtWidgets.QLabel("Histogram Placeholder", self.tabHistogram)
         self.widgetHistogram.setObjectName("widgetHistogram")
         self.widgetHistogram.setAlignment(QtCore.Qt.AlignCenter)
+        self.widgetHistogram.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         hist_layout.addWidget(self.widgetHistogram)
         self.tabsInfo.addTab(self.tabHistogram, "直方图")
 
@@ -184,6 +182,7 @@ class MainWindowUI:
         self.widgetWaveform = QtWidgets.QLabel("Waveform Placeholder", self.tabWaveform)
         self.widgetWaveform.setObjectName("widgetWaveform")
         self.widgetWaveform.setAlignment(QtCore.Qt.AlignCenter)
+        self.widgetWaveform.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         wave_layout.addWidget(self.widgetWaveform)
         self.tabsInfo.addTab(self.tabWaveform, "波形图")
 
@@ -192,6 +191,7 @@ class MainWindowUI:
         meta_layout = QtWidgets.QVBoxLayout(self.tabMetadata)
         self.tabsMetadata = QtWidgets.QTabWidget(self.tabMetadata)
         self.tabsMetadata.setObjectName("tabsMetadata")
+        self.tabsMetadata.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         self.tabMetadataGeneral = QtWidgets.QWidget(self.tabsMetadata)
         self.tabMetadataGeneral.setObjectName("tabMetadataGeneral")
@@ -273,6 +273,7 @@ class MainWindowUI:
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         table.horizontalHeader().setStretchLastSection(True)
+        table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         return table
 
 
