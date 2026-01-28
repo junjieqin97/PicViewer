@@ -47,6 +47,11 @@ class MainController(QtCore.QObject):
         self._filmstrip_icon_side = self._ui.listFilmstrip.iconSize().width() or 96
         self._filmstrip_resize_timer = QtCore.QTimer(self)
         self._analysis_refresh_timer = QtCore.QTimer(self)
+        self._analysis_resize_timer = QtCore.QTimer(self)
+        self._analysis_resize_active = False
+        self._analysis_resize_interval_ms = 180
+        self._analysis_preview_scale = 0.6
+        self._analysis_preview_min_side = 180
         self._zoom_by_path: Dict[str, float] = {}
         self._fit_to_window_by_path: Dict[str, bool] = {}
         self._analysis_render_key_by_path: Dict[str, tuple] = {}
@@ -108,6 +113,10 @@ class MainController(QtCore.QObject):
         # 轻量节流：避免在 splitter 拖动或 tab 切换时反复渲染。
         self._analysis_refresh_timer.setInterval(40)
         self._analysis_refresh_timer.timeout.connect(self._refresh_view_for_current_image)
+
+        self._analysis_resize_timer.setSingleShot(True)
+        self._analysis_resize_timer.setInterval(self._analysis_resize_interval_ms)
+        self._analysis_resize_timer.timeout.connect(self._finish_analysis_resize)
 
     def _install_cursor_tracking(self) -> None:
         """Enable cursor hints near split boundaries."""
@@ -545,6 +554,7 @@ class MainController(QtCore.QObject):
     def _on_main_splitter_moved(self, _: int, __: int) -> None:
         """Refresh analysis views after the info panel is resized."""
 
+        self._mark_analysis_resizing()
         self._schedule_analysis_refresh()
 
     def _schedule_analysis_refresh(self) -> None:
@@ -558,6 +568,21 @@ class MainController(QtCore.QObject):
         # 重启 single-shot timer：保证在布局稳定后再渲染。
         self._analysis_refresh_timer.stop()
         self._analysis_refresh_timer.start()
+
+    def _mark_analysis_resizing(self) -> None:
+        """Flag active resizing to trigger lightweight analysis renders."""
+
+        self._analysis_resize_active = True
+        self._analysis_resize_timer.stop()
+        self._analysis_resize_timer.start()
+
+    def _finish_analysis_resize(self) -> None:
+        """Restore full-quality analysis renders after resizing stops."""
+
+        if not self._analysis_resize_active:
+            return
+        self._analysis_resize_active = False
+        self._schedule_analysis_refresh()
 
     def update_info_for_image(self, image_path: Optional[Path]) -> None:
         """右侧信息区刷新接口（本版允许占位刷新）。"""
@@ -582,9 +607,11 @@ class MainController(QtCore.QObject):
         hist_logical = self._ui.widgetHistogram.size()
         wave_logical = self._ui.widgetWaveform.size()
         dpr = self._device_pixel_ratio_for(self._ui.widgetHistogram)
-        hist_size = self._analysis_size(hist_logical, dpr)
-        wave_size = self._analysis_size(wave_logical, dpr)
+        hist_size = self._analysis_render_size(hist_logical, dpr)
+        wave_size = self._analysis_render_size(wave_logical, dpr)
         render_key = (
+            (hist_logical.width(), hist_logical.height()),
+            (wave_logical.width(), wave_logical.height()),
             hist_size,
             wave_size,
             round(dpr, 2),
@@ -625,7 +652,8 @@ class MainController(QtCore.QObject):
             return
         if str(path) not in self._images_by_path:
             return
-        self.update_info_for_image(path)
+        self._mark_analysis_resizing()
+        self._schedule_analysis_refresh()
 
     def _set_info_placeholders(self) -> None:
         self._ui.widgetHistogram.setText("Histogram Placeholder")
@@ -743,6 +771,36 @@ class MainController(QtCore.QObject):
 
         physical = self._physical_size(logical_size, dpr)
         return (physical.height(), physical.width())
+
+    def _analysis_render_size(self, logical_size: QtCore.QSize, dpr: float) -> tuple[int, int]:
+        """Return the render size, downsampled during active resizing."""
+
+        size = self._analysis_size(logical_size, dpr)
+        if not self._analysis_resize_active:
+            return size
+        return self._scale_analysis_size(size, self._analysis_preview_scale)
+
+    def _scale_analysis_size(self, size: tuple[int, int], scale: float) -> tuple[int, int]:
+        """Scale the analysis render size while keeping a minimum readable size."""
+
+        height, width = size
+        if scale <= 0 or scale >= 1:
+            return size
+
+        scaled_height = max(1, int(round(height * scale)))
+        scaled_width = max(1, int(round(width * scale)))
+        min_side = self._analysis_preview_min_side
+
+        if height > min_side:
+            scaled_height = max(min_side, scaled_height)
+        else:
+            scaled_height = height
+        if width > min_side:
+            scaled_width = max(min_side, scaled_width)
+        else:
+            scaled_width = width
+
+        return (scaled_height, scaled_width)
 
     def _has_analysis_pixmaps(self) -> bool:
         """Return True when histogram and waveform pixmaps are present."""
@@ -983,6 +1041,7 @@ class MainController(QtCore.QObject):
         """Handle vertical splitter changes for filmstrip resizing."""
 
         self._schedule_filmstrip_resize()
+        self._mark_analysis_resizing()
         self._schedule_analysis_refresh()
 
     def _schedule_filmstrip_resize(self) -> None:
