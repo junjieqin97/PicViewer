@@ -20,7 +20,7 @@ WAVE_INTENSITY_PERCENTILE = 99.5
 WAVE_LOG_GAIN = 6.0
 WAVE_GAMMA = 0.7
 WAVE_BLUR_SIGMA = 0.8
-WAVE_AXIS_MARGIN = 56
+WAVE_AXIS_MARGIN = 0
 WAVE_AXIS_LABELS = (0, 20, 40, 60, 80, 100)
 WAVE_AXIS_TICKS = (20, 40, 60, 80)
 WAVE_AXIS_COLOR_BGR = (0, 255, 255)
@@ -408,7 +408,7 @@ class ImageAnalyzer:
         return int(round((1.0 - clamped / 100.0) * (wave_height - 1)))
 
     def _apply_waveform_axis(self, canvas_bgr: np.ndarray, geometry: WaveformGeometry) -> None:
-        """Draw the left exposure axis with yellow labels and tick marks."""
+        """Draw the exposure axis with yellow labels and tick marks."""
 
         height, width, _ = canvas_bgr.shape
         axis_x = min(width - 1, max(0, geometry.axis_margin - 1))
@@ -451,7 +451,7 @@ class ImageAnalyzer:
             )
             baseline_y = y + text_h // 2
             baseline_y = max(text_h + 2, min(height - baseline - 2, baseline_y))
-            text_x = max(0, axis_x - geometry.axis_text_x - text_w)
+            text_x = min(width - text_w, axis_x + geometry.axis_thickness + geometry.axis_text_x)
             cv2.putText(
                 canvas_bgr,
                 label,
