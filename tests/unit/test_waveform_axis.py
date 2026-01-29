@@ -33,14 +33,14 @@ def is_yellow_rgb(pixel: np.ndarray) -> bool:
     return red >= 150 and green >= 150 and blue <= 120
 
 
-def has_yellow_left_of_axis(image: np.ndarray, y_center: int, axis_x: int) -> bool:
-    """Check for yellow pixels left of the axis near the expected label row."""
+def has_yellow_right_of_axis(image: np.ndarray, y_center: int, axis_x: int) -> bool:
+    """Check for yellow pixels right of the axis near the expected label row."""
 
     height = image.shape[0]
     y_min = max(0, y_center - 8)
     y_max = min(height - 1, y_center + 8)
-    label_x_end = max(0, axis_x - 3)
-    region = image[y_min : y_max + 1, : label_x_end + 1]
+    label_x_start = min(image.shape[1] - 1, axis_x + 3)
+    region = image[y_min : y_max + 1, label_x_start:]
     mask = (region[:, :, 0] >= 150) & (region[:, :, 1] >= 150) & (region[:, :, 2] <= 120)
     return bool(mask.any())
 
@@ -66,13 +66,14 @@ class WaveformAxisTests(unittest.TestCase):
 
         for exposure_value in WAVE_AXIS_TICKS:
             y = exposure_to_y(exposure_value, height)
-            self.assertFalse(
-                is_yellow_rgb(waveform[y, sample_x_far_left]),
-                msg=(
-                    "Tick should not extend left of the waveform Y axis "
-                    f"at exposure={exposure_value}, y={y}"
-                ),
-            )
+            if axis_x > 0:
+                self.assertFalse(
+                    is_yellow_rgb(waveform[y, sample_x_far_left]),
+                    msg=(
+                        "Tick should not extend left of the waveform Y axis "
+                        f"at exposure={exposure_value}, y={y}"
+                    ),
+                )
             self.assertTrue(
                 is_yellow_rgb(waveform[y, sample_x_left]),
                 msg=f"Expected yellow tick near axis at exposure={exposure_value}, y={y}",
@@ -82,8 +83,8 @@ class WaveformAxisTests(unittest.TestCase):
                 msg=f"Expected full-width yellow tick at exposure={exposure_value}, y={y}",
             )
 
-    def test_waveform_axis_labels_exist_left_of_axis(self) -> None:
-        """All exposure labels should appear on the left side of the axis."""
+    def test_waveform_axis_labels_exist_right_of_axis(self) -> None:
+        """All exposure labels should appear on the right side of the axis."""
 
         waveform = self.analyzer.analyze(self.image_bgr).waveform_luma
         height, width, _ = waveform.shape
@@ -92,7 +93,7 @@ class WaveformAxisTests(unittest.TestCase):
         for exposure_value in WAVE_AXIS_LABELS:
             y = exposure_to_y(exposure_value, height)
             self.assertTrue(
-                has_yellow_left_of_axis(waveform, y, axis_x),
+                has_yellow_right_of_axis(waveform, y, axis_x),
                 msg=f"Expected yellow label near exposure={exposure_value}, y={y}",
             )
 

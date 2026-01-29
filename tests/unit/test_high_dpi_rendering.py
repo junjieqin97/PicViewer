@@ -65,7 +65,7 @@ class HighDpiRenderingTests(unittest.TestCase):
         expected_margin = min(waveform.shape[1] - 1, max(0, expected_margin))
         axis_x = min(waveform.shape[1] - 1, max(0, expected_margin - 1))
 
-        self.assertGreaterEqual(axis_x, WAVE_AXIS_MARGIN)
+        self.assertEqual(axis_x, 0)
         self.assertTrue(is_yellow_rgb(waveform[waveform.shape[0] // 2, axis_x]))
 
     def test_analysis_source_and_preview_are_capped(self) -> None:
