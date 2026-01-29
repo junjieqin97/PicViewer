@@ -452,7 +452,7 @@ class ImageAnalyzer:
             baseline_y = y + text_h // 2
             baseline_y = max(text_h + 2, min(height - baseline - 2, baseline_y))
             if exposure_value in self._wave_axis_ticks:
-                baseline_y = min(height - baseline - 2, baseline_y + max(2, text_h // 4))
+                baseline_y = min(height - baseline - 2, baseline_y + max(4, text_h // 2))
             text_x = min(width - text_w, axis_x + geometry.axis_thickness + geometry.axis_text_x)
             cv2.putText(
                 canvas_bgr,
