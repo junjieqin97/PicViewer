@@ -25,6 +25,7 @@ class MainWindowUI:
 
         self.create_actions()
         self.create_menus()
+        self.create_context_menus()
         self.create_widgets()
         self.create_layouts()
 
@@ -143,6 +144,16 @@ class MainWindowUI:
         self.menuHelp = menu_bar.addMenu("帮助(Help)")
         self.menuHelp.setObjectName("menuHelp")
         self.menuHelp.addAction(self.actAbout)
+
+    def create_context_menus(self) -> None:
+        """Create shared context menus for the image display area."""
+
+        self.menuImageContext = QtWidgets.QMenu(self._main_window)
+        self.menuImageContext.setObjectName("menuImageContext")
+        self.menuImageContext.addAction(self.actZoomIn)
+        self.menuImageContext.addAction(self.actZoomOut)
+        self.menuImageContext.addSeparator()
+        self.menuImageContext.addAction(self.actFitToWindow)
 
     def create_widgets(self) -> None:
         self.info_panel_histogram_size = QtCore.QSize(

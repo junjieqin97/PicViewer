@@ -58,6 +58,7 @@ CentralWidget 使用 QVBoxLayout，上下两块：
 - 规范：tab 内只放一个主显示控件，不要堆额外按钮/工具条（工具入口全部在菜单栏）。
 - 命名规则：
 - Tab 内的显示控件命名为 viewImage（如果用 QGraphicsView）或 lblImage（如果用 QLabel 占位）。
+- 右键菜单：在`图片显示区`右键可以打开右键菜单，右键菜单下有`放大`、`缩小`、`适配窗口`功能（功能实现保持和`顶部菜单栏`中的一致，详见`5.2 MenuBar Actions`）
 
 ### 3.2 右侧信息区（Info Panel）
 

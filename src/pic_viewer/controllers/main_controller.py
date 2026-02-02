@@ -66,6 +66,7 @@ class MainController(QtCore.QObject):
         self._image_drag_start_pos: Optional[QtCore.QPoint] = None
         self._image_drag_start_scroll: Optional[QtCore.QPoint] = None
         self._image_drag_scroll_area: Optional[QtWidgets.QScrollArea] = None
+        self._image_context_menu = self._ui.menuImageContext
 
         self._connect_signals()
         self._install_cursor_tracking()
@@ -136,6 +137,28 @@ class MainController(QtCore.QObject):
         widget.setProperty("_cursor_tracking", True)
         widget.setMouseTracking(True)
         widget.installEventFilter(self)
+
+    def _install_image_context_menu(self, widget: QtWidgets.QWidget) -> None:
+        """Enable custom context menu on the image display widgets."""
+
+        if widget.property("_image_context_menu") is True:
+            return
+        widget.setProperty("_image_context_menu", True)
+        widget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        widget.customContextMenuRequested.connect(self._show_image_context_menu)
+
+    def _show_image_context_menu(self, pos: QtCore.QPoint) -> None:
+        """Show the image context menu at the requested position."""
+
+        if self._image_context_menu is None:
+            return
+        sender = self.sender()
+        if isinstance(sender, QtWidgets.QWidget):
+            global_pos = sender.mapToGlobal(pos)
+        else:
+            global_pos = QtGui.QCursor.pos()
+        self._refresh_actions_state()
+        self._image_context_menu.exec_(global_pos)
 
     def _set_splitter_handle_cursor(self) -> None:
         self._set_splitter_cursor(self._ui.splitMain, QtCore.Qt.SplitHCursor)
@@ -488,6 +511,9 @@ class MainController(QtCore.QObject):
         self._track_cursor_widget(scroll_area)
         self._track_cursor_widget(scroll_area.viewport())
         self._track_cursor_widget(lbl_image)
+        self._install_image_context_menu(scroll_area)
+        self._install_image_context_menu(scroll_area.viewport())
+        self._install_image_context_menu(lbl_image)
 
         tab_index = self._ui.tabsImages.addTab(tab_container, "")
         self._update_tab_title(tab_index, path)
