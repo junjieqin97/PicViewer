@@ -76,6 +76,7 @@ class MainController(QtCore.QObject):
         self._sync_view_actions()
         self._refresh_actions_state()
         self.update_info_for_image(None)
+        self._ensure_empty_image_placeholder()
 
     def _connect_signals(self) -> None:
         self._ui.actOpenFile.triggered.connect(self._open_file)
@@ -487,6 +488,7 @@ class MainController(QtCore.QObject):
             self._ui.tabsImages.setCurrentIndex(existing_tab)
             return
 
+        self._remove_empty_image_placeholder()
         tab_container = QtWidgets.QWidget()
         tab_container.setProperty("image_path", str(path))
         layout = QtWidgets.QVBoxLayout(tab_container)
@@ -544,6 +546,8 @@ class MainController(QtCore.QObject):
         tab = self._ui.tabsImages.widget(index)
         if tab is None:
             return
+        if tab.property("_image_placeholder") is True:
+            return
 
         path = self._tab_path(tab)
         self._ui.tabsImages.removeTab(index)
@@ -558,6 +562,7 @@ class MainController(QtCore.QObject):
 
         self._refresh_actions_state()
         self.update_info_for_image(self._current_image_path())
+        self._ensure_empty_image_placeholder()
 
     def _on_tab_changed(self, _: int) -> None:
         path = self._current_image_path()
@@ -685,6 +690,92 @@ class MainController(QtCore.QObject):
         self._ui.widgetWaveform.setText("Waveform Placeholder")
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
+
+    def _ensure_empty_image_placeholder(self) -> None:
+        if self._has_image_tabs():
+            self._ui.tabsImages.tabBar().setVisible(True)
+            return
+        if self._has_placeholder_tab():
+            self._ui.tabsImages.tabBar().setVisible(False)
+            return
+        placeholder = self._build_empty_image_placeholder()
+        tab_index = self._ui.tabsImages.addTab(placeholder, "")
+        tab_bar = self._ui.tabsImages.tabBar()
+        tab_bar.setTabButton(tab_index, QtWidgets.QTabBar.LeftSide, None)
+        tab_bar.setTabButton(tab_index, QtWidgets.QTabBar.RightSide, None)
+        tab_bar.setVisible(False)
+        self._ui.tabsImages.setCurrentIndex(tab_index)
+
+    def _remove_empty_image_placeholder(self) -> None:
+        tab_index = self._placeholder_tab_index()
+        if tab_index is None:
+            return
+        self._ui.tabsImages.removeTab(tab_index)
+        self._ui.tabsImages.tabBar().setVisible(True)
+
+    def _build_empty_image_placeholder(self) -> QtWidgets.QWidget:
+        placeholder = QtWidgets.QWidget()
+        placeholder.setObjectName("tabImagePlaceholder")
+        placeholder.setProperty("_image_placeholder", True)
+        layout = QtWidgets.QVBoxLayout(placeholder)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addStretch(1)
+
+        grid = QtWidgets.QGridLayout()
+        grid.setHorizontalSpacing(12)
+        grid.setVerticalSpacing(6)
+
+        open_file_text = self._ui.actOpenFile.text()
+        open_file_shortcut = self._shortcut_text(self._ui.actOpenFile)
+        open_folder_text = self._ui.actOpenFolder.text()
+        open_folder_shortcut = self._shortcut_text(self._ui.actOpenFolder)
+
+        label_open_file = QtWidgets.QLabel(open_file_text)
+        label_open_file.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        label_open_file_shortcut = QtWidgets.QLabel(open_file_shortcut)
+        label_open_file_shortcut.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+
+        label_open_folder = QtWidgets.QLabel(open_folder_text)
+        label_open_folder.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        label_open_folder_shortcut = QtWidgets.QLabel(open_folder_shortcut)
+        label_open_folder_shortcut.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+
+        grid.addWidget(label_open_file, 0, 0)
+        grid.addWidget(label_open_file_shortcut, 0, 1)
+        grid.addWidget(label_open_folder, 1, 0)
+        grid.addWidget(label_open_folder_shortcut, 1, 1)
+
+        grid_container = QtWidgets.QWidget()
+        grid_container.setLayout(grid)
+        grid_container.setStyleSheet("color: #777;")
+        layout.addWidget(grid_container, 0, QtCore.Qt.AlignHCenter)
+        layout.addStretch(1)
+        return placeholder
+
+    def _shortcut_text(self, action: QtWidgets.QAction) -> str:
+        sequence = action.shortcut()
+        if sequence.isEmpty():
+            return ""
+        return sequence.toString(QtGui.QKeySequence.NativeText)
+
+    def _has_image_tabs(self) -> bool:
+        for i in range(self._ui.tabsImages.count()):
+            tab = self._ui.tabsImages.widget(i)
+            if tab is None:
+                continue
+            if self._tab_path(tab) is not None:
+                return True
+        return False
+
+    def _has_placeholder_tab(self) -> bool:
+        return self._placeholder_tab_index() is not None
+
+    def _placeholder_tab_index(self) -> Optional[int]:
+        for i in range(self._ui.tabsImages.count()):
+            tab = self._ui.tabsImages.widget(i)
+            if tab is not None and tab.property("_image_placeholder") is True:
+                return i
+        return None
 
     def _clear_metadata_tables(self) -> None:
         self._populate_metadata_table(self._ui.tableMetadataGeneral, tuple(), "暂无通用信息")
@@ -1032,11 +1123,11 @@ class MainController(QtCore.QObject):
         return self._ui.listFilmstrip.item(row)
 
     def _refresh_actions_state(self) -> None:
-        has_tab = self._ui.tabsImages.count() > 0
-        self._ui.actCloseTab.setEnabled(has_tab)
-        self._ui.actZoomIn.setEnabled(has_tab)
-        self._ui.actZoomOut.setEnabled(has_tab)
-        self._ui.actFitToWindow.setEnabled(has_tab)
+        has_image_tab = self._has_image_tabs()
+        self._ui.actCloseTab.setEnabled(has_image_tab)
+        self._ui.actZoomIn.setEnabled(has_image_tab)
+        self._ui.actZoomOut.setEnabled(has_image_tab)
+        self._ui.actFitToWindow.setEnabled(has_image_tab)
 
     def _format_display_name(self, filename: str) -> str:
         """Shorten long filenames for tab and filmstrip display."""

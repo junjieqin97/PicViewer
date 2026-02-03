@@ -53,6 +53,7 @@ CentralWidget 使用 QVBoxLayout，上下两块：
 - 每个 Tab 对应一张图片；Tab 标题必须是图片文件名（含扩展名）。
 - Tab 可关闭：tabsImages.setTabsClosable(True)；关闭按钮关闭当前图片 Tab。
 - 切换 Tab 会同步更新：右侧信息区内容 + 底部胶卷选中项。
+- 当没有打开图片时，图片区中央显示“打开图片…”和“打开文件夹…”提示，并展示对应平台快捷键。
 - Tab 内容结构（每个 tab 内部）：
 - ImageViewWidget（建议用 QGraphicsView + QGraphicsScene 或 QLabel 占位）
 - 规范：tab 内只放一个主显示控件，不要堆额外按钮/工具条（工具入口全部在菜单栏）。
