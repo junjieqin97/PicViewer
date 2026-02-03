@@ -29,6 +29,7 @@ WAVE_AXIS_TICK_LENGTH = 0
 WAVE_AXIS_FONT_SCALE = 0.4
 WAVE_AXIS_THICKNESS = 1
 WAVE_AXIS_TEXT_X = 4
+ANALYSIS_BG_COLOR_BGR = (64, 64, 64)
 LUMA_COLOR = (200, 200, 200)
 CHANNEL_COLORS = {
     0: (255, 0, 0),
@@ -130,6 +131,7 @@ class ImageAnalyzer:
         self._wave_axis_font_scale_base = WAVE_AXIS_FONT_SCALE
         self._wave_axis_thickness_base = WAVE_AXIS_THICKNESS
         self._wave_axis_text_x_base = WAVE_AXIS_TEXT_X
+        self._analysis_bg_color_bgr = ANALYSIS_BG_COLOR_BGR
 
     def analyze(self, bgr: np.ndarray) -> AnalysisResult:
         """Generate analysis artifacts from BGR input.
@@ -213,7 +215,11 @@ class ImageAnalyzer:
         """Render histogram image for selected BGR channels."""
 
         geometry = self._resolve_histogram_geometry(hist_size, pixel_ratio)
-        hist_img = np.zeros((geometry.height, geometry.width, 3), dtype=np.uint8)
+        hist_img = np.full(
+            (geometry.height, geometry.width, 3),
+            self._analysis_bg_color_bgr,
+            dtype=np.uint8,
+        )
         for channel in channels:
             values = bgr[:, :, channel]
             self._draw_histogram(hist_img, values, CHANNEL_COLORS[channel], geometry)
@@ -228,7 +234,11 @@ class ImageAnalyzer:
         """Render luminance histogram image."""
 
         geometry = self._resolve_histogram_geometry(hist_size, pixel_ratio)
-        hist_img = np.zeros((geometry.height, geometry.width, 3), dtype=np.uint8)
+        hist_img = np.full(
+            (geometry.height, geometry.width, 3),
+            self._analysis_bg_color_bgr,
+            dtype=np.uint8,
+        )
         luma = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
         self._draw_histogram(hist_img, luma, LUMA_COLOR, geometry)
         return cv2.cvtColor(hist_img, cv2.COLOR_BGR2RGB)
@@ -390,6 +400,7 @@ class ImageAnalyzer:
             self._normalize_single_wave(wave[:, :, idx]) for idx in range(wave.shape[2])
         ]
         stacked_bgr = np.stack(normalized_channels, axis=2)
+        stacked_bgr = cv2.add(stacked_bgr, self._analysis_bg_color_bgr)
         self._apply_waveform_axis(stacked_bgr, geometry)
         return cv2.cvtColor(stacked_bgr, cv2.COLOR_BGR2RGB)
 
@@ -398,6 +409,7 @@ class ImageAnalyzer:
 
         normalized = self._normalize_single_wave(wave)
         stacked_bgr = np.repeat(normalized[:, :, None], 3, axis=2)
+        stacked_bgr = cv2.add(stacked_bgr, self._analysis_bg_color_bgr)
         self._apply_waveform_axis(stacked_bgr, geometry)
         return cv2.cvtColor(stacked_bgr, cv2.COLOR_BGR2RGB)
 
