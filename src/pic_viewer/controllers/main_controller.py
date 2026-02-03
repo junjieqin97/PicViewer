@@ -409,6 +409,9 @@ class MainController(QtCore.QObject):
 
     def _change_channel(self, channel: RgbChannel) -> None:
         if self._view_settings.mode != LumaRgbMode.RGB:
+            self._view_settings = AnalysisViewSettings(mode=LumaRgbMode.RGB, channel=channel)
+            self._sync_view_actions()
+            self._refresh_view_for_current_image()
             return
         if self._view_settings.channel == channel:
             return
