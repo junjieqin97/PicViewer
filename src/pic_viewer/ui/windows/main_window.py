@@ -103,11 +103,17 @@ class MainWindowUI:
         modifier = "Ctrl"
         self.actOpenFile.setShortcut(QtGui.QKeySequence(f"{modifier}+O"))
         self.actOpenFolder.setShortcut(QtGui.QKeySequence(f"{modifier}+Shift+O"))
+        self.actCloseTab.setShortcut(QtGui.QKeySequence("Esc"))
         self.actToggleInfoPanel.setShortcut(QtGui.QKeySequence(f"{modifier}+Right"))
         self.actToggleFilmstrip.setShortcut(QtGui.QKeySequence(f"{modifier}+Down"))
         self.actZoomIn.setShortcut(QtGui.QKeySequence(f"{modifier}++"))
         self.actZoomOut.setShortcut(QtGui.QKeySequence(f"{modifier}+-"))
         self.actFitToWindow.setShortcut(QtGui.QKeySequence(f"{modifier}+0"))
+        self.actModeLuma.setShortcut(QtGui.QKeySequence(f"{modifier}+L"))
+        self.actModeRgb.setShortcut(QtGui.QKeySequence(f"{modifier}+K"))
+        self.actChannelRed.setShortcut(QtGui.QKeySequence(f"{modifier}+R"))
+        self.actChannelGreen.setShortcut(QtGui.QKeySequence(f"{modifier}+G"))
+        self.actChannelBlue.setShortcut(QtGui.QKeySequence(f"{modifier}+B"))
 
     def create_menus(self) -> None:
         menu_bar = self._main_window.menuBar()
