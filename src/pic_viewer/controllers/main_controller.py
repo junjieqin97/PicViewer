@@ -438,9 +438,6 @@ class MainController(QtCore.QObject):
             with QtCore.QSignalBlocker(action):
                 action.setChecked(checked)
 
-        for action, _ in channel_pairs:
-            action.setEnabled(rgb_mode)
-
         if not rgb_mode:
             with QtCore.QSignalBlocker(self._ui.actChannelAll):
                 self._ui.actChannelAll.setChecked(True)
