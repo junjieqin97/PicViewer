@@ -383,7 +383,10 @@ class MainController(QtCore.QObject):
 
         if visible:
             info_widget.setVisible(True)
-            splitter.setSizes(self._last_splitter_sizes or [1, 380])
+            if self._last_splitter_sizes:
+                splitter.setSizes(self._last_splitter_sizes)
+            else:
+                splitter.setSizes(self._ui.default_split_main_sizes(splitter.width()))
             return
 
         self._last_splitter_sizes = splitter.sizes()

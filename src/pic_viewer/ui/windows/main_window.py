@@ -16,6 +16,7 @@ class MainWindowUI:
     INFO_PANEL_WAVEFORM_SIZE = QtCore.QSize(256, 256)
     INFO_PANEL_METADATA_HEIGHT = 320
     INFO_PANEL_MIN_WIDTH = 320
+    IMAGE_PANEL_MIN_WIDTH = 500
 
     def setup_ui(self, main_window: QtWidgets.QMainWindow) -> None:
         self._main_window = main_window
@@ -166,6 +167,7 @@ class MainWindowUI:
         )
         self.info_panel_metadata_height = int(self.INFO_PANEL_METADATA_HEIGHT)
         self.info_panel_min_width = int(self.INFO_PANEL_MIN_WIDTH)
+        self.image_panel_min_width = int(self.IMAGE_PANEL_MIN_WIDTH)
 
         self.central = QtWidgets.QWidget(self._main_window)
         self.central.setObjectName("central")
@@ -181,6 +183,8 @@ class MainWindowUI:
         self.tabsImages.setObjectName("tabsImages")
         self.tabsImages.setTabsClosable(True)
         self.tabsImages.setMovable(True)
+        self.tabsImages.setMinimumWidth(self.image_panel_min_width)
+        self.tabsImages.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         self.scrollInfo = QtWidgets.QWidget(self.splitMain)
         self.scrollInfo.setObjectName("scrollInfo")
@@ -298,13 +302,25 @@ class MainWindowUI:
         self.splitMain.setStretchFactor(0, 3)
         self.splitMain.setStretchFactor(1, 1)
         self.splitMain.setCollapsible(1, False)
-        default_info_width = max(self.info_panel_min_width, 380)
-        self.splitMain.setSizes([1, default_info_width])
+        self.splitMain.setSizes(self.default_split_main_sizes())
 
         self.splitVertical.setStretchFactor(0, 3)
         self.splitVertical.setStretchFactor(1, 1)
         default_filmstrip = 140
         self.splitVertical.setSizes([max(self._main_window.height() - default_filmstrip, 1), default_filmstrip])
+
+    def default_split_main_sizes(self, total_width: int | None = None) -> list[int]:
+        """Return default splitter sizes for the image area and info panel."""
+
+        info_width = max(self.info_panel_min_width, 300)
+        base_width = total_width if total_width and total_width > 0 else self._main_window.width()
+        if base_width <= 0:
+            base_width = self._main_window.minimumWidth()
+        if base_width <= 0:
+            base_width = info_width + self.image_panel_min_width
+        base_width = max(base_width, info_width + self.image_panel_min_width)
+        image_width = max(base_width - info_width, self.image_panel_min_width)
+        return [image_width, info_width]
 
     def _create_metadata_table(
         self, parent: QtWidgets.QWidget, object_name: str
