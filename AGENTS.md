@@ -57,6 +57,7 @@ PicViewer/
 │     │  ├─ __init__.py
 │     │  ├─ windows/             # 主窗口/对话框/页面
 │     │  ├─ widgets/             # 可复用组件
+│     │  ├─ i18n/                # 国际化辅助
 │     │  ├─ presenters/          # (可选) MVP/MVVM 的展示逻辑 / view-model
 │     │  └─ resources/           # 图标、qss/css、图片、字体、翻译文件等
 │     │
@@ -88,7 +89,6 @@ PicViewer/
 │     │  ├─ __init__.py
 │     │  ├─ errors.py            # 自定义异常
 │     │  ├─ event_bus.py         # (可选) 事件总线
-│     │  ├─ i18n.py              # (可选) 国际化辅助
 │     │  └─ utils.py
 │     │
 │     └─ assets/                 # (可选) 静态资源集中管理（也可放ui/resources）
@@ -116,10 +116,15 @@ The python coding rules are defined in: [docs/rules.md](docs/rules.md)
 
 The UI design guidelines are defined in: [docs/ui.md](docs/ui.md)
 
+The i18n rules are defined in: [docs/i18n.md](docs/i18n.md)
+
+The translation files(*.ts files) are stored in: `src/pic_viewer/ui/resources/i18n`
+
 You MUST:
 
 - Read the coding rules and the UI design guidelines before making changes
 - Follow these rules and guidelines unless explicitly instructed otherwise
+- Check if the translation files also need to be updated while modifying the UI layer code
 
 ## 6. Feature Implementation Rules
 
