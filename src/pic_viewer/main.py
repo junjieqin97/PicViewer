@@ -23,6 +23,7 @@ from pic_viewer.config.settings import AppSettings, load_settings
 from pic_viewer.domain.rules.analysis import ImageAnalyzer
 from pic_viewer.infra.adapters.image_reader import ImageReader
 from pic_viewer.infra.adapters.metadata_reader import MetadataReader
+from pic_viewer.ui.i18n.runtime import install_translator, resolve_language
 from pic_viewer.ui.windows.main_window import MainWindow
 
 
@@ -52,6 +53,12 @@ def main() -> None:
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
     app = QtWidgets.QApplication(sys.argv)
+    requested_language = resolve_language(settings.language_override)
+    active_language, translator = install_translator(app, requested_language)
+    if translator is not None:
+        app._picviewer_translator = translator  # type: ignore[attr-defined]
+    logging.getLogger(__name__).info("UI语言: requested=%s, active=%s", requested_language, active_language)
+
     service = build_services(settings)
     view_service = AnalysisViewService()
     window = MainWindow(service, view_service)

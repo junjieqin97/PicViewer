@@ -78,6 +78,9 @@ class MainController(QtCore.QObject):
         self.update_info_for_image(None)
         self._ensure_empty_image_placeholder()
 
+    def _tr(self, text: str) -> str:
+        return QtCore.QCoreApplication.translate("MainController", text)
+
     def _connect_signals(self) -> None:
         self._ui.actOpenFile.triggered.connect(self._open_file)
         self._ui.actOpenFolder.triggered.connect(self._open_folder)
@@ -373,10 +376,18 @@ class MainController(QtCore.QObject):
         self._refresh_current_image_pixmap()
 
     def _todo_not_implemented(self) -> None:
-        QtWidgets.QMessageBox.information(self._main_window, "提示", "该功能尚未实现（TODO）")
+        QtWidgets.QMessageBox.information(
+            self._main_window,
+            self._tr("提示"),
+            self._tr("该功能尚未实现（TODO）"),
+        )
 
     def _show_about(self) -> None:
-        QtWidgets.QMessageBox.information(self._main_window, "关于", "PicViewer\n一个简单的图片预览工具 Demo。")
+        QtWidgets.QMessageBox.information(
+            self._main_window,
+            self._tr("关于"),
+            self._tr("PicViewer\n一个简单的图片预览工具 Demo。"),
+        )
 
     def _toggle_info_panel(self, visible: bool) -> None:
         splitter = self._ui.splitMain
@@ -449,13 +460,15 @@ class MainController(QtCore.QObject):
         self.update_info_for_image(path)
 
     def _open_file(self) -> None:
+        image_filter_label = self._tr("图片文件")
+        all_files_label = self._tr("所有文件")
         filter_text = (
-            "Images (*.jpg *.jpeg *.png *.tif *.tiff *.bmp *.dng *.nef *.cr2 *.arw *.raf);;"
-            "All Files (*)"
+            f"{image_filter_label} (*.jpg *.jpeg *.png *.tif *.tiff *.bmp *.dng *.nef *.cr2 *.arw *.raf);;"
+            f"{all_files_label} (*)"
         )
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self._main_window,
-            "打开图片",
+            self._tr("打开图片"),
             "",
             filter_text,
         )
@@ -464,7 +477,7 @@ class MainController(QtCore.QObject):
         self.open_image(Path(path))
 
     def _open_folder(self) -> None:
-        folder = QtWidgets.QFileDialog.getExistingDirectory(self._main_window, "打开文件夹", "")
+        folder = QtWidgets.QFileDialog.getExistingDirectory(self._main_window, self._tr("打开文件夹"), "")
         if not folder:
             return
 
@@ -472,7 +485,11 @@ class MainController(QtCore.QObject):
         supported = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp", ".dng", ".nef", ".cr2", ".arw", ".raf"}
         paths = sorted([p for p in root.iterdir() if p.is_file() and p.suffix.lower() in supported])
         if not paths:
-            QtWidgets.QMessageBox.information(self._main_window, "提示", "该文件夹未找到可打开的图片文件")
+            QtWidgets.QMessageBox.information(
+                self._main_window,
+                self._tr("提示"),
+                self._tr("该文件夹未找到可打开的图片文件"),
+            )
             return
 
         for path in paths:
@@ -503,7 +520,7 @@ class MainController(QtCore.QObject):
         scroll_area.setProperty("_image_drag_area", True)
         layout.addWidget(scroll_area)
 
-        lbl_image = QtWidgets.QLabel("加载中…")
+        lbl_image = QtWidgets.QLabel(self._tr("加载中…"))
         lbl_image.setObjectName("lblImage")
         lbl_image.setAlignment(QtCore.Qt.AlignCenter)
         lbl_image.setStyleSheet("background:#222;color:#ddd;")
@@ -686,8 +703,8 @@ class MainController(QtCore.QObject):
             return
 
     def _set_info_placeholders(self) -> None:
-        self._ui.widgetHistogram.setText("Histogram Placeholder")
-        self._ui.widgetWaveform.setText("Waveform Placeholder")
+        self._ui.widgetHistogram.setText(self._tr("直方图占位图"))
+        self._ui.widgetWaveform.setText(self._tr("波形图占位图"))
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
 
@@ -778,17 +795,38 @@ class MainController(QtCore.QObject):
         return None
 
     def _clear_metadata_tables(self) -> None:
-        self._populate_metadata_table(self._ui.tableMetadataGeneral, tuple(), "暂无通用信息")
-        self._populate_metadata_table(self._ui.tableMetadataExif, tuple(), "暂无 Exif 信息")
-        self._populate_metadata_table(self._ui.tableMetadataIptc, tuple(), "暂无 IPTC 信息")
-        self._populate_metadata_table(self._ui.tableMetadataTiff, tuple(), "暂无 TIFF 信息")
+        self._populate_metadata_table(self._ui.tableMetadataGeneral, tuple(), self._tr("暂无通用信息"))
+        self._populate_metadata_table(self._ui.tableMetadataExif, tuple(), self._tr("暂无 Exif 信息"))
+        self._populate_metadata_table(self._ui.tableMetadataIptc, tuple(), self._tr("暂无 IPTC 信息"))
+        self._populate_metadata_table(self._ui.tableMetadataTiff, tuple(), self._tr("暂无 TIFF 信息"))
         self._ui.tabsMetadata.setCurrentIndex(0)
 
     def _fill_metadata_tables(self, metadata: ImageMetadata) -> None:
-        self._populate_metadata_table(self._ui.tableMetadataGeneral, metadata.general, "暂无通用信息")
-        self._populate_metadata_table(self._ui.tableMetadataExif, metadata.exif, "暂无 Exif 信息")
-        self._populate_metadata_table(self._ui.tableMetadataIptc, metadata.iptc, "暂无 IPTC 信息")
-        self._populate_metadata_table(self._ui.tableMetadataTiff, metadata.tiff, "暂无 TIFF 信息")
+        self._populate_metadata_table(
+            self._ui.tableMetadataGeneral,
+            self._localize_general_metadata_entries(metadata.general),
+            self._tr("暂无通用信息"),
+        )
+        self._populate_metadata_table(self._ui.tableMetadataExif, metadata.exif, self._tr("暂无 Exif 信息"))
+        self._populate_metadata_table(self._ui.tableMetadataIptc, metadata.iptc, self._tr("暂无 IPTC 信息"))
+        self._populate_metadata_table(self._ui.tableMetadataTiff, metadata.tiff, self._tr("暂无 TIFF 信息"))
+
+    def _localize_general_metadata_entries(self, entries: MetadataSection) -> MetadataSection:
+        key_map = {
+            "文件名": self._tr("文件名"),
+            "路径": self._tr("路径"),
+            "大小": self._tr("大小"),
+            "分辨率": self._tr("分辨率"),
+        }
+        value_map = {
+            "未知": self._tr("未知"),
+        }
+        localized: list[tuple[str, str]] = []
+        for key, value in entries:
+            localized_key = key_map.get(key, key)
+            localized_value = value_map.get(value, value)
+            localized.append((localized_key, localized_value))
+        return tuple(localized)
 
     def _populate_metadata_table(
         self, table: QtWidgets.QTableWidget, entries: MetadataSection, empty_message: str
@@ -981,7 +1019,7 @@ class MainController(QtCore.QObject):
         if str(path) in self._threads_by_path:
             return
 
-        self._main_window.statusBar().showMessage(f"正在读取图片：{path.name}")
+        self._main_window.statusBar().showMessage(self._tr("正在读取图片：{name}").format(name=path.name))
 
         worker = ImageLoadWorker(self._image_service, path)
         thread = QtCore.QThread(self._main_window)
@@ -1024,12 +1062,13 @@ class MainController(QtCore.QObject):
         else:
             self._refresh_tab_pixmap(path, result.analysis)
 
-        self._main_window.statusBar().showMessage(f"加载完成：{path.name}")
+        self._main_window.statusBar().showMessage(self._tr("加载完成：{name}").format(name=path.name))
 
     def _on_error(self, path: Path, message: str) -> None:
         logger.warning("加载图片失败: %s, %s", path, message)
-        QtWidgets.QMessageBox.warning(self._main_window, "错误", message)
-        self._main_window.statusBar().showMessage(f"加载失败：{path.name}")
+        localized_message = self._localize_backend_error_message(message)
+        QtWidgets.QMessageBox.warning(self._main_window, self._tr("错误"), localized_message)
+        self._main_window.statusBar().showMessage(self._tr("加载失败：{name}").format(name=path.name))
 
         tab_index = self._find_tab_index_by_path(path)
         if tab_index is None:
@@ -1039,7 +1078,7 @@ class MainController(QtCore.QObject):
             return
         lbl = tab.findChild(QtWidgets.QLabel, "lblImage")
         if lbl is not None:
-            lbl.setText("加载失败")
+            lbl.setText(self._tr("加载失败"))
             lbl.setPixmap(QtGui.QPixmap())
 
         if self._current_image_path() == path:
@@ -1128,6 +1167,16 @@ class MainController(QtCore.QObject):
         self._ui.actZoomIn.setEnabled(has_image_tab)
         self._ui.actZoomOut.setEnabled(has_image_tab)
         self._ui.actFitToWindow.setEnabled(has_image_tab)
+
+    def _localize_backend_error_message(self, message: str) -> str:
+        mapping = {
+            "图片文件不存在": self._tr("图片文件不存在"),
+            "不支持该图片格式": self._tr("不支持该图片格式"),
+            "无法读取该图片文件": self._tr("无法读取该图片文件"),
+            "图像分析失败": self._tr("图像分析失败"),
+            "处理图片时发生未知错误": self._tr("处理图片时发生未知错误"),
+        }
+        return mapping.get(message, message)
 
     def _format_display_name(self, filename: str) -> str:
         """Shorten long filenames for tab and filmstrip display."""

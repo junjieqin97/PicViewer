@@ -20,7 +20,6 @@ class MainWindowUI:
 
     def setup_ui(self, main_window: QtWidgets.QMainWindow) -> None:
         self._main_window = main_window
-        main_window.setWindowTitle("PicViewer")
         main_window.resize(1200, 800)
         main_window.setMinimumSize(900, 600)
 
@@ -29,54 +28,58 @@ class MainWindowUI:
         self.create_context_menus()
         self.create_widgets()
         self.create_layouts()
+        self.retranslate_ui()
 
         self.actToggleInfoPanel.setChecked(True)
         self.actToggleFilmstrip.setChecked(True)
 
+    def _tr(self, text: str) -> str:
+        return QtCore.QCoreApplication.translate("MainWindowUI", text)
+
     def create_actions(self) -> None:
-        self.actOpenFile = QtWidgets.QAction("打开图片…", self._main_window)
+        self.actOpenFile = QtWidgets.QAction(self._main_window)
         self.actOpenFile.setObjectName("actOpenFile")
-        self.actOpenFolder = QtWidgets.QAction("打开文件夹…", self._main_window)
+        self.actOpenFolder = QtWidgets.QAction(self._main_window)
         self.actOpenFolder.setObjectName("actOpenFolder")
-        self.actCloseTab = QtWidgets.QAction("关闭当前标签", self._main_window)
+        self.actCloseTab = QtWidgets.QAction(self._main_window)
         self.actCloseTab.setObjectName("actCloseTab")
-        self.actExit = QtWidgets.QAction("退出", self._main_window)
+        self.actExit = QtWidgets.QAction(self._main_window)
         self.actExit.setObjectName("actExit")
 
-        self.actZoomIn = QtWidgets.QAction("放大", self._main_window)
+        self.actZoomIn = QtWidgets.QAction(self._main_window)
         self.actZoomIn.setObjectName("actZoomIn")
-        self.actZoomOut = QtWidgets.QAction("缩小", self._main_window)
+        self.actZoomOut = QtWidgets.QAction(self._main_window)
         self.actZoomOut.setObjectName("actZoomOut")
-        self.actFitToWindow = QtWidgets.QAction("适配窗口", self._main_window)
+        self.actFitToWindow = QtWidgets.QAction(self._main_window)
         self.actFitToWindow.setObjectName("actFitToWindow")
 
-        self.actToggleInfoPanel = QtWidgets.QAction("显示/隐藏信息区", self._main_window)
+        self.actToggleInfoPanel = QtWidgets.QAction(self._main_window)
         self.actToggleInfoPanel.setObjectName("actToggleInfoPanel")
         self.actToggleInfoPanel.setCheckable(True)
-        self.actToggleFilmstrip = QtWidgets.QAction("显示/隐藏胶卷窗格", self._main_window)
+        self.actToggleFilmstrip = QtWidgets.QAction(self._main_window)
         self.actToggleFilmstrip.setObjectName("actToggleFilmstrip")
         self.actToggleFilmstrip.setCheckable(True)
 
-        self.actAbout = QtWidgets.QAction("关于", self._main_window)
+        self.actAbout = QtWidgets.QAction(self._main_window)
         self.actAbout.setObjectName("actAbout")
 
-        self.actModeLuma = QtWidgets.QAction("明度模式", self._main_window)
+        self.actModeLuma = QtWidgets.QAction(self._main_window)
         self.actModeLuma.setObjectName("actModeLuma")
         self.actModeLuma.setCheckable(True)
-        self.actModeRgb = QtWidgets.QAction("RGB模式", self._main_window)
+        self.actModeRgb = QtWidgets.QAction(self._main_window)
         self.actModeRgb.setObjectName("actModeRgb")
         self.actModeRgb.setCheckable(True)
 
-        self.actChannelAll = QtWidgets.QAction("RGB全部通道", self._main_window)
+        self.actChannelAll = QtWidgets.QAction(self._main_window)
         self.actChannelAll.setObjectName("actChannelAll")
         self.actChannelAll.setCheckable(True)
-        self.actChannelRed = QtWidgets.QAction("仅红通道", self._main_window)
+        self.actChannelRed = QtWidgets.QAction(self._main_window)
         self.actChannelRed.setObjectName("actChannelRed")
         self.actChannelRed.setCheckable(True)
-        self.actChannelGreen = QtWidgets.QAction("仅绿通道", self._main_window)
+        self.actChannelGreen = QtWidgets.QAction(self._main_window)
         self.actChannelGreen.setObjectName("actChannelGreen")
         self.actChannelGreen.setCheckable(True)
-        self.actChannelBlue = QtWidgets.QAction("仅蓝通道", self._main_window)
+        self.actChannelBlue = QtWidgets.QAction(self._main_window)
         self.actChannelBlue.setObjectName("actChannelBlue")
         self.actChannelBlue.setCheckable(True)
 
@@ -118,7 +121,7 @@ class MainWindowUI:
     def create_menus(self) -> None:
         menu_bar = self._main_window.menuBar()
 
-        self.menuFile = menu_bar.addMenu("文件(File)")
+        self.menuFile = menu_bar.addMenu("")
         self.menuFile.setObjectName("menuFile")
         self.menuFile.addAction(self.actOpenFile)
         self.menuFile.addAction(self.actOpenFolder)
@@ -127,7 +130,7 @@ class MainWindowUI:
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actExit)
 
-        self.menuView = menu_bar.addMenu("查看(View)")
+        self.menuView = menu_bar.addMenu("")
         self.menuView.setObjectName("menuView")
         self.menuView.addAction(self.actZoomIn)
         self.menuView.addAction(self.actZoomOut)
@@ -136,19 +139,19 @@ class MainWindowUI:
         self.menuView.addAction(self.actToggleInfoPanel)
         self.menuView.addAction(self.actToggleFilmstrip)
 
-        self.menuTools = menu_bar.addMenu("工具(Tools)")
+        self.menuTools = menu_bar.addMenu("")
         self.menuTools.setObjectName("menuTools")
-        self.menuMode = self.menuTools.addMenu("直方图/波形图模式")
+        self.menuMode = self.menuTools.addMenu("")
         self.menuMode.addAction(self.actModeLuma)
         self.menuMode.addAction(self.actModeRgb)
 
-        self.menuChannel = self.menuTools.addMenu("RGB通道")
+        self.menuChannel = self.menuTools.addMenu("")
         self.menuChannel.addAction(self.actChannelAll)
         self.menuChannel.addAction(self.actChannelRed)
         self.menuChannel.addAction(self.actChannelGreen)
         self.menuChannel.addAction(self.actChannelBlue)
 
-        self.menuHelp = menu_bar.addMenu("帮助(Help)")
+        self.menuHelp = menu_bar.addMenu("")
         self.menuHelp.setObjectName("menuHelp")
         self.menuHelp.addAction(self.actAbout)
 
@@ -208,7 +211,7 @@ class MainWindowUI:
         self.tabHistogram = QtWidgets.QWidget(self.tabsInfo)
         self.tabHistogram.setObjectName("tabHistogram")
         hist_layout = QtWidgets.QVBoxLayout(self.tabHistogram)
-        self.widgetHistogram = QtWidgets.QLabel("Histogram Placeholder", self.tabHistogram)
+        self.widgetHistogram = QtWidgets.QLabel("", self.tabHistogram)
         self.widgetHistogram.setObjectName("widgetHistogram")
         self.widgetHistogram.setAlignment(QtCore.Qt.AlignCenter)
         self.widgetHistogram.setFixedSize(self.info_panel_histogram_size)
@@ -219,12 +222,12 @@ class MainWindowUI:
             QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop,
         )
         hist_layout.addStretch(1)
-        self.tabsInfo.addTab(self.tabHistogram, "直方图")
+        self.tabsInfo.addTab(self.tabHistogram, "")
 
         self.tabWaveform = QtWidgets.QWidget(self.tabsInfo)
         self.tabWaveform.setObjectName("tabWaveform")
         wave_layout = QtWidgets.QVBoxLayout(self.tabWaveform)
-        self.widgetWaveform = QtWidgets.QLabel("Waveform Placeholder", self.tabWaveform)
+        self.widgetWaveform = QtWidgets.QLabel("", self.tabWaveform)
         self.widgetWaveform.setObjectName("widgetWaveform")
         self.widgetWaveform.setAlignment(QtCore.Qt.AlignCenter)
         self.widgetWaveform.setFixedSize(self.info_panel_waveform_size)
@@ -235,7 +238,7 @@ class MainWindowUI:
             QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop,
         )
         wave_layout.addStretch(1)
-        self.tabsInfo.addTab(self.tabWaveform, "波形图")
+        self.tabsInfo.addTab(self.tabWaveform, "")
 
         self.tabMetadata = QtWidgets.QWidget(self.tabsInfo)
         self.tabMetadata.setObjectName("tabMetadata")
@@ -250,32 +253,32 @@ class MainWindowUI:
         general_layout = QtWidgets.QVBoxLayout(self.tabMetadataGeneral)
         self.tableMetadataGeneral = self._create_metadata_table(self.tabMetadataGeneral, "tableMetadataGeneral")
         general_layout.addWidget(self.tableMetadataGeneral)
-        self.tabsMetadata.addTab(self.tabMetadataGeneral, "通用")
+        self.tabsMetadata.addTab(self.tabMetadataGeneral, "")
 
         self.tabMetadataExif = QtWidgets.QWidget(self.tabsMetadata)
         self.tabMetadataExif.setObjectName("tabMetadataExif")
         exif_layout = QtWidgets.QVBoxLayout(self.tabMetadataExif)
         self.tableMetadataExif = self._create_metadata_table(self.tabMetadataExif, "tableMetadataExif")
         exif_layout.addWidget(self.tableMetadataExif)
-        self.tabsMetadata.addTab(self.tabMetadataExif, "Exif")
+        self.tabsMetadata.addTab(self.tabMetadataExif, "")
 
         self.tabMetadataIptc = QtWidgets.QWidget(self.tabsMetadata)
         self.tabMetadataIptc.setObjectName("tabMetadataIptc")
         iptc_layout = QtWidgets.QVBoxLayout(self.tabMetadataIptc)
         self.tableMetadataIptc = self._create_metadata_table(self.tabMetadataIptc, "tableMetadataIptc")
         iptc_layout.addWidget(self.tableMetadataIptc)
-        self.tabsMetadata.addTab(self.tabMetadataIptc, "IPTC")
+        self.tabsMetadata.addTab(self.tabMetadataIptc, "")
 
         self.tabMetadataTiff = QtWidgets.QWidget(self.tabsMetadata)
         self.tabMetadataTiff.setObjectName("tabMetadataTiff")
         tiff_layout = QtWidgets.QVBoxLayout(self.tabMetadataTiff)
         self.tableMetadataTiff = self._create_metadata_table(self.tabMetadataTiff, "tableMetadataTiff")
         tiff_layout.addWidget(self.tableMetadataTiff)
-        self.tabsMetadata.addTab(self.tabMetadataTiff, "TIFF")
+        self.tabsMetadata.addTab(self.tabMetadataTiff, "")
 
         meta_layout.addWidget(self.tabsMetadata, 0, QtCore.Qt.AlignTop)
         meta_layout.addStretch(1)
-        self.tabsInfo.addTab(self.tabMetadata, "元数据")
+        self.tabsInfo.addTab(self.tabMetadata, "")
 
         self.frameFilmstrip = QtWidgets.QFrame(self.splitVertical)
         self.frameFilmstrip.setObjectName("frameFilmstrip")
@@ -334,7 +337,6 @@ class MainWindowUI:
         table = QtWidgets.QTableWidget(parent)
         table.setObjectName(object_name)
         table.setColumnCount(2)
-        table.setHorizontalHeaderLabels(["Key", "Value"])
         table.verticalHeader().setVisible(False)
         table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -342,6 +344,53 @@ class MainWindowUI:
         table.horizontalHeader().setStretchLastSection(True)
         table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         return table
+
+    def retranslate_ui(self) -> None:
+        self._main_window.setWindowTitle(self._tr("PicViewer"))
+
+        self.actOpenFile.setText(self._tr("打开图片…"))
+        self.actOpenFolder.setText(self._tr("打开文件夹…"))
+        self.actCloseTab.setText(self._tr("关闭当前标签"))
+        self.actExit.setText(self._tr("退出"))
+        self.actZoomIn.setText(self._tr("放大"))
+        self.actZoomOut.setText(self._tr("缩小"))
+        self.actFitToWindow.setText(self._tr("适配窗口"))
+        self.actToggleInfoPanel.setText(self._tr("显示/隐藏信息区"))
+        self.actToggleFilmstrip.setText(self._tr("显示/隐藏胶卷窗格"))
+        self.actAbout.setText(self._tr("关于"))
+        self.actModeLuma.setText(self._tr("明度模式"))
+        self.actModeRgb.setText(self._tr("RGB模式"))
+        self.actChannelAll.setText(self._tr("RGB全部通道"))
+        self.actChannelRed.setText(self._tr("仅红通道"))
+        self.actChannelGreen.setText(self._tr("仅绿通道"))
+        self.actChannelBlue.setText(self._tr("仅蓝通道"))
+
+        self.menuFile.setTitle(self._tr("文件"))
+        self.menuView.setTitle(self._tr("查看"))
+        self.menuTools.setTitle(self._tr("工具"))
+        self.menuMode.setTitle(self._tr("直方图/波形图模式"))
+        self.menuChannel.setTitle(self._tr("RGB通道"))
+        self.menuHelp.setTitle(self._tr("帮助"))
+
+        self.tabsInfo.setTabText(self.tabsInfo.indexOf(self.tabHistogram), self._tr("直方图"))
+        self.tabsInfo.setTabText(self.tabsInfo.indexOf(self.tabWaveform), self._tr("波形图"))
+        self.tabsInfo.setTabText(self.tabsInfo.indexOf(self.tabMetadata), self._tr("元数据"))
+
+        self.tabsMetadata.setTabText(self.tabsMetadata.indexOf(self.tabMetadataGeneral), self._tr("通用"))
+        self.tabsMetadata.setTabText(self.tabsMetadata.indexOf(self.tabMetadataExif), self._tr("Exif"))
+        self.tabsMetadata.setTabText(self.tabsMetadata.indexOf(self.tabMetadataIptc), self._tr("IPTC"))
+        self.tabsMetadata.setTabText(self.tabsMetadata.indexOf(self.tabMetadataTiff), self._tr("TIFF"))
+
+        self.widgetHistogram.setText(self._tr("直方图占位图"))
+        self.widgetWaveform.setText(self._tr("波形图占位图"))
+        self._set_metadata_headers()
+
+    def _set_metadata_headers(self) -> None:
+        headers = [self._tr("键"), self._tr("值")]
+        self.tableMetadataGeneral.setHorizontalHeaderLabels(headers)
+        self.tableMetadataExif.setHorizontalHeaderLabels(headers)
+        self.tableMetadataIptc.setHorizontalHeaderLabels(headers)
+        self.tableMetadataTiff.setHorizontalHeaderLabels(headers)
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -355,7 +404,7 @@ class MainWindow(QtWidgets.QMainWindow):
         from pic_viewer.controllers.main_controller import MainController
 
         self.controller = MainController(self, self.ui, image_service, view_service)
-        self.statusBar().showMessage("准备就绪")
+        self.statusBar().showMessage(QtCore.QCoreApplication.translate("MainWindow", "准备就绪"))
 
     def resizeEvent(self, event) -> None:  # type: ignore[override]
         super().resizeEvent(event)

@@ -2,3 +2,4 @@
 *.iml
 src/*.egg-info
 **/__pycache__/**
+src/pic_viewer/ui/resources/i18n/*.qm

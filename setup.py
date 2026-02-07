@@ -8,6 +8,13 @@ setup(
     description="A desktop photo viewer with histogram and waveform.",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
+    include_package_data=True,
+    package_data={
+        "pic_viewer": [
+            "ui/resources/i18n/*.ts",
+            "ui/resources/i18n/*.qm",
+        ]
+    },
     install_requires=[
         "PyQt5>=5.15",
         "opencv-python>=4.7",

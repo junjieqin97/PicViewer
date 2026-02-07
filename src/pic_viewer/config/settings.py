@@ -12,6 +12,7 @@ class AppSettings:
 
     log_level: str
     allow_raw: bool
+    language_override: str | None
 
 
 def load_settings() -> AppSettings:
@@ -23,4 +24,9 @@ def load_settings() -> AppSettings:
 
     log_level = os.getenv("PICVIEWER_LOG_LEVEL", "INFO")
     allow_raw = os.getenv("PICVIEWER_ALLOW_RAW", "1").lower() not in {"0", "false", "no"}
-    return AppSettings(log_level=log_level, allow_raw=allow_raw)
+    language_override = os.getenv("PICVIEWER_LANG")
+    return AppSettings(
+        log_level=log_level,
+        allow_raw=allow_raw,
+        language_override=language_override,
+    )

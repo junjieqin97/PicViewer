@@ -22,6 +22,13 @@ raw = ["rawpy>=0.17"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+pic_viewer = [
+  "ui/resources/i18n/*.ts",
+  "ui/resources/i18n/*.qm",
+]
