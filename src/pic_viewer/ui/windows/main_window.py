@@ -14,7 +14,6 @@ class MainWindowUI:
     # Fixed sizes are defined in logical pixels; Qt DPI scaling keeps proportions across screens.
     INFO_PANEL_HISTOGRAM_SIZE = QtCore.QSize(256, 100)
     INFO_PANEL_WAVEFORM_SIZE = QtCore.QSize(256, 256)
-    INFO_PANEL_METADATA_HEIGHT = 320
     INFO_PANEL_MIN_WIDTH = 320
     IMAGE_PANEL_MIN_WIDTH = 500
 
@@ -174,7 +173,6 @@ class MainWindowUI:
             self.INFO_PANEL_WAVEFORM_SIZE.width(),
             self.INFO_PANEL_WAVEFORM_SIZE.height(),
         )
-        self.info_panel_metadata_height = int(self.INFO_PANEL_METADATA_HEIGHT)
         self.info_panel_min_width = int(self.INFO_PANEL_MIN_WIDTH)
         self.image_panel_min_width = int(self.IMAGE_PANEL_MIN_WIDTH)
 
@@ -245,8 +243,7 @@ class MainWindowUI:
         meta_layout = QtWidgets.QVBoxLayout(self.tabMetadata)
         self.tabsMetadata = QtWidgets.QTabWidget(self.tabMetadata)
         self.tabsMetadata.setObjectName("tabsMetadata")
-        self.tabsMetadata.setFixedHeight(self.info_panel_metadata_height)
-        self.tabsMetadata.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.tabsMetadata.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         self.tabMetadataGeneral = QtWidgets.QWidget(self.tabsMetadata)
         self.tabMetadataGeneral.setObjectName("tabMetadataGeneral")
@@ -276,8 +273,7 @@ class MainWindowUI:
         tiff_layout.addWidget(self.tableMetadataTiff)
         self.tabsMetadata.addTab(self.tabMetadataTiff, "")
 
-        meta_layout.addWidget(self.tabsMetadata, 0, QtCore.Qt.AlignTop)
-        meta_layout.addStretch(1)
+        meta_layout.addWidget(self.tabsMetadata, 1)
         self.tabsInfo.addTab(self.tabMetadata, "")
 
         self.frameFilmstrip = QtWidgets.QFrame(self.splitVertical)
