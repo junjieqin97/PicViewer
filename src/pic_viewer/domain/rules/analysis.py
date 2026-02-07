@@ -181,6 +181,12 @@ class ImageAnalyzer:
             waveform_b=waveform_b,
         )
 
+    def build_preview_rgb(self, bgr: np.ndarray) -> np.ndarray:
+        """Build a UI preview from a BGR image without full analysis."""
+
+        rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+        return self._build_preview_rgb(rgb)
+
     def _build_analysis_source_bgr(self, bgr: np.ndarray) -> np.ndarray:
         """Downscale large images for analysis stability and re-rendering."""
 

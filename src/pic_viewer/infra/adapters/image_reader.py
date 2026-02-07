@@ -33,8 +33,7 @@ class ImageReader:
             ImageLoadError: If the file cannot be loaded.
         """
 
-        if not path.exists() or not path.is_file():
-            raise ImageLoadError("图片文件不存在")
+        self._validate_path(path)
 
         image = cv2.imread(str(path), cv2.IMREAD_COLOR)
         if image is not None:
@@ -43,12 +42,56 @@ class ImageReader:
         if not self._allow_raw:
             raise ImageLoadError("不支持该图片格式")
 
-        raw_image = self._read_raw(path)
+        raw_image = self._read_raw(path, preview=False)
         if raw_image is None:
             raise ImageLoadError("无法读取该图片文件")
         return raw_image
 
-    def _read_raw(self, path: Path) -> Optional[np.ndarray]:
+    def read_preview(self, path: Path, max_edge: int = 1920) -> np.ndarray:
+        """Read a faster low-cost preview for incremental UI updates."""
+
+        self._validate_path(path)
+        max_edge = max(1, int(max_edge))
+        reduced_flags = (
+            cv2.IMREAD_REDUCED_COLOR_8,
+            cv2.IMREAD_REDUCED_COLOR_4,
+            cv2.IMREAD_REDUCED_COLOR_2,
+        )
+
+        for flag in reduced_flags:
+            image = cv2.imread(str(path), flag)
+            if image is not None:
+                return self._resize_if_needed(image, max_edge)
+
+        image = cv2.imread(str(path), cv2.IMREAD_COLOR)
+        if image is not None:
+            return self._resize_if_needed(image, max_edge)
+
+        if not self._allow_raw:
+            raise ImageLoadError("不支持该图片格式")
+
+        raw_image = self._read_raw(path, preview=True)
+        if raw_image is None:
+            raise ImageLoadError("无法读取该图片文件")
+        return self._resize_if_needed(raw_image, max_edge)
+
+    def _validate_path(self, path: Path) -> None:
+        if not path.exists() or not path.is_file():
+            raise ImageLoadError("图片文件不存在")
+
+    def _resize_if_needed(self, bgr: np.ndarray, max_edge: int) -> np.ndarray:
+        height, width = bgr.shape[:2]
+        edge = max(height, width)
+        if edge <= max_edge:
+            return bgr
+        scale = max_edge / float(edge)
+        resized = (
+            max(1, int(round(width * scale))),
+            max(1, int(round(height * scale))),
+        )
+        return cv2.resize(bgr, resized, interpolation=cv2.INTER_AREA)
+
+    def _read_raw(self, path: Path, preview: bool) -> Optional[np.ndarray]:
         """Attempt to load RAW image using rawpy."""
 
         try:
@@ -59,7 +102,10 @@ class ImageReader:
 
         try:
             with rawpy.imread(str(path)) as raw:
-                rgb = raw.postprocess()
+                if preview:
+                    rgb = raw.postprocess(half_size=True, output_bps=8)
+                else:
+                    rgb = raw.postprocess()
             return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
         except Exception:
             logger.exception("RAW图像读取失败")

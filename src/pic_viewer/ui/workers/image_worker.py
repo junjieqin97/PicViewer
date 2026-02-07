@@ -1,4 +1,4 @@
-"""Threaded image loading worker."""
+"""Thread-pool image loading tasks."""
 
 from __future__ import annotations
 
@@ -13,31 +13,62 @@ from pic_viewer.common.errors import ImageLoadError, ImageProcessError
 logger = logging.getLogger(__name__)
 
 
-class ImageLoadWorker(QtCore.QObject):
-    """Run image loading and analysis in a worker thread."""
+class ImageTaskSignals(QtCore.QObject):
+    """Signals emitted by background image tasks."""
 
-    # 需要跨线程（QueuedConnection）传递 Python 对象，必须使用 PyQt_PyObject。
-    # 否则会出现信号无法排队传递，导致 UI 一直停留在“加载中”，线程也无法正常退出。
     finished = QtCore.pyqtSignal(object)
     error = QtCore.pyqtSignal(str)
+
+
+class PreviewLoadTask(QtCore.QRunnable):
+    """Load preview payload in a thread-pool worker."""
 
     def __init__(self, service: ImageService, path: Path) -> None:
         super().__init__()
         self._service = service
         self._path = path
+        self.signals = ImageTaskSignals()
+        self.setAutoDelete(True)
 
     @QtCore.pyqtSlot()
     def run(self) -> None:
-        """Execute the load/analysis task."""
+        """Execute lightweight preview loading."""
+
+        try:
+            result = self._service.load_preview(self._path)
+        except (ImageLoadError, ImageProcessError) as exc:
+            self.signals.error.emit(str(exc))
+            return
+        except Exception:  # pragma: no cover - defensive safety net
+            logger.exception("预览处理异常: %s", self._path)
+            self.signals.error.emit("处理图片时发生未知错误")
+            return
+
+        self.signals.finished.emit(result)
+
+
+class ImageLoadTask(QtCore.QRunnable):
+    """Load full analysis payload in a thread-pool worker."""
+
+    def __init__(self, service: ImageService, path: Path) -> None:
+        super().__init__()
+        self._service = service
+        self._path = path
+        self.signals = ImageTaskSignals()
+        self.setAutoDelete(True)
+
+    @QtCore.pyqtSlot()
+    def run(self) -> None:
+        """Execute full load + analysis task."""
 
         try:
             result = self._service.load_and_analyze(self._path)
         except (ImageLoadError, ImageProcessError) as exc:
-            self.error.emit(str(exc))
+            self.signals.error.emit(str(exc))
             return
-        except Exception as exc:  # pragma: no cover - defensive safety net
+        except Exception:  # pragma: no cover - defensive safety net
             logger.exception("图像处理异常: %s", self._path)
-            self.error.emit("处理图片时发生未知错误")
+            self.signals.error.emit("处理图片时发生未知错误")
             return
 
-        self.finished.emit(result)
+        self.signals.finished.emit(result)

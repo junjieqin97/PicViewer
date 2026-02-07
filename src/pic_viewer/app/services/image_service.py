@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 
 from pic_viewer.app.dto.analysis_view import AnalysisView, AnalysisViewSettings, LumaRgbMode, RgbChannel
-from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult
+from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult, PreviewLoadResult
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
 from pic_viewer.common.errors import ImageLoadError
 from pic_viewer.domain.rules.analysis import ImageAnalyzer
@@ -75,6 +75,20 @@ class ImageService:
         )
 
         return ImageLoadResult(analysis=analysis, metadata=metadata)
+
+    def load_preview(self, path: Path) -> PreviewLoadResult:
+        """Load a lightweight preview without metadata or analysis plots."""
+
+        try:
+            preview_bgr = self._reader.read_preview(path)
+        except ImageLoadError:
+            raise
+        except Exception as exc:  # pragma: no cover - defensive safety net
+            logger.exception("读取预览失败: %s", path)
+            raise ImageLoadError("无法读取该图片文件") from exc
+
+        preview_rgb = self._analyzer.build_preview_rgb(preview_bgr)
+        return PreviewLoadResult(preview_rgb=preview_rgb)
 
     def render_analysis_view(
         self,

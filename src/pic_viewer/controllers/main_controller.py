@@ -6,17 +6,19 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Optional
 
+import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.dto.analysis_view import AnalysisViewSettings, LumaRgbMode, RgbChannel
-from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult
+from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult, PreviewLoadResult
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
 from pic_viewer.app.services.analysis_view_service import AnalysisViewService
 from pic_viewer.app.services.image_service import ImageService
 from pic_viewer.ui.utils.image_qt import to_qpixmap
-from pic_viewer.ui.workers.image_worker import ImageLoadWorker
+from pic_viewer.ui.workers.image_worker import ImageLoadTask, PreviewLoadTask
 
 logger = logging.getLogger(__name__)
+MAX_IMAGE_LOAD_CONCURRENCY = 8
 
 
 class MainController(QtCore.QObject):
@@ -36,8 +38,13 @@ class MainController(QtCore.QObject):
         self._view_service = view_service
 
         self._images_by_path: Dict[str, ImageLoadResult] = {}
-        self._workers_by_path: Dict[str, ImageLoadWorker] = {}
-        self._threads_by_path: Dict[str, QtCore.QThread] = {}
+        self._preview_by_path: Dict[str, PreviewLoadResult] = {}
+        self._preview_tasks_by_path: Dict[str, PreviewLoadTask] = {}
+        self._load_tasks_by_path: Dict[str, ImageLoadTask] = {}
+        self._active_session_by_path: Dict[str, int] = {}
+        self._session_counter_by_path: Dict[str, int] = {}
+        self._thread_pool = QtCore.QThreadPool(self._main_window)
+        self._thread_pool.setMaxThreadCount(MAX_IMAGE_LOAD_CONCURRENCY)
         self._syncing_selection = False
         self._view_settings = AnalysisViewSettings(mode=LumaRgbMode.LUMA, channel=RgbChannel.ALL)
         self._last_splitter_sizes: Optional[list[int]] = None
@@ -492,17 +499,27 @@ class MainController(QtCore.QObject):
             )
             return
 
-        for path in paths:
-            self.open_image(path)
+        last_path: Optional[Path] = None
+        with QtCore.QSignalBlocker(self._ui.tabsImages), QtCore.QSignalBlocker(self._ui.listFilmstrip):
+            for path in paths:
+                self.open_image(path, activate=False)
+                last_path = path
 
-    def open_image(self, path: Path) -> None:
-        """打开图片：新增Tab + 新增胶卷Item + 自动切换到该Tab。"""
+        if last_path is not None:
+            self._activate_existing_path(last_path)
+
+    def open_image(self, path: Path, activate: bool = True) -> None:
+        """打开图片：新增Tab + 新增胶卷Item；可选激活该Tab。"""
 
         existing_tab = self._find_tab_index_by_path(path)
         if existing_tab is not None:
             self._update_tab_title(existing_tab, path)
             self._update_filmstrip_text(path)
-            self._ui.tabsImages.setCurrentIndex(existing_tab)
+            if activate:
+                self._ui.tabsImages.setCurrentIndex(existing_tab)
+            self._ensure_preview_load(path)
+            if activate:
+                self._ensure_full_load(path)
             return
 
         self._remove_empty_image_placeholder()
@@ -539,7 +556,6 @@ class MainController(QtCore.QObject):
 
         tab_index = self._ui.tabsImages.addTab(tab_container, "")
         self._update_tab_title(tab_index, path)
-        self._ui.tabsImages.setCurrentIndex(tab_index)
         self._set_zoom_state(path, 1.0, True)
 
         item = QtWidgets.QListWidgetItem()
@@ -547,9 +563,12 @@ class MainController(QtCore.QObject):
         self._apply_display_name_to_item(item, path)
         item.setIcon(self._placeholder_icon())
         self._ui.listFilmstrip.addItem(item)
-        self._ui.listFilmstrip.setCurrentRow(self._ui.listFilmstrip.count() - 1)
-
-        self._start_load(path)
+        session = self._start_path_session(path)
+        self._ensure_preview_load(path, session)
+        if activate:
+            self._ui.tabsImages.setCurrentIndex(tab_index)
+            self._ui.listFilmstrip.setCurrentRow(self._ui.listFilmstrip.count() - 1)
+            self._ensure_full_load(path, session)
         self._refresh_actions_state()
 
     def close_current_tab(self) -> None:
@@ -572,7 +591,8 @@ class MainController(QtCore.QObject):
         if path is not None:
             self._remove_filmstrip_item(path)
             self._images_by_path.pop(str(path), None)
-            self._stop_thread_if_running(path)
+            self._preview_by_path.pop(str(path), None)
+            self._cancel_tasks_for_path(path)
             self._zoom_by_path.pop(str(path), None)
             self._fit_to_window_by_path.pop(str(path), None)
             self._analysis_render_key_by_path.pop(str(path), None)
@@ -586,6 +606,7 @@ class MainController(QtCore.QObject):
         self.update_info_for_image(path)
         self._sync_filmstrip_selection_from_tab(path)
         self._refresh_actions_state()
+        self._ensure_full_load(path)
 
     def _on_filmstrip_row_changed(self, row: int) -> None:
         if self._syncing_selection:
@@ -649,6 +670,9 @@ class MainController(QtCore.QObject):
             self._set_info_placeholders()
             self._clear_metadata_tables()
             self._last_metadata_path = None
+            preview = self._preview_by_path.get(str(image_path))
+            if preview is not None:
+                self._refresh_tab_preview_pixmap(image_path, preview.preview_rgb)
             return
 
         if str(image_path) != self._last_metadata_path:
@@ -850,11 +874,24 @@ class MainController(QtCore.QObject):
             return
         data = self._images_by_path.get(str(path))
         if data is None:
+            preview = self._preview_by_path.get(str(path))
+            if preview is not None:
+                self._refresh_tab_preview_pixmap(path, preview.preview_rgb)
             return
         self._refresh_tab_pixmap(path, data.analysis)
 
     def _refresh_tab_pixmap(self, path: Path, analysis: ImageAnalysis) -> None:
         """Render the image preview inside the tab for the given path."""
+
+        self._set_tab_pixmap(path, analysis.preview_rgb)
+
+    def _refresh_tab_preview_pixmap(self, path: Path, preview_rgb: np.ndarray) -> None:
+        """Render a lightweight preview before full analysis completes."""
+
+        self._set_tab_pixmap(path, preview_rgb)
+
+    def _set_tab_pixmap(self, path: Path, preview_rgb: np.ndarray) -> None:
+        """Render an RGB preview inside the tab for the given path."""
 
         tab_index = self._find_tab_index_by_path(path)
         if tab_index is None:
@@ -876,7 +913,7 @@ class MainController(QtCore.QObject):
         existing = lbl.pixmap()
         if existing is not None and self._pixmap_matches_target(existing, target_size, dpr):
             return
-        pixmap = to_qpixmap(analysis.preview_rgb, target_size, device_pixel_ratio=dpr)
+        pixmap = to_qpixmap(preview_rgb, target_size, device_pixel_ratio=dpr)
         lbl.setPixmap(pixmap)
         lbl.setText("")
         if not pixmap.isNull():
@@ -1015,47 +1052,104 @@ class MainController(QtCore.QObject):
         self._zoom_by_path[key] = zoom
         self._fit_to_window_by_path[key] = fit_to_window
 
-    def _start_load(self, path: Path) -> None:
-        if str(path) in self._threads_by_path:
+    def _start_path_session(self, path: Path) -> int:
+        """Start a new active session for a path to invalidate stale tasks."""
+
+        key = str(path)
+        session = self._session_counter_by_path.get(key, 0) + 1
+        self._session_counter_by_path[key] = session
+        self._active_session_by_path[key] = session
+        return session
+
+    def _is_session_active(self, path: Path, session: int) -> bool:
+        return self._active_session_by_path.get(str(path)) == session
+
+    def _activate_existing_path(self, path: Path) -> None:
+        """Switch to an existing tab/filmstrip item and trigger lazy full load."""
+
+        tab_index = self._find_tab_index_by_path(path)
+        if tab_index is not None:
+            self._ui.tabsImages.setCurrentIndex(tab_index)
+        row = self._find_filmstrip_row_by_path(path)
+        if row is not None:
+            self._ui.listFilmstrip.setCurrentRow(row)
+        self._ensure_full_load(path)
+
+    def _ensure_preview_load(self, path: Path, session: Optional[int] = None) -> None:
+        key = str(path)
+        if key in self._images_by_path or key in self._preview_by_path or key in self._preview_tasks_by_path:
+            return
+        if session is None:
+            session = self._active_session_by_path.get(key)
+        if session is None:
+            return
+
+        task = PreviewLoadTask(self._image_service, path)
+        task.signals.finished.connect(lambda result, p=path, s=session: self._on_preview_loaded(p, s, result))
+        task.signals.error.connect(lambda message, p=path, s=session: self._on_preview_error(p, s, message))
+        self._preview_tasks_by_path[key] = task
+        self._thread_pool.start(task, -1)
+
+    def _ensure_full_load(self, path: Optional[Path], session: Optional[int] = None) -> None:
+        if path is None:
+            return
+        key = str(path)
+        if key in self._images_by_path or key in self._load_tasks_by_path:
+            return
+        if session is None:
+            session = self._active_session_by_path.get(key)
+        if session is None:
             return
 
         self._main_window.statusBar().showMessage(self._tr("正在读取图片：{name}").format(name=path.name))
+        task = ImageLoadTask(self._image_service, path)
+        task.signals.finished.connect(lambda result, p=path, s=session: self._on_loaded(p, s, result))
+        task.signals.error.connect(lambda message, p=path, s=session: self._on_error(p, s, message))
+        self._load_tasks_by_path[key] = task
+        self._thread_pool.start(task, 1)
 
-        worker = ImageLoadWorker(self._image_service, path)
-        thread = QtCore.QThread(self._main_window)
-        worker.moveToThread(thread)
+    def _cancel_tasks_for_path(self, path: Path) -> None:
+        """Invalidate path session and forget pending task references."""
 
-        thread.started.connect(worker.run)
-        worker.finished.connect(lambda result, p=path: self._on_loaded(p, result))
-        worker.error.connect(lambda message, p=path: self._on_error(p, message))
+        key = str(path)
+        self._active_session_by_path.pop(key, None)
+        self._preview_tasks_by_path.pop(key, None)
+        self._load_tasks_by_path.pop(key, None)
 
-        worker.finished.connect(thread.quit)
-        worker.error.connect(thread.quit)
-        worker.finished.connect(worker.deleteLater)
-        worker.error.connect(worker.deleteLater)
-        thread.finished.connect(thread.deleteLater)
-        thread.finished.connect(lambda p=path: self._threads_by_path.pop(str(p), None))
-        thread.finished.connect(lambda p=path: self._workers_by_path.pop(str(p), None))
-
-        # 必须持有 worker 的 Python 引用，否则函数返回后对象可能被 GC，
-        # 导致 started->run/finished 信号都无法触发，表现为一直“加载中”。
-        self._workers_by_path[str(path)] = worker
-        self._threads_by_path[str(path)] = thread
-        thread.start()
-
-    def _stop_thread_if_running(self, path: Path) -> None:
-        thread = self._threads_by_path.pop(str(path), None)
-        if thread is None:
+    def _on_preview_loaded(self, path: Path, session: int, result: PreviewLoadResult) -> None:
+        key = str(path)
+        self._preview_tasks_by_path.pop(key, None)
+        if not self._is_session_active(path, session):
             return
-        if thread.isRunning():
-            thread.requestInterruption()
-            thread.quit()
 
-    def _on_loaded(self, path: Path, result: ImageLoadResult) -> None:
-        self._images_by_path[str(path)] = result
+        self._preview_by_path[key] = result
+        self._update_filmstrip_icon(path, result.preview_rgb)
+        if key in self._images_by_path:
+            return
+        if self._current_image_path() == path:
+            self.update_info_for_image(path)
+        else:
+            self._refresh_tab_preview_pixmap(path, result.preview_rgb)
+
+    def _on_preview_error(self, path: Path, session: int, message: str) -> None:
+        self._preview_tasks_by_path.pop(str(path), None)
+        if not self._is_session_active(path, session):
+            return
+        logger.warning("预览图片失败: %s, %s", path, message)
+        if self._current_image_path() == path:
+            self._ensure_full_load(path, session)
+
+    def _on_loaded(self, path: Path, session: int, result: ImageLoadResult) -> None:
+        key = str(path)
+        self._load_tasks_by_path.pop(key, None)
+        if not self._is_session_active(path, session):
+            return
+
+        self._images_by_path[key] = result
+        self._preview_by_path.pop(key, None)
         # 强制下一次刷新使用最新分析结果重渲染。
-        self._analysis_render_key_by_path.pop(str(path), None)
-        self._update_filmstrip_icon(path, result.analysis)
+        self._analysis_render_key_by_path.pop(key, None)
+        self._update_filmstrip_icon(path, result.analysis.preview_rgb)
 
         if self._current_image_path() == path:
             self.update_info_for_image(path)
@@ -1064,7 +1158,11 @@ class MainController(QtCore.QObject):
 
         self._main_window.statusBar().showMessage(self._tr("加载完成：{name}").format(name=path.name))
 
-    def _on_error(self, path: Path, message: str) -> None:
+    def _on_error(self, path: Path, session: int, message: str) -> None:
+        self._load_tasks_by_path.pop(str(path), None)
+        if not self._is_session_active(path, session):
+            return
+
         logger.warning("加载图片失败: %s, %s", path, message)
         localized_message = self._localize_backend_error_message(message)
         QtWidgets.QMessageBox.warning(self._main_window, self._tr("错误"), localized_message)
@@ -1084,7 +1182,7 @@ class MainController(QtCore.QObject):
         if self._current_image_path() == path:
             self.update_info_for_image(path)
 
-    def _update_filmstrip_icon(self, path: Path, analysis: ImageAnalysis) -> None:
+    def _update_filmstrip_icon(self, path: Path, preview_rgb: np.ndarray) -> None:
         item = self._find_filmstrip_item_by_path(path)
         if item is None:
             return
@@ -1092,7 +1190,7 @@ class MainController(QtCore.QObject):
         if icon_size.width() <= 0 or icon_size.height() <= 0:
             icon_size = QtCore.QSize(self._filmstrip_icon_side, self._filmstrip_icon_side)
         dpr = self._device_pixel_ratio_for(self._ui.listFilmstrip)
-        pix = to_qpixmap(analysis.preview_rgb, icon_size, device_pixel_ratio=dpr)
+        pix = to_qpixmap(preview_rgb, icon_size, device_pixel_ratio=dpr)
         item.setIcon(QtGui.QIcon(pix))
 
     def _sync_filmstrip_selection_from_tab(self, path: Optional[Path]) -> None:

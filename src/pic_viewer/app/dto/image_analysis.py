@@ -51,3 +51,10 @@ class ImageLoadResult:
 
     analysis: ImageAnalysis
     metadata: ImageMetadata
+
+
+@dataclass(frozen=True)
+class PreviewLoadResult:
+    """Fast preview payload used for incremental loading."""
+
+    preview_rgb: np.ndarray
