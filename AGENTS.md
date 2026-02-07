@@ -34,6 +34,9 @@ code comments or commit messages.
 Do NOT change these unless explicitly instructed.
 
 - Language: Python 3
+- Package Manager: Anaconda
+  - Conda Env Name: PicViewer
+  - You MUST activate the conda environment by running `conda activate PicViewer` before executing the python command.
 - GUI Framework: PyQt5
 - Image Processing: OpenCV
 - Target OS: cross-platform (Windows / macOS / Linux)
