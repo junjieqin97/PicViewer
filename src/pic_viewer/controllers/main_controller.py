@@ -1137,7 +1137,7 @@ class MainController(QtCore.QObject):
         self._preview_tasks_by_path.pop(str(path), None)
         if not self._is_session_active(path, session):
             return
-        logger.warning("预览图片失败: %s, %s", path, message)
+        logger.warning("Failed to load preview image: %s, %s", path, message)
         if self._current_image_path() == path:
             self._ensure_full_load(path, session)
 
@@ -1165,7 +1165,7 @@ class MainController(QtCore.QObject):
         if not self._is_session_active(path, session):
             return
 
-        logger.warning("加载图片失败: %s, %s", path, message)
+        logger.warning("Failed to load image: %s, %s", path, message)
         localized_message = self._localize_backend_error_message(message)
         QtWidgets.QMessageBox.warning(self._main_window, self._tr("错误"), localized_message)
         self._main_window.statusBar().showMessage(self._tr("加载失败：{name}").format(name=path.name))

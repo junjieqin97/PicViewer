@@ -57,7 +57,7 @@ def main() -> None:
     active_language, translator = install_translator(app, requested_language)
     if translator is not None:
         app._picviewer_translator = translator  # type: ignore[attr-defined]
-    logging.getLogger(__name__).info("UI语言: requested=%s, active=%s", requested_language, active_language)
+    logging.getLogger(__name__).info("UI language: requested=%s, active=%s", requested_language, active_language)
 
     service = build_services(settings)
     view_service = AnalysisViewService()

@@ -73,7 +73,7 @@ def install_translator(
     qm_path = root / f"{TRANSLATION_BASENAME}_{resolved}.qm"
     translator = QtCore.QTranslator(app)
     if not translator.load(str(qm_path)):
-        logger.warning("翻译文件加载失败: %s，回退到 %s", qm_path, DEFAULT_LANGUAGE)
+        logger.warning("Failed to load translation file: %s, falling back to %s", qm_path, DEFAULT_LANGUAGE)
         return DEFAULT_LANGUAGE, None
 
     app.installTranslator(translator)

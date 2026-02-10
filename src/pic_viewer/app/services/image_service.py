@@ -45,7 +45,7 @@ class ImageService:
         except ImageLoadError:
             raise
         except Exception as exc:  # pragma: no cover - defensive safety net
-            logger.exception("读取图片失败: %s", path)
+            logger.exception("Failed to read image: %s", path)
             raise ImageLoadError("无法读取该图片文件") from exc
 
         result = self._analyzer.analyze(bgr)
@@ -84,7 +84,7 @@ class ImageService:
         except ImageLoadError:
             raise
         except Exception as exc:  # pragma: no cover - defensive safety net
-            logger.exception("读取预览失败: %s", path)
+            logger.exception("Failed to read preview: %s", path)
             raise ImageLoadError("无法读取该图片文件") from exc
 
         preview_rgb = self._analyzer.build_preview_rgb(preview_bgr)
@@ -122,7 +122,7 @@ class ImageService:
             )
             return AnalysisView(histogram_rgb=histogram_rgb, waveform_rgb=waveform_rgb)
         except Exception:  # pragma: no cover - defensive fallback
-            logger.exception("渲染分析视图失败")
+            logger.exception("Failed to render analysis view")
             return self._select_precomputed_view(analysis, settings)
 
     def _render_with_settings(
@@ -203,14 +203,14 @@ class ImageService:
             size_bytes = path.stat().st_size
             entries.append(("大小", self._format_size(size_bytes)))
         except OSError:
-            logger.warning("读取文件大小失败: %s", path, exc_info=True)
+            logger.warning("Failed to read file size: %s", path, exc_info=True)
             entries.append(("大小", "未知"))
 
         try:
             height, width = analysis.source_size
             entries.append(("分辨率", f"{width} x {height}"))
         except Exception:
-            logger.warning("读取分辨率失败: %s", path, exc_info=True)
+            logger.warning("Failed to read resolution: %s", path, exc_info=True)
         return tuple(entries)
 
     def _format_size(self, size_bytes: int) -> str:

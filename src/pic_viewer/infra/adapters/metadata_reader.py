@@ -28,10 +28,10 @@ class MetadataReader:
                 iptc = self._extract_iptc(image)
                 tiff = self._extract_tiff(image)
         except FileNotFoundError:
-            logger.warning("元数据读取失败，文件不存在: %s", path)
+            logger.warning("Metadata read failed, file not found: %s", path)
             return self._empty()
         except Exception:  # pragma: no cover - 防御性兜底
-            logger.exception("提取元数据时出错: %s", path)
+            logger.exception("Error extracting metadata: %s", path)
             return self._empty()
 
         return ImageMetadata(
@@ -55,7 +55,7 @@ class MetadataReader:
         try:
             data = JpegImagePlugin.getiptcinfo(image)
         except Exception:  # pragma: no cover - 防御性兜底
-            logger.debug("解析IPTC信息失败", exc_info=True)
+            logger.debug("Failed to parse IPTC metadata", exc_info=True)
             return tuple()
         if not data:
             return tuple()

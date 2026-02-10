@@ -97,7 +97,7 @@ class ImageReader:
         try:
             import rawpy  # type: ignore
         except Exception:
-            logger.warning("RAW解码库未安装，跳过RAW读取")
+            logger.warning("RAW decoder is not installed, skipping RAW read")
             return None
 
         try:
@@ -108,5 +108,5 @@ class ImageReader:
                     rgb = raw.postprocess()
             return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
         except Exception:
-            logger.exception("RAW图像读取失败")
+            logger.exception("Failed to read RAW image")
             return None

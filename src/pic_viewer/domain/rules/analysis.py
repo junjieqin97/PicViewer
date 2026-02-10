@@ -162,7 +162,7 @@ class ImageAnalyzer:
             waveform_g = self.render_waveform_channels(analysis_bgr, [1])
             waveform_r = self.render_waveform_channels(analysis_bgr, [2])
         except Exception as exc:  # pragma: no cover - defensive safety net
-            logger.exception("图像分析失败")
+            logger.exception("Image analysis failed")
             raise ImageProcessError("图像分析失败") from exc
 
         return AnalysisResult(
