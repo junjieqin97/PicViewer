@@ -420,6 +420,8 @@ class MainController(QtCore.QObject):
 
     def _change_view_mode(self, mode: LumaRgbMode) -> None:
         if self._view_settings.mode == mode:
+            if mode == LumaRgbMode.RGB and self._view_settings.channel != RgbChannel.ALL:
+                self._change_channel(RgbChannel.ALL)
             return
         self._view_settings = AnalysisViewSettings(mode=mode, channel=self._view_settings.channel)
         self._sync_view_actions()
