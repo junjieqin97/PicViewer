@@ -113,6 +113,7 @@ class MainWindowUI:
         self.actFitToWindow.setShortcut(QtGui.QKeySequence(f"{modifier}+0"))
         self.actModeLuma.setShortcut(QtGui.QKeySequence(f"{modifier}+L"))
         self.actModeRgb.setShortcut(QtGui.QKeySequence(f"{modifier}+K"))
+        self.actChannelAll.setShortcut(QtGui.QKeySequence(f"{modifier}+K"))
         self.actChannelRed.setShortcut(QtGui.QKeySequence(f"{modifier}+R"))
         self.actChannelGreen.setShortcut(QtGui.QKeySequence(f"{modifier}+G"))
         self.actChannelBlue.setShortcut(QtGui.QKeySequence(f"{modifier}+B"))
