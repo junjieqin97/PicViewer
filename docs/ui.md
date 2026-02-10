@@ -160,6 +160,7 @@ Actions（命名必须一致，文案可中英混排但建议一致）：
 | 适配窗口      | `Ctrl + 0`         | `Command + 0`         | 已实现   |
 | 明度模式      | `Ctrl + L`         | `Command + L`         | 已实现   |
 | RGB模式     | `Ctrl + K`         | `Command + K`         | 已实现   |
+| RGB全部通道   | `Ctrl + K`         | `Command + K`         | 已实现   |
 | 仅红通道      | `Ctrl + R`         | `Command + R`         | 已实现   |
 | 仅绿通道      | `Ctrl + G`         | `Command + G`         | 已实现   |
 | 仅蓝通道      | `Ctrl + B`         | `Command + B`         | 已实现   |
