@@ -207,6 +207,9 @@ class MainWindowUI:
         self.tabsImages.setMovable(True)
         self.tabsImages.setMinimumWidth(self.image_panel_min_width)
         self.tabsImages.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        tab_bar = self.tabsImages.tabBar()
+        tab_bar.setExpanding(False)
+        self.tabsImages.setStyleSheet("QTabWidget#tabsImages::tab-bar { alignment: left; }")
 
         self.scrollInfo = QtWidgets.QWidget(self.splitMain)
         self.scrollInfo.setObjectName("scrollInfo")
