@@ -124,6 +124,8 @@ class MainWindowUI:
         self.actChannelRed.setShortcut(QtGui.QKeySequence(f"{modifier}+R"))
         self.actChannelGreen.setShortcut(QtGui.QKeySequence(f"{modifier}+G"))
         self.actChannelBlue.setShortcut(QtGui.QKeySequence(f"{modifier}+B"))
+        self.actToggleUnderexposed.setShortcut(QtGui.QKeySequence(f"{modifier}+Shift+P"))
+        self.actToggleOverexposed.setShortcut(QtGui.QKeySequence(f"{modifier}+P"))
 
     def create_menus(self) -> None:
         menu_bar = self._main_window.menuBar()

@@ -171,6 +171,8 @@ Actions（命名必须一致，文案可中英混排但建议一致）：
 | 仅红通道      | `Ctrl + R`         | `Command + R`         | 已实现   |
 | 仅绿通道      | `Ctrl + G`         | `Command + G`         | 已实现   |
 | 仅蓝通道      | `Ctrl + B`         | `Command + B`         | 已实现   |
+| 显示欠曝      | `Shift + Ctrl + P` | `Shift + Command + P` | 已实现   |
+| 显示过曝      | `Ctrl + P`         | `Command + P`         | 已实现   |
 
 ## 7. 交互规则（必须实现的同步关系）
 
