@@ -25,7 +25,8 @@
 - 至少包含这些顶层菜单（名称必须一致）：
     - 文件(File)：打开图片、打开文件夹、关闭当前标签、退出
     - 查看(View)：缩放、适配窗口、显示/隐藏右侧信息区、显示/隐藏胶卷窗格
-    - 工具(Tools)：直方图/波形图选项（可先放占位）
+    - 工具(Tools)：直方图/波形图选项 + 伪色选项
+      - 伪色(Pseudo Color)：显示欠曝（checkable）、显示过曝（checkable）
     - 帮助(Help)：关于
 - 要求：每个菜单项用 QAction 创建并命名（见“组件清单”）。
 
@@ -143,6 +144,8 @@ Actions（命名必须一致，文案可中英混排但建议一致）：
 - actFitToWindow：适配窗口
 - actToggleInfoPanel：显示/隐藏信息区（可 checkable）
 - actToggleFilmstrip：显示/隐藏胶卷窗格（可 checkable）
+- actToggleUnderexposed：显示欠曝（可 checkable）
+- actToggleOverexposed：显示过曝（可 checkable）
 - actAbout：关于
 
 ## 6. 快捷键

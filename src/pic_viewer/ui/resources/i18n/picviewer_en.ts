@@ -282,6 +282,21 @@ A simple image viewer demo.</translation>
     </message>
     <message>
         <location filename="../../windows/main_window.py" line="373" />
+        <source>伪色</source>
+        <translation>Pseudo Color</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="364" />
+        <source>显示欠曝</source>
+        <translation>Show Underexposed</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="365" />
+        <source>显示过曝</source>
+        <translation>Show Overexposed</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="374" />
         <source>帮助</source>
         <translation>Help</translation>
     </message>

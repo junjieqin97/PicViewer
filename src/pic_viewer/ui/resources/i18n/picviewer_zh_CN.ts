@@ -282,6 +282,21 @@
     </message>
     <message>
         <location filename="../../windows/main_window.py" line="373" />
+        <source>伪色</source>
+        <translation>伪色</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="364" />
+        <source>显示欠曝</source>
+        <translation>显示欠曝</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="365" />
+        <source>显示过曝</source>
+        <translation>显示过曝</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="374" />
         <source>帮助</source>
         <translation>帮助</translation>
     </message>

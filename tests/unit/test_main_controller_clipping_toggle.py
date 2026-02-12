@@ -31,9 +31,17 @@ class MainControllerClippingToggleTests(unittest.TestCase):
 
     def setUp(self) -> None:
         self.widget = HistogramClippingLabel()
+        self.act_toggle_underexposed = QtWidgets.QAction()
+        self.act_toggle_underexposed.setCheckable(True)
+        self.act_toggle_overexposed = QtWidgets.QAction()
+        self.act_toggle_overexposed.setCheckable(True)
         self.controller = MainController.__new__(MainController)
         QtCore.QObject.__init__(self.controller)
-        self.controller._ui = SimpleNamespace(widgetHistogram=self.widget)
+        self.controller._ui = SimpleNamespace(
+            widgetHistogram=self.widget,
+            actToggleUnderexposed=self.act_toggle_underexposed,
+            actToggleOverexposed=self.act_toggle_overexposed,
+        )
         self.controller._show_underexposed = False
         self.controller._show_overexposed = False
         self.controller._sync_histogram_overlay_state = MagicMock()
@@ -89,6 +97,48 @@ class MainControllerClippingToggleTests(unittest.TestCase):
 
         self.assertIn("/tmp/a.jpg", controller._tab_preview_render_key_by_path)
         controller._refresh_current_image_pixmap.assert_not_called()
+
+    def test_menu_underexposed_toggle_triggers_state_and_refresh(self) -> None:
+        self.act_toggle_underexposed.toggled.connect(self.controller._on_underexposed_toggled)
+
+        self.act_toggle_underexposed.setChecked(True)
+
+        self.assertTrue(self.controller._show_underexposed)
+        self.controller._sync_histogram_overlay_state.assert_called_once_with()
+        self.controller._refresh_overlay_for_current_image.assert_called_once_with()
+
+    def test_menu_overexposed_toggle_triggers_state_and_refresh(self) -> None:
+        self.act_toggle_overexposed.toggled.connect(self.controller._on_overexposed_toggled)
+
+        self.act_toggle_overexposed.setChecked(True)
+
+        self.assertTrue(self.controller._show_overexposed)
+        self.controller._sync_histogram_overlay_state.assert_called_once_with()
+        self.controller._refresh_overlay_for_current_image.assert_called_once_with()
+
+    def test_sync_overlay_state_updates_menu_actions_and_widget(self) -> None:
+        controller = MainController.__new__(MainController)
+        QtCore.QObject.__init__(controller)
+        widget = HistogramClippingLabel()
+        action_under = QtWidgets.QAction()
+        action_under.setCheckable(True)
+        action_over = QtWidgets.QAction()
+        action_over.setCheckable(True)
+        controller._ui = SimpleNamespace(
+            widgetHistogram=widget,
+            actToggleUnderexposed=action_under,
+            actToggleOverexposed=action_over,
+        )
+        controller._show_underexposed = True
+        controller._show_overexposed = False
+        self.addCleanup(widget.deleteLater)
+
+        MainController._sync_histogram_overlay_state(controller)
+
+        self.assertTrue(action_under.isChecked())
+        self.assertFalse(action_over.isChecked())
+        self.assertTrue(widget.underexposed_active())
+        self.assertFalse(widget.overexposed_active())
 
 
 if __name__ == "__main__":

@@ -111,6 +111,10 @@ class MainController(QtCore.QObject):
         self._ui.actChannelRed.triggered.connect(lambda: self._change_channel(RgbChannel.RED))
         self._ui.actChannelGreen.triggered.connect(lambda: self._change_channel(RgbChannel.GREEN))
         self._ui.actChannelBlue.triggered.connect(lambda: self._change_channel(RgbChannel.BLUE))
+        if hasattr(self._ui, "actToggleUnderexposed"):
+            self._ui.actToggleUnderexposed.toggled.connect(self._on_underexposed_toggled)
+        if hasattr(self._ui, "actToggleOverexposed"):
+            self._ui.actToggleOverexposed.toggled.connect(self._on_overexposed_toggled)
 
         self._ui.tabsImages.currentChanged.connect(self._on_tab_changed)
         self._ui.tabsImages.tabCloseRequested.connect(self.close_tab)
@@ -490,6 +494,13 @@ class MainController(QtCore.QObject):
 
     def _sync_histogram_overlay_state(self) -> None:
         """Keep histogram clipping widget state in sync with controller flags."""
+
+        if hasattr(self._ui, "actToggleUnderexposed"):
+            with QtCore.QSignalBlocker(self._ui.actToggleUnderexposed):
+                self._ui.actToggleUnderexposed.setChecked(self._show_underexposed)
+        if hasattr(self._ui, "actToggleOverexposed"):
+            with QtCore.QSignalBlocker(self._ui.actToggleOverexposed):
+                self._ui.actToggleOverexposed.setChecked(self._show_overexposed)
 
         histogram_widget = self._ui.widgetHistogram
         if not hasattr(histogram_widget, "set_clipping_state"):

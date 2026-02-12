@@ -82,6 +82,12 @@ class MainWindowUI:
         self.actChannelBlue = QtWidgets.QAction(self._main_window)
         self.actChannelBlue.setObjectName("actChannelBlue")
         self.actChannelBlue.setCheckable(True)
+        self.actToggleUnderexposed = QtWidgets.QAction(self._main_window)
+        self.actToggleUnderexposed.setObjectName("actToggleUnderexposed")
+        self.actToggleUnderexposed.setCheckable(True)
+        self.actToggleOverexposed = QtWidgets.QAction(self._main_window)
+        self.actToggleOverexposed.setObjectName("actToggleOverexposed")
+        self.actToggleOverexposed.setCheckable(True)
 
         self.actionGroupMode = QtWidgets.QActionGroup(self._main_window)
         self.actionGroupMode.setExclusive(True)
@@ -151,6 +157,11 @@ class MainWindowUI:
         self.menuChannel.addAction(self.actChannelRed)
         self.menuChannel.addAction(self.actChannelGreen)
         self.menuChannel.addAction(self.actChannelBlue)
+
+        self.menuPseudoColor = self.menuTools.addMenu("")
+        self.menuPseudoColor.setObjectName("menuPseudoColor")
+        self.menuPseudoColor.addAction(self.actToggleUnderexposed)
+        self.menuPseudoColor.addAction(self.actToggleOverexposed)
 
         self.menuHelp = menu_bar.addMenu("")
         self.menuHelp.setObjectName("menuHelp")
@@ -362,12 +373,15 @@ class MainWindowUI:
         self.actChannelRed.setText(self._tr("仅红通道"))
         self.actChannelGreen.setText(self._tr("仅绿通道"))
         self.actChannelBlue.setText(self._tr("仅蓝通道"))
+        self.actToggleUnderexposed.setText(self._tr("显示欠曝"))
+        self.actToggleOverexposed.setText(self._tr("显示过曝"))
 
         self.menuFile.setTitle(self._tr("文件"))
         self.menuView.setTitle(self._tr("查看"))
         self.menuTools.setTitle(self._tr("工具"))
         self.menuMode.setTitle(self._tr("直方图/波形图模式"))
         self.menuChannel.setTitle(self._tr("RGB通道"))
+        self.menuPseudoColor.setTitle(self._tr("伪色"))
         self.menuHelp.setTitle(self._tr("帮助"))
 
         self.tabsInfo.setTabText(self.tabsInfo.indexOf(self.tabHistogram), self._tr("直方图"))
