@@ -80,6 +80,10 @@ CentralWidget 使用 QVBoxLayout，上下两块：
 
 - 直方图：widgetHistogram（可先是 QLabel “Histogram Placeholder”）
   - 固定显示尺寸：高 100 × 宽 256（逻辑像素）
+  - 直方图左上角和右上角必须显示可点击小三角形：
+    - 左上角三角形切换`欠曝`预警：在主图中以`绿色`伪色半透明叠加显示欠曝区域
+    - 右上角三角形切换`过曝`预警：在主图中以`红色`伪色半透明叠加显示过曝区域
+  - 欠曝/过曝三角形状态为全局共享（切换图片后保持当前开关状态）
 - 波形图：widgetWaveform（可先是 QLabel “Waveform Placeholder”）
   - 固定显示尺寸：高 256 × 宽 256（逻辑像素）
 - 元数据：tableMetadata: QTableWidget（两列：Key/Value；或 QLabel 占位也可，但推荐表格）

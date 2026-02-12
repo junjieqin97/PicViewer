@@ -331,6 +331,16 @@
         <translation>波形图占位图</translation>
     </message>
     <message>
+        <location filename="../../windows/main_window.py" line="387" />
+        <source>显示/隐藏欠曝区域</source>
+        <translation>显示/隐藏欠曝区域</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="388" />
+        <source>显示/隐藏过曝区域</source>
+        <translation>显示/隐藏过曝区域</translation>
+    </message>
+    <message>
         <location filename="../../windows/main_window.py" line="389" />
         <source>键</source>
         <translation>键</translation>

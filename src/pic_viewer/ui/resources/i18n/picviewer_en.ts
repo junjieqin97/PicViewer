@@ -331,6 +331,16 @@ A simple image viewer demo.</translation>
         <translation>Waveform Placeholder</translation>
     </message>
     <message>
+        <location filename="../../windows/main_window.py" line="387" />
+        <source>显示/隐藏欠曝区域</source>
+        <translation>Show/Hide Underexposed Areas</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="388" />
+        <source>显示/隐藏过曝区域</source>
+        <translation>Show/Hide Overexposed Areas</translation>
+    </message>
+    <message>
         <location filename="../../windows/main_window.py" line="389" />
         <source>键</source>
         <translation>Key</translation>
