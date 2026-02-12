@@ -12,6 +12,7 @@ from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult, Pr
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
 from pic_viewer.common.errors import ImageLoadError
 from pic_viewer.domain.rules.analysis import ImageAnalyzer
+from pic_viewer.domain.rules.exposure_overlay import ExposureOverlayOptions, apply_exposure_overlay
 from pic_viewer.infra.adapters.image_reader import ImageReader
 from pic_viewer.infra.adapters.metadata_reader import MetadataReader
 
@@ -124,6 +125,23 @@ class ImageService:
         except Exception:  # pragma: no cover - defensive fallback
             logger.exception("Failed to render analysis view")
             return self._select_precomputed_view(analysis, settings)
+
+    def build_preview_with_exposure_overlay(
+        self,
+        preview_rgb: np.ndarray,
+        show_underexposed: bool,
+        show_overexposed: bool,
+    ) -> np.ndarray:
+        """Return a display preview with optional clipping pseudo-color overlays."""
+
+        if not show_underexposed and not show_overexposed:
+            return preview_rgb
+
+        options = ExposureOverlayOptions(
+            show_underexposed=show_underexposed,
+            show_overexposed=show_overexposed,
+        )
+        return apply_exposure_overlay(preview_rgb, options)
 
     def _render_with_settings(
         self,

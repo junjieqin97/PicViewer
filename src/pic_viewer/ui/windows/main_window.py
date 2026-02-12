@@ -6,6 +6,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.analysis_view_service import AnalysisViewService
 from pic_viewer.app.services.image_service import ImageService
+from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel
 
 
 class MainWindowUI:
@@ -210,7 +211,7 @@ class MainWindowUI:
         self.tabHistogram = QtWidgets.QWidget(self.tabsInfo)
         self.tabHistogram.setObjectName("tabHistogram")
         hist_layout = QtWidgets.QVBoxLayout(self.tabHistogram)
-        self.widgetHistogram = QtWidgets.QLabel("", self.tabHistogram)
+        self.widgetHistogram = HistogramClippingLabel("", self.tabHistogram)
         self.widgetHistogram.setObjectName("widgetHistogram")
         self.widgetHistogram.setAlignment(QtCore.Qt.AlignCenter)
         self.widgetHistogram.setFixedSize(self.info_panel_histogram_size)
@@ -379,6 +380,10 @@ class MainWindowUI:
         self.tabsMetadata.setTabText(self.tabsMetadata.indexOf(self.tabMetadataTiff), self._tr("TIFF"))
 
         self.widgetHistogram.setText(self._tr("直方图占位图"))
+        self.widgetHistogram.set_triangle_tooltips(
+            self._tr("显示/隐藏欠曝区域"),
+            self._tr("显示/隐藏过曝区域"),
+        )
         self.widgetWaveform.setText(self._tr("波形图占位图"))
         self._set_metadata_headers()
 

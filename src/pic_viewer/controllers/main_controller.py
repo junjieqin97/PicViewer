@@ -66,6 +66,9 @@ class MainController(QtCore.QObject):
         self._zoom_by_path: Dict[str, float] = {}
         self._fit_to_window_by_path: Dict[str, bool] = {}
         self._analysis_render_key_by_path: Dict[str, tuple] = {}
+        self._tab_preview_render_key_by_path: Dict[str, tuple] = {}
+        self._show_underexposed = False
+        self._show_overexposed = False
         self._zoom_step = 1.25
         self._zoom_min = 0.1
         self._zoom_max = 6.0
@@ -81,6 +84,7 @@ class MainController(QtCore.QObject):
         self._configure_analysis_refresh()
         self._apply_initial_visibility()
         self._sync_view_actions()
+        self._sync_histogram_overlay_state()
         self._refresh_actions_state()
         self.update_info_for_image(None)
         self._ensure_empty_image_placeholder()
@@ -113,6 +117,10 @@ class MainController(QtCore.QObject):
         self._ui.listFilmstrip.currentRowChanged.connect(self._on_filmstrip_row_changed)
         self._ui.tabsInfo.currentChanged.connect(self._on_info_tab_changed)
         self._ui.splitMain.splitterMoved.connect(self._on_main_splitter_moved)
+        if hasattr(self._ui.widgetHistogram, "underexposed_toggled"):
+            self._ui.widgetHistogram.underexposed_toggled.connect(self._on_underexposed_toggled)
+        if hasattr(self._ui.widgetHistogram, "overexposed_toggled"):
+            self._ui.widgetHistogram.overexposed_toggled.connect(self._on_overexposed_toggled)
 
     def _configure_filmstrip_resize(self) -> None:
         """Configure dynamic filmstrip icon resizing."""
@@ -462,6 +470,45 @@ class MainController(QtCore.QObject):
             with QtCore.QSignalBlocker(self._ui.actChannelAll):
                 self._ui.actChannelAll.setChecked(True)
 
+    def _on_underexposed_toggled(self, active: bool) -> None:
+        """Handle underexposed clipping toggle changes."""
+
+        if self._show_underexposed == active:
+            return
+        self._show_underexposed = active
+        self._sync_histogram_overlay_state()
+        self._refresh_overlay_for_current_image()
+
+    def _on_overexposed_toggled(self, active: bool) -> None:
+        """Handle overexposed clipping toggle changes."""
+
+        if self._show_overexposed == active:
+            return
+        self._show_overexposed = active
+        self._sync_histogram_overlay_state()
+        self._refresh_overlay_for_current_image()
+
+    def _sync_histogram_overlay_state(self) -> None:
+        """Keep histogram clipping widget state in sync with controller flags."""
+
+        histogram_widget = self._ui.widgetHistogram
+        if not hasattr(histogram_widget, "set_clipping_state"):
+            return
+        with QtCore.QSignalBlocker(histogram_widget):
+            histogram_widget.set_clipping_state(
+                self._show_underexposed,
+                self._show_overexposed,
+            )
+
+    def _refresh_overlay_for_current_image(self) -> None:
+        """Refresh current image pixmap when clipping overlay state changes."""
+
+        path = self._current_image_path()
+        if path is None:
+            return
+        self._tab_preview_render_key_by_path.pop(str(path), None)
+        self._refresh_current_image_pixmap()
+
     def _refresh_view_for_current_image(self) -> None:
         path = self._current_image_path()
         if path is None:
@@ -598,6 +645,7 @@ class MainController(QtCore.QObject):
             self._zoom_by_path.pop(str(path), None)
             self._fit_to_window_by_path.pop(str(path), None)
             self._analysis_render_key_by_path.pop(str(path), None)
+            self._tab_preview_render_key_by_path.pop(str(path), None)
 
         self._refresh_actions_state()
         self.update_info_for_image(self._current_image_path())
@@ -913,13 +961,32 @@ class MainController(QtCore.QObject):
             return
         dpr = self._device_pixel_ratio_for(lbl)
         existing = lbl.pixmap()
-        if existing is not None and self._pixmap_matches_target(existing, target_size, dpr):
+        path_key = str(path)
+        render_key = (
+            target_size.width(),
+            target_size.height(),
+            round(dpr, 2),
+            self._show_underexposed,
+            self._show_overexposed,
+            id(preview_rgb),
+        )
+        if (
+            existing is not None
+            and self._tab_preview_render_key_by_path.get(path_key) == render_key
+            and self._pixmap_matches_target(existing, target_size, dpr)
+        ):
             return
-        pixmap = to_qpixmap(preview_rgb, target_size, device_pixel_ratio=dpr)
+        display_rgb = self._image_service.build_preview_with_exposure_overlay(
+            preview_rgb,
+            show_underexposed=self._show_underexposed,
+            show_overexposed=self._show_overexposed,
+        )
+        pixmap = to_qpixmap(display_rgb, target_size, device_pixel_ratio=dpr)
         lbl.setPixmap(pixmap)
         lbl.setText("")
         if not pixmap.isNull():
             lbl.resize(self._pixmap_logical_size(pixmap))
+        self._tab_preview_render_key_by_path[path_key] = render_key
 
     def _target_pixmap_size(self, path: Path, base_size: QtCore.QSize) -> QtCore.QSize:
         """Calculate the target pixmap size based on zoom settings."""
@@ -1125,6 +1192,7 @@ class MainController(QtCore.QObject):
             return
 
         self._preview_by_path[key] = result
+        self._tab_preview_render_key_by_path.pop(key, None)
         self._update_filmstrip_icon(path, result.preview_rgb)
         if key in self._images_by_path:
             return
@@ -1151,6 +1219,7 @@ class MainController(QtCore.QObject):
         self._preview_by_path.pop(key, None)
         # 强制下一次刷新使用最新分析结果重渲染。
         self._analysis_render_key_by_path.pop(key, None)
+        self._tab_preview_render_key_by_path.pop(key, None)
         self._update_filmstrip_icon(path, result.analysis.preview_rgb)
 
         if self._current_image_path() == path:
@@ -1164,6 +1233,7 @@ class MainController(QtCore.QObject):
         self._load_tasks_by_path.pop(str(path), None)
         if not self._is_session_active(path, session):
             return
+        self._tab_preview_render_key_by_path.pop(str(path), None)
 
         logger.warning("Failed to load image: %s, %s", path, message)
         localized_message = self._localize_backend_error_message(message)
