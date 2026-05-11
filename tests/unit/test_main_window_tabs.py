@@ -109,6 +109,29 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertTrue(any(open_file_shortcut in text for text in label_texts))
         self.assertTrue(any(open_folder_shortcut in text for text in label_texts))
 
+    def test_empty_image_placeholder_keeps_shortcuts_below_buttons(self) -> None:
+        window, ui, controller = self._build_tabs_controller()
+        self.addCleanup(window.deleteLater)
+
+        controller._ensure_empty_image_placeholder()
+        window.resize(1200, 800)
+        window.show()
+        self._app.processEvents()
+
+        open_file = ui.tabsImages.findChild(QtWidgets.QPushButton, "buttonEmptyOpenFile")
+        open_folder = ui.tabsImages.findChild(QtWidgets.QPushButton, "buttonEmptyOpenFolder")
+        open_file_shortcut = ui.tabsImages.findChild(QtWidgets.QLabel, "labelEmptyOpenFileShortcut")
+        open_folder_shortcut = ui.tabsImages.findChild(QtWidgets.QLabel, "labelEmptyOpenFolderShortcut")
+
+        self.assertIsNotNone(open_file)
+        self.assertIsNotNone(open_folder)
+        self.assertIsNotNone(open_file_shortcut)
+        self.assertIsNotNone(open_folder_shortcut)
+        self.assertIs(open_file.parentWidget(), open_file_shortcut.parentWidget())
+        self.assertIs(open_folder.parentWidget(), open_folder_shortcut.parentWidget())
+        self.assertLess(open_file.geometry().bottom(), open_file_shortcut.geometry().top())
+        self.assertLess(open_folder.geometry().bottom(), open_folder_shortcut.geometry().top())
+
     def _build_tabs_controller(
         self,
     ) -> tuple[QtWidgets.QMainWindow, MainWindowUI, MainControllerTabsMixin]:

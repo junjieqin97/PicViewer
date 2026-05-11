@@ -224,26 +224,51 @@ class MainControllerTabsMixin:
         label_description.setWordWrap(True)
         content_layout.addWidget(label_description)
 
-        actions_layout = QtWidgets.QHBoxLayout()
+        actions_container = QtWidgets.QWidget(content)
+        actions_layout = QtWidgets.QGridLayout(actions_container)
         actions_layout.setContentsMargins(0, 8, 0, 0)
-        actions_layout.setSpacing(16)
-        actions_layout.addStretch(1)
+        actions_layout.setHorizontalSpacing(32)
+        actions_layout.setVerticalSpacing(12)
+        actions_layout.setRowMinimumHeight(0, 34)
+        actions_layout.setRowMinimumHeight(1, actions_container.fontMetrics().height() + 8)
+        actions_container.setMinimumHeight(34 + 12 + actions_container.fontMetrics().height() + 16)
         actions_layout.addWidget(
-            self._build_empty_action_widget(
-                parent=content,
+            self._build_empty_action_button(
+                parent=actions_container,
                 button_object_name="buttonEmptyOpenFile",
                 action=self._ui.actOpenFile,
-            )
+            ),
+            0,
+            0,
         )
         actions_layout.addWidget(
-            self._build_empty_action_widget(
-                parent=content,
+            self._build_empty_action_button(
+                parent=actions_container,
                 button_object_name="buttonEmptyOpenFolder",
                 action=self._ui.actOpenFolder,
-            )
+            ),
+            0,
+            1,
         )
-        actions_layout.addStretch(1)
-        content_layout.addLayout(actions_layout)
+        actions_layout.addWidget(
+            self._build_empty_shortcut_label(
+                parent=actions_container,
+                label_object_name="labelEmptyOpenFileShortcut",
+                action=self._ui.actOpenFile,
+            ),
+            1,
+            0,
+        )
+        actions_layout.addWidget(
+            self._build_empty_shortcut_label(
+                parent=actions_container,
+                label_object_name="labelEmptyOpenFolderShortcut",
+                action=self._ui.actOpenFolder,
+            ),
+            1,
+            1,
+        )
+        content_layout.addWidget(actions_container, 0, QtCore.Qt.AlignHCenter)
 
         label_formats = QtWidgets.QLabel(
             self._tr("支持格式：JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF"),
@@ -259,30 +284,33 @@ class MainControllerTabsMixin:
         layout.addStretch(1)
         return placeholder
 
-    def _build_empty_action_widget(
+    def _build_empty_action_button(
         self,
         parent: QtWidgets.QWidget,
         button_object_name: str,
         action: QtWidgets.QAction,
-    ) -> QtWidgets.QWidget:
-        action_widget = QtWidgets.QWidget(parent)
-        action_layout = QtWidgets.QVBoxLayout(action_widget)
-        action_layout.setContentsMargins(0, 0, 0, 0)
-        action_layout.setSpacing(4)
-
-        button = QtWidgets.QPushButton(action.text(), action_widget)
+    ) -> QtWidgets.QPushButton:
+        button = QtWidgets.QPushButton(action.text(), parent)
         button.setObjectName(button_object_name)
         button.setMinimumWidth(160)
+        button.setMinimumHeight(34)
         button.clicked.connect(lambda _checked=False, target=action: target.trigger())
-        action_layout.addWidget(button)
+        return button
 
+    def _build_empty_shortcut_label(
+        self,
+        parent: QtWidgets.QWidget,
+        label_object_name: str,
+        action: QtWidgets.QAction,
+    ) -> QtWidgets.QLabel:
         shortcut = self._shortcut_text(action)
         shortcut_text = self._tr("快捷键：{shortcut}").format(shortcut=shortcut) if shortcut else ""
-        label_shortcut = QtWidgets.QLabel(shortcut_text, action_widget)
+        label_shortcut = QtWidgets.QLabel(shortcut_text, parent)
+        label_shortcut.setObjectName(label_object_name)
         label_shortcut.setAlignment(QtCore.Qt.AlignCenter)
+        label_shortcut.setMinimumHeight(label_shortcut.fontMetrics().height() + 8)
         label_shortcut.setStyleSheet("color: #777;")
-        action_layout.addWidget(label_shortcut)
-        return action_widget
+        return label_shortcut
 
     def _shortcut_text(self, action: QtWidgets.QAction) -> str:
         sequence = action.shortcut()
