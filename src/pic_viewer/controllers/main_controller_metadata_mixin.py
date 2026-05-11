@@ -17,6 +17,28 @@ class MainControllerMetadataMixin:
         self._populate_metadata_table(self._ui.tableMetadataTiff, tuple(), self._tr("暂无 TIFF 信息"))
         self._ui.tabsMetadata.setCurrentIndex(0)
 
+    def _set_metadata_loading_state(self) -> None:
+        self._populate_metadata_table(self._ui.tableMetadataGeneral, tuple(), self._tr("正在读取元数据…"))
+        self._populate_metadata_table(self._ui.tableMetadataExif, tuple(), self._tr("等待图片加载完成"))
+        self._populate_metadata_table(self._ui.tableMetadataIptc, tuple(), self._tr("等待图片加载完成"))
+        self._populate_metadata_table(self._ui.tableMetadataTiff, tuple(), self._tr("等待图片加载完成"))
+        self._ui.tabsMetadata.setCurrentIndex(0)
+
+    def _set_metadata_error_state(self, reason: str) -> None:
+        entries = (
+            (self._tr("加载状态"), self._tr("失败")),
+            (self._tr("失败原因"), reason),
+        )
+        self._populate_metadata_table(
+            self._ui.tableMetadataGeneral,
+            entries,
+            self._tr("图片加载失败，暂无元数据"),
+        )
+        self._populate_metadata_table(self._ui.tableMetadataExif, tuple(), self._tr("图片加载失败，暂无元数据"))
+        self._populate_metadata_table(self._ui.tableMetadataIptc, tuple(), self._tr("图片加载失败，暂无元数据"))
+        self._populate_metadata_table(self._ui.tableMetadataTiff, tuple(), self._tr("图片加载失败，暂无元数据"))
+        self._ui.tabsMetadata.setCurrentIndex(0)
+
     def _fill_metadata_tables(self, metadata: ImageMetadata) -> None:
         self._populate_metadata_table(
             self._ui.tableMetadataGeneral,

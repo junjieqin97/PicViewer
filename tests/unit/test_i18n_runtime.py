@@ -52,8 +52,8 @@ class I18nRuntimeTests(unittest.TestCase):
         localized = controller._localize_backend_error_message("图片文件不存在")
         self.assertEqual("translated:图片文件不存在", localized)
 
-        passthrough = controller._localize_backend_error_message("unknown-message")
-        self.assertEqual("unknown-message", passthrough)
+        fallback = controller._localize_backend_error_message("unknown-message")
+        self.assertEqual("translated:处理图片时发生未知错误", fallback)
 
     def test_controller_translation_checks_mixin_contexts(self) -> None:
         controller = MainController.__new__(MainController)
@@ -67,6 +67,19 @@ class I18nRuntimeTests(unittest.TestCase):
             translated = MainController._tr(controller, "开始浏览照片")
 
         self.assertEqual("translated empty state", translated)
+
+    def test_controller_translation_finds_load_state_text(self) -> None:
+        controller = MainController.__new__(MainController)
+
+        def fake_translate(context: str, text: str) -> str:
+            if context == "MainControllerTabsMixin" and text == "无法打开图片":
+                return "translated load failure"
+            return text
+
+        with patch.object(QtCore.QCoreApplication, "translate", side_effect=fake_translate):
+            translated = MainController._tr(controller, "无法打开图片")
+
+        self.assertEqual("translated load failure", translated)
 
     def test_controller_general_metadata_localization_mapping(self) -> None:
         controller = MainController.__new__(MainController)

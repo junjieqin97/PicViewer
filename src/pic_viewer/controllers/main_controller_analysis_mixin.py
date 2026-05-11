@@ -224,8 +224,19 @@ class MainControllerAnalysisMixin:
 
         data = self._images_by_path.get(str(image_path))
         if data is None:
-            self._set_info_placeholders()
-            self._clear_metadata_tables()
+            error_message = self._load_error_by_path.get(str(image_path))
+            if error_message:
+                self._set_info_error_placeholders()
+                self._set_metadata_error_state(error_message)
+                self._last_metadata_path = None
+                return
+
+            if self._is_path_loading(image_path):
+                self._set_info_loading_placeholders()
+                self._set_metadata_loading_state()
+            else:
+                self._set_info_placeholders()
+                self._clear_metadata_tables()
             self._last_metadata_path = None
             preview = self._preview_by_path.get(str(image_path))
             if preview is not None:
@@ -284,16 +295,31 @@ class MainControllerAnalysisMixin:
             return
 
     def _set_info_placeholders(self) -> None:
-        self._ui.widgetHistogram.setText(self._tr("直方图占位图"))
-        self._ui.widgetWaveform.setText(self._tr("波形图占位图"))
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
+        self._ui.widgetHistogram.setText(self._tr("直方图占位图"))
+        self._ui.widgetWaveform.setText(self._tr("波形图占位图"))
+
+    def _set_info_loading_placeholders(self) -> None:
+        self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
+        self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
+        self._ui.widgetHistogram.setText(self._tr("正在生成直方图…"))
+        self._ui.widgetWaveform.setText(self._tr("正在生成波形图…"))
+
+    def _set_info_error_placeholders(self) -> None:
+        message = self._tr("图片加载失败，无法生成分析")
+        self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
+        self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
+        self._ui.widgetHistogram.setText(message)
+        self._ui.widgetWaveform.setText(message)
 
     def _refresh_current_image_pixmap(self) -> None:
         """Refresh the current image pixmap using the stored zoom settings."""
 
         path = self._current_image_path()
         if path is None:
+            return
+        if str(path) in self._load_error_by_path:
             return
         data = self._images_by_path.get(str(path))
         if data is None:
@@ -359,6 +385,7 @@ class MainControllerAnalysisMixin:
         lbl.setText("")
         if not pixmap.isNull():
             lbl.resize(self._pixmap_logical_size(pixmap))
+            self._show_tab_image_state(path)
         self._tab_preview_render_key_by_path[path_key] = render_key
 
     def _target_pixmap_size(self, path: Path, base_size: QtCore.QSize) -> QtCore.QSize:

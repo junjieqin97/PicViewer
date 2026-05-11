@@ -58,6 +58,7 @@ class MainController(
         self._preview_by_path: Dict[str, PreviewLoadResult] = {}
         self._preview_tasks_by_path: Dict[str, PreviewLoadTask] = {}
         self._load_tasks_by_path: Dict[str, ImageLoadTask] = {}
+        self._load_error_by_path: Dict[str, str] = {}
         self._active_session_by_path: Dict[str, int] = {}
         self._session_counter_by_path: Dict[str, int] = {}
         self._thread_pool = QtCore.QThreadPool(self._main_window)

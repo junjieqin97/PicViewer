@@ -7,6 +7,8 @@ from typing import Optional
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from pic_viewer.ui.widgets.image_load_state_widget import ImageLoadStateWidget
+
 
 class MainControllerTabsMixin:
     """Provide image tab lifecycle and selection sync helpers."""
@@ -64,6 +66,13 @@ class MainControllerTabsMixin:
 
         existing_tab = self._find_tab_index_by_path(path)
         if existing_tab is not None:
+            if str(path) not in self._images_by_path:
+                self._load_error_by_path.pop(str(path), None)
+                self._show_tab_loading_state(
+                    path,
+                    self._tr("正在加载预览"),
+                    self._tr("正在加载预览：{name}").format(name=path.name),
+                )
             self._update_tab_title(existing_tab, path)
             self._update_filmstrip_text(path)
             if activate:
@@ -74,46 +83,18 @@ class MainControllerTabsMixin:
             return
 
         self._remove_empty_image_placeholder()
-        tab_container = QtWidgets.QWidget()
-        tab_container.setProperty("image_path", str(path))
-        layout = QtWidgets.QVBoxLayout(tab_container)
-        layout.setContentsMargins(0, 0, 0, 0)
-
-        scroll_area = QtWidgets.QScrollArea(tab_container)
-        scroll_area.setObjectName("scrollImage")
-        scroll_area.setWidgetResizable(False)
-        scroll_area.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
-        scroll_area.setAlignment(QtCore.Qt.AlignCenter)
-        scroll_area.setCursor(QtCore.Qt.OpenHandCursor)
-        scroll_area.setProperty("_image_drag_area", True)
-        layout.addWidget(scroll_area)
-
-        lbl_image = QtWidgets.QLabel(self._tr("加载中…"))
-        lbl_image.setObjectName("lblImage")
-        lbl_image.setAlignment(QtCore.Qt.AlignCenter)
-        lbl_image.setStyleSheet("background:#222;color:#ddd;")
-        lbl_image.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
-        lbl_image.setCursor(QtCore.Qt.OpenHandCursor)
-        lbl_image.setProperty("_image_drag_area", True)
-        scroll_area.setWidget(lbl_image)
-        scroll_area.viewport().setCursor(QtCore.Qt.OpenHandCursor)
-        scroll_area.viewport().setProperty("_image_drag_area", True)
-        self._track_cursor_widget(scroll_area)
-        self._track_cursor_widget(scroll_area.viewport())
-        self._track_cursor_widget(lbl_image)
-        self._install_image_context_menu(scroll_area)
-        self._install_image_context_menu(scroll_area.viewport())
-        self._install_image_context_menu(lbl_image)
-
+        self._load_error_by_path.pop(str(path), None)
+        tab_container = self._build_image_tab_container(path)
         tab_index = self._ui.tabsImages.addTab(tab_container, "")
         self._update_tab_title(tab_index, path)
         self._set_zoom_state(path, 1.0, True)
+        self._show_tab_loading_state(
+            path,
+            self._tr("正在加载预览"),
+            self._tr("正在加载预览：{name}").format(name=path.name),
+        )
 
-        item = QtWidgets.QListWidgetItem()
-        item.setData(QtCore.Qt.UserRole, str(path))
-        self._apply_display_name_to_item(item, path)
-        item.setIcon(self._placeholder_icon())
-        self._ui.listFilmstrip.addItem(item)
+        self._add_filmstrip_placeholder_item(path)
         session = self._start_path_session(path)
         self._ensure_preview_load(path, session)
         if activate:
@@ -143,6 +124,7 @@ class MainControllerTabsMixin:
             self._remove_filmstrip_item(path)
             self._images_by_path.pop(str(path), None)
             self._preview_by_path.pop(str(path), None)
+            self._load_error_by_path.pop(str(path), None)
             self._cancel_tasks_for_path(path)
             self._zoom_by_path.pop(str(path), None)
             self._fit_to_window_by_path.pop(str(path), None)
@@ -152,6 +134,139 @@ class MainControllerTabsMixin:
         self._refresh_actions_state()
         self.update_info_for_image(self._current_image_path())
         self._ensure_empty_image_placeholder()
+
+    def _build_image_tab_container(self, path: Path) -> QtWidgets.QWidget:
+        tab_container = QtWidgets.QWidget()
+        tab_container.setProperty("image_path", str(path))
+        layout = QtWidgets.QVBoxLayout(tab_container)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        stack = QtWidgets.QStackedWidget(tab_container)
+        stack.setObjectName("stackImageContent")
+        layout.addWidget(stack)
+
+        state_widget = ImageLoadStateWidget(stack)
+        state_widget.retry_requested.connect(lambda p=path: self._retry_load(p))
+        stack.addWidget(state_widget)
+
+        image_page = self._build_image_preview_page(stack)
+        stack.addWidget(image_page)
+        stack.setCurrentWidget(state_widget)
+        return tab_container
+
+    def _build_image_preview_page(self, parent: QtWidgets.QWidget) -> QtWidgets.QWidget:
+        image_page = QtWidgets.QWidget(parent)
+        image_page.setObjectName("pageImagePreview")
+        image_layout = QtWidgets.QVBoxLayout(image_page)
+        image_layout.setContentsMargins(0, 0, 0, 0)
+
+        scroll_area = QtWidgets.QScrollArea(image_page)
+        scroll_area.setObjectName("scrollImage")
+        scroll_area.setWidgetResizable(False)
+        scroll_area.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
+        scroll_area.setAlignment(QtCore.Qt.AlignCenter)
+        scroll_area.setCursor(QtCore.Qt.OpenHandCursor)
+        scroll_area.setProperty("_image_drag_area", True)
+        image_layout.addWidget(scroll_area)
+
+        lbl_image = QtWidgets.QLabel("")
+        lbl_image.setObjectName("lblImage")
+        lbl_image.setAlignment(QtCore.Qt.AlignCenter)
+        lbl_image.setStyleSheet("background:#222;color:#ddd;")
+        lbl_image.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
+        lbl_image.setCursor(QtCore.Qt.OpenHandCursor)
+        lbl_image.setProperty("_image_drag_area", True)
+        scroll_area.setWidget(lbl_image)
+        scroll_area.viewport().setCursor(QtCore.Qt.OpenHandCursor)
+        scroll_area.viewport().setProperty("_image_drag_area", True)
+        self._track_image_display_widgets(scroll_area, lbl_image)
+        return image_page
+
+    def _track_image_display_widgets(
+        self,
+        scroll_area: QtWidgets.QScrollArea,
+        lbl_image: QtWidgets.QLabel,
+    ) -> None:
+        self._track_cursor_widget(scroll_area)
+        self._track_cursor_widget(scroll_area.viewport())
+        self._track_cursor_widget(lbl_image)
+        self._install_image_context_menu(scroll_area)
+        self._install_image_context_menu(scroll_area.viewport())
+        self._install_image_context_menu(lbl_image)
+
+    def _add_filmstrip_placeholder_item(self, path: Path) -> None:
+        item = QtWidgets.QListWidgetItem()
+        item.setData(QtCore.Qt.UserRole, str(path))
+        self._apply_display_name_to_item(item, path)
+        item.setIcon(self._placeholder_icon())
+        self._ui.listFilmstrip.addItem(item)
+
+    def _retry_load(self, path: Path) -> None:
+        """Clear a failed image state and restart preview + full loading."""
+
+        key = str(path)
+        self._load_error_by_path.pop(key, None)
+        self._preview_by_path.pop(key, None)
+        self._images_by_path.pop(key, None)
+        self._analysis_render_key_by_path.pop(key, None)
+        self._tab_preview_render_key_by_path.pop(key, None)
+        self._preview_tasks_by_path.pop(key, None)
+        self._load_tasks_by_path.pop(key, None)
+        session = self._start_path_session(path)
+        self._show_tab_loading_state(
+            path,
+            self._tr("正在加载预览"),
+            self._tr("正在加载预览：{name}").format(name=path.name),
+        )
+        self.update_info_for_image(path)
+        self._ensure_preview_load(path, session)
+        self._ensure_full_load(path, session)
+
+    def _show_tab_loading_state(self, path: Path, title: str, detail: str) -> None:
+        state_widget = self._tab_load_state_widget(path)
+        stack = self._tab_content_stack(path)
+        if state_widget is None or stack is None:
+            return
+        state_widget.set_loading(title, detail)
+        stack.setCurrentWidget(state_widget)
+
+    def _show_tab_error_state(self, path: Path, reason: str) -> None:
+        state_widget = self._tab_load_state_widget(path)
+        stack = self._tab_content_stack(path)
+        if state_widget is None or stack is None:
+            return
+        state_widget.set_error(
+            self._tr("无法打开图片"),
+            reason,
+            self._tr("文件：{name}").format(name=path.name),
+            self._tr("重试"),
+        )
+        stack.setCurrentWidget(state_widget)
+
+    def _show_tab_image_state(self, path: Path) -> None:
+        stack = self._tab_content_stack(path)
+        image_page = self._tab_image_page(path)
+        if stack is None or image_page is None:
+            return
+        stack.setCurrentWidget(image_page)
+
+    def _tab_content_stack(self, path: Path) -> Optional[QtWidgets.QStackedWidget]:
+        tab = self._tab_widget_for_path(path)
+        if tab is None:
+            return None
+        return tab.findChild(QtWidgets.QStackedWidget, "stackImageContent")
+
+    def _tab_load_state_widget(self, path: Path) -> Optional[ImageLoadStateWidget]:
+        tab = self._tab_widget_for_path(path)
+        if tab is None:
+            return None
+        return tab.findChild(ImageLoadStateWidget, "widgetImageLoadState")
+
+    def _tab_image_page(self, path: Path) -> Optional[QtWidgets.QWidget]:
+        tab = self._tab_widget_for_path(path)
+        if tab is None:
+            return None
+        return tab.findChild(QtWidgets.QWidget, "pageImagePreview")
 
     def _on_tab_changed(self, _: int) -> None:
         path = self._current_image_path()
@@ -386,6 +501,12 @@ class MainControllerTabsMixin:
             if str(tab.property("image_path")) == target:
                 return i
         return None
+
+    def _tab_widget_for_path(self, path: Path) -> Optional[QtWidgets.QWidget]:
+        tab_index = self._find_tab_index_by_path(path)
+        if tab_index is None:
+            return None
+        return self._ui.tabsImages.widget(tab_index)
 
     def _find_filmstrip_row_by_path(self, path: Path) -> Optional[int]:
         target = str(path)
