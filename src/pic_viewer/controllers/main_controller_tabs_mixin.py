@@ -200,39 +200,89 @@ class MainControllerTabsMixin:
         placeholder.setObjectName("tabImagePlaceholder")
         placeholder.setProperty("_image_placeholder", True)
         layout = QtWidgets.QVBoxLayout(placeholder)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(24, 24, 24, 24)
         layout.addStretch(1)
 
-        grid = QtWidgets.QGridLayout()
-        grid.setHorizontalSpacing(12)
-        grid.setVerticalSpacing(6)
+        content = QtWidgets.QWidget(placeholder)
+        content.setObjectName("emptyStateContent")
+        content_layout = QtWidgets.QVBoxLayout(content)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(12)
 
-        open_file_text = self._ui.actOpenFile.text()
-        open_file_shortcut = self._shortcut_text(self._ui.actOpenFile)
-        open_folder_text = self._ui.actOpenFolder.text()
-        open_folder_shortcut = self._shortcut_text(self._ui.actOpenFolder)
+        label_title = QtWidgets.QLabel(self._tr("开始浏览照片"), content)
+        label_title.setObjectName("labelEmptyTitle")
+        label_title.setAlignment(QtCore.Qt.AlignCenter)
+        title_font = label_title.font()
+        title_font.setPointSize(title_font.pointSize() + 4)
+        title_font.setBold(True)
+        label_title.setFont(title_font)
+        content_layout.addWidget(label_title)
 
-        label_open_file = QtWidgets.QLabel(open_file_text)
-        label_open_file.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        label_open_file_shortcut = QtWidgets.QLabel(open_file_shortcut)
-        label_open_file_shortcut.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        label_description = QtWidgets.QLabel(self._tr("打开单张图片或选择文件夹开始预览。"), content)
+        label_description.setObjectName("labelEmptyDescription")
+        label_description.setAlignment(QtCore.Qt.AlignCenter)
+        label_description.setWordWrap(True)
+        content_layout.addWidget(label_description)
 
-        label_open_folder = QtWidgets.QLabel(open_folder_text)
-        label_open_folder.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        label_open_folder_shortcut = QtWidgets.QLabel(open_folder_shortcut)
-        label_open_folder_shortcut.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        actions_layout = QtWidgets.QHBoxLayout()
+        actions_layout.setContentsMargins(0, 8, 0, 0)
+        actions_layout.setSpacing(16)
+        actions_layout.addStretch(1)
+        actions_layout.addWidget(
+            self._build_empty_action_widget(
+                parent=content,
+                button_object_name="buttonEmptyOpenFile",
+                action=self._ui.actOpenFile,
+            )
+        )
+        actions_layout.addWidget(
+            self._build_empty_action_widget(
+                parent=content,
+                button_object_name="buttonEmptyOpenFolder",
+                action=self._ui.actOpenFolder,
+            )
+        )
+        actions_layout.addStretch(1)
+        content_layout.addLayout(actions_layout)
 
-        grid.addWidget(label_open_file, 0, 0)
-        grid.addWidget(label_open_file_shortcut, 0, 1)
-        grid.addWidget(label_open_folder, 1, 0)
-        grid.addWidget(label_open_folder_shortcut, 1, 1)
+        label_formats = QtWidgets.QLabel(
+            self._tr("支持格式：JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF"),
+            content,
+        )
+        label_formats.setObjectName("labelEmptyFormats")
+        label_formats.setAlignment(QtCore.Qt.AlignCenter)
+        label_formats.setWordWrap(True)
+        label_formats.setStyleSheet("color: #777;")
+        content_layout.addWidget(label_formats)
 
-        grid_container = QtWidgets.QWidget()
-        grid_container.setLayout(grid)
-        grid_container.setStyleSheet("color: #777;")
-        layout.addWidget(grid_container, 0, QtCore.Qt.AlignHCenter)
+        layout.addWidget(content, 0, QtCore.Qt.AlignHCenter)
         layout.addStretch(1)
         return placeholder
+
+    def _build_empty_action_widget(
+        self,
+        parent: QtWidgets.QWidget,
+        button_object_name: str,
+        action: QtWidgets.QAction,
+    ) -> QtWidgets.QWidget:
+        action_widget = QtWidgets.QWidget(parent)
+        action_layout = QtWidgets.QVBoxLayout(action_widget)
+        action_layout.setContentsMargins(0, 0, 0, 0)
+        action_layout.setSpacing(4)
+
+        button = QtWidgets.QPushButton(action.text(), action_widget)
+        button.setObjectName(button_object_name)
+        button.setMinimumWidth(160)
+        button.clicked.connect(lambda _checked=False, target=action: target.trigger())
+        action_layout.addWidget(button)
+
+        shortcut = self._shortcut_text(action)
+        shortcut_text = self._tr("快捷键：{shortcut}").format(shortcut=shortcut) if shortcut else ""
+        label_shortcut = QtWidgets.QLabel(shortcut_text, action_widget)
+        label_shortcut.setAlignment(QtCore.Qt.AlignCenter)
+        label_shortcut.setStyleSheet("color: #777;")
+        action_layout.addWidget(label_shortcut)
+        return action_widget
 
     def _shortcut_text(self, action: QtWidgets.QAction) -> str:
         sequence = action.shortcut()

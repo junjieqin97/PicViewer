@@ -176,6 +176,26 @@ A simple image viewer demo.</translation>
             <source>加载中…</source>
             <translation>Loading...</translation>
         </message>
+        <message>
+            <location filename="../../../controllers/main_controller_tabs_mixin.py" line="212" />
+            <source>开始浏览照片</source>
+            <translation>Start Browsing Photos</translation>
+        </message>
+        <message>
+            <location filename="../../../controllers/main_controller_tabs_mixin.py" line="221" />
+            <source>打开单张图片或选择文件夹开始预览。</source>
+            <translation>Open an image or choose a folder to start previewing.</translation>
+        </message>
+        <message>
+            <location filename="../../../controllers/main_controller_tabs_mixin.py" line="248" />
+            <source>支持格式：JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</source>
+            <translation>Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</translation>
+        </message>
+        <message>
+            <location filename="../../../controllers/main_controller_tabs_mixin.py" line="280" />
+            <source>快捷键：{shortcut}</source>
+            <translation>Shortcut: {shortcut}</translation>
+        </message>
     </context>
     <context>
         <name>MainWindow</name>

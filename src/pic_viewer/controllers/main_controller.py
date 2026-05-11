@@ -20,6 +20,14 @@ from pic_viewer.controllers.main_controller_tabs_mixin import MainControllerTabs
 from pic_viewer.ui.workers.image_worker import ImageLoadTask, PreviewLoadTask
 
 MAX_IMAGE_LOAD_CONCURRENCY = 8
+TRANSLATION_CONTEXTS = (
+    "MainController",
+    "MainControllerAnalysisMixin",
+    "MainControllerInteractionMixin",
+    "MainControllerLoadingMixin",
+    "MainControllerMetadataMixin",
+    "MainControllerTabsMixin",
+)
 
 
 class MainController(
@@ -99,6 +107,10 @@ class MainController(
         self._ensure_empty_image_placeholder()
 
     def _tr(self, text: str) -> str:
+        for context in TRANSLATION_CONTEXTS:
+            translated = QtCore.QCoreApplication.translate(context, text)
+            if translated != text:
+                return translated
         return QtCore.QCoreApplication.translate("MainController", text)
 
     def _connect_signals(self) -> None:

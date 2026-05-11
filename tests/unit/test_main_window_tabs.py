@@ -4,6 +4,7 @@ import os
 import sys
 from pathlib import Path
 import unittest
+from unittest.mock import MagicMock
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -14,6 +15,7 @@ SRC_ROOT = PROJECT_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+from pic_viewer.controllers.main_controller_tabs_mixin import MainControllerTabsMixin  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 
 
@@ -44,6 +46,79 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertIn("QTabWidget#tabsImages::tab-bar", style_sheet)
         self.assertIn("alignment: left", style_sheet)
         self.assertEqual("", ui.tabsInfo.styleSheet())
+
+    def test_empty_image_placeholder_hides_tab_bar(self) -> None:
+        window, ui, controller = self._build_tabs_controller()
+        self.addCleanup(window.deleteLater)
+
+        controller._ensure_empty_image_placeholder()
+
+        placeholder = ui.tabsImages.findChild(QtWidgets.QWidget, "tabImagePlaceholder")
+        self.assertIsNotNone(placeholder)
+        self.assertTrue(ui.tabsImages.tabBar().isHidden())
+
+    def test_empty_image_placeholder_has_action_buttons(self) -> None:
+        window, ui, controller = self._build_tabs_controller()
+        self.addCleanup(window.deleteLater)
+
+        controller._ensure_empty_image_placeholder()
+
+        open_file = ui.tabsImages.findChild(QtWidgets.QPushButton, "buttonEmptyOpenFile")
+        open_folder = ui.tabsImages.findChild(QtWidgets.QPushButton, "buttonEmptyOpenFolder")
+        self.assertIsNotNone(open_file)
+        self.assertIsNotNone(open_folder)
+        self.assertEqual(ui.actOpenFile.text(), open_file.text())
+        self.assertEqual(ui.actOpenFolder.text(), open_folder.text())
+
+    def test_empty_image_placeholder_buttons_trigger_actions(self) -> None:
+        window, ui, controller = self._build_tabs_controller()
+        open_file_triggered = MagicMock()
+        open_folder_triggered = MagicMock()
+        ui.actOpenFile.triggered.connect(open_file_triggered)
+        ui.actOpenFolder.triggered.connect(open_folder_triggered)
+        self.addCleanup(window.deleteLater)
+
+        controller._ensure_empty_image_placeholder()
+        open_file = ui.tabsImages.findChild(QtWidgets.QPushButton, "buttonEmptyOpenFile")
+        open_folder = ui.tabsImages.findChild(QtWidgets.QPushButton, "buttonEmptyOpenFolder")
+        self.assertIsNotNone(open_file)
+        self.assertIsNotNone(open_folder)
+
+        open_file.click()
+        open_folder.click()
+
+        open_file_triggered.assert_called_once()
+        open_folder_triggered.assert_called_once()
+
+    def test_empty_image_placeholder_shows_shortcuts_and_formats(self) -> None:
+        window, ui, controller = self._build_tabs_controller()
+        self.addCleanup(window.deleteLater)
+
+        controller._ensure_empty_image_placeholder()
+
+        labels = ui.tabsImages.findChildren(QtWidgets.QLabel)
+        label_texts = [label.text() for label in labels]
+        format_label = ui.tabsImages.findChild(QtWidgets.QLabel, "labelEmptyFormats")
+        self.assertIsNotNone(format_label)
+        self.assertIn("JPG", format_label.text())
+        self.assertIn("PNG", format_label.text())
+        self.assertIn("TIFF", format_label.text())
+        self.assertIn("DNG", format_label.text())
+        open_file_shortcut = controller._shortcut_text(ui.actOpenFile)
+        open_folder_shortcut = controller._shortcut_text(ui.actOpenFolder)
+        self.assertTrue(any(open_file_shortcut in text for text in label_texts))
+        self.assertTrue(any(open_folder_shortcut in text for text in label_texts))
+
+    def _build_tabs_controller(
+        self,
+    ) -> tuple[QtWidgets.QMainWindow, MainWindowUI, MainControllerTabsMixin]:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        controller = MainControllerTabsMixin()
+        controller._ui = ui  # type: ignore[attr-defined]
+        controller._tr = lambda text: text  # type: ignore[attr-defined]
+        return window, ui, controller
 
 
 if __name__ == "__main__":

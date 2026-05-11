@@ -4,6 +4,7 @@ import sys
 import tempfile
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 from PyQt5 import QtCore
 
@@ -53,6 +54,19 @@ class I18nRuntimeTests(unittest.TestCase):
 
         passthrough = controller._localize_backend_error_message("unknown-message")
         self.assertEqual("unknown-message", passthrough)
+
+    def test_controller_translation_checks_mixin_contexts(self) -> None:
+        controller = MainController.__new__(MainController)
+
+        def fake_translate(context: str, text: str) -> str:
+            if context == "MainControllerTabsMixin":
+                return "translated empty state"
+            return text
+
+        with patch.object(QtCore.QCoreApplication, "translate", side_effect=fake_translate):
+            translated = MainController._tr(controller, "开始浏览照片")
+
+        self.assertEqual("translated empty state", translated)
 
     def test_controller_general_metadata_localization_mapping(self) -> None:
         controller = MainController.__new__(MainController)
