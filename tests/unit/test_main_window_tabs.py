@@ -80,6 +80,25 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertEqual(expected_alignment, histogram_layout_item.alignment())
         self.assertEqual(expected_alignment, waveform_layout_item.alignment())
 
+    def test_analysis_mode_summary_is_visible_above_info_tabs(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        self.assertEqual("widgetAnalysisModeSummary", ui.widgetAnalysisModeSummary.objectName())
+        self.assertEqual("labelAnalysisModeTitle", ui.labelAnalysisModeTitle.objectName())
+        self.assertEqual("labelAnalysisModeValue", ui.labelAnalysisModeValue.objectName())
+        self.assertEqual("labelAnalysisChannelTitle", ui.labelAnalysisChannelTitle.objectName())
+        self.assertEqual("labelAnalysisChannelValue", ui.labelAnalysisChannelValue.objectName())
+
+        self.assertIs(ui.widgetAnalysisModeSummary, ui.layoutInfo.itemAt(0).widget())
+        self.assertIs(ui.tabsInfo, ui.layoutInfo.itemAt(1).widget())
+        self.assertEqual("分析模式", ui.labelAnalysisModeTitle.text())
+        self.assertEqual("明度模式", ui.labelAnalysisModeValue.text())
+        self.assertEqual("RGB通道", ui.labelAnalysisChannelTitle.text())
+        self.assertEqual("不适用", ui.labelAnalysisChannelValue.text())
+
     def test_metadata_tables_keep_fixed_key_column_and_stretched_value_column(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()

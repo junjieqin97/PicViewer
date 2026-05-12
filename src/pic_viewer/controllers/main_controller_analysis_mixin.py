@@ -125,6 +125,29 @@ class MainControllerAnalysisMixin:
         if not rgb_mode:
             with QtCore.QSignalBlocker(self._ui.actChannelAll):
                 self._ui.actChannelAll.setChecked(True)
+        self._sync_analysis_mode_summary()
+
+    def _sync_analysis_mode_summary(self) -> None:
+        """Update the visible analysis mode summary from current settings."""
+
+        if not hasattr(self._ui, "labelAnalysisModeValue"):
+            return
+
+        if self._view_settings.mode == LumaRgbMode.LUMA:
+            mode_text = self._tr("明度模式")
+            channel_text = self._tr("不适用")
+        else:
+            mode_text = self._tr("RGB模式")
+            channel_text_by_channel = {
+                RgbChannel.ALL: self._tr("全部"),
+                RgbChannel.RED: self._tr("红"),
+                RgbChannel.GREEN: self._tr("绿"),
+                RgbChannel.BLUE: self._tr("蓝"),
+            }
+            channel_text = channel_text_by_channel[self._view_settings.channel]
+
+        self._ui.labelAnalysisModeValue.setText(mode_text)
+        self._ui.labelAnalysisChannelValue.setText(channel_text)
 
     def _on_underexposed_toggled(self, active: bool) -> None:
         """Handle underexposed clipping toggle changes."""
