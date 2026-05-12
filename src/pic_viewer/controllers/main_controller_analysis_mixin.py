@@ -177,6 +177,8 @@ class MainControllerAnalysisMixin:
             with QtCore.QSignalBlocker(self._ui.actToggleOverexposed):
                 self._ui.actToggleOverexposed.setChecked(self._show_overexposed)
 
+        self._sync_pseudo_color_summary()
+
         histogram_widget = self._ui.widgetHistogram
         if not hasattr(histogram_widget, "set_clipping_state"):
             return
@@ -185,6 +187,23 @@ class MainControllerAnalysisMixin:
                 self._show_underexposed,
                 self._show_overexposed,
             )
+
+    def _sync_pseudo_color_summary(self) -> None:
+        """Update the visible pseudo-color toggle summary from controller state."""
+
+        if not hasattr(self._ui, "labelPseudoColorValue"):
+            return
+
+        enabled_text = self._tr("开启")
+        disabled_text = self._tr("关闭")
+        under_text = enabled_text if self._show_underexposed else disabled_text
+        over_text = enabled_text if self._show_overexposed else disabled_text
+        self._ui.labelPseudoColorValue.setText(
+            self._tr("欠曝：{under} / 过曝：{over}").format(
+                under=under_text,
+                over=over_text,
+            )
+        )
 
     def _refresh_overlay_for_current_image(self) -> None:
         """Refresh current image pixmap when clipping overlay state changes."""

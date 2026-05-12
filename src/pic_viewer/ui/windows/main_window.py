@@ -250,11 +250,22 @@ class MainWindowUI:
             QtWidgets.QSizePolicy.Preferred,
         )
         self.labelAnalysisChannelValue.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        self.labelPseudoColorTitle = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
+        self.labelPseudoColorTitle.setObjectName("labelPseudoColorTitle")
+        self.labelPseudoColorValue = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
+        self.labelPseudoColorValue.setObjectName("labelPseudoColorValue")
+        self.labelPseudoColorValue.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Preferred,
+        )
+        self.labelPseudoColorValue.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
 
         summary_layout.addWidget(self.labelAnalysisModeTitle, 0, 0)
         summary_layout.addWidget(self.labelAnalysisModeValue, 0, 1)
         summary_layout.addWidget(self.labelAnalysisChannelTitle, 1, 0)
         summary_layout.addWidget(self.labelAnalysisChannelValue, 1, 1)
+        summary_layout.addWidget(self.labelPseudoColorTitle, 2, 0)
+        summary_layout.addWidget(self.labelPseudoColorValue, 2, 1)
         summary_layout.setColumnStretch(1, 1)
         self.layoutInfo.addWidget(self.widgetAnalysisModeSummary)
 
@@ -463,6 +474,13 @@ class MainWindowUI:
         self.labelAnalysisModeValue.setText(self._tr("明度模式"))
         self.labelAnalysisChannelTitle.setText(self._tr("RGB通道"))
         self.labelAnalysisChannelValue.setText(self._tr("不适用"))
+        self.labelPseudoColorTitle.setText(self._tr("伪色状态"))
+        self.labelPseudoColorValue.setText(
+            self._tr("欠曝：{under} / 过曝：{over}").format(
+                under=self._tr("关闭"),
+                over=self._tr("关闭"),
+            )
+        )
 
         self.widgetHistogram.setText(self._tr("直方图占位图"))
         self.widgetHistogram.set_triangle_tooltips(

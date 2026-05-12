@@ -128,7 +128,9 @@ class MainControllerClippingToggleTests(unittest.TestCase):
             widgetHistogram=widget,
             actToggleUnderexposed=action_under,
             actToggleOverexposed=action_over,
+            labelPseudoColorValue=QtWidgets.QLabel(),
         )
+        controller._tr = lambda text: text  # type: ignore[method-assign]
         controller._show_underexposed = True
         controller._show_overexposed = False
         self.addCleanup(widget.deleteLater)
@@ -139,6 +141,30 @@ class MainControllerClippingToggleTests(unittest.TestCase):
         self.assertFalse(action_over.isChecked())
         self.assertTrue(widget.underexposed_active())
         self.assertFalse(widget.overexposed_active())
+        self.assertEqual("欠曝：开启 / 过曝：关闭", controller._ui.labelPseudoColorValue.text())
+
+    def test_sync_overlay_state_updates_visible_summary_for_both_states(self) -> None:
+        controller = MainController.__new__(MainController)
+        QtCore.QObject.__init__(controller)
+        widget = HistogramClippingLabel()
+        action_under = QtWidgets.QAction()
+        action_under.setCheckable(True)
+        action_over = QtWidgets.QAction()
+        action_over.setCheckable(True)
+        controller._ui = SimpleNamespace(
+            widgetHistogram=widget,
+            actToggleUnderexposed=action_under,
+            actToggleOverexposed=action_over,
+            labelPseudoColorValue=QtWidgets.QLabel(),
+        )
+        controller._tr = lambda text: text  # type: ignore[method-assign]
+        controller._show_underexposed = True
+        controller._show_overexposed = True
+        self.addCleanup(widget.deleteLater)
+
+        MainController._sync_histogram_overlay_state(controller)
+
+        self.assertEqual("欠曝：开启 / 过曝：开启", controller._ui.labelPseudoColorValue.text())
 
 
 if __name__ == "__main__":

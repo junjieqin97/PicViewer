@@ -69,6 +69,7 @@ CentralWidget 使用 QVBoxLayout，上下两块：
 
 - 容器：scrollInfo: QWidget（外层不滚动）
 - 内容布局：layoutInfo: QVBoxLayout
+- 信息区顶部必须显示轻量摘要：当前分析模式、RGB 通道、伪色状态（欠曝/过曝开关）。
 
 信息区内部使用 QTabWidget 或 QToolBox（二选一，推荐 QTabWidget）：
 
