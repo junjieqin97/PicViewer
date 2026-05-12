@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -46,6 +46,39 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertIn("QTabWidget#tabsImages::tab-bar", style_sheet)
         self.assertIn("alignment: left", style_sheet)
         self.assertEqual("", ui.tabsInfo.styleSheet())
+
+    def test_analysis_widgets_are_wrapped_in_fixed_top_aligned_frames(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        window.resize(1200, 800)
+        window.show()
+        self._app.processEvents()
+
+        self.assertEqual("frameHistogramAnalysis", ui.widgetHistogram.parentWidget().objectName())
+        self.assertEqual("frameWaveformAnalysis", ui.widgetWaveform.parentWidget().objectName())
+        self.assertEqual(ui.info_panel_histogram_size, ui.widgetHistogram.size())
+        self.assertEqual(ui.info_panel_waveform_size, ui.widgetWaveform.size())
+
+        histogram_frame = ui.frameHistogramAnalysis
+        waveform_frame = ui.frameWaveformAnalysis
+        self.assertEqual(QtWidgets.QSizePolicy.Fixed, histogram_frame.sizePolicy().horizontalPolicy())
+        self.assertEqual(QtWidgets.QSizePolicy.Fixed, histogram_frame.sizePolicy().verticalPolicy())
+        self.assertEqual(QtWidgets.QSizePolicy.Fixed, waveform_frame.sizePolicy().horizontalPolicy())
+        self.assertEqual(QtWidgets.QSizePolicy.Fixed, waveform_frame.sizePolicy().verticalPolicy())
+
+        max_histogram_height = ui.info_panel_histogram_size.height() + 24
+        max_waveform_height = ui.info_panel_waveform_size.height() + 24
+        self.assertLessEqual(histogram_frame.height(), max_histogram_height)
+        self.assertLessEqual(waveform_frame.height(), max_waveform_height)
+
+        histogram_layout_item = ui.tabHistogram.layout().itemAt(0)
+        waveform_layout_item = ui.tabWaveform.layout().itemAt(0)
+        expected_alignment = QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop
+        self.assertEqual(expected_alignment, histogram_layout_item.alignment())
+        self.assertEqual(expected_alignment, waveform_layout_item.alignment())
 
     def test_empty_image_placeholder_hides_tab_bar(self) -> None:
         window, ui, controller = self._build_tabs_controller()

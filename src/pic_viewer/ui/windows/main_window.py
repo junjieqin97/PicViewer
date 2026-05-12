@@ -227,33 +227,49 @@ class MainWindowUI:
         self.tabHistogram = QtWidgets.QWidget(self.tabsInfo)
         self.tabHistogram.setObjectName("tabHistogram")
         hist_layout = QtWidgets.QVBoxLayout(self.tabHistogram)
-        self.widgetHistogram = HistogramClippingLabel("", self.tabHistogram)
+        hist_layout.setContentsMargins(6, 6, 6, 6)
+        self.frameHistogramAnalysis = QtWidgets.QFrame(self.tabHistogram)
+        self.frameHistogramAnalysis.setObjectName("frameHistogramAnalysis")
+        self.frameHistogramAnalysis.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frameHistogramAnalysis.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        hist_frame_layout = QtWidgets.QVBoxLayout(self.frameHistogramAnalysis)
+        hist_frame_layout.setContentsMargins(8, 8, 8, 8)
+        hist_frame_layout.setSpacing(0)
+        self.widgetHistogram = HistogramClippingLabel("", self.frameHistogramAnalysis)
         self.widgetHistogram.setObjectName("widgetHistogram")
         self.widgetHistogram.setAlignment(QtCore.Qt.AlignCenter)
         self.widgetHistogram.setFixedSize(self.info_panel_histogram_size)
         self.widgetHistogram.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        hist_frame_layout.addWidget(self.widgetHistogram)
         hist_layout.addWidget(
-            self.widgetHistogram,
+            self.frameHistogramAnalysis,
             0,
             QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop,
         )
-        hist_layout.addStretch(1)
         self.tabsInfo.addTab(self.tabHistogram, "")
 
         self.tabWaveform = QtWidgets.QWidget(self.tabsInfo)
         self.tabWaveform.setObjectName("tabWaveform")
         wave_layout = QtWidgets.QVBoxLayout(self.tabWaveform)
-        self.widgetWaveform = QtWidgets.QLabel("", self.tabWaveform)
+        wave_layout.setContentsMargins(6, 6, 6, 6)
+        self.frameWaveformAnalysis = QtWidgets.QFrame(self.tabWaveform)
+        self.frameWaveformAnalysis.setObjectName("frameWaveformAnalysis")
+        self.frameWaveformAnalysis.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frameWaveformAnalysis.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        wave_frame_layout = QtWidgets.QVBoxLayout(self.frameWaveformAnalysis)
+        wave_frame_layout.setContentsMargins(8, 8, 8, 8)
+        wave_frame_layout.setSpacing(0)
+        self.widgetWaveform = QtWidgets.QLabel("", self.frameWaveformAnalysis)
         self.widgetWaveform.setObjectName("widgetWaveform")
         self.widgetWaveform.setAlignment(QtCore.Qt.AlignCenter)
         self.widgetWaveform.setFixedSize(self.info_panel_waveform_size)
         self.widgetWaveform.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        wave_frame_layout.addWidget(self.widgetWaveform)
         wave_layout.addWidget(
-            self.widgetWaveform,
+            self.frameWaveformAnalysis,
             0,
             QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop,
         )
-        wave_layout.addStretch(1)
         self.tabsInfo.addTab(self.tabWaveform, "")
 
         self.tabMetadata = QtWidgets.QWidget(self.tabsInfo)
