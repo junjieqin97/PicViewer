@@ -17,6 +17,7 @@ class MainWindowUI:
     INFO_PANEL_WAVEFORM_SIZE = QtCore.QSize(256, 256)
     INFO_PANEL_MIN_WIDTH = 320
     IMAGE_PANEL_MIN_WIDTH = 500
+    METADATA_KEY_COLUMN_WIDTH = 112
 
     def setup_ui(self, main_window: QtWidgets.QMainWindow) -> None:
         self._main_window = main_window
@@ -371,7 +372,13 @@ class MainWindowUI:
         table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        table.horizontalHeader().setStretchLastSection(True)
+        table.setWordWrap(False)
+        table.setTextElideMode(QtCore.Qt.ElideRight)
+        header = table.horizontalHeader()
+        header.setStretchLastSection(False)
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Fixed)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        table.setColumnWidth(0, self.METADATA_KEY_COLUMN_WIDTH)
         table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         return table
 

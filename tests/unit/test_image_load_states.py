@@ -151,6 +151,46 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         self.assertEqual("失败原因", ui.tableMetadataGeneral.item(1, 0).text())
         self.assertEqual("无法读取该图片文件", ui.tableMetadataGeneral.item(1, 1).text())
 
+    def test_long_metadata_values_have_full_value_tooltips(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        long_value = "/tmp/" + ("nested/" * 8) + "sample-with-a-long-name.jpg"
+
+        controller._populate_metadata_table(
+            ui.tableMetadataGeneral,
+            (("路径", long_value),),
+            "暂无通用信息",
+        )
+
+        value_item = ui.tableMetadataGeneral.item(0, 1)
+        self.assertEqual(long_value, value_item.text())
+        self.assertEqual(long_value, value_item.toolTip())
+
+    def test_empty_metadata_state_spans_both_columns_and_is_not_selectable(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+
+        controller._populate_metadata_table(ui.tableMetadataExif, tuple(), "暂无 Exif 信息")
+
+        table = ui.tableMetadataExif
+        empty_item = table.item(0, 0)
+        self.assertEqual("暂无 Exif 信息", empty_item.text())
+        self.assertEqual(2, table.columnSpan(0, 0))
+        self.assertEqual(QtCore.Qt.AlignCenter, empty_item.textAlignment())
+        self.assertFalse(empty_item.flags() & QtCore.Qt.ItemIsSelectable)
+
+    def test_metadata_table_clears_empty_span_when_entries_return(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+
+        controller._populate_metadata_table(ui.tableMetadataTiff, tuple(), "暂无 TIFF 信息")
+        controller._populate_metadata_table(ui.tableMetadataTiff, (("Make", "Example"),), "暂无 TIFF 信息")
+
+        table = ui.tableMetadataTiff
+        self.assertEqual(1, table.columnSpan(0, 0))
+        self.assertEqual("Make", table.item(0, 0).text())
+        self.assertEqual("Example", table.item(0, 1).text())
+
     def _build_controller(self) -> tuple[QtWidgets.QMainWindow, MainWindowUI, MainController]:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()

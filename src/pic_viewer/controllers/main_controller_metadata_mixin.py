@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
 
 
 class MainControllerMetadataMixin:
     """Provide metadata table rendering helpers."""
+
+    METADATA_TOOLTIP_VALUE_LENGTH = 48
 
     def _clear_metadata_tables(self) -> None:
         self._populate_metadata_table(self._ui.tableMetadataGeneral, tuple(), self._tr("暂无通用信息"))
@@ -69,13 +71,31 @@ class MainControllerMetadataMixin:
     def _populate_metadata_table(
         self, table: QtWidgets.QTableWidget, entries: MetadataSection, empty_message: str
     ) -> None:
+        table.clearSpans()
+        table.clearContents()
         if entries:
             table.setRowCount(len(entries))
             for row, (key, value) in enumerate(entries):
-                table.setItem(row, 0, QtWidgets.QTableWidgetItem(key))
-                table.setItem(row, 1, QtWidgets.QTableWidgetItem(value))
+                table.setItem(row, 0, self._create_metadata_item(key))
+                table.setItem(row, 1, self._create_metadata_item(value, tooltip_if_long=True))
         else:
             table.setRowCount(1)
-            table.setItem(0, 0, QtWidgets.QTableWidgetItem(empty_message))
-            table.setItem(0, 1, QtWidgets.QTableWidgetItem(""))
-        table.resizeColumnsToContents()
+            table.setItem(0, 0, self._create_metadata_state_item(empty_message))
+            table.setSpan(0, 0, 1, 2)
+
+    def _create_metadata_item(
+        self, text: str, tooltip_if_long: bool = False
+    ) -> QtWidgets.QTableWidgetItem:
+        item = QtWidgets.QTableWidgetItem(text)
+        if tooltip_if_long and self._should_show_metadata_tooltip(text):
+            item.setToolTip(text)
+        return item
+
+    def _create_metadata_state_item(self, text: str) -> QtWidgets.QTableWidgetItem:
+        item = QtWidgets.QTableWidgetItem(text)
+        item.setTextAlignment(QtCore.Qt.AlignCenter)
+        item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
+        return item
+
+    def _should_show_metadata_tooltip(self, text: str) -> bool:
+        return "\n" in text or len(text) > self.METADATA_TOOLTIP_VALUE_LENGTH

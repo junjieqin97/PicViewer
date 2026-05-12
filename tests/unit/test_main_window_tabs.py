@@ -80,6 +80,26 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertEqual(expected_alignment, histogram_layout_item.alignment())
         self.assertEqual(expected_alignment, waveform_layout_item.alignment())
 
+    def test_metadata_tables_keep_fixed_key_column_and_stretched_value_column(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        tables = (
+            ui.tableMetadataGeneral,
+            ui.tableMetadataExif,
+            ui.tableMetadataIptc,
+            ui.tableMetadataTiff,
+        )
+        for table in tables:
+            header = table.horizontalHeader()
+            self.assertEqual(QtWidgets.QHeaderView.Fixed, header.sectionResizeMode(0))
+            self.assertEqual(QtWidgets.QHeaderView.Stretch, header.sectionResizeMode(1))
+            self.assertEqual(ui.METADATA_KEY_COLUMN_WIDTH, table.columnWidth(0))
+            self.assertFalse(table.wordWrap())
+            self.assertEqual(QtCore.Qt.ElideRight, table.textElideMode())
+
     def test_empty_image_placeholder_hides_tab_bar(self) -> None:
         window, ui, controller = self._build_tabs_controller()
         self.addCleanup(window.deleteLater)
