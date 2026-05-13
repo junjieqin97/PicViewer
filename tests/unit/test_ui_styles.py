@@ -34,6 +34,11 @@ class UiStylesTests(unittest.TestCase):
         self.assertIn("alignment: left", style_sheet)
         self.assertIn("QStatusBar", style_sheet)
 
+    def test_stylesheet_does_not_override_native_tab_close_button(self) -> None:
+        style_sheet = styles.load_stylesheet()
+
+        self.assertNotIn("QTabBar::close-button", style_sheet)
+
     def test_load_stylesheet_returns_empty_string_when_file_missing(self) -> None:
         missing_path = PROJECT_ROOT / "missing-main.qss"
 
