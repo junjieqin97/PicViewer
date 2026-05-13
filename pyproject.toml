@@ -31,4 +31,5 @@ where = ["src"]
 pic_viewer = [
   "ui/resources/i18n/*.ts",
   "ui/resources/i18n/*.qm",
+  "ui/resources/styles/*.qss",
 ]

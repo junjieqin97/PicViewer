@@ -36,16 +36,15 @@ class MainWindowTabsTests(unittest.TestCase):
 
         self.assertFalse(ui.tabsImages.tabBar().expanding())
 
-    def test_image_tabs_have_left_aligned_tab_bar_style(self) -> None:
+    def test_main_window_loads_left_aligned_tab_bar_style(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
         ui.setup_ui(window)
         self.addCleanup(window.deleteLater)
 
-        style_sheet = ui.tabsImages.styleSheet()
+        style_sheet = window.styleSheet()
         self.assertIn("QTabWidget#tabsImages::tab-bar", style_sheet)
         self.assertIn("alignment: left", style_sheet)
-        self.assertEqual("", ui.tabsInfo.styleSheet())
 
     def test_analysis_widgets_are_wrapped_in_fixed_top_aligned_frames(self) -> None:
         window = QtWidgets.QMainWindow()

@@ -6,6 +6,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.analysis_view_service import AnalysisViewService
 from pic_viewer.app.services.image_service import ImageService
+from pic_viewer.ui.resources.styles import apply_stylesheet
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel
 
 
@@ -29,6 +30,7 @@ class MainWindowUI:
         self.create_context_menus()
         self.create_widgets()
         self.create_layouts()
+        apply_stylesheet(main_window)
         self.retranslate_ui()
 
         self.actToggleInfoPanel.setChecked(True)
@@ -210,7 +212,6 @@ class MainWindowUI:
         self.tabsImages.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         tab_bar = self.tabsImages.tabBar()
         tab_bar.setExpanding(False)
-        self.tabsImages.setStyleSheet("QTabWidget#tabsImages::tab-bar { alignment: left; }")
 
         self.scrollInfo = QtWidgets.QWidget(self.splitMain)
         self.scrollInfo.setObjectName("scrollInfo")

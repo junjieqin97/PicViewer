@@ -172,7 +172,6 @@ class MainControllerTabsMixin:
         lbl_image = QtWidgets.QLabel("")
         lbl_image.setObjectName("lblImage")
         lbl_image.setAlignment(QtCore.Qt.AlignCenter)
-        lbl_image.setStyleSheet("background:#222;color:#ddd;")
         lbl_image.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
         lbl_image.setCursor(QtCore.Qt.OpenHandCursor)
         lbl_image.setProperty("_image_drag_area", True)
@@ -392,7 +391,6 @@ class MainControllerTabsMixin:
         label_formats.setObjectName("labelEmptyFormats")
         label_formats.setAlignment(QtCore.Qt.AlignCenter)
         label_formats.setWordWrap(True)
-        label_formats.setStyleSheet("color: #777;")
         content_layout.addWidget(label_formats)
 
         layout.addWidget(content, 0, QtCore.Qt.AlignHCenter)
@@ -424,7 +422,6 @@ class MainControllerTabsMixin:
         label_shortcut.setObjectName(label_object_name)
         label_shortcut.setAlignment(QtCore.Qt.AlignCenter)
         label_shortcut.setMinimumHeight(label_shortcut.fontMetrics().height() + 8)
-        label_shortcut.setStyleSheet("color: #777;")
         return label_shortcut
 
     def _shortcut_text(self, action: QtWidgets.QAction) -> str:

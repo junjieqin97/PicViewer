@@ -78,14 +78,12 @@ class ImageLoadStateWidget(QtWidgets.QWidget):
         self.label_reason.setObjectName("labelImageLoadStateReason")
         self.label_reason.setAlignment(QtCore.Qt.AlignCenter)
         self.label_reason.setWordWrap(True)
-        self.label_reason.setStyleSheet("color: #d06a4b;")
         content_layout.addWidget(self.label_reason)
 
         self.label_file_name = QtWidgets.QLabel(content)
         self.label_file_name.setObjectName("labelImageLoadStateFileName")
         self.label_file_name.setAlignment(QtCore.Qt.AlignCenter)
         self.label_file_name.setWordWrap(True)
-        self.label_file_name.setStyleSheet("color: #777;")
         content_layout.addWidget(self.label_file_name)
 
         self.progress = QtWidgets.QProgressBar(content)
