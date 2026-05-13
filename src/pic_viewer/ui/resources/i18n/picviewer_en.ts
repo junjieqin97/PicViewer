@@ -78,6 +78,16 @@
         <source>欠曝：{under} / 过曝：{over}</source>
         <translation>Underexposed: {under} / Overexposed: {over}</translation>
     </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="69"/>
+        <source>缩放：适配窗口</source>
+        <translation>Zoom: Fit to Window</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="70"/>
+        <source>缩放：{percent}%</source>
+        <translation>Zoom: {percent}%</translation>
+    </message>
 </context>
 <context>
     <name>MainControllerInteractionMixin</name>

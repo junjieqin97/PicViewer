@@ -46,6 +46,7 @@ class MainControllerAnalysisMixin:
             return
         self._set_zoom_state(path, 1.0, True)
         self._refresh_current_image_pixmap()
+        self._show_zoom_status(path)
 
     def _adjust_zoom(self, factor: float) -> None:
         """Apply a zoom factor for the current image."""
@@ -59,6 +60,22 @@ class MainControllerAnalysisMixin:
         zoom = max(self._zoom_min, min(self._zoom_max, zoom * factor))
         self._set_zoom_state(path, zoom, False)
         self._refresh_current_image_pixmap()
+        self._show_zoom_status(path)
+
+    def _format_zoom_status(self, zoom: float, fit_to_window: bool) -> str:
+        """Return the status-bar text for the current zoom state."""
+
+        if fit_to_window:
+            return self._tr("缩放：适配窗口")
+        return self._tr("缩放：{percent}%").format(percent=round(zoom * 100))
+
+    def _show_zoom_status(self, path: Path) -> None:
+        """Show the persisted zoom state for the given image in the status bar."""
+
+        zoom, fit_to_window = self._get_zoom_state(path)
+        self._main_window.statusBar().showMessage(
+            self._format_zoom_status(zoom, fit_to_window)
+        )
 
     def _toggle_info_panel(self, visible: bool) -> None:
         splitter = self._ui.splitMain

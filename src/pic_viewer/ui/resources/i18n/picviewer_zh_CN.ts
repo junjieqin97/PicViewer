@@ -78,6 +78,16 @@
         <source>欠曝：{under} / 过曝：{over}</source>
         <translation>欠曝：{under} / 过曝：{over}</translation>
     </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="69"/>
+        <source>缩放：适配窗口</source>
+        <translation>缩放：适配窗口</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="70"/>
+        <source>缩放：{percent}%</source>
+        <translation>缩放：{percent}%</translation>
+    </message>
 </context>
 <context>
     <name>MainControllerInteractionMixin</name>
