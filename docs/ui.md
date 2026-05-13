@@ -5,6 +5,7 @@
 - 严格按本说明实现 UI 结构与组件命名；不得擅自新增/删减区域、按钮、面板。
 - 禁止使用 move()/resize() 绝对定位；所有布局必须基于 QVBoxLayout/QHBoxLayout/QGridLayout/QSplitter。
 - 所有可视区域必须可随窗口缩放自适应：左+中图片区、右侧信息区随窗口变化；底部胶卷条固定高度。
+- UI 组件样式必须统一定义在 `src/pic_viewer/ui/resources/styles/*.qss` 文件中；禁止在 Python 代码中通过 `setStyleSheet(...)` 或字符串常量硬编码颜色、边框、间距等样式。
 
 ## 1. 主窗口布局结构（信息架构）
 
