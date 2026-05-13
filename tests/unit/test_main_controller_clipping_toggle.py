@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -74,6 +74,63 @@ class MainControllerClippingToggleTests(unittest.TestCase):
 
         self.controller._sync_histogram_overlay_state.assert_not_called()
         self.controller._refresh_overlay_for_current_image.assert_not_called()
+
+    def test_hovering_triangles_updates_hover_state_and_cursor(self) -> None:
+        self.widget.resize(256, 100)
+
+        self._send_mouse_move(self.widget, QtCore.QPoint(10, 10))
+
+        self.assertEqual("underexposed", self.widget._hovered_triangle)
+        self.assertEqual(QtCore.Qt.PointingHandCursor, self.widget.cursor().shape())
+
+        self._send_mouse_move(self.widget, QtCore.QPoint(245, 10))
+
+        self.assertEqual("overexposed", self.widget._hovered_triangle)
+        self.assertEqual(QtCore.Qt.PointingHandCursor, self.widget.cursor().shape())
+
+        self._send_mouse_move(self.widget, QtCore.QPoint(128, 80))
+
+        self.assertIsNone(self.widget._hovered_triangle)
+        self.assertNotEqual(QtCore.Qt.PointingHandCursor, self.widget.cursor().shape())
+
+        self._send_mouse_move(self.widget, QtCore.QPoint(10, 10))
+        self.widget.leaveEvent(QtCore.QEvent(QtCore.QEvent.Leave))
+
+        self.assertIsNone(self.widget._hovered_triangle)
+        self.assertNotEqual(QtCore.Qt.PointingHandCursor, self.widget.cursor().shape())
+
+    def test_clicking_triangles_emits_toggle_signals(self) -> None:
+        self.widget.resize(256, 100)
+        underexposed_toggled = MagicMock()
+        overexposed_toggled = MagicMock()
+        self.widget.underexposed_toggled.connect(underexposed_toggled)
+        self.widget.overexposed_toggled.connect(overexposed_toggled)
+
+        self._send_mouse_press(self.widget, QtCore.QPoint(10, 10))
+        self._send_mouse_press(self.widget, QtCore.QPoint(245, 10))
+
+        underexposed_toggled.assert_called_once_with(True)
+        overexposed_toggled.assert_called_once_with(True)
+
+    def _send_mouse_move(self, widget: HistogramClippingLabel, pos: QtCore.QPoint) -> None:
+        event = QtGui.QMouseEvent(
+            QtCore.QEvent.MouseMove,
+            QtCore.QPointF(pos),
+            QtCore.Qt.NoButton,
+            QtCore.Qt.NoButton,
+            QtCore.Qt.NoModifier,
+        )
+        widget.mouseMoveEvent(event)
+
+    def _send_mouse_press(self, widget: HistogramClippingLabel, pos: QtCore.QPoint) -> None:
+        event = QtGui.QMouseEvent(
+            QtCore.QEvent.MouseButtonPress,
+            QtCore.QPointF(pos),
+            QtCore.Qt.LeftButton,
+            QtCore.Qt.LeftButton,
+            QtCore.Qt.NoModifier,
+        )
+        widget.mousePressEvent(event)
 
     def test_refresh_overlay_clears_cache_and_refreshes_current_tab(self) -> None:
         controller = MainController.__new__(MainController)

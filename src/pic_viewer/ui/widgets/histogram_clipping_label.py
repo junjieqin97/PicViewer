@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
+TriangleName = Literal["underexposed", "overexposed"] | None
 
 
 class HistogramClippingLabel(QtWidgets.QLabel):
@@ -15,7 +19,8 @@ class HistogramClippingLabel(QtWidgets.QLabel):
         super().__init__(text, parent)
         self._underexposed_active = False
         self._overexposed_active = False
-        self._triangle_size = 12
+        self._hovered_triangle: TriangleName = None
+        self._triangle_size = 14
         self._triangle_margin = 6
         self._underexposed_tooltip = ""
         self._overexposed_tooltip = ""
@@ -60,13 +65,15 @@ class HistogramClippingLabel(QtWidgets.QLabel):
             painter,
             self._left_triangle(),
             active=self._underexposed_active,
-            active_color=QtGui.QColor(0, 200, 0),
+            hovered=self._hovered_triangle == "underexposed",
+            semantic_color=QtGui.QColor(48, 180, 88),
         )
         self._paint_triangle(
             painter,
             self._right_triangle(),
             active=self._overexposed_active,
-            active_color=QtGui.QColor(220, 40, 40),
+            hovered=self._hovered_triangle == "overexposed",
+            semantic_color=QtGui.QColor(224, 68, 68),
         )
         painter.end()
 
@@ -74,14 +81,14 @@ class HistogramClippingLabel(QtWidgets.QLabel):
         """Toggle clipping marker state when a triangle is clicked."""
 
         if event.button() == QtCore.Qt.LeftButton:
-            pos = event.pos()
-            if self._left_triangle().containsPoint(pos, QtCore.Qt.OddEvenFill):
+            triangle = self._triangle_at(event.pos())
+            if triangle == "underexposed":
                 self._underexposed_active = not self._underexposed_active
                 self.underexposed_toggled.emit(self._underexposed_active)
                 self.update()
                 event.accept()
                 return
-            if self._right_triangle().containsPoint(pos, QtCore.Qt.OddEvenFill):
+            if triangle == "overexposed":
                 self._overexposed_active = not self._overexposed_active
                 self.overexposed_toggled.emit(self._overexposed_active)
                 self.update()
@@ -92,10 +99,9 @@ class HistogramClippingLabel(QtWidgets.QLabel):
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:  # type: ignore[override]
         """Show hand cursor when hovering clipping triangles."""
 
-        pos = event.pos()
-        if self._left_triangle().containsPoint(pos, QtCore.Qt.OddEvenFill) or self._right_triangle().containsPoint(
-            pos, QtCore.Qt.OddEvenFill
-        ):
+        triangle = self._triangle_at(event.pos())
+        self._set_hovered_triangle(triangle)
+        if triangle is not None:
             self.setCursor(QtCore.Qt.PointingHandCursor)
         else:
             self.unsetCursor()
@@ -105,11 +111,11 @@ class HistogramClippingLabel(QtWidgets.QLabel):
         """Handle tooltip events for clipping triangles."""
 
         if event.type() == QtCore.QEvent.ToolTip and isinstance(event, QtGui.QHelpEvent):
-            pos = event.pos()
-            if self._left_triangle().containsPoint(pos, QtCore.Qt.OddEvenFill):
+            triangle = self._triangle_at(event.pos())
+            if triangle == "underexposed":
                 QtWidgets.QToolTip.showText(event.globalPos(), self._underexposed_tooltip, self)
                 return True
-            if self._right_triangle().containsPoint(pos, QtCore.Qt.OddEvenFill):
+            if triangle == "overexposed":
                 QtWidgets.QToolTip.showText(event.globalPos(), self._overexposed_tooltip, self)
                 return True
             QtWidgets.QToolTip.hideText()
@@ -120,6 +126,7 @@ class HistogramClippingLabel(QtWidgets.QLabel):
     def leaveEvent(self, event: QtCore.QEvent) -> None:  # type: ignore[override]
         """Clear cursor override and hide tooltip on leave."""
 
+        self._set_hovered_triangle(None)
         self.unsetCursor()
         QtWidgets.QToolTip.hideText()
         super().leaveEvent(event)
@@ -155,16 +162,57 @@ class HistogramClippingLabel(QtWidgets.QLabel):
             ]
         )
 
+    def _triangle_at(self, pos: QtCore.QPoint) -> TriangleName:
+        """Return the clipping triangle under the given widget position."""
+
+        if self._left_triangle().containsPoint(pos, QtCore.Qt.OddEvenFill):
+            return "underexposed"
+        if self._right_triangle().containsPoint(pos, QtCore.Qt.OddEvenFill):
+            return "overexposed"
+        return None
+
+    def _set_hovered_triangle(self, value: TriangleName) -> None:
+        """Update hovered clipping marker and repaint only when it changes."""
+
+        if self._hovered_triangle == value:
+            return
+        self._hovered_triangle = value
+        self.update()
+
     def _paint_triangle(
         self,
         painter: QtGui.QPainter,
         polygon: QtGui.QPolygon,
         active: bool,
-        active_color: QtGui.QColor,
+        hovered: bool,
+        semantic_color: QtGui.QColor,
     ) -> None:
         """Draw a clipping indicator triangle."""
 
-        color = active_color if active else QtGui.QColor(120, 120, 120)
-        painter.setBrush(QtGui.QBrush(color))
-        painter.setPen(QtGui.QPen(QtGui.QColor(30, 30, 30), 1))
+        fill_color = QtGui.QColor(semantic_color)
+        fill_color.setAlpha(230 if active else 92)
+        if hovered and not active:
+            fill_color.setAlpha(128)
+
+        outline_color = semantic_color.lighter(145 if hovered else 115)
+        outline_width = 2 if hovered else 1
+
+        if hovered:
+            glow_color = QtGui.QColor(semantic_color)
+            glow_color.setAlpha(72)
+            glow_pen = QtGui.QPen(glow_color, 5)
+            glow_pen.setJoinStyle(QtCore.Qt.RoundJoin)
+            painter.setBrush(QtCore.Qt.NoBrush)
+            painter.setPen(glow_pen)
+            painter.drawPolygon(polygon)
+
+        painter.setBrush(QtGui.QBrush(fill_color))
+        painter.setPen(QtGui.QPen(outline_color, outline_width))
         painter.drawPolygon(polygon)
+
+        if active:
+            highlight_color = semantic_color.lighter(160)
+            highlight_color.setAlpha(150)
+            painter.setBrush(QtCore.Qt.NoBrush)
+            painter.setPen(QtGui.QPen(highlight_color, 1))
+            painter.drawPolyline(polygon)
