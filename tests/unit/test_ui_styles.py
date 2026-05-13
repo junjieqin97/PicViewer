@@ -32,6 +32,10 @@ class UiStylesTests(unittest.TestCase):
 
         self.assertIn("QTabWidget#tabsImages::tab-bar", style_sheet)
         self.assertIn("alignment: left", style_sheet)
+        self.assertIn("QScrollArea#scrollImage", style_sheet)
+        self.assertIn("QWidget#viewportImageCanvas", style_sheet)
+        self.assertIn("QScrollArea#scrollImage QScrollBar:horizontal", style_sheet)
+        self.assertIn("QScrollArea#scrollImage QScrollBar:vertical", style_sheet)
         self.assertIn("QStatusBar", style_sheet)
 
     def test_stylesheet_does_not_override_native_tab_close_button(self) -> None:

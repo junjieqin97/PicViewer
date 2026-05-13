@@ -49,10 +49,14 @@ QTabBar::tab:selected {
 }
 
 QWidget#tabImagePlaceholder,
-QWidget#pageImagePreview,
 QStackedWidget#stackImageContent,
 QWidget#widgetImageLoadState {
     background: #191b1f;
+    color: #d7dbe0;
+}
+
+QWidget#pageImagePreview {
+    background: #0f1114;
     color: #d7dbe0;
 }
 
@@ -99,17 +103,54 @@ QPushButton#buttonImageLoadRetry:hover {
 }
 
 QScrollArea#scrollImage {
-    background: #15171a;
-    border: 1px solid #31363d;
+    background: #0f1114;
+    border: 1px solid #2e343b;
 }
 
-QScrollArea#scrollImage > QWidget > QWidget {
-    background: #15171a;
+QWidget#viewportImageCanvas {
+    background: #0f1114;
 }
 
 QLabel#lblImage {
-    background: #1a1d21;
+    background: transparent;
     color: #cfd5dc;
+}
+
+QScrollArea#scrollImage QScrollBar:horizontal {
+    background: #111419;
+    border: none;
+    height: 10px;
+    margin: 0;
+}
+
+QScrollArea#scrollImage QScrollBar:vertical {
+    background: #111419;
+    border: none;
+    width: 10px;
+    margin: 0;
+}
+
+QScrollArea#scrollImage QScrollBar::handle:horizontal,
+QScrollArea#scrollImage QScrollBar::handle:vertical {
+    background: #3c4652;
+    border-radius: 5px;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+QScrollArea#scrollImage QScrollBar::handle:horizontal:hover,
+QScrollArea#scrollImage QScrollBar::handle:vertical:hover {
+    background: #596777;
+}
+
+QScrollArea#scrollImage QScrollBar::add-line,
+QScrollArea#scrollImage QScrollBar::sub-line,
+QScrollArea#scrollImage QScrollBar::add-page,
+QScrollArea#scrollImage QScrollBar::sub-page {
+    background: transparent;
+    border: none;
+    width: 0;
+    height: 0;
 }
 
 QWidget#scrollInfo {

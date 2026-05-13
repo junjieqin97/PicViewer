@@ -16,6 +16,9 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.controllers.main_controller_tabs_mixin import MainControllerTabsMixin  # noqa: E402
+from pic_viewer.controllers.main_controller_interaction_mixin import (  # noqa: E402
+    MainControllerInteractionMixin,
+)
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 
 
@@ -207,6 +210,24 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertLess(open_file.geometry().bottom(), open_file_shortcut.geometry().top())
         self.assertLess(open_folder.geometry().bottom(), open_folder_shortcut.geometry().top())
 
+    def test_image_preview_canvas_exposes_styled_scroll_area(self) -> None:
+        window, ui, controller = self._build_image_preview_controller()
+        self.addCleanup(window.deleteLater)
+
+        image_page = controller._build_image_preview_page(window)
+
+        scroll_area = image_page.findChild(QtWidgets.QScrollArea, "scrollImage")
+        lbl_image = image_page.findChild(QtWidgets.QLabel, "lblImage")
+        self.assertIsNotNone(scroll_area)
+        self.assertIsNotNone(lbl_image)
+        self.assertEqual(QtWidgets.QFrame.NoFrame, scroll_area.frameShape())
+        self.assertEqual("viewportImageCanvas", scroll_area.viewport().objectName())
+        self.assertEqual(QtCore.Qt.ScrollBarAsNeeded, scroll_area.horizontalScrollBarPolicy())
+        self.assertEqual(QtCore.Qt.ScrollBarAsNeeded, scroll_area.verticalScrollBarPolicy())
+        self.assertTrue(scroll_area.property("_image_drag_area"))
+        self.assertTrue(scroll_area.viewport().property("_image_drag_area"))
+        self.assertTrue(lbl_image.property("_image_drag_area"))
+
     def _build_tabs_controller(
         self,
     ) -> tuple[QtWidgets.QMainWindow, MainWindowUI, MainControllerTabsMixin]:
@@ -217,6 +238,28 @@ class MainWindowTabsTests(unittest.TestCase):
         controller._ui = ui  # type: ignore[attr-defined]
         controller._tr = lambda text: text  # type: ignore[attr-defined]
         return window, ui, controller
+
+    def _build_image_preview_controller(
+        self,
+    ) -> tuple[QtWidgets.QMainWindow, MainWindowUI, "_ImagePreviewController"]:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        controller = _ImagePreviewController()
+        QtCore.QObject.__init__(controller, window)
+        controller._ui = ui  # type: ignore[attr-defined]
+        controller._tr = lambda text: text  # type: ignore[attr-defined]
+        controller._image_context_menu = ui.menuImageContext  # type: ignore[attr-defined]
+        controller._cursor_override_target = None  # type: ignore[attr-defined]
+        return window, ui, controller
+
+
+class _ImagePreviewController(
+    MainControllerTabsMixin,
+    MainControllerInteractionMixin,
+    QtCore.QObject,
+):
+    """Minimal controller for image preview widget construction tests."""
 
 
 if __name__ == "__main__":
