@@ -4,77 +4,77 @@
 <context>
     <name>MainControllerAnalysisMixin</name>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="342"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="359"/>
         <source>直方图占位图</source>
         <translation>直方图占位图</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="343"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="360"/>
         <source>波形图占位图</source>
         <translation>波形图占位图</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="348"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="365"/>
         <source>正在生成直方图…</source>
         <translation>正在生成直方图…</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="349"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="366"/>
         <source>正在生成波形图…</source>
         <translation>正在生成波形图…</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="352"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="369"/>
         <source>图片加载失败，无法生成分析</source>
         <translation>图片加载失败，无法生成分析</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="137"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="154"/>
         <source>明度模式</source>
         <translation>明度模式</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="138"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="155"/>
         <source>不适用</source>
         <translation>不适用</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="140"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="157"/>
         <source>RGB模式</source>
         <translation>RGB模式</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="142"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="159"/>
         <source>全部</source>
         <translation>全部</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="143"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="160"/>
         <source>红</source>
         <translation>红</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="144"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="161"/>
         <source>绿</source>
         <translation>绿</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="145"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="162"/>
         <source>蓝</source>
         <translation>蓝</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="197"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="214"/>
         <source>开启</source>
         <translation>开启</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="198"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="215"/>
         <source>关闭</source>
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="201"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="218"/>
         <source>欠曝：{under} / 过曝：{over}</source>
         <translation>欠曝：{under} / 过曝：{over}</translation>
     </message>
@@ -293,47 +293,47 @@
         <translation>该文件夹未找到可打开的图片文件</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="327"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="330"/>
         <source>开始浏览照片</source>
         <translation>开始浏览照片</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="336"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="339"/>
         <source>打开单张图片或选择文件夹开始预览。</source>
         <translation>打开单张图片或选择文件夹开始预览。</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="388"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="391"/>
         <source>支持格式：JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</source>
         <translation>支持格式：JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="422"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="424"/>
         <source>快捷键：{shortcut}</source>
         <translation>快捷键：{shortcut}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="216"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="219"/>
         <source>正在加载预览</source>
         <translation>正在加载预览</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="216"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="219"/>
         <source>正在加载预览：{name}</source>
         <translation>正在加载预览：{name}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="238"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="241"/>
         <source>无法打开图片</source>
         <translation>无法打开图片</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="238"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="241"/>
         <source>文件：{name}</source>
         <translation>文件：{name}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="238"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="241"/>
         <source>重试</source>
         <translation>重试</translation>
     </message>
@@ -341,7 +341,7 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../windows/main_window.py" line="512"/>
+        <location filename="../../windows/main_window.py" line="513"/>
         <source>准备就绪</source>
         <translation>准备就绪</translation>
     </message>
@@ -349,224 +349,224 @@
 <context>
     <name>MainWindowUI</name>
     <message>
-        <location filename="../../windows/main_window.py" line="435"/>
+        <location filename="../../windows/main_window.py" line="436"/>
         <source>PicViewer</source>
         <translation>PicViewer</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="437"/>
+        <location filename="../../windows/main_window.py" line="438"/>
         <source>打开图片…</source>
         <translation>打开图片…</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="438"/>
+        <location filename="../../windows/main_window.py" line="439"/>
         <source>打开文件夹…</source>
         <translation>打开文件夹…</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="439"/>
+        <location filename="../../windows/main_window.py" line="440"/>
         <source>关闭当前标签</source>
         <translation>关闭当前标签</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="440"/>
+        <location filename="../../windows/main_window.py" line="441"/>
         <source>退出</source>
         <translation>退出</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="441"/>
+        <location filename="../../windows/main_window.py" line="442"/>
         <source>放大</source>
         <translation>放大</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="442"/>
+        <location filename="../../windows/main_window.py" line="443"/>
         <source>缩小</source>
         <translation>缩小</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="443"/>
+        <location filename="../../windows/main_window.py" line="444"/>
         <source>适配窗口</source>
         <translation>适配窗口</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="444"/>
-        <source>显示/隐藏信息区</source>
-        <translation>显示/隐藏信息区</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="445"/>
-        <source>显示/隐藏胶卷窗格</source>
-        <translation>显示/隐藏胶卷窗格</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="446"/>
+        <location filename="../../windows/main_window.py" line="447"/>
         <source>关于</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="474"/>
+        <location filename="../../windows/main_window.py" line="475"/>
         <source>明度模式</source>
         <translation>明度模式</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="448"/>
+        <location filename="../../windows/main_window.py" line="449"/>
         <source>RGB模式</source>
         <translation>RGB模式</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="449"/>
+        <location filename="../../windows/main_window.py" line="450"/>
         <source>RGB全部通道</source>
         <translation>RGB全部通道</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="450"/>
+        <location filename="../../windows/main_window.py" line="451"/>
         <source>仅红通道</source>
         <translation>仅红通道</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="451"/>
+        <location filename="../../windows/main_window.py" line="452"/>
         <source>仅绿通道</source>
         <translation>仅绿通道</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="452"/>
+        <location filename="../../windows/main_window.py" line="453"/>
         <source>仅蓝通道</source>
         <translation>仅蓝通道</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="456"/>
+        <location filename="../../windows/main_window.py" line="457"/>
         <source>文件</source>
         <translation>文件</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="457"/>
+        <location filename="../../windows/main_window.py" line="458"/>
         <source>查看</source>
         <translation>查看</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="458"/>
+        <location filename="../../windows/main_window.py" line="459"/>
         <source>工具</source>
         <translation>工具</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="459"/>
+        <location filename="../../windows/main_window.py" line="460"/>
         <source>直方图/波形图模式</source>
         <translation>直方图/波形图模式</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="475"/>
+        <location filename="../../windows/main_window.py" line="476"/>
         <source>RGB通道</source>
         <translation>RGB通道</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="461"/>
+        <location filename="../../windows/main_window.py" line="462"/>
         <source>伪色</source>
         <translation>伪色</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="453"/>
+        <location filename="../../windows/main_window.py" line="454"/>
         <source>显示欠曝</source>
         <translation>显示欠曝</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="454"/>
+        <location filename="../../windows/main_window.py" line="455"/>
         <source>显示过曝</source>
         <translation>显示过曝</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="462"/>
+        <location filename="../../windows/main_window.py" line="463"/>
         <source>帮助</source>
         <translation>帮助</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="464"/>
+        <location filename="../../windows/main_window.py" line="465"/>
         <source>直方图</source>
         <translation>直方图</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="465"/>
+        <location filename="../../windows/main_window.py" line="466"/>
         <source>波形图</source>
         <translation>波形图</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="466"/>
+        <location filename="../../windows/main_window.py" line="467"/>
         <source>元数据</source>
         <translation>元数据</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="468"/>
+        <location filename="../../windows/main_window.py" line="469"/>
         <source>通用</source>
         <translation>通用</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="469"/>
+        <location filename="../../windows/main_window.py" line="470"/>
         <source>Exif</source>
         <translation>Exif</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="470"/>
+        <location filename="../../windows/main_window.py" line="471"/>
         <source>IPTC</source>
         <translation>IPTC</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="471"/>
+        <location filename="../../windows/main_window.py" line="472"/>
         <source>TIFF</source>
         <translation>TIFF</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="485"/>
+        <location filename="../../windows/main_window.py" line="486"/>
         <source>直方图占位图</source>
         <translation>直方图占位图</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="490"/>
+        <location filename="../../windows/main_window.py" line="491"/>
         <source>波形图占位图</source>
         <translation>波形图占位图</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="486"/>
+        <location filename="../../windows/main_window.py" line="487"/>
         <source>显示/隐藏欠曝区域</source>
         <translation>显示/隐藏欠曝区域</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="486"/>
+        <location filename="../../windows/main_window.py" line="487"/>
         <source>显示/隐藏过曝区域</source>
         <translation>显示/隐藏过曝区域</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="494"/>
+        <location filename="../../windows/main_window.py" line="495"/>
         <source>键</source>
         <translation>键</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="494"/>
+        <location filename="../../windows/main_window.py" line="495"/>
         <source>值</source>
         <translation>值</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="473"/>
+        <location filename="../../windows/main_window.py" line="474"/>
         <source>分析模式</source>
         <translation>分析模式</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="476"/>
+        <location filename="../../windows/main_window.py" line="477"/>
         <source>不适用</source>
         <translation>不适用</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="477"/>
+        <location filename="../../windows/main_window.py" line="478"/>
         <source>伪色状态</source>
         <translation>伪色状态</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="478"/>
+        <location filename="../../windows/main_window.py" line="479"/>
         <source>欠曝：{under} / 过曝：{over}</source>
         <translation>欠曝：{under} / 过曝：{over}</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="478"/>
+        <location filename="../../windows/main_window.py" line="479"/>
         <source>关闭</source>
         <translation>关闭</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="445"/>
+        <source>信息区</source>
+        <translation>信息区</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="446"/>
+        <source>胶卷窗格</source>
+        <translation>胶卷窗格</translation>
     </message>
 </context>
 </TS>

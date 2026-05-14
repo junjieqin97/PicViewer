@@ -38,6 +38,19 @@ class MainWindowShortcutTests(unittest.TestCase):
         self.assertEqual("Ctrl+Shift+P", under)
         self.assertEqual("Ctrl+P", over)
 
+    def test_checkable_view_menu_labels_are_state_names(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        self.assertTrue(ui.actToggleInfoPanel.isCheckable())
+        self.assertTrue(ui.actToggleFilmstrip.isCheckable())
+        self.assertEqual("信息区", ui.actToggleInfoPanel.text())
+        self.assertEqual("胶卷窗格", ui.actToggleFilmstrip.text())
+        self.assertNotIn("显示/隐藏", ui.actToggleInfoPanel.text())
+        self.assertNotIn("显示/隐藏", ui.actToggleFilmstrip.text())
+
 
 if __name__ == "__main__":
     unittest.main()
