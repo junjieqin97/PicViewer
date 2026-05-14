@@ -34,8 +34,6 @@ class UiStylesTests(unittest.TestCase):
         self.assertIn("alignment: left", style_sheet)
         self.assertIn("QTabWidget#tabsImages QTabBar::tab:selected", style_sheet)
         self.assertIn("QTabWidget#tabsImages QTabBar::tab:hover", style_sheet)
-        self.assertIn("QToolButton#buttonImageTabClose", style_sheet)
-        self.assertIn("QToolButton#buttonImageTabClose:hover", style_sheet)
         self.assertIn("QScrollArea#scrollImage", style_sheet)
         self.assertIn("QWidget#viewportImageCanvas", style_sheet)
         self.assertIn("QScrollArea#scrollImage QScrollBar:horizontal", style_sheet)
@@ -46,6 +44,7 @@ class UiStylesTests(unittest.TestCase):
         style_sheet = styles.load_stylesheet()
 
         self.assertNotIn("QTabBar::close-button", style_sheet)
+        self.assertNotIn("QToolButton#buttonImageTabClose", style_sheet)
 
     def test_load_stylesheet_returns_empty_string_when_file_missing(self) -> None:
         missing_path = PROJECT_ROOT / "missing-main.qss"

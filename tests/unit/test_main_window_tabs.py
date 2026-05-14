@@ -49,7 +49,7 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertIn("QTabWidget#tabsImages::tab-bar", style_sheet)
         self.assertIn("alignment: left", style_sheet)
 
-    def test_open_image_installs_custom_close_button_on_image_tab(self) -> None:
+    def test_open_image_uses_native_close_button_on_image_tab(self) -> None:
         window, ui, controller = self._build_tabs_controller()
         self.addCleanup(window.deleteLater)
         self._stub_open_image_dependencies(controller)
@@ -57,27 +57,8 @@ class MainWindowTabsTests(unittest.TestCase):
         controller.open_image(Path("/tmp/sample.jpg"))
 
         button = ui.tabsImages.tabBar().tabButton(0, QtWidgets.QTabBar.RightSide)
-        self.assertIsInstance(button, QtWidgets.QToolButton)
-        self.assertEqual("buttonImageTabClose", button.objectName())
-        self.assertEqual("x", button.text())
-        self.assertEqual(QtCore.Qt.ArrowCursor, button.cursor().shape())
-
-    def test_custom_close_button_resolves_tab_index_after_tab_move(self) -> None:
-        window, ui, controller = self._build_tabs_controller()
-        self.addCleanup(window.deleteLater)
-        close_tab = MagicMock()
-        controller.close_tab = close_tab  # type: ignore[method-assign]
-
-        first_tab = QtWidgets.QWidget()
-        second_tab = QtWidgets.QWidget()
-        first_index = ui.tabsImages.addTab(first_tab, "first.jpg")
-        ui.tabsImages.addTab(second_tab, "second.jpg")
-        button = controller._install_image_tab_close_button(first_index)
-
-        ui.tabsImages.tabBar().moveTab(0, 1)
-        button.click()
-
-        close_tab.assert_called_once_with(1)
+        self.assertIsNotNone(button)
+        self.assertNotEqual("buttonImageTabClose", button.objectName())
 
     def test_analysis_widgets_are_wrapped_in_fixed_top_aligned_frames(self) -> None:
         window = QtWidgets.QMainWindow()

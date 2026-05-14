@@ -80,32 +80,6 @@ QTabWidget#tabsImages QTabBar::tab:selected:hover {
     border-top-color: #b4d2f2;
 }
 
-QToolButton#buttonImageTabClose {
-    background: #3b424b;
-    color: #e8edf2;
-    border: 1px solid #5b6673;
-    border-radius: 9px;
-    padding: 0;
-    margin-left: 6px;
-    min-width: 18px;
-    max-width: 18px;
-    min-height: 18px;
-    max-height: 18px;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-QToolButton#buttonImageTabClose:hover {
-    background: #687483;
-    color: #ffffff;
-    border-color: #93a1b1;
-}
-
-QToolButton#buttonImageTabClose:pressed {
-    background: #7d8a9a;
-    border-color: #b5c0ce;
-}
-
 QWidget#tabImagePlaceholder,
 QStackedWidget#stackImageContent,
 QWidget#widgetImageLoadState {

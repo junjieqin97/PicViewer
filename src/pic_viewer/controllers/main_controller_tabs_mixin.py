@@ -75,7 +75,6 @@ class MainControllerTabsMixin:
                 )
             self._update_tab_title(existing_tab, path)
             self._update_filmstrip_text(path)
-            self._install_image_tab_close_button(existing_tab)
             if activate:
                 self._ui.tabsImages.setCurrentIndex(existing_tab)
             self._ensure_preview_load(path)
@@ -88,7 +87,6 @@ class MainControllerTabsMixin:
         tab_container = self._build_image_tab_container(path)
         tab_index = self._ui.tabsImages.addTab(tab_container, "")
         self._update_tab_title(tab_index, path)
-        self._install_image_tab_close_button(tab_index)
         self._set_zoom_state(path, 1.0, True)
         self._show_tab_loading_state(
             path,
@@ -136,32 +134,6 @@ class MainControllerTabsMixin:
         self._refresh_actions_state()
         self.update_info_for_image(self._current_image_path())
         self._ensure_empty_image_placeholder()
-
-    def _install_image_tab_close_button(self, tab_index: int) -> QtWidgets.QToolButton:
-        """Install the styled close button for an image tab."""
-
-        tab_widget = self._ui.tabsImages.widget(tab_index)
-        if tab_widget is None:
-            raise IndexError(f"Image tab index out of range: {tab_index}")
-
-        tab_bar = self._ui.tabsImages.tabBar()
-        button = QtWidgets.QToolButton(tab_bar)
-        button.setObjectName("buttonImageTabClose")
-        button.setText("x")
-        button.setAutoRaise(True)
-        button.setCursor(QtCore.Qt.ArrowCursor)
-        button.setFocusPolicy(QtCore.Qt.NoFocus)
-        button.setFixedSize(18, 18)
-        button.clicked.connect(lambda _checked=False, target=tab_widget: self._close_tab_widget(target))
-        tab_bar.setTabButton(tab_index, QtWidgets.QTabBar.RightSide, button)
-        return button
-
-    def _close_tab_widget(self, tab_widget: QtWidgets.QWidget) -> None:
-        """Close a tab by widget so moved tabs resolve to the current index."""
-
-        tab_index = self._ui.tabsImages.indexOf(tab_widget)
-        if tab_index >= 0:
-            self.close_tab(tab_index)
 
     def _build_image_tab_container(self, path: Path) -> QtWidgets.QWidget:
         tab_container = QtWidgets.QWidget()
