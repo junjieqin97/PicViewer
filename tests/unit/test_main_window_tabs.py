@@ -49,6 +49,36 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertIn("QTabWidget#tabsImages::tab-bar", style_sheet)
         self.assertIn("alignment: left", style_sheet)
 
+    def test_open_image_installs_custom_close_button_on_image_tab(self) -> None:
+        window, ui, controller = self._build_tabs_controller()
+        self.addCleanup(window.deleteLater)
+        self._stub_open_image_dependencies(controller)
+
+        controller.open_image(Path("/tmp/sample.jpg"))
+
+        button = ui.tabsImages.tabBar().tabButton(0, QtWidgets.QTabBar.RightSide)
+        self.assertIsInstance(button, QtWidgets.QToolButton)
+        self.assertEqual("buttonImageTabClose", button.objectName())
+        self.assertEqual("x", button.text())
+        self.assertEqual(QtCore.Qt.ArrowCursor, button.cursor().shape())
+
+    def test_custom_close_button_resolves_tab_index_after_tab_move(self) -> None:
+        window, ui, controller = self._build_tabs_controller()
+        self.addCleanup(window.deleteLater)
+        close_tab = MagicMock()
+        controller.close_tab = close_tab  # type: ignore[method-assign]
+
+        first_tab = QtWidgets.QWidget()
+        second_tab = QtWidgets.QWidget()
+        first_index = ui.tabsImages.addTab(first_tab, "first.jpg")
+        ui.tabsImages.addTab(second_tab, "second.jpg")
+        button = controller._install_image_tab_close_button(first_index)
+
+        ui.tabsImages.tabBar().moveTab(0, 1)
+        button.click()
+
+        close_tab.assert_called_once_with(1)
+
     def test_analysis_widgets_are_wrapped_in_fixed_top_aligned_frames(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
@@ -238,6 +268,19 @@ class MainWindowTabsTests(unittest.TestCase):
         controller._ui = ui  # type: ignore[attr-defined]
         controller._tr = lambda text: text  # type: ignore[attr-defined]
         return window, ui, controller
+
+    def _stub_open_image_dependencies(self, controller: MainControllerTabsMixin) -> None:
+        controller._images_by_path = {}  # type: ignore[attr-defined]
+        controller._load_error_by_path = {}  # type: ignore[attr-defined]
+        controller._remove_empty_image_placeholder = lambda: None  # type: ignore[method-assign]
+        controller._build_image_tab_container = lambda path: QtWidgets.QWidget()  # type: ignore[method-assign]
+        controller._set_zoom_state = lambda *args: None  # type: ignore[method-assign]
+        controller._show_tab_loading_state = lambda *args: None  # type: ignore[method-assign]
+        controller._add_filmstrip_placeholder_item = lambda path: None  # type: ignore[method-assign]
+        controller._start_path_session = lambda path: 1  # type: ignore[method-assign]
+        controller._ensure_preview_load = lambda *args: None  # type: ignore[method-assign]
+        controller._ensure_full_load = lambda *args: None  # type: ignore[method-assign]
+        controller._refresh_actions_state = lambda: None  # type: ignore[method-assign]
 
     def _build_image_preview_controller(
         self,

@@ -48,6 +48,64 @@ QTabBar::tab:selected {
     border-bottom-color: #3a414a;
 }
 
+QTabWidget#tabsImages QTabBar::tab {
+    background: #272c33;
+    color: #cbd2da;
+    border: 1px solid #454d57;
+    border-top: 2px solid transparent;
+    border-bottom-color: #24282d;
+    min-height: 26px;
+    padding: 6px 10px 6px 12px;
+    margin-right: 2px;
+}
+
+QTabWidget#tabsImages QTabBar::tab:hover {
+    background: #34404b;
+    color: #f3f6f8;
+    border-color: #5d6976;
+    border-top-color: #6f8fb8;
+}
+
+QTabWidget#tabsImages QTabBar::tab:selected {
+    background: #3f4a56;
+    color: #ffffff;
+    border-color: #718297;
+    border-top-color: #9fc4f0;
+    border-bottom-color: #3f4a56;
+}
+
+QTabWidget#tabsImages QTabBar::tab:selected:hover {
+    background: #45515f;
+    border-color: #8294aa;
+    border-top-color: #b4d2f2;
+}
+
+QToolButton#buttonImageTabClose {
+    background: #3b424b;
+    color: #e8edf2;
+    border: 1px solid #5b6673;
+    border-radius: 9px;
+    padding: 0;
+    margin-left: 6px;
+    min-width: 18px;
+    max-width: 18px;
+    min-height: 18px;
+    max-height: 18px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+QToolButton#buttonImageTabClose:hover {
+    background: #687483;
+    color: #ffffff;
+    border-color: #93a1b1;
+}
+
+QToolButton#buttonImageTabClose:pressed {
+    background: #7d8a9a;
+    border-color: #b5c0ce;
+}
+
 QWidget#tabImagePlaceholder,
 QStackedWidget#stackImageContent,
 QWidget#widgetImageLoadState {
