@@ -22,6 +22,19 @@ Please see the [AGENTS.md](AGENTS.md).
 PICVIEWER_LANG=en python -m pic_viewer.main
 ```
 
+## 日志
+
+- 默认模式：日志输出到控制台。
+- 开发者模式：日志输出到 `~/.PicViewer/logs/picviewer.log`，单文件最大 5MB，保留 5 个滚动备份。
+- 日志级别仍由 `PICVIEWER_LOG_LEVEL` 控制，默认值为 `INFO`。
+
+### 开发者模式示例
+
+```bash
+python -m pic_viewer.main --developer-mode
+PICVIEWER_LOG_LEVEL=DEBUG python -m pic_viewer.main --developer-mode
+```
+
 ### 回退规则
 
 - 若选择英文但运行时找不到 `picviewer_en.qm`，应用会自动回退到中文并继续启动。
