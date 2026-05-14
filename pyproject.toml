@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "A desktop photo viewer."
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "Proprietary" }
+license = "LicenseRef-Proprietary"
 authors = [{ name = "PicViewer Team" }]
 dependencies = [
   "PyQt5>=5.15",
@@ -19,6 +19,15 @@ dependencies = [
 
 [project.optional-dependencies]
 raw = ["rawpy>=0.17"]
+packaging = [
+  "build>=1.2",
+  "twine>=5.0",
+  "pyinstaller>=6.0",
+  "rawpy>=0.17",
+]
+
+[project.scripts]
+picviewer = "pic_viewer.main:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

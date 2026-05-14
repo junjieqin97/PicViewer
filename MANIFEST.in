@@ -1,0 +1,7 @@
+include README.md
+include pyproject.toml
+include docs/packaging.md
+recursive-include src/pic_viewer/ui/resources/i18n *.ts *.qm
+recursive-include src/pic_viewer/ui/resources/styles *.qss
+recursive-include packaging *.spec
+recursive-include scripts *.py *.sh

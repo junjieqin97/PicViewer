@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import subprocess
 import sys
 from pathlib import Path
 import unittest
@@ -26,6 +28,29 @@ class MainCliTests(unittest.TestCase):
 
         self.assertFalse(developer_mode)
         self.assertEqual(["picviewer", "-platform", "offscreen"], qt_args)
+
+    def test_package_module_help_exits_before_qapplication_startup(self) -> None:
+        env = os.environ.copy()
+        existing_pythonpath = env.get("PYTHONPATH")
+        env["PYTHONPATH"] = (
+            str(SRC_ROOT)
+            if not existing_pythonpath
+            else f"{SRC_ROOT}{os.pathsep}{existing_pythonpath}"
+        )
+
+        result = subprocess.run(
+            [sys.executable, "-m", "pic_viewer", "--help"],
+            cwd=PROJECT_ROOT,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertIn("--developer-mode", result.stdout)
+        self.assertNotIn("QApplication", result.stderr)
 
 
 if __name__ == "__main__":

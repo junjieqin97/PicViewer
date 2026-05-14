@@ -4,6 +4,51 @@ This project is developed by AI.
 
 Please see the [AGENTS.md](AGENTS.md).
 
+## 安装与启动
+
+开发源码运行：
+
+```bash
+conda activate PicViewer
+python -m pic_viewer.main
+```
+
+安装为 Python 包后运行：
+
+```bash
+pip install picviewer
+python -m pic_viewer
+picviewer
+```
+
+需要 RAW 支持的专业用户可安装：
+
+```bash
+pip install "picviewer[raw]"
+```
+
+## 打包
+
+发布前请先激活项目环境：
+
+```bash
+conda activate PicViewer
+```
+
+构建 Python 源码包和 wheel：
+
+```bash
+python scripts/packaging/build_python_package.py
+```
+
+构建 Windows/macOS 本机 PyInstaller App：
+
+```bash
+python scripts/packaging/build_app.py
+```
+
+详细规则见 [docs/packaging.md](docs/packaging.md)。
+
 ## Notes
 
 - High-DPI 支持已启用：图片显示区与信息区分析图会按 DPR 渲染。
@@ -20,6 +65,7 @@ Please see the [AGENTS.md](AGENTS.md).
 
 ```bash
 PICVIEWER_LANG=en python -m pic_viewer.main
+PICVIEWER_LANG=en python -m pic_viewer
 ```
 
 ## 日志
@@ -32,6 +78,7 @@ PICVIEWER_LANG=en python -m pic_viewer.main
 
 ```bash
 python -m pic_viewer.main --developer-mode
+python -m pic_viewer --developer-mode
 PICVIEWER_LOG_LEVEL=DEBUG python -m pic_viewer.main --developer-mode
 ```
 
