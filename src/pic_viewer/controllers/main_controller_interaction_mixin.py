@@ -6,6 +6,8 @@ from typing import Optional
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from pic_viewer.app.services.app_metadata_service import AppMetadata, load_app_metadata
+
 
 class MainControllerInteractionMixin:
     """Provide cursor tracking, drag-to-pan, and context-menu helpers."""
@@ -228,8 +230,21 @@ class MainControllerInteractionMixin:
         )
 
     def _show_about(self) -> None:
+        metadata = load_app_metadata()
         QtWidgets.QMessageBox.information(
             self._main_window,
             self._tr("About"),
-            self._tr("PicViewer\nA simple image viewer demo."),
+            self._build_about_text(metadata),
+        )
+
+    def _build_about_text(self, metadata: AppMetadata) -> str:
+        return self._tr(
+            "{name}\n"
+            "Version {version}\n\n"
+            "A desktop photo viewer for common image formats and camera RAW files.\n\n"
+            "Copyright (c) {owner}. All rights reserved."
+        ).format(
+            name=metadata.name,
+            version=metadata.version,
+            owner=metadata.copyright_owner,
         )

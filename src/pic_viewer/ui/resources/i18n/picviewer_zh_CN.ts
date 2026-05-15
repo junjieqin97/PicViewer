@@ -92,26 +92,34 @@
 <context>
     <name>MainControllerInteractionMixin</name>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="224"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="226"/>
         <source>Info</source>
         <translation>提示</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="224"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="226"/>
         <source>This feature is not implemented yet (TODO).</source>
         <translation>该功能尚未实现（TODO）</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="231"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="234"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="231"/>
-        <source>PicViewer
-A simple image viewer demo.</source>
-        <translation>PicViewer
-一个简单的图片预览工具 Demo。</translation>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="241"/>
+        <source>{name}
+Version {version}
+
+A desktop photo viewer for common image formats and camera RAW files.
+
+Copyright (c) {owner}. All rights reserved.</source>
+        <translation>{name}
+版本 {version}
+
+用于预览常见图片格式和相机 RAW 文件的桌面照片查看器。
+
+版权所有 (c) {owner}。保留所有权利。</translation>
     </message>
 </context>
 <context>

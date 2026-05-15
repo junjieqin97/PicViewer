@@ -92,26 +92,34 @@
 <context>
     <name>MainControllerInteractionMixin</name>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="224"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="226"/>
         <source>Info</source>
         <translation>Info</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="224"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="226"/>
         <source>This feature is not implemented yet (TODO).</source>
         <translation>This feature is not implemented yet (TODO).</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="231"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="234"/>
         <source>About</source>
         <translation>About</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="231"/>
-        <source>PicViewer
-A simple image viewer demo.</source>
-        <translation>PicViewer
-A simple image viewer demo.</translation>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="241"/>
+        <source>{name}
+Version {version}
+
+A desktop photo viewer for common image formats and camera RAW files.
+
+Copyright (c) {owner}. All rights reserved.</source>
+        <translation>{name}
+Version {version}
+
+A desktop photo viewer for common image formats and camera RAW files.
+
+Copyright (c) {owner}. All rights reserved.</translation>
     </message>
 </context>
 <context>
