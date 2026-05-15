@@ -7,7 +7,7 @@ PicViewer 支持两种发布模式：
 - Python 包：生成 `sdist` 和 `wheel`，专业用户安装后可执行 `python -m pic_viewer` 或 `picviewer`。
 - 桌面 App：使用 PyInstaller 在 Windows/macOS 本机构建可分发 App，普通用户无需了解 Python 环境。
 
-本阶段不包含代码签名、公证、DMG/MSI 安装器、自动更新或 PyPI 上传自动化。
+本阶段不包含代码签名、公证、MSI 安装器、自动更新或 PyPI 上传自动化。
 
 ## 前置条件
 
@@ -76,6 +76,26 @@ PyInstaller 使用 `onedir` 模式。Windows 产物为 `dist/PicViewer/`，macOS
 
 不支持交叉构建：Windows App 必须在 Windows 构建，macOS App 必须在 macOS 构建。
 
+## macOS DMG 模式
+
+构建命令：
+
+```bash
+python scripts/packaging/build_dmg.py
+```
+
+脚本会执行以下步骤：
+
+- 校验当前 conda 环境名为 `PicViewer`。
+- 校验当前平台为 macOS。
+- 从 `pyproject.toml` 读取版本号。
+- 校验 `dist/PicViewer.app` 已存在；若不存在，应先运行 `python scripts/packaging/build_app.py`。
+- 将 `dist/PicViewer.app` 复制到临时 staging 目录。
+- 在 staging 目录中创建 `Applications -> /Applications` 捷径，方便用户拖拽安装。
+- 使用 macOS 自带 `hdiutil` 生成压缩 DMG。
+
+DMG 产物输出到 `dist/PicViewer-版本号.dmg`，例如 `dist/PicViewer-0.1.0.dmg`。
+
 ## 发布检查清单
 
 ```bash
@@ -84,6 +104,7 @@ python -m unittest discover -s tests/unit
 python scripts/packaging/build_python_package.py
 python -m zipfile -l dist/*.whl
 python scripts/packaging/build_app.py
+python scripts/packaging/build_dmg.py
 ```
 
 检查 wheel 内容时，应能看到：

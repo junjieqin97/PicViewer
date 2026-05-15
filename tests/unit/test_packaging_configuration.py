@@ -22,6 +22,7 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn('"build', pyproject)
         self.assertIn('"twine', pyproject)
         self.assertIn('"pyinstaller', pyproject)
+        self.assertIn('"tomli>=2.0; python_version < \\"3.11\\""', pyproject)
 
     def test_manifest_includes_runtime_resources_and_release_files(self) -> None:
         manifest = (PROJECT_ROOT / "MANIFEST.in").read_text(encoding="utf-8")
