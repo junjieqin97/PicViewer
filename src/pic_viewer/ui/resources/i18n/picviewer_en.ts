@@ -92,34 +92,24 @@
 <context>
     <name>MainControllerInteractionMixin</name>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="226"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="227"/>
         <source>Info</source>
         <translation>Info</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="226"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="227"/>
         <source>This feature is not implemented yet (TODO).</source>
         <translation>This feature is not implemented yet (TODO).</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="234"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="235"/>
         <source>About</source>
         <translation>About</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="241"/>
-        <source>{name}
-Version {version}
-
-A desktop photo viewer for common image formats and camera RAW files.
-
-Copyright (c) {owner}. All rights reserved.</source>
-        <translation>{name}
-Version {version}
-
-A desktop photo viewer for common image formats and camera RAW files.
-
-Copyright (c) {owner}. All rights reserved.</translation>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="242"/>
+        <source>&lt;div style=&quot;font-size: 12pt;&quot;&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;Version {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;A desktop photo viewer for common image formats and camera RAW files.&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;Copyright (c) {years} {owner}. All rights reserved.&lt;/p&gt;&lt;/div&gt;</source>
+        <translation>&lt;div style=&quot;font-size: 12pt;&quot;&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;Version {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;A desktop photo viewer for common image formats and camera RAW files.&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;Copyright (c) {years} {owner}. All rights reserved.&lt;/p&gt;&lt;/div&gt;</translation>
     </message>
 </context>
 <context>

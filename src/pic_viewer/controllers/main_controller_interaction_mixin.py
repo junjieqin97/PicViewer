@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from html import escape
 from typing import Optional
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -239,12 +240,19 @@ class MainControllerInteractionMixin:
 
     def _build_about_text(self, metadata: AppMetadata) -> str:
         return self._tr(
-            "{name}\n"
-            "Version {version}\n\n"
-            "A desktop photo viewer for common image formats and camera RAW files.\n\n"
-            "Copyright (c) {owner}. All rights reserved."
+            '<div style="font-size: 12pt;">'
+            '<p><strong>{name}</strong><br>'
+            '<strong>Version {version}</strong></p>'
+            '<p class="about-light" style="font-weight: 300;">'
+            "A desktop photo viewer for common image formats and camera RAW files."
+            "</p>"
+            '<p class="about-light" style="font-weight: 300;">'
+            "Copyright (c) {years} {owner}. All rights reserved."
+            "</p>"
+            "</div>"
         ).format(
-            name=metadata.name,
-            version=metadata.version,
-            owner=metadata.copyright_owner,
+            name=escape(metadata.name),
+            version=escape(metadata.version),
+            years=escape(metadata.copyright_years),
+            owner=escape(metadata.copyright_owner),
         )

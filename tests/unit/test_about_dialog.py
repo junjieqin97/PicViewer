@@ -30,10 +30,12 @@ class AboutDialogTests(unittest.TestCase):
 
         text = MainController._build_about_text(controller, metadata)
 
-        self.assertIn("PicViewer", text)
-        self.assertIn("Version 1.2.3", text)
+        self.assertIn("<strong>PicViewer</strong>", text)
+        self.assertIn("<strong>Version 1.2.3</strong>", text)
         self.assertIn("camera RAW files", text)
-        self.assertIn("Copyright (c) junjieqin. All rights reserved.", text)
+        self.assertIn('class="about-light"', text)
+        self.assertIn('font-weight: 300;', text)
+        self.assertIn("Copyright (c) 2025-2026 junjieqin. All rights reserved.", text)
         self.assertNotIn("demo", text.lower())
 
     def test_show_about_uses_generated_about_text(self) -> None:
@@ -55,7 +57,11 @@ class AboutDialogTests(unittest.TestCase):
         _, title, text = information.call_args.args
         self.assertEqual("About", title)
         self.assertIn("Version 4.5.6", text)
+        self.assertIn("2025-2026", text)
         self.assertIn("junjieqin", text)
+        self.assertIn("<strong>", text)
+        self.assertIn('class="about-light"', text)
+        self.assertIn('font-weight: 300;', text)
         self.assertNotIn("demo", text.lower())
 
 

@@ -92,34 +92,24 @@
 <context>
     <name>MainControllerInteractionMixin</name>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="226"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="227"/>
         <source>Info</source>
         <translation>提示</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="226"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="227"/>
         <source>This feature is not implemented yet (TODO).</source>
         <translation>该功能尚未实现（TODO）</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="234"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="235"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="241"/>
-        <source>{name}
-Version {version}
-
-A desktop photo viewer for common image formats and camera RAW files.
-
-Copyright (c) {owner}. All rights reserved.</source>
-        <translation>{name}
-版本 {version}
-
-用于预览常见图片格式和相机 RAW 文件的桌面照片查看器。
-
-版权所有 (c) {owner}。保留所有权利。</translation>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="242"/>
+        <source>&lt;div style=&quot;font-size: 12pt;&quot;&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;Version {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;A desktop photo viewer for common image formats and camera RAW files.&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;Copyright (c) {years} {owner}. All rights reserved.&lt;/p&gt;&lt;/div&gt;</source>
+        <translation>&lt;div style=&quot;font-size: 12pt;&quot;&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;版本 {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;用于预览常见图片格式和相机 RAW 文件的桌面照片查看器。&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;版权所有 (c) {years} {owner}。保留所有权利。&lt;/p&gt;&lt;/div&gt;</translation>
     </message>
 </context>
 <context>

@@ -46,6 +46,7 @@ class AppMetadataServiceTests(unittest.TestCase):
 
         self.assertEqual("PicViewer", metadata.name)
         self.assertEqual("junjieqin", metadata.copyright_owner)
+        self.assertEqual("2025-2026", metadata.copyright_years)
         self.assertEqual(resolve_app_version(project_root=PROJECT_ROOT), metadata.version)
 
     def test_resolve_app_version_falls_back_to_package_metadata_for_invalid_pyproject(self) -> None:

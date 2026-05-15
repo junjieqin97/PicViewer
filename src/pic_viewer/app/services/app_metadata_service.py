@@ -17,6 +17,7 @@ except ModuleNotFoundError:  # pragma: no cover - needed for Python 3.9/3.10
 PACKAGE_NAME = "picviewer"
 APP_NAME = "PicViewer"
 COPYRIGHT_OWNER = "junjieqin"
+COPYRIGHT_YEARS = "2025-2026"
 UNKNOWN_VERSION = "unknown"
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ class AppMetadata:
     name: str
     version: str
     copyright_owner: str
+    copyright_years: str = COPYRIGHT_YEARS
 
 
 def load_app_metadata(project_root: Optional[Path] = None) -> AppMetadata:
@@ -37,6 +39,7 @@ def load_app_metadata(project_root: Optional[Path] = None) -> AppMetadata:
         name=APP_NAME,
         version=resolve_app_version(project_root=project_root),
         copyright_owner=COPYRIGHT_OWNER,
+        copyright_years=COPYRIGHT_YEARS,
     )
 
 
