@@ -223,13 +223,13 @@ class MainControllerInteractionMixin:
     def _todo_not_implemented(self) -> None:
         QtWidgets.QMessageBox.information(
             self._main_window,
-            self._tr("提示"),
-            self._tr("该功能尚未实现（TODO）"),
+            self._tr("Info"),
+            self._tr("This feature is not implemented yet (TODO)."),
         )
 
     def _show_about(self) -> None:
         QtWidgets.QMessageBox.information(
             self._main_window,
-            self._tr("关于"),
-            self._tr("PicViewer\n一个简单的图片预览工具 Demo。"),
+            self._tr("About"),
+            self._tr("PicViewer\nA simple image viewer demo."),
         )

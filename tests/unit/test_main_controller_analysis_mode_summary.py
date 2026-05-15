@@ -43,8 +43,8 @@ class MainControllerAnalysisModeSummaryTests(unittest.TestCase):
 
         MainController._sync_view_actions(controller)
 
-        self.assertEqual("明度模式", ui.labelAnalysisModeValue.text())
-        self.assertEqual("不适用", ui.labelAnalysisChannelValue.text())
+        self.assertEqual("Luma Mode", ui.labelAnalysisModeValue.text())
+        self.assertEqual("Not Applicable", ui.labelAnalysisChannelValue.text())
 
     def test_rgb_all_channel_summary_updates_when_mode_changes(self) -> None:
         window, ui, controller = self._build_controller()
@@ -52,14 +52,14 @@ class MainControllerAnalysisModeSummaryTests(unittest.TestCase):
 
         MainController._change_view_mode(controller, LumaRgbMode.RGB)
 
-        self.assertEqual("RGB模式", ui.labelAnalysisModeValue.text())
-        self.assertEqual("全部", ui.labelAnalysisChannelValue.text())
+        self.assertEqual("RGB Mode", ui.labelAnalysisModeValue.text())
+        self.assertEqual("All", ui.labelAnalysisChannelValue.text())
 
     def test_rgb_single_channel_summary_updates_when_channel_changes(self) -> None:
         expected = (
-            (RgbChannel.RED, "红"),
-            (RgbChannel.GREEN, "绿"),
-            (RgbChannel.BLUE, "蓝"),
+            (RgbChannel.RED, "Red"),
+            (RgbChannel.GREEN, "Green"),
+            (RgbChannel.BLUE, "Blue"),
         )
         for channel, label in expected:
             with self.subTest(channel=channel):
@@ -68,7 +68,7 @@ class MainControllerAnalysisModeSummaryTests(unittest.TestCase):
 
                 MainController._change_channel(controller, channel)
 
-                self.assertEqual("RGB模式", ui.labelAnalysisModeValue.text())
+                self.assertEqual("RGB Mode", ui.labelAnalysisModeValue.text())
                 self.assertEqual(label, ui.labelAnalysisChannelValue.text())
 
     def _build_controller(self) -> tuple[QtWidgets.QMainWindow, MainWindowUI, MainController]:

@@ -44,7 +44,7 @@ class ImageLoadStateTests(unittest.TestCase):
         self.assertIsNotNone(detail)
         self.assertIsNotNone(stack)
         self.assertIs(stack.currentWidget(), state)
-        self.assertEqual("正在加载预览", title.text())
+        self.assertEqual("Loading preview", title.text())
         self.assertIn(path.name, detail.text())
 
     def test_full_load_failure_shows_specific_inline_reason(self) -> None:
@@ -53,7 +53,7 @@ class ImageLoadStateTests(unittest.TestCase):
         path = Path("/tmp/unsupported.raw")
         controller.open_image(path)
 
-        controller._on_error(path, 1, "不支持该图片格式")
+        controller._on_error(path, 1, "Unsupported image format")
 
         title = ui.tabsImages.findChild(QtWidgets.QLabel, "labelImageLoadStateTitle")
         reason = ui.tabsImages.findChild(QtWidgets.QLabel, "labelImageLoadStateReason")
@@ -61,16 +61,16 @@ class ImageLoadStateTests(unittest.TestCase):
         self.assertIsNotNone(title)
         self.assertIsNotNone(reason)
         self.assertIsNotNone(lbl_image)
-        self.assertEqual("无法打开图片", title.text())
-        self.assertEqual("不支持该图片格式", reason.text())
-        self.assertNotEqual("加载失败", lbl_image.text())
+        self.assertEqual("Unable to Open Image", title.text())
+        self.assertEqual("Unsupported image format", reason.text())
+        self.assertNotEqual("Failed to load", lbl_image.text())
 
     def test_retry_clears_error_and_restarts_preview_and_full_load(self) -> None:
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
         path = Path("/tmp/retry.jpg")
         controller.open_image(path)
-        controller._on_error(path, 1, "无法读取该图片文件")
+        controller._on_error(path, 1, "Unable to read this image file")
         controller._ensure_preview_load.reset_mock()
         controller._ensure_full_load.reset_mock()
 
@@ -134,22 +134,22 @@ class InfoPanelLoadStateTests(unittest.TestCase):
 
         MainController.update_info_for_image(controller, path)
 
-        self.assertEqual("正在生成直方图…", ui.widgetHistogram.text())
-        self.assertEqual("正在生成波形图…", ui.widgetWaveform.text())
-        self.assertEqual("正在读取元数据…", ui.tableMetadataGeneral.item(0, 0).text())
+        self.assertEqual("Generating histogram...", ui.widgetHistogram.text())
+        self.assertEqual("Generating waveform...", ui.widgetWaveform.text())
+        self.assertEqual("Reading metadata...", ui.tableMetadataGeneral.item(0, 0).text())
 
     def test_failed_image_shows_analysis_failure_and_reason(self) -> None:
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
         path = Path("/tmp/fail.jpg")
-        controller._load_error_by_path[str(path)] = "无法读取该图片文件"
+        controller._load_error_by_path[str(path)] = "Unable to read this image file"
 
         MainController.update_info_for_image(controller, path)
 
-        self.assertEqual("图片加载失败，无法生成分析", ui.widgetHistogram.text())
-        self.assertEqual("图片加载失败，无法生成分析", ui.widgetWaveform.text())
-        self.assertEqual("失败原因", ui.tableMetadataGeneral.item(1, 0).text())
-        self.assertEqual("无法读取该图片文件", ui.tableMetadataGeneral.item(1, 1).text())
+        self.assertEqual("Image failed to load. Analysis is unavailable.", ui.widgetHistogram.text())
+        self.assertEqual("Image failed to load. Analysis is unavailable.", ui.widgetWaveform.text())
+        self.assertEqual("Failure Reason", ui.tableMetadataGeneral.item(1, 0).text())
+        self.assertEqual("Unable to read this image file", ui.tableMetadataGeneral.item(1, 1).text())
 
     def test_long_metadata_values_have_full_value_tooltips(self) -> None:
         window, ui, controller = self._build_controller()
@@ -158,8 +158,8 @@ class InfoPanelLoadStateTests(unittest.TestCase):
 
         controller._populate_metadata_table(
             ui.tableMetadataGeneral,
-            (("路径", long_value),),
-            "暂无通用信息",
+            (("Path", long_value),),
+            "No general metadata",
         )
 
         value_item = ui.tableMetadataGeneral.item(0, 1)
@@ -170,11 +170,11 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
 
-        controller._populate_metadata_table(ui.tableMetadataExif, tuple(), "暂无 Exif 信息")
+        controller._populate_metadata_table(ui.tableMetadataExif, tuple(), "No Exif metadata")
 
         table = ui.tableMetadataExif
         empty_item = table.item(0, 0)
-        self.assertEqual("暂无 Exif 信息", empty_item.text())
+        self.assertEqual("No Exif metadata", empty_item.text())
         self.assertEqual(2, table.columnSpan(0, 0))
         self.assertEqual(QtCore.Qt.AlignCenter, empty_item.textAlignment())
         self.assertFalse(empty_item.flags() & QtCore.Qt.ItemIsSelectable)
@@ -183,8 +183,8 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
 
-        controller._populate_metadata_table(ui.tableMetadataTiff, tuple(), "暂无 TIFF 信息")
-        controller._populate_metadata_table(ui.tableMetadataTiff, (("Make", "Example"),), "暂无 TIFF 信息")
+        controller._populate_metadata_table(ui.tableMetadataTiff, tuple(), "No TIFF metadata")
+        controller._populate_metadata_table(ui.tableMetadataTiff, (("Make", "Example"),), "No TIFF metadata")
 
         table = ui.tableMetadataTiff
         self.assertEqual(1, table.columnSpan(0, 0))

@@ -51,8 +51,8 @@ class MainControllerLoadingMixin:
 
         self._show_tab_loading_state(
             path,
-            self._tr("正在加载预览"),
-            self._tr("正在加载预览：{name}").format(name=path.name),
+            self._tr("Loading preview"),
+            self._tr("Loading preview: {name}").format(name=path.name),
         )
         task = PreviewLoadTask(self._image_service, path)
         task.signals.finished.connect(lambda result, p=path, s=session: self._on_preview_loaded(p, s, result))
@@ -73,12 +73,12 @@ class MainControllerLoadingMixin:
         if session is None:
             return
 
-        self._main_window.statusBar().showMessage(self._tr("正在读取图片：{name}").format(name=path.name))
+        self._main_window.statusBar().showMessage(self._tr("Loading image: {name}").format(name=path.name))
         if key not in self._preview_by_path:
             self._show_tab_loading_state(
                 path,
-                self._tr("正在读取图片"),
-                self._tr("正在读取图片并生成分析：{name}").format(name=path.name),
+                self._tr("Loading image"),
+                self._tr("Loading image and generating analysis: {name}").format(name=path.name),
             )
         task = ImageLoadTask(self._image_service, path)
         task.signals.finished.connect(lambda result, p=path, s=session: self._on_loaded(p, s, result))
@@ -120,7 +120,7 @@ class MainControllerLoadingMixin:
         logger.warning("Failed to load preview image: %s, %s", path, message)
         if self._current_image_path() == path:
             self._main_window.statusBar().showMessage(
-                self._tr("预览失败，正在尝试读取完整图片：{name}").format(name=path.name)
+                self._tr("Preview failed, trying full image load: {name}").format(name=path.name)
             )
             self._ensure_full_load(path, session)
 
@@ -143,7 +143,7 @@ class MainControllerLoadingMixin:
         else:
             self._refresh_tab_pixmap(path, result.analysis)
 
-        self._main_window.statusBar().showMessage(self._tr("加载完成：{name}").format(name=path.name))
+        self._main_window.statusBar().showMessage(self._tr("Loaded: {name}").format(name=path.name))
 
     def _on_error(self, path: Path, session: int, message: str) -> None:
         key = str(path)
@@ -156,7 +156,7 @@ class MainControllerLoadingMixin:
         localized_message = self._localize_backend_error_message(message)
         self._load_error_by_path[key] = localized_message
         self._show_tab_error_state(path, localized_message)
-        self._main_window.statusBar().showMessage(self._tr("加载失败：{name}").format(name=path.name))
+        self._main_window.statusBar().showMessage(self._tr("Failed to load: {name}").format(name=path.name))
 
         if self._current_image_path() == path:
             self.update_info_for_image(path)
@@ -167,10 +167,12 @@ class MainControllerLoadingMixin:
 
     def _localize_backend_error_message(self, message: str) -> str:
         mapping = {
-            "图片文件不存在": self._tr("图片文件不存在"),
-            "不支持该图片格式": self._tr("不支持该图片格式"),
-            "无法读取该图片文件": self._tr("无法读取该图片文件"),
-            "图像分析失败": self._tr("图像分析失败"),
-            "处理图片时发生未知错误": self._tr("处理图片时发生未知错误"),
+            "Image file does not exist": self._tr("Image file does not exist"),
+            "Unsupported image format": self._tr("Unsupported image format"),
+            "Unable to read this image file": self._tr("Unable to read this image file"),
+            "Image analysis failed": self._tr("Image analysis failed"),
+            "An unknown error occurred while processing the image": self._tr(
+                "An unknown error occurred while processing the image"
+            ),
         }
-        return mapping.get(message, self._tr("处理图片时发生未知错误"))
+        return mapping.get(message, self._tr("An unknown error occurred while processing the image"))

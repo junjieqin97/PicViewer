@@ -20,15 +20,15 @@ class MainControllerTabsMixin:
         self._toggle_filmstrip(self._ui.actToggleFilmstrip.isChecked())
 
     def _open_file(self) -> None:
-        image_filter_label = self._tr("图片文件")
-        all_files_label = self._tr("所有文件")
+        image_filter_label = self._tr("Image Files")
+        all_files_label = self._tr("All Files")
         filter_text = (
             f"{image_filter_label} (*.jpg *.jpeg *.png *.tif *.tiff *.bmp *.dng *.nef *.cr2 *.arw *.raf);;"
             f"{all_files_label} (*)"
         )
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self._main_window,
-            self._tr("打开图片"),
+            self._tr("Open Image"),
             "",
             filter_text,
         )
@@ -37,7 +37,7 @@ class MainControllerTabsMixin:
         self.open_image(Path(path))
 
     def _open_folder(self) -> None:
-        folder = QtWidgets.QFileDialog.getExistingDirectory(self._main_window, self._tr("打开文件夹"), "")
+        folder = QtWidgets.QFileDialog.getExistingDirectory(self._main_window, self._tr("Open Folder"), "")
         if not folder:
             return
 
@@ -47,8 +47,8 @@ class MainControllerTabsMixin:
         if not paths:
             QtWidgets.QMessageBox.information(
                 self._main_window,
-                self._tr("提示"),
-                self._tr("该文件夹未找到可打开的图片文件"),
+                self._tr("Info"),
+                self._tr("No supported image files were found in this folder."),
             )
             return
 
@@ -70,8 +70,8 @@ class MainControllerTabsMixin:
                 self._load_error_by_path.pop(str(path), None)
                 self._show_tab_loading_state(
                     path,
-                    self._tr("正在加载预览"),
-                    self._tr("正在加载预览：{name}").format(name=path.name),
+                    self._tr("Loading preview"),
+                    self._tr("Loading preview: {name}").format(name=path.name),
                 )
             self._update_tab_title(existing_tab, path)
             self._update_filmstrip_text(path)
@@ -90,8 +90,8 @@ class MainControllerTabsMixin:
         self._set_zoom_state(path, 1.0, True)
         self._show_tab_loading_state(
             path,
-            self._tr("正在加载预览"),
-            self._tr("正在加载预览：{name}").format(name=path.name),
+            self._tr("Loading preview"),
+            self._tr("Loading preview: {name}").format(name=path.name),
         )
 
         self._add_filmstrip_placeholder_item(path)
@@ -218,8 +218,8 @@ class MainControllerTabsMixin:
         session = self._start_path_session(path)
         self._show_tab_loading_state(
             path,
-            self._tr("正在加载预览"),
-            self._tr("正在加载预览：{name}").format(name=path.name),
+            self._tr("Loading preview"),
+            self._tr("Loading preview: {name}").format(name=path.name),
         )
         self.update_info_for_image(path)
         self._ensure_preview_load(path, session)
@@ -239,10 +239,10 @@ class MainControllerTabsMixin:
         if state_widget is None or stack is None:
             return
         state_widget.set_error(
-            self._tr("无法打开图片"),
+            self._tr("Unable to Open Image"),
             reason,
-            self._tr("文件：{name}").format(name=path.name),
-            self._tr("重试"),
+            self._tr("File: {name}").format(name=path.name),
+            self._tr("Retry"),
         )
         stack.setCurrentWidget(state_widget)
 
@@ -327,7 +327,7 @@ class MainControllerTabsMixin:
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(12)
 
-        label_title = QtWidgets.QLabel(self._tr("开始浏览照片"), content)
+        label_title = QtWidgets.QLabel(self._tr("Start Browsing Photos"), content)
         label_title.setObjectName("labelEmptyTitle")
         label_title.setAlignment(QtCore.Qt.AlignCenter)
         title_font = label_title.font()
@@ -336,7 +336,7 @@ class MainControllerTabsMixin:
         label_title.setFont(title_font)
         content_layout.addWidget(label_title)
 
-        label_description = QtWidgets.QLabel(self._tr("打开单张图片或选择文件夹开始预览。"), content)
+        label_description = QtWidgets.QLabel(self._tr("Open an image or choose a folder to start previewing."), content)
         label_description.setObjectName("labelEmptyDescription")
         label_description.setAlignment(QtCore.Qt.AlignCenter)
         label_description.setWordWrap(True)
@@ -389,7 +389,7 @@ class MainControllerTabsMixin:
         content_layout.addWidget(actions_container, 0, QtCore.Qt.AlignHCenter)
 
         label_formats = QtWidgets.QLabel(
-            self._tr("支持格式：JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF"),
+            self._tr("Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF"),
             content,
         )
         label_formats.setObjectName("labelEmptyFormats")
@@ -421,7 +421,7 @@ class MainControllerTabsMixin:
         action: QtWidgets.QAction,
     ) -> QtWidgets.QLabel:
         shortcut = self._shortcut_text(action)
-        shortcut_text = self._tr("快捷键：{shortcut}").format(shortcut=shortcut) if shortcut else ""
+        shortcut_text = self._tr("Shortcut: {shortcut}").format(shortcut=shortcut) if shortcut else ""
         label_shortcut = QtWidgets.QLabel(shortcut_text, parent)
         label_shortcut.setObjectName(label_object_name)
         label_shortcut.setAlignment(QtCore.Qt.AlignCenter)

@@ -41,7 +41,7 @@ class PreviewLoadTask(QtCore.QRunnable):
             return
         except Exception:  # pragma: no cover - defensive safety net
             logger.exception("Preview processing failed: %s", self._path)
-            self.signals.error.emit("处理图片时发生未知错误")
+            self.signals.error.emit("An unknown error occurred while processing the image")
             return
 
         self.signals.finished.emit(result)
@@ -68,7 +68,7 @@ class ImageLoadTask(QtCore.QRunnable):
             return
         except Exception:  # pragma: no cover - defensive safety net
             logger.exception("Image processing failed: %s", self._path)
-            self.signals.error.emit("处理图片时发生未知错误")
+            self.signals.error.emit("An unknown error occurred while processing the image")
             return
 
         self.signals.finished.emit(result)

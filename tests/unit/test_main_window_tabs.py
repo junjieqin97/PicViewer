@@ -109,12 +109,12 @@ class MainWindowTabsTests(unittest.TestCase):
 
         self.assertIs(ui.widgetAnalysisModeSummary, ui.layoutInfo.itemAt(0).widget())
         self.assertIs(ui.tabsInfo, ui.layoutInfo.itemAt(1).widget())
-        self.assertEqual("分析模式", ui.labelAnalysisModeTitle.text())
-        self.assertEqual("明度模式", ui.labelAnalysisModeValue.text())
-        self.assertEqual("RGB通道", ui.labelAnalysisChannelTitle.text())
-        self.assertEqual("不适用", ui.labelAnalysisChannelValue.text())
-        self.assertEqual("伪色状态", ui.labelPseudoColorTitle.text())
-        self.assertEqual("欠曝：关闭 / 过曝：关闭", ui.labelPseudoColorValue.text())
+        self.assertEqual("Analysis Mode", ui.labelAnalysisModeTitle.text())
+        self.assertEqual("Luma Mode", ui.labelAnalysisModeValue.text())
+        self.assertEqual("RGB Channels", ui.labelAnalysisChannelTitle.text())
+        self.assertEqual("Not Applicable", ui.labelAnalysisChannelValue.text())
+        self.assertEqual("Pseudo Color State", ui.labelPseudoColorTitle.text())
+        self.assertEqual("Underexposed: Off / Overexposed: Off", ui.labelPseudoColorValue.text())
 
     def test_metadata_tables_keep_fixed_key_column_and_stretched_value_column(self) -> None:
         window = QtWidgets.QMainWindow()

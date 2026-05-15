@@ -46,10 +46,10 @@ class MainWindowShortcutTests(unittest.TestCase):
 
         self.assertTrue(ui.actToggleInfoPanel.isCheckable())
         self.assertTrue(ui.actToggleFilmstrip.isCheckable())
-        self.assertEqual("信息区", ui.actToggleInfoPanel.text())
-        self.assertEqual("胶卷窗格", ui.actToggleFilmstrip.text())
-        self.assertNotIn("显示/隐藏", ui.actToggleInfoPanel.text())
-        self.assertNotIn("显示/隐藏", ui.actToggleFilmstrip.text())
+        self.assertEqual("Info Panel", ui.actToggleInfoPanel.text())
+        self.assertEqual("Filmstrip", ui.actToggleFilmstrip.text())
+        self.assertNotIn("Show/Hide", ui.actToggleInfoPanel.text())
+        self.assertNotIn("Show/Hide", ui.actToggleFilmstrip.text())
 
 
 if __name__ == "__main__":

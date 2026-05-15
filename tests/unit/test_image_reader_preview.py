@@ -46,7 +46,7 @@ class ImageReaderPreviewTests(unittest.TestCase):
             with patch("pic_viewer.infra.adapters.image_reader.cv2.imread", return_value=None):
                 with self.assertRaises(ImageLoadError) as ctx:
                     reader.read_preview(path)
-        self.assertEqual("不支持该图片格式", str(ctx.exception))
+        self.assertEqual("Unsupported image format", str(ctx.exception))
 
 
 if __name__ == "__main__":

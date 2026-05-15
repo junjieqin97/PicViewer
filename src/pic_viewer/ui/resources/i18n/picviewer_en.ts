@@ -1,115 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="en" sourcelanguage="zh_CN">
+<TS version="2.1" language="en" sourcelanguage="en">
 <context>
     <name>MainControllerAnalysisMixin</name>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="359"/>
-        <source>直方图占位图</source>
-        <translation>Histogram Placeholder</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="360"/>
-        <source>波形图占位图</source>
-        <translation>Waveform Placeholder</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="365"/>
-        <source>正在生成直方图…</source>
-        <translation>Generating histogram...</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="366"/>
-        <source>正在生成波形图…</source>
-        <translation>Generating waveform...</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="369"/>
-        <source>图片加载失败，无法生成分析</source>
-        <translation>Image failed to load. Analysis is unavailable.</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="154"/>
-        <source>明度模式</source>
-        <translation>Luma Mode</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="155"/>
-        <source>不适用</source>
-        <translation>Not Applicable</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="157"/>
-        <source>RGB模式</source>
-        <translation>RGB Mode</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="159"/>
-        <source>全部</source>
-        <translation>All</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="160"/>
-        <source>红</source>
-        <translation>Red</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="161"/>
-        <source>绿</source>
-        <translation>Green</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="162"/>
-        <source>蓝</source>
-        <translation>Blue</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="214"/>
-        <source>开启</source>
-        <translation>On</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="215"/>
-        <source>关闭</source>
-        <translation>Off</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="218"/>
-        <source>欠曝：{under} / 过曝：{over}</source>
-        <translation>Underexposed: {under} / Overexposed: {over}</translation>
-    </message>
-    <message>
         <location filename="../../../controllers/main_controller_analysis_mixin.py" line="69"/>
-        <source>缩放：适配窗口</source>
+        <source>Zoom: Fit to Window</source>
         <translation>Zoom: Fit to Window</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_analysis_mixin.py" line="70"/>
-        <source>缩放：{percent}%</source>
+        <source>Zoom: {percent}%</source>
         <translation>Zoom: {percent}%</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="154"/>
+        <source>Luma Mode</source>
+        <translation>Luma Mode</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="155"/>
+        <source>Not Applicable</source>
+        <translation>Not Applicable</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="157"/>
+        <source>RGB Mode</source>
+        <translation>RGB Mode</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="159"/>
+        <source>All</source>
+        <translation>All</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="160"/>
+        <source>Red</source>
+        <translation>Red</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="161"/>
+        <source>Green</source>
+        <translation>Green</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="162"/>
+        <source>Blue</source>
+        <translation>Blue</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="214"/>
+        <source>On</source>
+        <translation>On</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="215"/>
+        <source>Off</source>
+        <translation>Off</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="218"/>
+        <source>Underexposed: {under} / Overexposed: {over}</source>
+        <translation>Underexposed: {under} / Overexposed: {over}</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="359"/>
+        <source>Histogram Placeholder</source>
+        <translation>Histogram Placeholder</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="360"/>
+        <source>Waveform Placeholder</source>
+        <translation>Waveform Placeholder</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="365"/>
+        <source>Generating histogram...</source>
+        <translation>Generating histogram...</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="366"/>
+        <source>Generating waveform...</source>
+        <translation>Generating waveform...</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="369"/>
+        <source>Image failed to load. Analysis is unavailable.</source>
+        <translation>Image failed to load. Analysis is unavailable.</translation>
     </message>
 </context>
 <context>
     <name>MainControllerInteractionMixin</name>
     <message>
         <location filename="../../../controllers/main_controller_interaction_mixin.py" line="224"/>
-        <source>提示</source>
+        <source>Info</source>
         <translation>Info</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_interaction_mixin.py" line="224"/>
-        <source>该功能尚未实现（TODO）</source>
+        <source>This feature is not implemented yet (TODO).</source>
         <translation>This feature is not implemented yet (TODO).</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_interaction_mixin.py" line="231"/>
-        <source>关于</source>
+        <source>About</source>
         <translation>About</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_interaction_mixin.py" line="231"/>
         <source>PicViewer
-一个简单的图片预览工具 Demo。</source>
+A simple image viewer demo.</source>
         <translation>PicViewer
 A simple image viewer demo.</translation>
     </message>
@@ -117,232 +117,232 @@ A simple image viewer demo.</translation>
 <context>
     <name>MainControllerLoadingMixin</name>
     <message>
-        <location filename="../../../controllers/main_controller_loading_mixin.py" line="76"/>
-        <source>正在读取图片：{name}</source>
-        <translation>Loading image: {name}</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_loading_mixin.py" line="146"/>
-        <source>加载完成：{name}</source>
-        <translation>Loaded: {name}</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_loading_mixin.py" line="159"/>
-        <source>加载失败：{name}</source>
-        <translation>Failed to load: {name}</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_loading_mixin.py" line="170"/>
-        <source>图片文件不存在</source>
-        <translation>Image file does not exist</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_loading_mixin.py" line="171"/>
-        <source>不支持该图片格式</source>
-        <translation>Unsupported image format</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_loading_mixin.py" line="172"/>
-        <source>无法读取该图片文件</source>
-        <translation>Unable to read this image file</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_loading_mixin.py" line="173"/>
-        <source>图像分析失败</source>
-        <translation>Image analysis failed</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_loading_mixin.py" line="176"/>
-        <source>处理图片时发生未知错误</source>
-        <translation>An unknown error occurred while processing the image</translation>
-    </message>
-    <message>
         <location filename="../../../controllers/main_controller_loading_mixin.py" line="52"/>
-        <source>正在加载预览</source>
+        <source>Loading preview</source>
         <translation>Loading preview</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_loading_mixin.py" line="52"/>
-        <source>正在加载预览：{name}</source>
+        <source>Loading preview: {name}</source>
         <translation>Loading preview: {name}</translation>
     </message>
     <message>
+        <location filename="../../../controllers/main_controller_loading_mixin.py" line="76"/>
+        <source>Loading image: {name}</source>
+        <translation>Loading image: {name}</translation>
+    </message>
+    <message>
         <location filename="../../../controllers/main_controller_loading_mixin.py" line="78"/>
-        <source>正在读取图片</source>
+        <source>Loading image</source>
         <translation>Loading image</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_loading_mixin.py" line="78"/>
-        <source>正在读取图片并生成分析：{name}</source>
+        <source>Loading image and generating analysis: {name}</source>
         <translation>Loading image and generating analysis: {name}</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_loading_mixin.py" line="122"/>
-        <source>预览失败，正在尝试读取完整图片：{name}</source>
+        <source>Preview failed, trying full image load: {name}</source>
         <translation>Preview failed, trying full image load: {name}</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_loading_mixin.py" line="146"/>
+        <source>Loaded: {name}</source>
+        <translation>Loaded: {name}</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_loading_mixin.py" line="159"/>
+        <source>Failed to load: {name}</source>
+        <translation>Failed to load: {name}</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_loading_mixin.py" line="170"/>
+        <source>Image file does not exist</source>
+        <translation>Image file does not exist</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_loading_mixin.py" line="171"/>
+        <source>Unsupported image format</source>
+        <translation>Unsupported image format</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_loading_mixin.py" line="172"/>
+        <source>Unable to read this image file</source>
+        <translation>Unable to read this image file</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_loading_mixin.py" line="173"/>
+        <source>Image analysis failed</source>
+        <translation>Image analysis failed</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_loading_mixin.py" line="178"/>
+        <source>An unknown error occurred while processing the image</source>
+        <translation>An unknown error occurred while processing the image</translation>
     </message>
 </context>
 <context>
     <name>MainControllerMetadataMixin</name>
     <message>
-        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="45"/>
-        <source>暂无通用信息</source>
+        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="57"/>
+        <source>No general metadata</source>
         <translation>No general metadata</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="50"/>
-        <source>暂无 Exif 信息</source>
+        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="62"/>
+        <source>No Exif metadata</source>
         <translation>No Exif metadata</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="51"/>
-        <source>暂无 IPTC 信息</source>
+        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="63"/>
+        <source>No IPTC metadata</source>
         <translation>No IPTC metadata</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="52"/>
-        <source>暂无 TIFF 信息</source>
+        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="64"/>
+        <source>No TIFF metadata</source>
         <translation>No TIFF metadata</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="56"/>
-        <source>文件名</source>
-        <translation>File Name</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="57"/>
-        <source>路径</source>
-        <translation>Path</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="58"/>
-        <source>大小</source>
-        <translation>Size</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="59"/>
-        <source>分辨率</source>
-        <translation>Resolution</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="62"/>
-        <source>未知</source>
-        <translation>Unknown</translation>
-    </message>
-    <message>
         <location filename="../../../controllers/main_controller_metadata_mixin.py" line="23"/>
-        <source>正在读取元数据…</source>
+        <source>Reading metadata...</source>
         <translation>Reading metadata...</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_metadata_mixin.py" line="26"/>
-        <source>等待图片加载完成</source>
+        <source>Waiting for image load to finish</source>
         <translation>Waiting for image load to finish</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_metadata_mixin.py" line="30"/>
-        <source>加载状态</source>
+        <source>Load Status</source>
         <translation>Load Status</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_metadata_mixin.py" line="30"/>
-        <source>失败</source>
+        <source>Failed</source>
         <translation>Failed</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_metadata_mixin.py" line="30"/>
-        <source>失败原因</source>
+        <source>Failure Reason</source>
         <translation>Failure Reason</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="41"/>
-        <source>图片加载失败，暂无元数据</source>
+        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="49"/>
+        <source>Image failed to load. No metadata is available.</source>
         <translation>Image failed to load. No metadata is available.</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="68"/>
+        <source>File Name</source>
+        <translation>File Name</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="69"/>
+        <source>Path</source>
+        <translation>Path</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="70"/>
+        <source>Size</source>
+        <translation>Size</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="71"/>
+        <source>Resolution</source>
+        <translation>Resolution</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_metadata_mixin.py" line="74"/>
+        <source>Unknown</source>
+        <translation>Unknown</translation>
     </message>
 </context>
 <context>
     <name>MainControllerTabsMixin</name>
     <message>
         <location filename="../../../controllers/main_controller_tabs_mixin.py" line="23"/>
-        <source>图片文件</source>
+        <source>Image Files</source>
         <translation>Image Files</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_tabs_mixin.py" line="24"/>
-        <source>所有文件</source>
+        <source>All Files</source>
         <translation>All Files</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_tabs_mixin.py" line="29"/>
-        <source>打开图片</source>
+        <source>Open Image</source>
         <translation>Open Image</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_tabs_mixin.py" line="40"/>
-        <source>打开文件夹</source>
+        <source>Open Folder</source>
         <translation>Open Folder</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_tabs_mixin.py" line="48"/>
-        <source>提示</source>
+        <source>Info</source>
         <translation>Info</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_tabs_mixin.py" line="48"/>
-        <source>该文件夹未找到可打开的图片文件</source>
+        <source>No supported image files were found in this folder.</source>
         <translation>No supported image files were found in this folder.</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="330"/>
-        <source>开始浏览照片</source>
-        <translation>Start Browsing Photos</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="339"/>
-        <source>打开单张图片或选择文件夹开始预览。</source>
-        <translation>Open an image or choose a folder to start previewing.</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="391"/>
-        <source>支持格式：JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</source>
-        <translation>Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</translation>
-    </message>
-    <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="424"/>
-        <source>快捷键：{shortcut}</source>
-        <translation>Shortcut: {shortcut}</translation>
-    </message>
-    <message>
         <location filename="../../../controllers/main_controller_tabs_mixin.py" line="219"/>
-        <source>正在加载预览</source>
+        <source>Loading preview</source>
         <translation>Loading preview</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_tabs_mixin.py" line="219"/>
-        <source>正在加载预览：{name}</source>
+        <source>Loading preview: {name}</source>
         <translation>Loading preview: {name}</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_tabs_mixin.py" line="241"/>
-        <source>无法打开图片</source>
+        <source>Unable to Open Image</source>
         <translation>Unable to Open Image</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_tabs_mixin.py" line="241"/>
-        <source>文件：{name}</source>
+        <source>File: {name}</source>
         <translation>File: {name}</translation>
     </message>
     <message>
         <location filename="../../../controllers/main_controller_tabs_mixin.py" line="241"/>
-        <source>重试</source>
+        <source>Retry</source>
         <translation>Retry</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="330"/>
+        <source>Start Browsing Photos</source>
+        <translation>Start Browsing Photos</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="339"/>
+        <source>Open an image or choose a folder to start previewing.</source>
+        <translation>Open an image or choose a folder to start previewing.</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="391"/>
+        <source>Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</source>
+        <translation>Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="424"/>
+        <source>Shortcut: {shortcut}</source>
+        <translation>Shortcut: {shortcut}</translation>
     </message>
 </context>
 <context>
     <name>MainWindow</name>
     <message>
         <location filename="../../windows/main_window.py" line="513"/>
-        <source>准备就绪</source>
+        <source>Ready</source>
         <translation>Ready</translation>
     </message>
 </context>
@@ -352,141 +352,6 @@ A simple image viewer demo.</translation>
         <location filename="../../windows/main_window.py" line="436"/>
         <source>PicViewer</source>
         <translation>PicViewer</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="438"/>
-        <source>打开图片…</source>
-        <translation>Open Image...</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="439"/>
-        <source>打开文件夹…</source>
-        <translation>Open Folder...</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="440"/>
-        <source>关闭当前标签</source>
-        <translation>Close Current Tab</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="441"/>
-        <source>退出</source>
-        <translation>Exit</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="442"/>
-        <source>放大</source>
-        <translation>Zoom In</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="443"/>
-        <source>缩小</source>
-        <translation>Zoom Out</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="444"/>
-        <source>适配窗口</source>
-        <translation>Fit to Window</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="447"/>
-        <source>关于</source>
-        <translation>About</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="475"/>
-        <source>明度模式</source>
-        <translation>Luma Mode</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="449"/>
-        <source>RGB模式</source>
-        <translation>RGB Mode</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="450"/>
-        <source>RGB全部通道</source>
-        <translation>All RGB Channels</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="451"/>
-        <source>仅红通道</source>
-        <translation>Red Channel Only</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="452"/>
-        <source>仅绿通道</source>
-        <translation>Green Channel Only</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="453"/>
-        <source>仅蓝通道</source>
-        <translation>Blue Channel Only</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="457"/>
-        <source>文件</source>
-        <translation>File</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="458"/>
-        <source>查看</source>
-        <translation>View</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="459"/>
-        <source>工具</source>
-        <translation>Tools</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="460"/>
-        <source>直方图/波形图模式</source>
-        <translation>Histogram/Waveform Mode</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="476"/>
-        <source>RGB通道</source>
-        <translation>RGB Channels</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="462"/>
-        <source>伪色</source>
-        <translation>Pseudo Color</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="454"/>
-        <source>显示欠曝</source>
-        <translation>Show Underexposed</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="455"/>
-        <source>显示过曝</source>
-        <translation>Show Overexposed</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="463"/>
-        <source>帮助</source>
-        <translation>Help</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="465"/>
-        <source>直方图</source>
-        <translation>Histogram</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="466"/>
-        <source>波形图</source>
-        <translation>Waveform</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="467"/>
-        <source>元数据</source>
-        <translation>Metadata</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="469"/>
-        <source>通用</source>
-        <translation>General</translation>
     </message>
     <message>
         <location filename="../../windows/main_window.py" line="470"/>
@@ -504,69 +369,204 @@ A simple image viewer demo.</translation>
         <translation>TIFF</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="486"/>
-        <source>直方图占位图</source>
-        <translation>Histogram Placeholder</translation>
+        <location filename="../../windows/main_window.py" line="438"/>
+        <source>Open Image...</source>
+        <translation>Open Image...</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="491"/>
-        <source>波形图占位图</source>
-        <translation>Waveform Placeholder</translation>
+        <location filename="../../windows/main_window.py" line="439"/>
+        <source>Open Folder...</source>
+        <translation>Open Folder...</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="487"/>
-        <source>显示/隐藏欠曝区域</source>
-        <translation>Show/Hide Underexposed Areas</translation>
+        <location filename="../../windows/main_window.py" line="440"/>
+        <source>Close Current Tab</source>
+        <translation>Close Current Tab</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="487"/>
-        <source>显示/隐藏过曝区域</source>
-        <translation>Show/Hide Overexposed Areas</translation>
+        <location filename="../../windows/main_window.py" line="441"/>
+        <source>Exit</source>
+        <translation>Exit</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="495"/>
-        <source>键</source>
-        <translation>Key</translation>
+        <location filename="../../windows/main_window.py" line="442"/>
+        <source>Zoom In</source>
+        <translation>Zoom In</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="495"/>
-        <source>值</source>
-        <translation>Value</translation>
+        <location filename="../../windows/main_window.py" line="443"/>
+        <source>Zoom Out</source>
+        <translation>Zoom Out</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="474"/>
-        <source>分析模式</source>
-        <translation>Analysis Mode</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="477"/>
-        <source>不适用</source>
-        <translation>Not Applicable</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="478"/>
-        <source>伪色状态</source>
-        <translation>Pseudo Color State</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="479"/>
-        <source>欠曝：{under} / 过曝：{over}</source>
-        <translation>Underexposed: {under} / Overexposed: {over}</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="479"/>
-        <source>关闭</source>
-        <translation>Off</translation>
+        <location filename="../../windows/main_window.py" line="444"/>
+        <source>Fit to Window</source>
+        <translation>Fit to Window</translation>
     </message>
     <message>
         <location filename="../../windows/main_window.py" line="445"/>
-        <source>信息区</source>
+        <source>Info Panel</source>
         <translation>Info Panel</translation>
     </message>
     <message>
         <location filename="../../windows/main_window.py" line="446"/>
-        <source>胶卷窗格</source>
+        <source>Filmstrip</source>
         <translation>Filmstrip</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="447"/>
+        <source>About</source>
+        <translation>About</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="475"/>
+        <source>Luma Mode</source>
+        <translation>Luma Mode</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="449"/>
+        <source>RGB Mode</source>
+        <translation>RGB Mode</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="450"/>
+        <source>All RGB Channels</source>
+        <translation>All RGB Channels</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="451"/>
+        <source>Red Channel Only</source>
+        <translation>Red Channel Only</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="452"/>
+        <source>Green Channel Only</source>
+        <translation>Green Channel Only</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="453"/>
+        <source>Blue Channel Only</source>
+        <translation>Blue Channel Only</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="454"/>
+        <source>Show Underexposed</source>
+        <translation>Show Underexposed</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="455"/>
+        <source>Show Overexposed</source>
+        <translation>Show Overexposed</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="457"/>
+        <source>File</source>
+        <translation>File</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="458"/>
+        <source>View</source>
+        <translation>View</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="459"/>
+        <source>Tools</source>
+        <translation>Tools</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="460"/>
+        <source>Histogram/Waveform Mode</source>
+        <translation>Histogram/Waveform Mode</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="476"/>
+        <source>RGB Channels</source>
+        <translation>RGB Channels</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="462"/>
+        <source>Pseudo Color</source>
+        <translation>Pseudo Color</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="463"/>
+        <source>Help</source>
+        <translation>Help</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="465"/>
+        <source>Histogram</source>
+        <translation>Histogram</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="466"/>
+        <source>Waveform</source>
+        <translation>Waveform</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="467"/>
+        <source>Metadata</source>
+        <translation>Metadata</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="469"/>
+        <source>General</source>
+        <translation>General</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="474"/>
+        <source>Analysis Mode</source>
+        <translation>Analysis Mode</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="477"/>
+        <source>Not Applicable</source>
+        <translation>Not Applicable</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="478"/>
+        <source>Pseudo Color State</source>
+        <translation>Pseudo Color State</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="479"/>
+        <source>Underexposed: {under} / Overexposed: {over}</source>
+        <translation>Underexposed: {under} / Overexposed: {over}</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="479"/>
+        <source>Off</source>
+        <translation>Off</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="486"/>
+        <source>Histogram Placeholder</source>
+        <translation>Histogram Placeholder</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="487"/>
+        <source>Show/Hide Underexposed Areas</source>
+        <translation>Show/Hide Underexposed Areas</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="487"/>
+        <source>Show/Hide Overexposed Areas</source>
+        <translation>Show/Hide Overexposed Areas</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="491"/>
+        <source>Waveform Placeholder</source>
+        <translation>Waveform Placeholder</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="495"/>
+        <source>Key</source>
+        <translation>Key</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="495"/>
+        <source>Value</source>
+        <translation>Value</translation>
     </message>
 </context>
 </TS>

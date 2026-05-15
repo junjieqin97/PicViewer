@@ -435,64 +435,64 @@ class MainWindowUI:
     def retranslate_ui(self) -> None:
         self._main_window.setWindowTitle(self._tr("PicViewer"))
 
-        self.actOpenFile.setText(self._tr("打开图片…"))
-        self.actOpenFolder.setText(self._tr("打开文件夹…"))
-        self.actCloseTab.setText(self._tr("关闭当前标签"))
-        self.actExit.setText(self._tr("退出"))
-        self.actZoomIn.setText(self._tr("放大"))
-        self.actZoomOut.setText(self._tr("缩小"))
-        self.actFitToWindow.setText(self._tr("适配窗口"))
-        self.actToggleInfoPanel.setText(self._tr("信息区"))
-        self.actToggleFilmstrip.setText(self._tr("胶卷窗格"))
-        self.actAbout.setText(self._tr("关于"))
-        self.actModeLuma.setText(self._tr("明度模式"))
-        self.actModeRgb.setText(self._tr("RGB模式"))
-        self.actChannelAll.setText(self._tr("RGB全部通道"))
-        self.actChannelRed.setText(self._tr("仅红通道"))
-        self.actChannelGreen.setText(self._tr("仅绿通道"))
-        self.actChannelBlue.setText(self._tr("仅蓝通道"))
-        self.actToggleUnderexposed.setText(self._tr("显示欠曝"))
-        self.actToggleOverexposed.setText(self._tr("显示过曝"))
+        self.actOpenFile.setText(self._tr("Open Image..."))
+        self.actOpenFolder.setText(self._tr("Open Folder..."))
+        self.actCloseTab.setText(self._tr("Close Current Tab"))
+        self.actExit.setText(self._tr("Exit"))
+        self.actZoomIn.setText(self._tr("Zoom In"))
+        self.actZoomOut.setText(self._tr("Zoom Out"))
+        self.actFitToWindow.setText(self._tr("Fit to Window"))
+        self.actToggleInfoPanel.setText(self._tr("Info Panel"))
+        self.actToggleFilmstrip.setText(self._tr("Filmstrip"))
+        self.actAbout.setText(self._tr("About"))
+        self.actModeLuma.setText(self._tr("Luma Mode"))
+        self.actModeRgb.setText(self._tr("RGB Mode"))
+        self.actChannelAll.setText(self._tr("All RGB Channels"))
+        self.actChannelRed.setText(self._tr("Red Channel Only"))
+        self.actChannelGreen.setText(self._tr("Green Channel Only"))
+        self.actChannelBlue.setText(self._tr("Blue Channel Only"))
+        self.actToggleUnderexposed.setText(self._tr("Show Underexposed"))
+        self.actToggleOverexposed.setText(self._tr("Show Overexposed"))
 
-        self.menuFile.setTitle(self._tr("文件"))
-        self.menuView.setTitle(self._tr("查看"))
-        self.menuTools.setTitle(self._tr("工具"))
-        self.menuMode.setTitle(self._tr("直方图/波形图模式"))
-        self.menuChannel.setTitle(self._tr("RGB通道"))
-        self.menuPseudoColor.setTitle(self._tr("伪色"))
-        self.menuHelp.setTitle(self._tr("帮助"))
+        self.menuFile.setTitle(self._tr("File"))
+        self.menuView.setTitle(self._tr("View"))
+        self.menuTools.setTitle(self._tr("Tools"))
+        self.menuMode.setTitle(self._tr("Histogram/Waveform Mode"))
+        self.menuChannel.setTitle(self._tr("RGB Channels"))
+        self.menuPseudoColor.setTitle(self._tr("Pseudo Color"))
+        self.menuHelp.setTitle(self._tr("Help"))
 
-        self.tabsInfo.setTabText(self.tabsInfo.indexOf(self.tabHistogram), self._tr("直方图"))
-        self.tabsInfo.setTabText(self.tabsInfo.indexOf(self.tabWaveform), self._tr("波形图"))
-        self.tabsInfo.setTabText(self.tabsInfo.indexOf(self.tabMetadata), self._tr("元数据"))
+        self.tabsInfo.setTabText(self.tabsInfo.indexOf(self.tabHistogram), self._tr("Histogram"))
+        self.tabsInfo.setTabText(self.tabsInfo.indexOf(self.tabWaveform), self._tr("Waveform"))
+        self.tabsInfo.setTabText(self.tabsInfo.indexOf(self.tabMetadata), self._tr("Metadata"))
 
-        self.tabsMetadata.setTabText(self.tabsMetadata.indexOf(self.tabMetadataGeneral), self._tr("通用"))
+        self.tabsMetadata.setTabText(self.tabsMetadata.indexOf(self.tabMetadataGeneral), self._tr("General"))
         self.tabsMetadata.setTabText(self.tabsMetadata.indexOf(self.tabMetadataExif), self._tr("Exif"))
         self.tabsMetadata.setTabText(self.tabsMetadata.indexOf(self.tabMetadataIptc), self._tr("IPTC"))
         self.tabsMetadata.setTabText(self.tabsMetadata.indexOf(self.tabMetadataTiff), self._tr("TIFF"))
 
-        self.labelAnalysisModeTitle.setText(self._tr("分析模式"))
-        self.labelAnalysisModeValue.setText(self._tr("明度模式"))
-        self.labelAnalysisChannelTitle.setText(self._tr("RGB通道"))
-        self.labelAnalysisChannelValue.setText(self._tr("不适用"))
-        self.labelPseudoColorTitle.setText(self._tr("伪色状态"))
+        self.labelAnalysisModeTitle.setText(self._tr("Analysis Mode"))
+        self.labelAnalysisModeValue.setText(self._tr("Luma Mode"))
+        self.labelAnalysisChannelTitle.setText(self._tr("RGB Channels"))
+        self.labelAnalysisChannelValue.setText(self._tr("Not Applicable"))
+        self.labelPseudoColorTitle.setText(self._tr("Pseudo Color State"))
         self.labelPseudoColorValue.setText(
-            self._tr("欠曝：{under} / 过曝：{over}").format(
-                under=self._tr("关闭"),
-                over=self._tr("关闭"),
+            self._tr("Underexposed: {under} / Overexposed: {over}").format(
+                under=self._tr("Off"),
+                over=self._tr("Off"),
             )
         )
 
-        self.widgetHistogram.setText(self._tr("直方图占位图"))
+        self.widgetHistogram.setText(self._tr("Histogram Placeholder"))
         self.widgetHistogram.set_triangle_tooltips(
-            self._tr("显示/隐藏欠曝区域"),
-            self._tr("显示/隐藏过曝区域"),
+            self._tr("Show/Hide Underexposed Areas"),
+            self._tr("Show/Hide Overexposed Areas"),
         )
-        self.widgetWaveform.setText(self._tr("波形图占位图"))
+        self.widgetWaveform.setText(self._tr("Waveform Placeholder"))
         self._set_metadata_headers()
 
     def _set_metadata_headers(self) -> None:
-        headers = [self._tr("键"), self._tr("值")]
+        headers = [self._tr("Key"), self._tr("Value")]
         self.tableMetadataGeneral.setHorizontalHeaderLabels(headers)
         self.tableMetadataExif.setHorizontalHeaderLabels(headers)
         self.tableMetadataIptc.setHorizontalHeaderLabels(headers)
@@ -510,7 +510,7 @@ class MainWindow(QtWidgets.QMainWindow):
         from pic_viewer.controllers.main_controller import MainController
 
         self.controller = MainController(self, self.ui, image_service, view_service)
-        self.statusBar().showMessage(QtCore.QCoreApplication.translate("MainWindow", "准备就绪"))
+        self.statusBar().showMessage(QtCore.QCoreApplication.translate("MainWindow", "Ready"))
 
     def resizeEvent(self, event) -> None:  # type: ignore[override]
         super().resizeEvent(event)

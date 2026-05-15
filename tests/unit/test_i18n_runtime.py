@@ -14,7 +14,12 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
-from pic_viewer.ui.i18n.runtime import DEFAULT_LANGUAGE, install_translator, resolve_language  # noqa: E402
+from pic_viewer.ui.i18n.runtime import (  # noqa: E402
+    CHINESE_LANGUAGE,
+    DEFAULT_LANGUAGE,
+    install_translator,
+    resolve_language,
+)
 
 
 class I18nRuntimeTests(unittest.TestCase):
@@ -26,11 +31,15 @@ class I18nRuntimeTests(unittest.TestCase):
         resolved = resolve_language(language_override=None, system_locale_name="en_US")
         self.assertEqual("en", resolved)
 
-    def test_unsupported_system_locale_falls_back_to_chinese(self) -> None:
+    def test_system_chinese_locale_maps_to_zh_cn(self) -> None:
+        resolved = resolve_language(language_override=None, system_locale_name="zh_CN")
+        self.assertEqual(CHINESE_LANGUAGE, resolved)
+
+    def test_unsupported_system_locale_falls_back_to_english(self) -> None:
         resolved = resolve_language(language_override=None, system_locale_name="fr_FR")
         self.assertEqual(DEFAULT_LANGUAGE, resolved)
 
-    def test_install_translator_falls_back_when_qm_missing(self) -> None:
+    def test_install_translator_returns_none_for_source_language(self) -> None:
         app = QtCore.QCoreApplication.instance()
         if app is None:
             app = QtCore.QCoreApplication([])
@@ -45,15 +54,30 @@ class I18nRuntimeTests(unittest.TestCase):
         self.assertEqual(DEFAULT_LANGUAGE, active)
         self.assertIsNone(translator)
 
+    def test_install_translator_falls_back_when_chinese_qm_missing(self) -> None:
+        app = QtCore.QCoreApplication.instance()
+        if app is None:
+            app = QtCore.QCoreApplication([])
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            active, translator = install_translator(
+                app=app,
+                language=CHINESE_LANGUAGE,
+                translations_root=Path(tmp_dir),
+            )
+
+        self.assertEqual(DEFAULT_LANGUAGE, active)
+        self.assertIsNone(translator)
+
     def test_controller_error_localization_mapping(self) -> None:
         controller = MainController.__new__(MainController)
         controller._tr = lambda text: f"translated:{text}"  # type: ignore[method-assign]
 
-        localized = controller._localize_backend_error_message("图片文件不存在")
-        self.assertEqual("translated:图片文件不存在", localized)
+        localized = controller._localize_backend_error_message("Image file does not exist")
+        self.assertEqual("translated:Image file does not exist", localized)
 
         fallback = controller._localize_backend_error_message("unknown-message")
-        self.assertEqual("translated:处理图片时发生未知错误", fallback)
+        self.assertEqual("translated:An unknown error occurred while processing the image", fallback)
 
     def test_controller_translation_checks_mixin_contexts(self) -> None:
         controller = MainController.__new__(MainController)
@@ -64,7 +88,7 @@ class I18nRuntimeTests(unittest.TestCase):
             return text
 
         with patch.object(QtCore.QCoreApplication, "translate", side_effect=fake_translate):
-            translated = MainController._tr(controller, "开始浏览照片")
+            translated = MainController._tr(controller, "Start Browsing Photos")
 
         self.assertEqual("translated empty state", translated)
 
@@ -72,12 +96,12 @@ class I18nRuntimeTests(unittest.TestCase):
         controller = MainController.__new__(MainController)
 
         def fake_translate(context: str, text: str) -> str:
-            if context == "MainControllerTabsMixin" and text == "无法打开图片":
+            if context == "MainControllerTabsMixin" and text == "Unable to Open Image":
                 return "translated load failure"
             return text
 
         with patch.object(QtCore.QCoreApplication, "translate", side_effect=fake_translate):
-            translated = MainController._tr(controller, "无法打开图片")
+            translated = MainController._tr(controller, "Unable to Open Image")
 
         self.assertEqual("translated load failure", translated)
 
@@ -87,15 +111,15 @@ class I18nRuntimeTests(unittest.TestCase):
 
         localized = controller._localize_general_metadata_entries(
             (
-                ("文件名", "sample.jpg"),
-                ("大小", "未知"),
-                ("其他", "保留原样"),
+                ("File Name", "sample.jpg"),
+                ("Size", "Unknown"),
+                ("Other", "keep as-is"),
             )
         )
 
-        self.assertEqual(("translated:文件名", "sample.jpg"), localized[0])
-        self.assertEqual(("translated:大小", "translated:未知"), localized[1])
-        self.assertEqual(("其他", "保留原样"), localized[2])
+        self.assertEqual(("translated:File Name", "sample.jpg"), localized[0])
+        self.assertEqual(("translated:Size", "translated:Unknown"), localized[1])
+        self.assertEqual(("Other", "keep as-is"), localized[2])
 
 
 if __name__ == "__main__":

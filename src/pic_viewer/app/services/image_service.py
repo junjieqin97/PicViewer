@@ -47,7 +47,7 @@ class ImageService:
             raise
         except Exception as exc:  # pragma: no cover - defensive safety net
             logger.exception("Failed to read image: %s", path)
-            raise ImageLoadError("无法读取该图片文件") from exc
+            raise ImageLoadError("Unable to read this image file") from exc
 
         result = self._analyzer.analyze(bgr)
         analysis = ImageAnalysis(
@@ -86,7 +86,7 @@ class ImageService:
             raise
         except Exception as exc:  # pragma: no cover - defensive safety net
             logger.exception("Failed to read preview: %s", path)
-            raise ImageLoadError("无法读取该图片文件") from exc
+            raise ImageLoadError("Unable to read this image file") from exc
 
         preview_rgb = self._analyzer.build_preview_rgb(preview_bgr)
         return PreviewLoadResult(preview_rgb=preview_rgb)
@@ -214,19 +214,19 @@ class ImageService:
         """Assemble general metadata similar to macOS 预览."""
 
         entries: list[tuple[str, str]] = [
-            ("文件名", path.name),
-            ("路径", str(path)),
+            ("File Name", path.name),
+            ("Path", str(path)),
         ]
         try:
             size_bytes = path.stat().st_size
-            entries.append(("大小", self._format_size(size_bytes)))
+            entries.append(("Size", self._format_size(size_bytes)))
         except OSError:
             logger.warning("Failed to read file size: %s", path, exc_info=True)
-            entries.append(("大小", "未知"))
+            entries.append(("Size", "Unknown"))
 
         try:
             height, width = analysis.source_size
-            entries.append(("分辨率", f"{width} x {height}"))
+            entries.append(("Resolution", f"{width} x {height}"))
         except Exception:
             logger.warning("Failed to read resolution: %s", path, exc_info=True)
         return tuple(entries)

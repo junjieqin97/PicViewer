@@ -33,7 +33,7 @@ class MainControllerZoomFeedbackTests(unittest.TestCase):
 
         MainController._fit_to_window(controller)
 
-        self.assertEqual("缩放：适配窗口", window.statusBar().currentMessage())
+        self.assertEqual("Zoom: Fit to Window", window.statusBar().currentMessage())
         self.assertEqual((1.0, True), MainController._get_zoom_state(controller, path))
         controller._refresh_current_image_pixmap.assert_called_once_with()
 
@@ -43,15 +43,15 @@ class MainControllerZoomFeedbackTests(unittest.TestCase):
 
         MainController._zoom_in(controller)
 
-        self.assertEqual("缩放：125%", window.statusBar().currentMessage())
+        self.assertEqual("Zoom: 125%", window.statusBar().currentMessage())
         self.assertEqual((1.25, False), MainController._get_zoom_state(controller, path))
         controller._refresh_current_image_pixmap.assert_called_once_with()
 
     def test_zoom_status_uses_clamped_percent_at_zoom_bounds(self) -> None:
         zoom_step = 1.25
         cases = (
-            (5.9, zoom_step, "缩放：600%", 6.0),
-            (0.11, 1 / zoom_step, "缩放：10%", 0.1),
+            (5.9, zoom_step, "Zoom: 600%", 6.0),
+            (0.11, 1 / zoom_step, "Zoom: 10%", 0.1),
         )
         for initial_zoom, factor, expected_status, expected_zoom in cases:
             with self.subTest(expected_status=expected_status):

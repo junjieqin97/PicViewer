@@ -95,7 +95,8 @@ python scripts/packaging/build_app.py
 App 验证至少覆盖：
 
 - 默认语言启动。
-- `PICVIEWER_LANG=en` 启动。
+- `PICVIEWER_LANG=zh_CN` 启动。
+- 必要时用 `PICVIEWER_LANG=en` 显式验证英文 source 回退。
 - 打开普通 JPG/PNG 图片。
 - 打开 RAW 图片。
 - `--developer-mode` 能写入开发日志。

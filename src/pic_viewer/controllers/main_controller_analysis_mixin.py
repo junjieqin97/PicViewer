@@ -66,8 +66,8 @@ class MainControllerAnalysisMixin:
         """Return the status-bar text for the current zoom state."""
 
         if fit_to_window:
-            return self._tr("缩放：适配窗口")
-        return self._tr("缩放：{percent}%").format(percent=round(zoom * 100))
+            return self._tr("Zoom: Fit to Window")
+        return self._tr("Zoom: {percent}%").format(percent=round(zoom * 100))
 
     def _show_zoom_status(self, path: Path) -> None:
         """Show the persisted zoom state for the given image in the status bar."""
@@ -151,15 +151,15 @@ class MainControllerAnalysisMixin:
             return
 
         if self._view_settings.mode == LumaRgbMode.LUMA:
-            mode_text = self._tr("明度模式")
-            channel_text = self._tr("不适用")
+            mode_text = self._tr("Luma Mode")
+            channel_text = self._tr("Not Applicable")
         else:
-            mode_text = self._tr("RGB模式")
+            mode_text = self._tr("RGB Mode")
             channel_text_by_channel = {
-                RgbChannel.ALL: self._tr("全部"),
-                RgbChannel.RED: self._tr("红"),
-                RgbChannel.GREEN: self._tr("绿"),
-                RgbChannel.BLUE: self._tr("蓝"),
+                RgbChannel.ALL: self._tr("All"),
+                RgbChannel.RED: self._tr("Red"),
+                RgbChannel.GREEN: self._tr("Green"),
+                RgbChannel.BLUE: self._tr("Blue"),
             }
             channel_text = channel_text_by_channel[self._view_settings.channel]
 
@@ -211,12 +211,12 @@ class MainControllerAnalysisMixin:
         if not hasattr(self._ui, "labelPseudoColorValue"):
             return
 
-        enabled_text = self._tr("开启")
-        disabled_text = self._tr("关闭")
+        enabled_text = self._tr("On")
+        disabled_text = self._tr("Off")
         under_text = enabled_text if self._show_underexposed else disabled_text
         over_text = enabled_text if self._show_overexposed else disabled_text
         self._ui.labelPseudoColorValue.setText(
-            self._tr("欠曝：{under} / 过曝：{over}").format(
+            self._tr("Underexposed: {under} / Overexposed: {over}").format(
                 under=under_text,
                 over=over_text,
             )
@@ -356,17 +356,17 @@ class MainControllerAnalysisMixin:
     def _set_info_placeholders(self) -> None:
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
-        self._ui.widgetHistogram.setText(self._tr("直方图占位图"))
-        self._ui.widgetWaveform.setText(self._tr("波形图占位图"))
+        self._ui.widgetHistogram.setText(self._tr("Histogram Placeholder"))
+        self._ui.widgetWaveform.setText(self._tr("Waveform Placeholder"))
 
     def _set_info_loading_placeholders(self) -> None:
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
-        self._ui.widgetHistogram.setText(self._tr("正在生成直方图…"))
-        self._ui.widgetWaveform.setText(self._tr("正在生成波形图…"))
+        self._ui.widgetHistogram.setText(self._tr("Generating histogram..."))
+        self._ui.widgetWaveform.setText(self._tr("Generating waveform..."))
 
     def _set_info_error_placeholders(self) -> None:
-        message = self._tr("图片加载失败，无法生成分析")
+        message = self._tr("Image failed to load. Analysis is unavailable.")
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
         self._ui.widgetHistogram.setText(message)

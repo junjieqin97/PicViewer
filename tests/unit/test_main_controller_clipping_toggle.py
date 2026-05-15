@@ -198,7 +198,7 @@ class MainControllerClippingToggleTests(unittest.TestCase):
         self.assertFalse(action_over.isChecked())
         self.assertTrue(widget.underexposed_active())
         self.assertFalse(widget.overexposed_active())
-        self.assertEqual("欠曝：开启 / 过曝：关闭", controller._ui.labelPseudoColorValue.text())
+        self.assertEqual("Underexposed: On / Overexposed: Off", controller._ui.labelPseudoColorValue.text())
 
     def test_sync_overlay_state_updates_visible_summary_for_both_states(self) -> None:
         controller = MainController.__new__(MainController)
@@ -221,7 +221,7 @@ class MainControllerClippingToggleTests(unittest.TestCase):
 
         MainController._sync_histogram_overlay_state(controller)
 
-        self.assertEqual("欠曝：开启 / 过曝：开启", controller._ui.labelPseudoColorValue.text())
+        self.assertEqual("Underexposed: On / Overexposed: On", controller._ui.labelPseudoColorValue.text())
 
 
 if __name__ == "__main__":

@@ -54,7 +54,7 @@ class ImageServicePreviewTests(unittest.TestCase):
         with self.assertRaises(ImageLoadError) as ctx:
             self.service.load_preview(self.path)
 
-        self.assertEqual("无法读取该图片文件", str(ctx.exception))
+        self.assertEqual("Unable to read this image file", str(ctx.exception))
 
 
 if __name__ == "__main__":

@@ -10,8 +10,9 @@ from PyQt5 import QtCore
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_LANGUAGE = "zh_CN"
+DEFAULT_LANGUAGE = "en"
 ENGLISH_LANGUAGE = "en"
+CHINESE_LANGUAGE = "zh_CN"
 TRANSLATION_BASENAME = "picviewer"
 
 
@@ -26,7 +27,7 @@ def normalize_language(raw: Optional[str]) -> Optional[str]:
 
     lowered = value.replace("-", "_").lower()
     if lowered.startswith("zh"):
-        return DEFAULT_LANGUAGE
+        return CHINESE_LANGUAGE
     if lowered.startswith("en"):
         return ENGLISH_LANGUAGE
     return None
@@ -62,7 +63,7 @@ def install_translator(
     Returns:
         tuple[str, Optional[QTranslator]]:
             Active language code and installed translator. `None` means source
-            language (zh_CN) is used without a translator.
+            language (en) is used without a translator.
     """
 
     resolved = normalize_language(language) or DEFAULT_LANGUAGE

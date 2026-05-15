@@ -40,11 +40,11 @@ class ImageReader:
             return image
 
         if not self._allow_raw:
-            raise ImageLoadError("不支持该图片格式")
+            raise ImageLoadError("Unsupported image format")
 
         raw_image = self._read_raw(path, preview=False)
         if raw_image is None:
-            raise ImageLoadError("无法读取该图片文件")
+            raise ImageLoadError("Unable to read this image file")
         return raw_image
 
     def read_preview(self, path: Path, max_edge: int = 1920) -> np.ndarray:
@@ -68,16 +68,16 @@ class ImageReader:
             return self._resize_if_needed(image, max_edge)
 
         if not self._allow_raw:
-            raise ImageLoadError("不支持该图片格式")
+            raise ImageLoadError("Unsupported image format")
 
         raw_image = self._read_raw(path, preview=True)
         if raw_image is None:
-            raise ImageLoadError("无法读取该图片文件")
+            raise ImageLoadError("Unable to read this image file")
         return self._resize_if_needed(raw_image, max_edge)
 
     def _validate_path(self, path: Path) -> None:
         if not path.exists() or not path.is_file():
-            raise ImageLoadError("图片文件不存在")
+            raise ImageLoadError("Image file does not exist")
 
     def _resize_if_needed(self, bgr: np.ndarray, max_edge: int) -> np.ndarray:
         height, width = bgr.shape[:2]
