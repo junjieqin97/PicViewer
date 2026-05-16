@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from html import escape
+from pathlib import Path
 from typing import Optional
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.app_metadata_service import AppMetadata, load_app_metadata
+from pic_viewer.app.services.image_file_policy import filter_supported_image_paths
 
 
 class MainControllerInteractionMixin:
@@ -20,6 +22,24 @@ class MainControllerInteractionMixin:
         self._track_cursor_widget(self._ui.central)
         for widget in self._ui.central.findChildren(QtWidgets.QWidget):
             self._track_cursor_widget(widget)
+
+    def _install_file_drop_handling(self) -> None:
+        """Enable local image file drops in the central workspace."""
+
+        self._track_file_drop_widget(self._ui.central)
+        self._track_file_drop_widget(self._ui.splitVertical)
+        self._track_file_drop_widget(self._ui.splitMain)
+        self._track_file_drop_widget(self._ui.tabsImages)
+        for widget in self._ui.central.findChildren(QtWidgets.QWidget):
+            self._track_file_drop_widget(widget)
+
+    def _track_file_drop_widget(self, widget: QtWidgets.QWidget) -> None:
+        if widget.property("_file_drop_area") is True:
+            return
+        widget.setProperty("_file_drop_area", True)
+        widget.setAcceptDrops(True)
+        if widget.property("_cursor_tracking") is not True:
+            widget.installEventFilter(self)
 
     def _track_cursor_widget(self, widget: QtWidgets.QWidget) -> None:
         if widget.property("_cursor_tracking") is True:
@@ -60,12 +80,106 @@ class MainControllerInteractionMixin:
             handle.setCursor(cursor)
 
     def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:  # type: ignore[override]
+        if self._handle_file_drop_event(watched, event):
+            return True
         if self._handle_image_drag_event(watched, event):
             return True
         if event.type() in (QtCore.QEvent.MouseMove, QtCore.QEvent.Enter, QtCore.QEvent.Leave):
             self._update_boundary_cursor()
             self._refresh_image_cursor(watched, event)
         return super().eventFilter(watched, event)
+
+    def _handle_file_drop_event(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        """Accept and open supported local image files dropped on the workspace."""
+
+        if not isinstance(watched, QtWidgets.QWidget):
+            return False
+        if watched.property("_file_drop_area") is not True:
+            return False
+
+        event_type = event.type()
+        if event_type in (QtCore.QEvent.DragEnter, QtCore.QEvent.DragMove):
+            if not hasattr(event, "mimeData"):
+                return False
+            if self._mime_data_has_supported_image_files(event.mimeData()):
+                event.acceptProposedAction()
+            else:
+                event.ignore()
+            return True
+
+        if event_type == QtCore.QEvent.Drop:
+            if not hasattr(event, "mimeData"):
+                return False
+            has_supported = self._mime_data_has_supported_image_files(event.mimeData())
+            self._open_dropped_images_from_mime_data(event.mimeData())
+            if has_supported:
+                event.acceptProposedAction()
+            else:
+                event.ignore()
+            return True
+
+        return False
+
+    def _mime_data_has_supported_image_files(self, mime_data: QtCore.QMimeData) -> bool:
+        return bool(self._supported_drop_paths(mime_data))
+
+    def _supported_drop_paths(self, mime_data: QtCore.QMimeData) -> list[Path]:
+        return filter_supported_image_paths(self._local_file_paths_from_mime_data(mime_data))
+
+    def _local_file_paths_from_mime_data(self, mime_data: QtCore.QMimeData) -> list[Path]:
+        if not mime_data.hasUrls():
+            return []
+
+        paths: list[Path] = []
+        seen: set[str] = set()
+        for url in mime_data.urls():
+            if not url.isLocalFile():
+                continue
+            raw_path = url.toLocalFile()
+            if not raw_path:
+                continue
+            path = Path(raw_path)
+            key = self._drop_path_key(path)
+            if key in seen:
+                continue
+            seen.add(key)
+            paths.append(path)
+        return paths
+
+    def _drop_path_key(self, path: Path) -> str:
+        try:
+            return str(path.resolve())
+        except OSError:
+            return str(path)
+
+    def _open_dropped_images_from_mime_data(self, mime_data: QtCore.QMimeData) -> None:
+        local_paths = self._local_file_paths_from_mime_data(mime_data)
+        supported_paths = filter_supported_image_paths(local_paths)
+        if not supported_paths:
+            self._show_no_supported_drop_files_message()
+            return
+
+        skipped_count = len(local_paths) - len(supported_paths)
+        if skipped_count > 0:
+            self._show_skipped_drop_files_message(skipped_count)
+        self._open_image_paths(supported_paths)
+
+    def _show_no_supported_drop_files_message(self) -> None:
+        QtWidgets.QMessageBox.information(
+            self._main_window,
+            self._tr("Info"),
+            self._tr("No supported image files were found in the dropped files."),
+        )
+
+    def _show_skipped_drop_files_message(self, skipped_count: int) -> None:
+        if skipped_count <= 0:
+            return
+        if not hasattr(self, "_main_window"):
+            return
+        self._main_window.statusBar().showMessage(
+            self._tr("Skipped {count} unsupported file(s).").format(count=skipped_count),
+            5000,
+        )
 
     def _handle_image_drag_event(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
         """Handle drag-to-pan interactions inside image scroll areas."""

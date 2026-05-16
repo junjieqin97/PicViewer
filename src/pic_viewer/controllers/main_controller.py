@@ -99,6 +99,7 @@ class MainController(
 
         self._connect_signals()
         self._install_cursor_tracking()
+        self._install_file_drop_handling()
         self._configure_filmstrip_resize()
         self._configure_analysis_refresh()
         self._apply_initial_visibility()

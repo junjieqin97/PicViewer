@@ -64,27 +64,27 @@
         <translation>欠曝：{under} / 过曝：{over}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="359"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="362"/>
         <source>Histogram Placeholder</source>
         <translation>直方图占位图</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="360"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="363"/>
         <source>Waveform Placeholder</source>
         <translation>波形图占位图</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="365"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="369"/>
         <source>Generating histogram...</source>
         <translation>正在生成直方图…</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="366"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="370"/>
         <source>Generating waveform...</source>
         <translation>正在生成波形图…</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="369"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="374"/>
         <source>Image failed to load. Analysis is unavailable.</source>
         <translation>图片加载失败，无法生成分析</translation>
     </message>
@@ -92,24 +92,34 @@
 <context>
     <name>MainControllerInteractionMixin</name>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="227"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="341"/>
         <source>Info</source>
         <translation>提示</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="227"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="341"/>
         <source>This feature is not implemented yet (TODO).</source>
         <translation>该功能尚未实现（TODO）</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="235"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="349"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="242"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="356"/>
         <source>&lt;div style=&quot;font-size: 12pt;&quot;&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;Version {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;A desktop photo viewer for common image formats and camera RAW files.&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;Copyright (c) {years} {owner}. All rights reserved.&lt;/p&gt;&lt;/div&gt;</source>
         <translation>&lt;div style=&quot;font-size: 12pt;&quot;&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;版本 {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;用于预览常见图片格式和相机 RAW 文件的桌面照片查看器。&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;版权所有 (c) {years} {owner}。保留所有权利。&lt;/p&gt;&lt;/div&gt;</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="168"/>
+        <source>No supported image files were found in the dropped files.</source>
+        <translation>拖入的文件中未找到可打开的图片文件</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="179"/>
+        <source>Skipped {count} unsupported file(s).</source>
+        <translation>已跳过 {count} 个不支持的文件。</translation>
     </message>
 </context>
 <context>
@@ -261,22 +271,22 @@
 <context>
     <name>MainControllerTabsMixin</name>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="23"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="24"/>
         <source>Image Files</source>
         <translation>图片文件</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="24"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="25"/>
         <source>All Files</source>
         <translation>所有文件</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="29"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="30"/>
         <source>Open Image</source>
         <translation>打开图片</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="40"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="41"/>
         <source>Open Folder</source>
         <translation>打开文件夹</translation>
     </message>
@@ -291,49 +301,54 @@
         <translation>该文件夹未找到可打开的图片文件</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="219"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="234"/>
         <source>Loading preview</source>
         <translation>正在加载预览</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="219"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="234"/>
         <source>Loading preview: {name}</source>
         <translation>正在加载预览：{name}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="241"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="256"/>
         <source>Unable to Open Image</source>
         <translation>无法打开图片</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="241"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="256"/>
         <source>File: {name}</source>
         <translation>文件：{name}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="241"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="256"/>
         <source>Retry</source>
         <translation>重试</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="330"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="347"/>
         <source>Start Browsing Photos</source>
         <translation>开始浏览照片</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="339"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="356"/>
         <source>Open an image or choose a folder to start previewing.</source>
         <translation>打开单张图片或选择文件夹开始预览。</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="391"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="414"/>
         <source>Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</source>
         <translation>支持格式：JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="424"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="447"/>
         <source>Shortcut: {shortcut}</source>
         <translation>快捷键：{shortcut}</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="362"/>
+        <source>Drop files here to open them</source>
+        <translation>将图片文件拖到这里即可打开</translation>
     </message>
 </context>
 <context>

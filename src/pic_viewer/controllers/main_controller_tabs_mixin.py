@@ -7,6 +7,7 @@ from typing import Optional
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from pic_viewer.app.services.image_file_policy import filter_supported_image_paths
 from pic_viewer.ui.widgets.image_load_state_widget import ImageLoadStateWidget
 
 
@@ -42,14 +43,24 @@ class MainControllerTabsMixin:
             return
 
         root = Path(folder)
-        supported = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp", ".dng", ".nef", ".cr2", ".arw", ".raf"}
-        paths = sorted([p for p in root.iterdir() if p.is_file() and p.suffix.lower() in supported])
+        paths = sorted(filter_supported_image_paths(root.iterdir()))
         if not paths:
             QtWidgets.QMessageBox.information(
                 self._main_window,
                 self._tr("Info"),
                 self._tr("No supported image files were found in this folder."),
             )
+            return
+
+        self._open_image_paths(paths)
+
+    def _open_image_paths(self, paths: list[Path]) -> None:
+        """Open one or more images and activate the last path."""
+
+        if not paths:
+            return
+        if len(paths) == 1:
+            self.open_image(paths[0])
             return
 
         last_path: Optional[Path] = None
@@ -193,6 +204,10 @@ class MainControllerTabsMixin:
         self._track_cursor_widget(scroll_area)
         self._track_cursor_widget(scroll_area.viewport())
         self._track_cursor_widget(lbl_image)
+        if hasattr(self, "_track_file_drop_widget"):
+            self._track_file_drop_widget(scroll_area)
+            self._track_file_drop_widget(scroll_area.viewport())
+            self._track_file_drop_widget(lbl_image)
         self._install_image_context_menu(scroll_area)
         self._install_image_context_menu(scroll_area.viewport())
         self._install_image_context_menu(lbl_image)
@@ -299,6 +314,8 @@ class MainControllerTabsMixin:
             self._ui.tabsImages.tabBar().setVisible(False)
             return
         placeholder = self._build_empty_image_placeholder()
+        if hasattr(self, "_track_file_drop_widget"):
+            self._track_file_drop_widget(placeholder)
         tab_index = self._ui.tabsImages.addTab(placeholder, "")
         tab_bar = self._ui.tabsImages.tabBar()
         tab_bar.setTabButton(tab_index, QtWidgets.QTabBar.LeftSide, None)
@@ -341,6 +358,12 @@ class MainControllerTabsMixin:
         label_description.setAlignment(QtCore.Qt.AlignCenter)
         label_description.setWordWrap(True)
         content_layout.addWidget(label_description)
+
+        label_drop_hint = QtWidgets.QLabel(self._tr("Drop files here to open them"), content)
+        label_drop_hint.setObjectName("labelEmptyDropHint")
+        label_drop_hint.setAlignment(QtCore.Qt.AlignCenter)
+        label_drop_hint.setWordWrap(True)
+        content_layout.addWidget(label_drop_hint)
 
         actions_container = QtWidgets.QWidget(content)
         actions_layout = QtWidgets.QGridLayout(actions_container)

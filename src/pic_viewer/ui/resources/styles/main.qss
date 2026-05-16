@@ -107,6 +107,10 @@ QLabel#labelImageLoadStateDetail {
     color: #b9c0c8;
 }
 
+QLabel#labelEmptyDropHint {
+    color: #d6dde6;
+}
+
 QLabel#labelEmptyFormats,
 QLabel#labelEmptyOpenFileShortcut,
 QLabel#labelEmptyOpenFolderShortcut,

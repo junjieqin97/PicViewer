@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import os
 import sys
+import tempfile
 from pathlib import Path
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -198,6 +199,16 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertTrue(any(open_file_shortcut in text for text in label_texts))
         self.assertTrue(any(open_folder_shortcut in text for text in label_texts))
 
+    def test_empty_image_placeholder_shows_drop_hint(self) -> None:
+        window, ui, controller = self._build_tabs_controller()
+        self.addCleanup(window.deleteLater)
+
+        controller._ensure_empty_image_placeholder()
+
+        drop_hint = ui.tabsImages.findChild(QtWidgets.QLabel, "labelEmptyDropHint")
+        self.assertIsNotNone(drop_hint)
+        self.assertEqual("Drop files here to open them", drop_hint.text())
+
     def test_empty_image_placeholder_keeps_shortcuts_below_buttons(self) -> None:
         window, ui, controller = self._build_tabs_controller()
         self.addCleanup(window.deleteLater)
@@ -239,6 +250,64 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertTrue(scroll_area.viewport().property("_image_drag_area"))
         self.assertTrue(lbl_image.property("_image_drag_area"))
 
+    def test_drop_mime_data_filters_local_supported_image_files(self) -> None:
+        window, _ui, controller = self._build_drop_controller()
+        self.addCleanup(window.deleteLater)
+
+        with self._temporary_drop_files() as paths:
+            mime_data = QtCore.QMimeData()
+            mime_data.setUrls(
+                [
+                    QtCore.QUrl.fromLocalFile(str(paths["image"])),
+                    QtCore.QUrl.fromLocalFile(str(paths["text"])),
+                    QtCore.QUrl.fromLocalFile(str(paths["directory"])),
+                    QtCore.QUrl("https://example.com/remote.jpg"),
+                ]
+            )
+
+            supported = controller._supported_drop_paths(mime_data)
+
+        self.assertEqual([paths["image"]], supported)
+
+    def test_open_image_paths_batches_multiple_files_and_activates_last(self) -> None:
+        window, ui, controller = self._build_tabs_controller()
+        self.addCleanup(window.deleteLater)
+        first = Path("/tmp/first.jpg")
+        second = Path("/tmp/second.png")
+        controller.open_image = MagicMock()  # type: ignore[method-assign]
+        controller._activate_existing_path = MagicMock()  # type: ignore[method-assign]
+
+        controller._open_image_paths([first, second])
+
+        controller.open_image.assert_has_calls(
+            [
+                call(first, activate=False),
+                call(second, activate=False),
+            ]
+        )
+        controller._activate_existing_path.assert_called_once_with(second)
+        self.assertEqual(0, ui.tabsImages.signalsBlocked())
+        self.assertEqual(0, ui.listFilmstrip.signalsBlocked())
+
+    def test_open_dropped_images_warns_when_no_supported_files_exist(self) -> None:
+        window, _ui, controller = self._build_drop_controller()
+        self.addCleanup(window.deleteLater)
+
+        with self._temporary_drop_files() as paths:
+            mime_data = QtCore.QMimeData()
+            mime_data.setUrls(
+                [
+                    QtCore.QUrl.fromLocalFile(str(paths["text"])),
+                    QtCore.QUrl.fromLocalFile(str(paths["directory"])),
+                    QtCore.QUrl("https://example.com/remote.jpg"),
+                ]
+            )
+
+            controller._open_dropped_images_from_mime_data(mime_data)
+
+        controller._open_image_paths.assert_not_called()
+        controller._show_no_supported_drop_files_message.assert_called_once()
+
     def _build_tabs_controller(
         self,
     ) -> tuple[QtWidgets.QMainWindow, MainWindowUI, MainControllerTabsMixin]:
@@ -277,6 +346,44 @@ class MainWindowTabsTests(unittest.TestCase):
         controller._cursor_override_target = None  # type: ignore[attr-defined]
         return window, ui, controller
 
+    def _build_drop_controller(
+        self,
+    ) -> tuple[QtWidgets.QMainWindow, MainWindowUI, "_DropController"]:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        controller = _DropController()
+        QtCore.QObject.__init__(controller, window)
+        controller._ui = ui  # type: ignore[attr-defined]
+        controller._tr = lambda text: text  # type: ignore[attr-defined]
+        controller._open_image_paths = MagicMock()  # type: ignore[method-assign]
+        controller._show_no_supported_drop_files_message = MagicMock()  # type: ignore[method-assign]
+        return window, ui, controller
+
+    class _TemporaryDropFiles:
+        def __init__(self) -> None:
+            self._tmp_dir: object | None = None
+            self.paths: dict[str, Path] = {}
+
+        def __enter__(self) -> dict[str, Path]:
+            self._tmp_dir = tempfile.TemporaryDirectory()
+            root = Path(self._tmp_dir.__enter__())  # type: ignore[union-attr]
+            image = root / "image.JPG"
+            text = root / "notes.txt"
+            directory = root / "folder.png"
+            image.write_bytes(b"image")
+            text.write_text("not an image", encoding="utf-8")
+            directory.mkdir()
+            self.paths = {"image": image, "text": text, "directory": directory}
+            return self.paths
+
+        def __exit__(self, exc_type, exc, tb) -> None:  # type: ignore[no-untyped-def]
+            if self._tmp_dir is not None:
+                self._tmp_dir.__exit__(exc_type, exc, tb)  # type: ignore[attr-defined]
+
+    def _temporary_drop_files(self) -> "_TemporaryDropFiles":
+        return self._TemporaryDropFiles()
+
 
 class _ImagePreviewController(
     MainControllerTabsMixin,
@@ -284,6 +391,13 @@ class _ImagePreviewController(
     QtCore.QObject,
 ):
     """Minimal controller for image preview widget construction tests."""
+
+
+class _DropController(
+    MainControllerInteractionMixin,
+    QtCore.QObject,
+):
+    """Minimal controller for file-drop helper tests."""
 
 
 if __name__ == "__main__":

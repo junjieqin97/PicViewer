@@ -64,27 +64,27 @@
         <translation>Underexposed: {under} / Overexposed: {over}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="359"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="362"/>
         <source>Histogram Placeholder</source>
         <translation>Histogram Placeholder</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="360"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="363"/>
         <source>Waveform Placeholder</source>
         <translation>Waveform Placeholder</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="365"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="369"/>
         <source>Generating histogram...</source>
         <translation>Generating histogram...</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="366"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="370"/>
         <source>Generating waveform...</source>
         <translation>Generating waveform...</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="369"/>
+        <location filename="../../../controllers/main_controller_analysis_mixin.py" line="374"/>
         <source>Image failed to load. Analysis is unavailable.</source>
         <translation>Image failed to load. Analysis is unavailable.</translation>
     </message>
@@ -92,24 +92,34 @@
 <context>
     <name>MainControllerInteractionMixin</name>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="227"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="341"/>
         <source>Info</source>
         <translation>Info</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="227"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="341"/>
         <source>This feature is not implemented yet (TODO).</source>
         <translation>This feature is not implemented yet (TODO).</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="235"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="349"/>
         <source>About</source>
         <translation>About</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="242"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="356"/>
         <source>&lt;div style=&quot;font-size: 12pt;&quot;&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;Version {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;A desktop photo viewer for common image formats and camera RAW files.&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;Copyright (c) {years} {owner}. All rights reserved.&lt;/p&gt;&lt;/div&gt;</source>
         <translation>&lt;div style=&quot;font-size: 12pt;&quot;&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;Version {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;A desktop photo viewer for common image formats and camera RAW files.&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;Copyright (c) {years} {owner}. All rights reserved.&lt;/p&gt;&lt;/div&gt;</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="168"/>
+        <source>No supported image files were found in the dropped files.</source>
+        <translation>No supported image files were found in the dropped files.</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="179"/>
+        <source>Skipped {count} unsupported file(s).</source>
+        <translation>Skipped {count} unsupported file(s).</translation>
     </message>
 </context>
 <context>
@@ -261,22 +271,22 @@
 <context>
     <name>MainControllerTabsMixin</name>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="23"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="24"/>
         <source>Image Files</source>
         <translation>Image Files</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="24"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="25"/>
         <source>All Files</source>
         <translation>All Files</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="29"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="30"/>
         <source>Open Image</source>
         <translation>Open Image</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="40"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="41"/>
         <source>Open Folder</source>
         <translation>Open Folder</translation>
     </message>
@@ -291,49 +301,54 @@
         <translation>No supported image files were found in this folder.</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="219"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="234"/>
         <source>Loading preview</source>
         <translation>Loading preview</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="219"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="234"/>
         <source>Loading preview: {name}</source>
         <translation>Loading preview: {name}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="241"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="256"/>
         <source>Unable to Open Image</source>
         <translation>Unable to Open Image</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="241"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="256"/>
         <source>File: {name}</source>
         <translation>File: {name}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="241"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="256"/>
         <source>Retry</source>
         <translation>Retry</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="330"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="347"/>
         <source>Start Browsing Photos</source>
         <translation>Start Browsing Photos</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="339"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="356"/>
         <source>Open an image or choose a folder to start previewing.</source>
         <translation>Open an image or choose a folder to start previewing.</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="391"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="414"/>
         <source>Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</source>
         <translation>Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="424"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="447"/>
         <source>Shortcut: {shortcut}</source>
         <translation>Shortcut: {shortcut}</translation>
+    </message>
+    <message>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="362"/>
+        <source>Drop files here to open them</source>
+        <translation>Drop files here to open them</translation>
     </message>
 </context>
 <context>
