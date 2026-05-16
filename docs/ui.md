@@ -179,9 +179,9 @@ Actions（命名必须一致，文案可中英混排但建议一致）：
 | 仅蓝通道      | `Ctrl + B`         | `Command + B`         | 已实现   |
 | 显示欠曝      | `Shift + Ctrl + P` | `Shift + Command + P` | 已实现   |
 | 显示过曝      | `Ctrl + P`         | `Command + P`         | 已实现   |
-| 显示峰值（高）  | `Ctrl + P, 3`      | `Command + P, 3`      | 已实现   |
-| 显示峰值（中）  | `Ctrl + P, 2`      | `Command + P, 2`      | 已实现   |
-| 显示峰值（低）  | `Ctrl + P, 1`      | `Command + P, 1`      | 已实现   |
+| 显示峰值（高）  | `Ctrl + F, 3`      | `Command + F, 3`      | 已实现   |
+| 显示峰值（中）  | `Ctrl + F, 2`      | `Command + F, 2`      | 已实现   |
+| 显示峰值（低）  | `Ctrl + F, 1`      | `Command + F, 1`      | 已实现   |
 
 ## 7. 交互规则（必须实现的同步关系）
 

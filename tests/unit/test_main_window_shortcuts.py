@@ -40,9 +40,9 @@ class MainWindowShortcutTests(unittest.TestCase):
 
         self.assertEqual("Ctrl+Shift+P", under)
         self.assertEqual("Ctrl+P", over)
-        self.assertEqual("Ctrl+P, 3", peak_high)
-        self.assertEqual("Ctrl+P, 2", peak_medium)
-        self.assertEqual("Ctrl+P, 1", peak_low)
+        self.assertEqual("Ctrl+F, 3", peak_high)
+        self.assertEqual("Ctrl+F, 2", peak_medium)
+        self.assertEqual("Ctrl+F, 1", peak_low)
 
     def test_checkable_view_menu_labels_are_state_names(self) -> None:
         window = QtWidgets.QMainWindow()
