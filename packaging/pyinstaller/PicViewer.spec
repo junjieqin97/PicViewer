@@ -9,6 +9,8 @@ block_cipher = None
 
 PROJECT_ROOT = Path(SPECPATH).resolve().parents[1]
 SRC_ROOT = PROJECT_ROOT / "src"
+WINDOWS_ICON = PROJECT_ROOT / "packaging" / "icons" / "picviewer.ico"
+MACOS_ICON = PROJECT_ROOT / "packaging" / "icons" / "picviewer.icns"
 sys.path.insert(0, str(SRC_ROOT))
 
 datas = collect_data_files(
@@ -17,6 +19,8 @@ datas = collect_data_files(
         "ui/resources/i18n/*.ts",
         "ui/resources/i18n/*.qm",
         "ui/resources/styles/*.qss",
+        "ui/resources/icons/*.svg",
+        "ui/resources/icons/*.png",
     ],
 )
 
@@ -59,6 +63,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=str(WINDOWS_ICON) if sys.platform == "win32" else None,
 )
 
 coll = COLLECT(
@@ -76,6 +81,6 @@ if sys.platform == "darwin":
     app = BUNDLE(
         coll,
         name="PicViewer.app",
-        icon=None,
+        icon=str(MACOS_ICON),
         bundle_identifier="com.picviewer.app",
     )

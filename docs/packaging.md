@@ -29,6 +29,14 @@ pip install ".[packaging]"
 python scripts/i18n/build_qm.py --lrelease /path/to/lrelease
 ```
 
+应用图标资源由 `src/pic_viewer/ui/resources/icons/picviewer.svg` 作为主源生成：
+
+```bash
+python scripts/packaging/generate_icons.py
+```
+
+脚本会生成运行时 PNG 尺寸族、Windows `.ico` 和 macOS `.icns`。macOS 会优先调用 `iconutil`，不可用时回退到 Pillow 生成 `.icns`。
+
 ## Python 包模式
 
 构建命令：
@@ -72,7 +80,7 @@ python scripts/packaging/build_app.py
 - 使用 `packaging/pyinstaller/PicViewer.spec` 调用 PyInstaller。
 - 在 `dist/` 输出平台本机产物。
 
-PyInstaller 使用 `onedir` 模式。Windows 产物为 `dist/PicViewer/`，macOS 产物为 `dist/PicViewer.app`。App 版本默认通过 `packaging` extra 安装并收集 `rawpy`，面向普通用户提供 RAW 支持。
+PyInstaller 使用 `onedir` 模式。Windows 产物为 `dist/PicViewer/`，macOS 产物为 `dist/PicViewer.app`。Windows 使用 `packaging/icons/picviewer.ico`，macOS 使用 `packaging/icons/picviewer.icns` 作为应用图标。App 版本默认通过 `packaging` extra 安装并收集 `rawpy`，面向普通用户提供 RAW 支持。
 
 不支持交叉构建：Windows App 必须在 Windows 构建，macOS App 必须在 macOS 构建。
 
@@ -110,6 +118,8 @@ python scripts/packaging/build_dmg.py
 检查 wheel 内容时，应能看到：
 
 - `pic_viewer/ui/resources/styles/main.qss`
+- `pic_viewer/ui/resources/icons/picviewer.svg`
+- `pic_viewer/ui/resources/icons/picviewer-256.png`
 - `pic_viewer/ui/resources/i18n/picviewer_zh_CN.qm`
 - `pic_viewer/ui/resources/i18n/picviewer_en.qm`
 

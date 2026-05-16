@@ -29,8 +29,25 @@ class PackagingConfigurationTests(unittest.TestCase):
 
         self.assertIn("recursive-include src/pic_viewer/ui/resources/i18n *.ts *.qm", manifest)
         self.assertIn("recursive-include src/pic_viewer/ui/resources/styles *.qss", manifest)
+        self.assertIn("recursive-include src/pic_viewer/ui/resources/icons *.svg *.png", manifest)
         self.assertIn("recursive-include packaging *.spec", manifest)
+        self.assertIn("recursive-include packaging/icons *.ico *.icns", manifest)
         self.assertIn("recursive-include scripts *.py *.sh", manifest)
+
+    def test_pyproject_includes_icon_package_data(self) -> None:
+        pyproject = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+
+        self.assertIn('"ui/resources/icons/*.svg"', pyproject)
+        self.assertIn('"ui/resources/icons/*.png"', pyproject)
+
+    def test_pyinstaller_spec_configures_platform_icons(self) -> None:
+        spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")
+
+        self.assertIn('WINDOWS_ICON = PROJECT_ROOT / "packaging" / "icons" / "picviewer.ico"', spec)
+        self.assertIn('MACOS_ICON = PROJECT_ROOT / "packaging" / "icons" / "picviewer.icns"', spec)
+        self.assertIn('icon=str(WINDOWS_ICON) if sys.platform == "win32" else None', spec)
+        self.assertIn("icon=str(MACOS_ICON)", spec)
+        self.assertNotIn("icon=None", spec)
 
     def test_setup_py_delegates_metadata_to_pyproject(self) -> None:
         setup_py = (PROJECT_ROOT / "setup.py").read_text(encoding="utf-8")
