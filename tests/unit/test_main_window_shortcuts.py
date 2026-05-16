@@ -34,9 +34,15 @@ class MainWindowShortcutTests(unittest.TestCase):
 
         under = ui.actToggleUnderexposed.shortcut().toString(QtGui.QKeySequence.PortableText)
         over = ui.actToggleOverexposed.shortcut().toString(QtGui.QKeySequence.PortableText)
+        peak_high = ui.actPeakHigh.shortcut().toString(QtGui.QKeySequence.PortableText)
+        peak_medium = ui.actPeakMedium.shortcut().toString(QtGui.QKeySequence.PortableText)
+        peak_low = ui.actPeakLow.shortcut().toString(QtGui.QKeySequence.PortableText)
 
         self.assertEqual("Ctrl+Shift+P", under)
         self.assertEqual("Ctrl+P", over)
+        self.assertEqual("Ctrl+P, 3", peak_high)
+        self.assertEqual("Ctrl+P, 2", peak_medium)
+        self.assertEqual("Ctrl+P, 1", peak_low)
 
     def test_checkable_view_menu_labels_are_state_names(self) -> None:
         window = QtWidgets.QMainWindow()
