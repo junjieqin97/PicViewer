@@ -10,6 +10,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.app_metadata_service import AppMetadata, load_app_metadata
 from pic_viewer.app.services.image_file_policy import filter_supported_image_paths
+from pic_viewer.ui.resources.icons import load_app_icon
 
 
 class MainControllerInteractionMixin:
@@ -346,11 +347,13 @@ class MainControllerInteractionMixin:
 
     def _show_about(self) -> None:
         metadata = load_app_metadata()
-        QtWidgets.QMessageBox.information(
-            self._main_window,
-            self._tr("About"),
-            self._build_about_text(metadata),
-        )
+        message_box = QtWidgets.QMessageBox(self._main_window)
+        message_box.setWindowTitle(self._tr("About"))
+        message_box.setTextFormat(QtCore.Qt.RichText)
+        message_box.setText(self._build_about_text(metadata))
+        message_box.setIconPixmap(load_app_icon().pixmap(64, 64))
+        message_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        message_box.exec_()
 
     def _build_about_text(self, metadata: AppMetadata) -> str:
         return self._tr(
