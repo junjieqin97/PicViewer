@@ -319,7 +319,8 @@ class MainControllerAnalysisMixin:
             self._view_settings.channel.value,
         )
         path_key = str(image_path)
-        if self._analysis_render_key_by_path.get(path_key) == render_key and self._has_analysis_pixmaps():
+        current_render_key = (path_key, render_key)
+        if self._current_analysis_render_key == current_render_key and self._has_analysis_pixmaps():
             self._fill_metadata_tables(data.metadata)
             self._refresh_tab_pixmap(image_path, data.analysis)
             return
@@ -342,6 +343,7 @@ class MainControllerAnalysisMixin:
         self._ui.widgetHistogram.setPixmap(to_qpixmap(view.histogram_rgb, hist_logical, device_pixel_ratio=dpr))
         self._ui.widgetWaveform.setPixmap(to_qpixmap(view.waveform_rgb, wave_logical, device_pixel_ratio=dpr))
         self._analysis_render_key_by_path[path_key] = render_key
+        self._current_analysis_render_key = current_render_key
         self._fill_metadata_tables(data.metadata)
         self._refresh_tab_pixmap(image_path, data.analysis)
 
@@ -354,18 +356,21 @@ class MainControllerAnalysisMixin:
             return
 
     def _set_info_placeholders(self) -> None:
+        self._current_analysis_render_key = None
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
         self._ui.widgetHistogram.setText(self._tr("Histogram Placeholder"))
         self._ui.widgetWaveform.setText(self._tr("Waveform Placeholder"))
 
     def _set_info_loading_placeholders(self) -> None:
+        self._current_analysis_render_key = None
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
         self._ui.widgetHistogram.setText(self._tr("Generating histogram..."))
         self._ui.widgetWaveform.setText(self._tr("Generating waveform..."))
 
     def _set_info_error_placeholders(self) -> None:
+        self._current_analysis_render_key = None
         message = self._tr("Image failed to load. Analysis is unavailable.")
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())

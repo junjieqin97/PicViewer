@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+import numpy as np
 from PyQt5 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -15,6 +16,14 @@ SRC_ROOT = PROJECT_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+from pic_viewer.app.dto.analysis_view import (  # noqa: E402
+    AnalysisView,
+    AnalysisViewSettings,
+    LumaRgbMode,
+    RgbChannel,
+)
+from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult  # noqa: E402
+from pic_viewer.app.dto.metadata import ImageMetadata  # noqa: E402
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 
@@ -151,6 +160,36 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         self.assertEqual("Failure Reason", ui.tableMetadataGeneral.item(1, 0).text())
         self.assertEqual("Unable to read this image file", ui.tableMetadataGeneral.item(1, 1).text())
 
+    def test_switching_back_to_cached_image_refreshes_analysis_pixmaps(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        self._configure_analysis_rendering(controller)
+        path_a = Path("/tmp/a.jpg")
+        path_b = Path("/tmp/b.jpg")
+        controller._images_by_path[str(path_a)] = self._image_result((255, 0, 0))
+        controller._images_by_path[str(path_b)] = self._image_result((0, 255, 0))
+
+        MainController.update_info_for_image(controller, path_a)
+        self.assertEqual((255, 0, 0), self._center_pixmap_color(ui.widgetHistogram))
+        MainController.update_info_for_image(controller, path_b)
+        self.assertEqual((0, 255, 0), self._center_pixmap_color(ui.widgetHistogram))
+        MainController.update_info_for_image(controller, path_a)
+
+        self.assertEqual((255, 0, 0), self._center_pixmap_color(ui.widgetHistogram))
+        self.assertEqual((255, 0, 0), self._center_pixmap_color(ui.widgetWaveform))
+
+    def test_refreshing_same_image_reuses_current_analysis_pixmaps(self) -> None:
+        window, _ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        self._configure_analysis_rendering(controller)
+        path = Path("/tmp/a.jpg")
+        controller._images_by_path[str(path)] = self._image_result((255, 0, 0))
+
+        MainController.update_info_for_image(controller, path)
+        MainController.update_info_for_image(controller, path)
+
+        controller._image_service.render_analysis_view.assert_called_once()
+
     def test_long_metadata_values_have_full_value_tooltips(self) -> None:
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
@@ -206,6 +245,68 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         controller._load_error_by_path = {}
         controller._last_metadata_path = None
         return window, ui, controller
+
+    def _configure_analysis_rendering(self, controller: MainController) -> None:
+        controller._analysis_histogram_size = QtCore.QSize(8, 8)
+        controller._analysis_waveform_size = QtCore.QSize(8, 8)
+        controller._analysis_resize_active = False
+        controller._analysis_render_key_by_path = {}
+        controller._current_analysis_render_key = None
+        controller._view_settings = AnalysisViewSettings(
+            mode=LumaRgbMode.LUMA,
+            channel=RgbChannel.ALL,
+        )
+        controller._view_service = MagicMock()
+        controller._view_service.build_view.side_effect = self._build_luma_view
+        controller._image_service = MagicMock()
+        controller._image_service.render_analysis_view.side_effect = self._render_luma_view
+
+    def _build_luma_view(self, analysis: ImageAnalysis, _settings: AnalysisViewSettings) -> AnalysisView:
+        return AnalysisView(
+            histogram_rgb=analysis.histogram_luma,
+            waveform_rgb=analysis.waveform_luma,
+        )
+
+    def _render_luma_view(
+        self,
+        analysis: ImageAnalysis,
+        settings: AnalysisViewSettings,
+        _hist_size: tuple[int, int],
+        _wave_size: tuple[int, int],
+        _dpr: float,
+    ) -> AnalysisView:
+        return self._build_luma_view(analysis, settings)
+
+    def _image_result(self, color_rgb: tuple[int, int, int]) -> ImageLoadResult:
+        rgb = np.zeros((8, 8, 3), dtype=np.uint8)
+        rgb[:] = color_rgb
+        analysis = ImageAnalysis(
+            analysis_bgr=rgb[:, :, ::-1],
+            preview_rgb=rgb,
+            source_size=(8, 8),
+            histogram_rgb=rgb,
+            histogram_luma=rgb,
+            histogram_r=rgb,
+            histogram_g=rgb,
+            histogram_b=rgb,
+            waveform_rgb=rgb,
+            waveform_luma=rgb,
+            waveform_r=rgb,
+            waveform_g=rgb,
+            waveform_b=rgb,
+        )
+        return ImageLoadResult(
+            analysis=analysis,
+            metadata=ImageMetadata(general=tuple(), exif=tuple(), iptc=tuple(), tiff=tuple()),
+        )
+
+    def _center_pixmap_color(self, label: QtWidgets.QLabel) -> tuple[int, int, int]:
+        pixmap = label.pixmap()
+        self.assertIsNotNone(pixmap)
+        self.assertFalse(pixmap.isNull())
+        image = pixmap.toImage()
+        color = image.pixelColor(image.width() // 2, image.height() // 2)
+        return color.red(), color.green(), color.blue()
 
 
 if __name__ == "__main__":

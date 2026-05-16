@@ -84,6 +84,7 @@ class MainController(
         self._zoom_by_path: Dict[str, float] = {}
         self._fit_to_window_by_path: Dict[str, bool] = {}
         self._analysis_render_key_by_path: Dict[str, tuple] = {}
+        self._current_analysis_render_key: Optional[tuple[str, tuple]] = None
         self._tab_preview_render_key_by_path: Dict[str, tuple] = {}
         self._show_underexposed = False
         self._show_overexposed = False
