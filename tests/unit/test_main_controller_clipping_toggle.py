@@ -17,6 +17,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
+from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel  # noqa: E402
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel  # noqa: E402
 
 
@@ -35,15 +36,25 @@ class MainControllerClippingToggleTests(unittest.TestCase):
         self.act_toggle_underexposed.setCheckable(True)
         self.act_toggle_overexposed = QtWidgets.QAction()
         self.act_toggle_overexposed.setCheckable(True)
+        self.act_peak_high = QtWidgets.QAction()
+        self.act_peak_high.setCheckable(True)
+        self.act_peak_medium = QtWidgets.QAction()
+        self.act_peak_medium.setCheckable(True)
+        self.act_peak_low = QtWidgets.QAction()
+        self.act_peak_low.setCheckable(True)
         self.controller = MainController.__new__(MainController)
         QtCore.QObject.__init__(self.controller)
         self.controller._ui = SimpleNamespace(
             widgetHistogram=self.widget,
             actToggleUnderexposed=self.act_toggle_underexposed,
             actToggleOverexposed=self.act_toggle_overexposed,
+            actPeakHigh=self.act_peak_high,
+            actPeakMedium=self.act_peak_medium,
+            actPeakLow=self.act_peak_low,
         )
         self.controller._show_underexposed = False
         self.controller._show_overexposed = False
+        self.controller._focus_peak_level = None
         self.controller._sync_histogram_overlay_state = MagicMock()
         self.controller._refresh_overlay_for_current_image = MagicMock()
         self.addCleanup(self.widget.deleteLater)
@@ -198,7 +209,10 @@ class MainControllerClippingToggleTests(unittest.TestCase):
         self.assertFalse(action_over.isChecked())
         self.assertTrue(widget.underexposed_active())
         self.assertFalse(widget.overexposed_active())
-        self.assertEqual("Underexposed: On / Overexposed: Off", controller._ui.labelPseudoColorValue.text())
+        self.assertEqual(
+            "Underexposed: On / Overexposed: Off / Peaks: Off",
+            controller._ui.labelPseudoColorValue.text(),
+        )
 
     def test_sync_overlay_state_updates_visible_summary_for_both_states(self) -> None:
         controller = MainController.__new__(MainController)
@@ -221,7 +235,51 @@ class MainControllerClippingToggleTests(unittest.TestCase):
 
         MainController._sync_histogram_overlay_state(controller)
 
-        self.assertEqual("Underexposed: On / Overexposed: On", controller._ui.labelPseudoColorValue.text())
+        self.assertEqual(
+            "Underexposed: On / Overexposed: On / Peaks: Off",
+            controller._ui.labelPseudoColorValue.text(),
+        )
+
+    def test_focus_peak_level_toggle_selects_one_level_and_refreshes(self) -> None:
+        self.controller._tr = lambda text: text  # type: ignore[method-assign]
+        self.controller._ui.labelPseudoColorValue = QtWidgets.QLabel()
+        self.controller._sync_histogram_overlay_state = (
+            lambda: MainController._sync_histogram_overlay_state(self.controller)
+        )
+        self.addCleanup(self.controller._ui.labelPseudoColorValue.deleteLater)
+
+        MainController._on_focus_peak_level_triggered(self.controller, FocusPeakLevel.HIGH)
+
+        self.assertEqual(FocusPeakLevel.HIGH, self.controller._focus_peak_level)
+        self.assertTrue(self.act_peak_high.isChecked())
+        self.assertFalse(self.act_peak_medium.isChecked())
+        self.assertFalse(self.act_peak_low.isChecked())
+        self.assertEqual(
+            "Underexposed: Off / Overexposed: Off / Peaks: High",
+            self.controller._ui.labelPseudoColorValue.text(),
+        )
+        self.controller._refresh_overlay_for_current_image.assert_called_once_with()
+
+    def test_focus_peak_level_toggle_turns_off_current_level(self) -> None:
+        self.controller._tr = lambda text: text  # type: ignore[method-assign]
+        self.controller._ui.labelPseudoColorValue = QtWidgets.QLabel()
+        self.controller._focus_peak_level = FocusPeakLevel.MEDIUM
+        self.controller._sync_histogram_overlay_state = (
+            lambda: MainController._sync_histogram_overlay_state(self.controller)
+        )
+        self.addCleanup(self.controller._ui.labelPseudoColorValue.deleteLater)
+
+        MainController._on_focus_peak_level_triggered(self.controller, FocusPeakLevel.MEDIUM)
+
+        self.assertIsNone(self.controller._focus_peak_level)
+        self.assertFalse(self.act_peak_high.isChecked())
+        self.assertFalse(self.act_peak_medium.isChecked())
+        self.assertFalse(self.act_peak_low.isChecked())
+        self.assertEqual(
+            "Underexposed: Off / Overexposed: Off / Peaks: Off",
+            self.controller._ui.labelPseudoColorValue.text(),
+        )
+        self.controller._refresh_overlay_for_current_image.assert_called_once_with()
 
 
 if __name__ == "__main__":

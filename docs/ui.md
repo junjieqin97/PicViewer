@@ -27,7 +27,7 @@
     - 文件(File)：打开图片、打开文件夹、关闭当前标签、退出
     - 查看(View)：缩放、适配窗口、信息区（checkable，勾选=显示）、胶卷窗格（checkable，勾选=显示）
     - 工具(Tools)：直方图/波形图选项 + 伪色选项
-      - 伪色(Pseudo Color)：显示欠曝（checkable）、显示过曝（checkable）
+      - 伪色(Pseudo Color)：显示欠曝（checkable）、显示过曝（checkable）、显示峰值（高/中/低，checkable，三档互斥且点击当前档关闭）
     - 帮助(Help)：关于
 - 要求：每个菜单项用 QAction 创建并命名（见“组件清单”）。
 
@@ -70,7 +70,7 @@ CentralWidget 使用 QVBoxLayout，上下两块：
 
 - 容器：scrollInfo: QWidget（外层不滚动）
 - 内容布局：layoutInfo: QVBoxLayout
-- 信息区顶部必须显示轻量摘要：当前分析模式、RGB 通道、伪色状态（欠曝/过曝开关）。
+- 信息区顶部必须显示轻量摘要：当前分析模式、RGB 通道、伪色状态（欠曝/过曝开关、峰值档位）。
 
 信息区内部使用 QTabWidget 或 QToolBox（二选一，推荐 QTabWidget）：
 
@@ -149,6 +149,9 @@ Actions（命名必须一致，文案可中英混排但建议一致）：
 - actToggleFilmstrip：胶卷窗格（可 checkable，勾选=显示）
 - actToggleUnderexposed：显示欠曝（可 checkable）
 - actToggleOverexposed：显示过曝（可 checkable）
+- actPeakHigh：高（可 checkable，焦点峰值高档）
+- actPeakMedium：中（可 checkable，焦点峰值中档）
+- actPeakLow：低（可 checkable，焦点峰值低档）
 - actAbout：关于
 
 ## 6. 快捷键

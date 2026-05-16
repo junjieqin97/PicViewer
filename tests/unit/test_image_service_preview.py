@@ -14,6 +14,7 @@ if str(SRC_ROOT) not in sys.path:
 
 from pic_viewer.app.services.image_service import ImageService  # noqa: E402
 from pic_viewer.common.errors import ImageLoadError  # noqa: E402
+from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel  # noqa: E402
 
 
 class ImageServicePreviewTests(unittest.TestCase):
@@ -55,6 +56,34 @@ class ImageServicePreviewTests(unittest.TestCase):
             self.service.load_preview(self.path)
 
         self.assertEqual("Unable to read this image file", str(ctx.exception))
+
+    def test_pseudo_color_preview_returns_unchanged_pixels_when_all_overlays_are_off(self) -> None:
+        preview_rgb = np.full((8, 8, 3), 64, dtype=np.uint8)
+
+        result = self.service.build_preview_with_pseudo_color_overlay(
+            preview_rgb,
+            show_underexposed=False,
+            show_overexposed=False,
+            focus_peak_level=None,
+        )
+
+        np.testing.assert_array_equal(result, preview_rgb)
+
+    def test_pseudo_color_preview_combines_exposure_and_focus_peaking(self) -> None:
+        preview_rgb = np.zeros((12, 12, 3), dtype=np.uint8)
+        preview_rgb[:, 6:] = 255
+
+        result = self.service.build_preview_with_pseudo_color_overlay(
+            preview_rgb,
+            show_underexposed=True,
+            show_overexposed=True,
+            focus_peak_level=FocusPeakLevel.HIGH,
+        )
+
+        self.assertFalse(np.array_equal(result, preview_rgb))
+        blue_dominant = result[:, :, 2] > result[:, :, 0]
+        blue_dominant &= result[:, :, 2] > result[:, :, 1]
+        self.assertTrue(bool(np.any(blue_dominant)))
 
 
 if __name__ == "__main__":

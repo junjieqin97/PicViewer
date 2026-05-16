@@ -17,6 +17,7 @@ from pic_viewer.controllers.main_controller_interaction_mixin import MainControl
 from pic_viewer.controllers.main_controller_loading_mixin import MainControllerLoadingMixin
 from pic_viewer.controllers.main_controller_metadata_mixin import MainControllerMetadataMixin
 from pic_viewer.controllers.main_controller_tabs_mixin import MainControllerTabsMixin
+from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
 from pic_viewer.ui.workers.image_worker import ImageLoadTask, PreviewLoadTask
 
 MAX_IMAGE_LOAD_CONCURRENCY = 8
@@ -88,6 +89,7 @@ class MainController(
         self._tab_preview_render_key_by_path: Dict[str, tuple] = {}
         self._show_underexposed = False
         self._show_overexposed = False
+        self._focus_peak_level: FocusPeakLevel | None = None
         self._zoom_step = 1.25
         self._zoom_min = 0.1
         self._zoom_max = 6.0
@@ -139,6 +141,18 @@ class MainController(
             self._ui.actToggleUnderexposed.toggled.connect(self._on_underexposed_toggled)
         if hasattr(self._ui, "actToggleOverexposed"):
             self._ui.actToggleOverexposed.toggled.connect(self._on_overexposed_toggled)
+        if hasattr(self._ui, "actPeakHigh"):
+            self._ui.actPeakHigh.triggered.connect(
+                lambda _checked=False: self._on_focus_peak_level_triggered(FocusPeakLevel.HIGH)
+            )
+        if hasattr(self._ui, "actPeakMedium"):
+            self._ui.actPeakMedium.triggered.connect(
+                lambda _checked=False: self._on_focus_peak_level_triggered(FocusPeakLevel.MEDIUM)
+            )
+        if hasattr(self._ui, "actPeakLow"):
+            self._ui.actPeakLow.triggered.connect(
+                lambda _checked=False: self._on_focus_peak_level_triggered(FocusPeakLevel.LOW)
+            )
 
         self._ui.tabsImages.currentChanged.connect(self._on_tab_changed)
         self._ui.tabsImages.tabCloseRequested.connect(self.close_tab)

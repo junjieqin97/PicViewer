@@ -10,6 +10,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.dto.analysis_view import AnalysisViewSettings, LumaRgbMode, RgbChannel
 from pic_viewer.app.dto.image_analysis import ImageAnalysis
+from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
 from pic_viewer.ui.utils.image_qt import to_qpixmap
 
 
@@ -184,6 +185,16 @@ class MainControllerAnalysisMixin:
         self._sync_histogram_overlay_state()
         self._refresh_overlay_for_current_image()
 
+    def _on_focus_peak_level_triggered(self, level: FocusPeakLevel) -> None:
+        """Handle focus peaking level menu changes."""
+
+        next_level = None if self._focus_peak_level == level else level
+        if self._focus_peak_level == next_level:
+            return
+        self._focus_peak_level = next_level
+        self._sync_histogram_overlay_state()
+        self._refresh_overlay_for_current_image()
+
     def _sync_histogram_overlay_state(self) -> None:
         """Keep histogram clipping widget state in sync with controller flags."""
 
@@ -193,6 +204,7 @@ class MainControllerAnalysisMixin:
         if hasattr(self._ui, "actToggleOverexposed"):
             with QtCore.QSignalBlocker(self._ui.actToggleOverexposed):
                 self._ui.actToggleOverexposed.setChecked(self._show_overexposed)
+        self._sync_focus_peak_actions()
 
         self._sync_pseudo_color_summary()
 
@@ -215,12 +227,43 @@ class MainControllerAnalysisMixin:
         disabled_text = self._tr("Off")
         under_text = enabled_text if self._show_underexposed else disabled_text
         over_text = enabled_text if self._show_overexposed else disabled_text
+        peak_text = self._focus_peak_level_summary_text()
         self._ui.labelPseudoColorValue.setText(
-            self._tr("Underexposed: {under} / Overexposed: {over}").format(
+            self._tr("Underexposed: {under} / Overexposed: {over} / Peaks: {peaks}").format(
                 under=under_text,
                 over=over_text,
+                peaks=peak_text,
             )
         )
+
+    def _sync_focus_peak_actions(self) -> None:
+        """Keep focus peaking menu actions aligned with controller state."""
+
+        action_pairs = (
+            ("actPeakHigh", FocusPeakLevel.HIGH),
+            ("actPeakMedium", FocusPeakLevel.MEDIUM),
+            ("actPeakLow", FocusPeakLevel.LOW),
+        )
+        current_level = getattr(self, "_focus_peak_level", None)
+        for action_name, level in action_pairs:
+            if not hasattr(self._ui, action_name):
+                continue
+            action = getattr(self._ui, action_name)
+            with QtCore.QSignalBlocker(action):
+                action.setChecked(current_level == level)
+
+    def _focus_peak_level_summary_text(self) -> str:
+        """Return localized focus peaking status text."""
+
+        level = getattr(self, "_focus_peak_level", None)
+        if level is None:
+            return self._tr("Off")
+        labels = {
+            FocusPeakLevel.HIGH: self._tr("High"),
+            FocusPeakLevel.MEDIUM: self._tr("Medium"),
+            FocusPeakLevel.LOW: self._tr("Low"),
+        }
+        return labels[level]
 
     def _refresh_overlay_for_current_image(self) -> None:
         """Refresh current image pixmap when clipping overlay state changes."""
@@ -431,6 +474,7 @@ class MainControllerAnalysisMixin:
             round(dpr, 2),
             self._show_underexposed,
             self._show_overexposed,
+            self._focus_peak_level.value if self._focus_peak_level is not None else None,
             id(preview_rgb),
         )
         if (
@@ -439,10 +483,11 @@ class MainControllerAnalysisMixin:
             and self._pixmap_matches_target(existing, target_size, dpr)
         ):
             return
-        display_rgb = self._image_service.build_preview_with_exposure_overlay(
+        display_rgb = self._image_service.build_preview_with_pseudo_color_overlay(
             preview_rgb,
             show_underexposed=self._show_underexposed,
             show_overexposed=self._show_overexposed,
+            focus_peak_level=self._focus_peak_level,
         )
         pixmap = to_qpixmap(display_rgb, target_size, device_pixel_ratio=dpr)
         lbl.setPixmap(pixmap)

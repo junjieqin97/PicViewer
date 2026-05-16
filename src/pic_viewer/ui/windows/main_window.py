@@ -91,6 +91,15 @@ class MainWindowUI:
         self.actToggleOverexposed = QtWidgets.QAction(self._main_window)
         self.actToggleOverexposed.setObjectName("actToggleOverexposed")
         self.actToggleOverexposed.setCheckable(True)
+        self.actPeakHigh = QtWidgets.QAction(self._main_window)
+        self.actPeakHigh.setObjectName("actPeakHigh")
+        self.actPeakHigh.setCheckable(True)
+        self.actPeakMedium = QtWidgets.QAction(self._main_window)
+        self.actPeakMedium.setObjectName("actPeakMedium")
+        self.actPeakMedium.setCheckable(True)
+        self.actPeakLow = QtWidgets.QAction(self._main_window)
+        self.actPeakLow.setObjectName("actPeakLow")
+        self.actPeakLow.setCheckable(True)
 
         self.actionGroupMode = QtWidgets.QActionGroup(self._main_window)
         self.actionGroupMode.setExclusive(True)
@@ -167,6 +176,12 @@ class MainWindowUI:
         self.menuPseudoColor.setObjectName("menuPseudoColor")
         self.menuPseudoColor.addAction(self.actToggleUnderexposed)
         self.menuPseudoColor.addAction(self.actToggleOverexposed)
+        self.menuPseudoColor.addSeparator()
+        self.menuFocusPeaking = self.menuPseudoColor.addMenu("")
+        self.menuFocusPeaking.setObjectName("menuFocusPeaking")
+        self.menuFocusPeaking.addAction(self.actPeakHigh)
+        self.menuFocusPeaking.addAction(self.actPeakMedium)
+        self.menuFocusPeaking.addAction(self.actPeakLow)
 
         self.menuHelp = menu_bar.addMenu("")
         self.menuHelp.setObjectName("menuHelp")
@@ -453,6 +468,9 @@ class MainWindowUI:
         self.actChannelBlue.setText(self._tr("Blue Channel Only"))
         self.actToggleUnderexposed.setText(self._tr("Show Underexposed"))
         self.actToggleOverexposed.setText(self._tr("Show Overexposed"))
+        self.actPeakHigh.setText(self._tr("High"))
+        self.actPeakMedium.setText(self._tr("Medium"))
+        self.actPeakLow.setText(self._tr("Low"))
 
         self.menuFile.setTitle(self._tr("File"))
         self.menuView.setTitle(self._tr("View"))
@@ -460,6 +478,7 @@ class MainWindowUI:
         self.menuMode.setTitle(self._tr("Histogram/Waveform Mode"))
         self.menuChannel.setTitle(self._tr("RGB Channels"))
         self.menuPseudoColor.setTitle(self._tr("Pseudo Color"))
+        self.menuFocusPeaking.setTitle(self._tr("Show Peaks"))
         self.menuHelp.setTitle(self._tr("Help"))
 
         self.tabsInfo.setTabText(self.tabsInfo.indexOf(self.tabHistogram), self._tr("Histogram"))
@@ -477,9 +496,10 @@ class MainWindowUI:
         self.labelAnalysisChannelValue.setText(self._tr("Not Applicable"))
         self.labelPseudoColorTitle.setText(self._tr("Pseudo Color State"))
         self.labelPseudoColorValue.setText(
-            self._tr("Underexposed: {under} / Overexposed: {over}").format(
+            self._tr("Underexposed: {under} / Overexposed: {over} / Peaks: {peaks}").format(
                 under=self._tr("Off"),
                 over=self._tr("Off"),
+                peaks=self._tr("Off"),
             )
         )
 

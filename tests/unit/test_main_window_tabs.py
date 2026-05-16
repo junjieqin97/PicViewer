@@ -115,7 +115,10 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertEqual("RGB Channels", ui.labelAnalysisChannelTitle.text())
         self.assertEqual("Not Applicable", ui.labelAnalysisChannelValue.text())
         self.assertEqual("Pseudo Color State", ui.labelPseudoColorTitle.text())
-        self.assertEqual("Underexposed: Off / Overexposed: Off", ui.labelPseudoColorValue.text())
+        self.assertEqual(
+            "Underexposed: Off / Overexposed: Off / Peaks: Off",
+            ui.labelPseudoColorValue.text(),
+        )
 
     def test_metadata_tables_keep_fixed_key_column_and_stretched_value_column(self) -> None:
         window = QtWidgets.QMainWindow()

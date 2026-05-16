@@ -51,6 +51,21 @@ class MainWindowShortcutTests(unittest.TestCase):
         self.assertNotIn("Show/Hide", ui.actToggleInfoPanel.text())
         self.assertNotIn("Show/Hide", ui.actToggleFilmstrip.text())
 
+    def test_focus_peaking_menu_has_three_checkable_levels(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        self.assertEqual("menuFocusPeaking", ui.menuFocusPeaking.objectName())
+        self.assertEqual("Show Peaks", ui.menuFocusPeaking.title())
+        self.assertIn(ui.menuFocusPeaking.menuAction(), ui.menuPseudoColor.actions())
+
+        actions = (ui.actPeakHigh, ui.actPeakMedium, ui.actPeakLow)
+        self.assertEqual(["High", "Medium", "Low"], [action.text() for action in actions])
+        self.assertTrue(all(action.isCheckable() for action in actions))
+        self.assertFalse(any(action.isChecked() for action in actions))
+
 
 if __name__ == "__main__":
     unittest.main()

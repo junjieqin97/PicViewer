@@ -13,6 +13,11 @@ from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
 from pic_viewer.common.errors import ImageLoadError
 from pic_viewer.domain.rules.analysis import ImageAnalyzer
 from pic_viewer.domain.rules.exposure_overlay import ExposureOverlayOptions, apply_exposure_overlay
+from pic_viewer.domain.rules.focus_peaking import (
+    FocusPeakLevel,
+    FocusPeakingOptions,
+    apply_focus_peaking_overlay,
+)
 from pic_viewer.infra.adapters.image_reader import ImageReader
 from pic_viewer.infra.adapters.metadata_reader import MetadataReader
 
@@ -134,14 +139,41 @@ class ImageService:
     ) -> np.ndarray:
         """Return a display preview with optional clipping pseudo-color overlays."""
 
+        return self.build_preview_with_pseudo_color_overlay(
+            preview_rgb,
+            show_underexposed=show_underexposed,
+            show_overexposed=show_overexposed,
+            focus_peak_level=None,
+        )
+
+    def build_preview_with_pseudo_color_overlay(
+        self,
+        preview_rgb: np.ndarray,
+        show_underexposed: bool,
+        show_overexposed: bool,
+        focus_peak_level: FocusPeakLevel | None,
+    ) -> np.ndarray:
+        """Return a display preview with optional pseudo-color overlays."""
+
         if not show_underexposed and not show_overexposed:
-            return preview_rgb
+            if focus_peak_level is None:
+                return preview_rgb
+            return apply_focus_peaking_overlay(
+                preview_rgb,
+                FocusPeakingOptions(level=focus_peak_level),
+            )
 
         options = ExposureOverlayOptions(
             show_underexposed=show_underexposed,
             show_overexposed=show_overexposed,
         )
-        return apply_exposure_overlay(preview_rgb, options)
+        output = apply_exposure_overlay(preview_rgb, options)
+        if focus_peak_level is None:
+            return output
+        return apply_focus_peaking_overlay(
+            output,
+            FocusPeakingOptions(level=focus_peak_level),
+        )
 
     def _render_with_settings(
         self,
