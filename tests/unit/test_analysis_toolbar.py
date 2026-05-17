@@ -75,6 +75,19 @@ class AnalysisToolbarTests(unittest.TestCase):
                 self.assertFalse(button.icon().isNull())
                 self.assertEqual(action.text(), button.toolTip())
 
+    def test_toolbar_button_group_is_centered_between_stretches(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        layout = ui.widgetAnalysisToolbar.layout()
+
+        self.assertIsNotNone(layout.itemAt(0).spacerItem())
+        self.assertIsNotNone(layout.itemAt(layout.count() - 1).spacerItem())
+        self.assertIs(ui.buttonToolbarModeLuma, layout.itemAt(1).widget())
+        self.assertIs(ui.buttonToolbarPeakLow, layout.itemAt(layout.count() - 2).widget())
+
     def test_controller_toggle_analysis_toolbar_changes_toolbar_visibility(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()

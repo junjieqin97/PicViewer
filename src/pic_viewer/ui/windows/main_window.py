@@ -309,6 +309,7 @@ class MainWindowUI:
             self.actPeakLow,
         )
 
+        toolbar_layout.addStretch(1)
         toolbar_layout.addWidget(self.buttonToolbarModeLuma)
         toolbar_layout.addWidget(self.buttonToolbarModeRgb)
         self._add_analysis_toolbar_separator(toolbar_layout)
