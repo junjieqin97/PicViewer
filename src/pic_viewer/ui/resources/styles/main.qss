@@ -23,6 +23,11 @@ QTabWidget#tabsMetadata::pane {
     background: #24282d;
 }
 
+QWidget#tabAnalysis,
+QWidget#tabMetadata {
+    background: #24282d;
+}
+
 QTabWidget#tabsImages::tab-bar {
     alignment: left;
 }

@@ -69,7 +69,7 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertIsNotNone(button)
         self.assertNotEqual("buttonImageTabClose", button.objectName())
 
-    def test_analysis_widgets_are_wrapped_in_fixed_top_aligned_frames(self) -> None:
+    def test_info_tabs_combine_histogram_and_waveform_in_analysis_tab(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
         ui.setup_ui(window)
@@ -81,6 +81,12 @@ class MainWindowTabsTests(unittest.TestCase):
 
         self.assertEqual("frameHistogramAnalysis", ui.widgetHistogram.parentWidget().objectName())
         self.assertEqual("frameWaveformAnalysis", ui.widgetWaveform.parentWidget().objectName())
+        self.assertEqual("tabAnalysis", ui.tabAnalysis.objectName())
+        self.assertEqual(2, ui.tabsInfo.count())
+        self.assertEqual("Analysis", ui.tabsInfo.tabText(0))
+        self.assertEqual("Metadata", ui.tabsInfo.tabText(1))
+        self.assertIs(ui.tabAnalysis, ui.tabsInfo.widget(0))
+        self.assertIs(ui.tabMetadata, ui.tabsInfo.widget(1))
         self.assertEqual(ui.info_panel_histogram_size, ui.widgetHistogram.size())
         self.assertEqual(ui.info_panel_waveform_size, ui.widgetWaveform.size())
 
@@ -96,11 +102,12 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertLessEqual(histogram_frame.height(), max_histogram_height)
         self.assertLessEqual(waveform_frame.height(), max_waveform_height)
 
-        histogram_layout_item = ui.tabHistogram.layout().itemAt(0)
-        waveform_layout_item = ui.tabWaveform.layout().itemAt(0)
+        analysis_layout = ui.tabAnalysis.layout()
+        self.assertIs(histogram_frame, analysis_layout.itemAt(0).widget())
+        self.assertIs(waveform_frame, analysis_layout.itemAt(1).widget())
         expected_alignment = QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop
-        self.assertEqual(expected_alignment, histogram_layout_item.alignment())
-        self.assertEqual(expected_alignment, waveform_layout_item.alignment())
+        self.assertEqual(expected_alignment, analysis_layout.itemAt(0).alignment())
+        self.assertEqual(expected_alignment, analysis_layout.itemAt(1).alignment())
 
     def test_filmstrip_uses_compact_uniform_layout_defaults(self) -> None:
         window = QtWidgets.QMainWindow()
@@ -242,6 +249,9 @@ class MainWindowTabsTests(unittest.TestCase):
 
         self.assertIs(ui.widgetAnalysisModeSummary, ui.layoutInfo.itemAt(0).widget())
         self.assertIs(ui.tabsInfo, ui.layoutInfo.itemAt(1).widget())
+        self.assertEqual(2, ui.tabsInfo.count())
+        self.assertEqual("Analysis", ui.tabsInfo.tabText(0))
+        self.assertEqual("Metadata", ui.tabsInfo.tabText(1))
         self.assertEqual("Analysis Mode", ui.labelAnalysisModeTitle.text())
         self.assertEqual("Luma Mode", ui.labelAnalysisModeValue.text())
         self.assertEqual("RGB Channels", ui.labelAnalysisChannelTitle.text())

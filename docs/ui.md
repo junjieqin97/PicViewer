@@ -43,7 +43,7 @@ CentralWidget 使用 QVBoxLayout，上下两块：
 使用 QSplitter(Qt.Horizontal)，左右两块：
 
 - 左侧（更准确说：左+中）= 图片显示区（Tab 浏览器式）
-- 右侧 = 信息区（直方图 / 波形图 / 元数据）
+- 右侧 = 信息区（分析 / 元数据；分析内包含直方图和波形图）
 
 约束：默认右侧信息区可调整宽度；主窗口缩放时，图片显示区优先扩展。
 
@@ -66,22 +66,22 @@ CentralWidget 使用 QVBoxLayout，上下两块：
 
 ### 3.2 右侧信息区（Info Panel）
 
-右侧信息区是一个不可滚动面板，包含三类信息：直方图、波形图、元数据（直方图和波形图内容固定尺寸显示，元数据区自适应填充信息区；尺寸以逻辑像素定义，DPI 自动缩放，确保不同分辨率下占比一致）。
+右侧信息区是一个不可滚动面板，包含两类一级信息：分析、元数据。其中“分析”面板合并显示直方图和波形图，以减少查看分析信息时的 Tab 切换成本；直方图和波形图内容固定尺寸显示，元数据区自适应填充信息区；尺寸以逻辑像素定义，DPI 自动缩放，确保不同分辨率下占比一致。
 
 - 容器：scrollInfo: QWidget（外层不滚动）
 - 内容布局：layoutInfo: QVBoxLayout
 - 信息区顶部必须显示轻量摘要：当前分析模式、RGB 通道、伪色状态（欠曝/过曝开关、峰值档位）。
 
-信息区内部使用 QTabWidget 或 QToolBox（二选一，推荐 QTabWidget）：
+信息区内部使用 QTabWidget：
 
 - 控件：tabsInfo: QTabWidget
-- 三个 Tab（标题必须一致）：
-  - tabHistogram 标题：直方图
-  - tabWaveform 标题：波形图
+- 两个 Tab（标题必须一致）：
+  - tabAnalysis 标题：分析
   - tabMetadata 标题：元数据
 
 每个信息 Tab 内部先用占位控件实现（元数据表允许内部滚动）：
 
+- 分析：tabAnalysis 使用垂直布局，按从上到下顺序显示直方图和波形图，两个分析图都应居中且靠顶部排列
 - 直方图：widgetHistogram（可先是 QLabel “Histogram Placeholder”）
   - 固定显示尺寸：高 100 × 宽 256（逻辑像素）
   - 直方图左上角和右上角必须显示可点击小三角形：
@@ -133,6 +133,8 @@ CentralWidget 使用 QVBoxLayout，上下两块：
 - scrollInfo: QWidget
 - layoutInfo: QVBoxLayout
 - tabsInfo: QTabWidget
+- tabAnalysis: QWidget
+- tabMetadata: QWidget
 - frameFilmstrip: QFrame
 - listFilmstrip: QListWidget
 - labelFilmstripSummary: QLabel（状态栏右侧，胶卷窗格隐藏时显示当前文件摘要）
@@ -189,7 +191,7 @@ Actions（命名必须一致，文案可中英混排但建议一致）：
 ## 7. 交互规则（必须实现的同步关系）
 
 - 打开图片 => 新增 Tab + 新增胶卷 item + 自动切到该 Tab。
-- 切换 Tab => 更新右侧信息（先占位更新）+ 更新胶卷选中项；当前选中图片在后台触发完整解析（直方图/波形图/元数据）。
+- 切换图片 Tab => 更新右侧信息（先占位更新）+ 更新胶卷选中项；当前选中图片在后台触发完整解析（直方图/波形图/元数据）。
 - 点击胶卷 item => 切换到对应 Tab。
 - 关闭 Tab => 同步移除对应胶卷 item；如果关闭的是当前 Tab，则切换到相邻 Tab 并同步更新。
 - 打开文件夹 => 先并发加载每张图的快速预览，再按需（选中时）进行完整解析。
@@ -220,7 +222,7 @@ UI 文件内禁止写业务逻辑；controller 里可以先用 TODO/占位实现
 
 - UI 结构严格为：MenuBar + (上部 Splitter) + (底部 Filmstrip)
 - 图片显示区为 QTabWidget，Tab 标题=文件名
-- 右侧信息区包含：直方图/波形图/元数据 三个 Tab（占位可）
+- 右侧信息区包含：分析/元数据 两个 Tab；分析 Tab 内同时显示直方图和波形图（占位可）
 - 底部胶卷条横向缩略图列表，可点击切换 Tab
 - Tab 与胶卷选中态双向同步
 - `图片显示区` 的 Tab 标题左对齐（标签组靠左，不均分铺满）

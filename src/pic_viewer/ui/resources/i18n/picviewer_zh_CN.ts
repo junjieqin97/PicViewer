@@ -379,7 +379,7 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../windows/main_window.py" line="557"/>
+        <location filename="../../windows/main_window.py" line="554"/>
         <source>Ready</source>
         <translation>准备就绪</translation>
     </message>
@@ -387,242 +387,237 @@
 <context>
     <name>MainWindowUI</name>
     <message>
-        <location filename="../../windows/main_window.py" line="475"/>
+        <location filename="../../windows/main_window.py" line="473"/>
         <source>PicViewer</source>
         <translation>PicViewer</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="513"/>
+        <location filename="../../windows/main_window.py" line="510"/>
         <source>Exif</source>
         <translation>Exif</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="514"/>
+        <location filename="../../windows/main_window.py" line="511"/>
         <source>IPTC</source>
         <translation>IPTC</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="515"/>
+        <location filename="../../windows/main_window.py" line="512"/>
         <source>TIFF</source>
         <translation>TIFF</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="477"/>
+        <location filename="../../windows/main_window.py" line="475"/>
         <source>Open Image...</source>
         <translation>打开图片…</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="478"/>
+        <location filename="../../windows/main_window.py" line="476"/>
         <source>Open Folder...</source>
         <translation>打开文件夹…</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="479"/>
+        <location filename="../../windows/main_window.py" line="477"/>
         <source>Close Current Tab</source>
         <translation>关闭当前标签</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="480"/>
+        <location filename="../../windows/main_window.py" line="478"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="481"/>
+        <location filename="../../windows/main_window.py" line="479"/>
         <source>Zoom In</source>
         <translation>放大</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="482"/>
+        <location filename="../../windows/main_window.py" line="480"/>
         <source>Zoom Out</source>
         <translation>缩小</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="483"/>
+        <location filename="../../windows/main_window.py" line="481"/>
         <source>Fit to Window</source>
         <translation>适配窗口</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="484"/>
+        <location filename="../../windows/main_window.py" line="482"/>
         <source>Info Panel</source>
         <translation>信息区</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="485"/>
+        <location filename="../../windows/main_window.py" line="483"/>
         <source>Filmstrip</source>
         <translation>胶卷窗格</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="486"/>
+        <location filename="../../windows/main_window.py" line="484"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="518"/>
+        <location filename="../../windows/main_window.py" line="515"/>
         <source>Luma Mode</source>
         <translation>明度模式</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="488"/>
+        <location filename="../../windows/main_window.py" line="486"/>
         <source>RGB Mode</source>
         <translation>RGB模式</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="489"/>
+        <location filename="../../windows/main_window.py" line="487"/>
         <source>All RGB Channels</source>
         <translation>RGB全部通道</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="490"/>
+        <location filename="../../windows/main_window.py" line="488"/>
         <source>Red Channel Only</source>
         <translation>仅红通道</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="491"/>
+        <location filename="../../windows/main_window.py" line="489"/>
         <source>Green Channel Only</source>
         <translation>仅绿通道</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="492"/>
+        <location filename="../../windows/main_window.py" line="490"/>
         <source>Blue Channel Only</source>
         <translation>仅蓝通道</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="493"/>
+        <location filename="../../windows/main_window.py" line="491"/>
         <source>Show Underexposed</source>
         <translation>显示欠曝</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="494"/>
+        <location filename="../../windows/main_window.py" line="492"/>
         <source>Show Overexposed</source>
         <translation>显示过曝</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="499"/>
+        <location filename="../../windows/main_window.py" line="497"/>
         <source>File</source>
         <translation>文件</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="500"/>
+        <location filename="../../windows/main_window.py" line="498"/>
         <source>View</source>
         <translation>查看</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="501"/>
+        <location filename="../../windows/main_window.py" line="499"/>
         <source>Tools</source>
         <translation>工具</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="502"/>
+        <location filename="../../windows/main_window.py" line="500"/>
         <source>Histogram/Waveform Mode</source>
         <translation>直方图/波形图模式</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="519"/>
+        <location filename="../../windows/main_window.py" line="516"/>
         <source>RGB Channels</source>
         <translation>RGB通道</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="504"/>
+        <location filename="../../windows/main_window.py" line="502"/>
         <source>Pseudo Color</source>
         <translation>伪色</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="506"/>
+        <location filename="../../windows/main_window.py" line="504"/>
         <source>Help</source>
         <translation>帮助</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="508"/>
-        <source>Histogram</source>
-        <translation>直方图</translation>
+        <location filename="../../windows/main_window.py" line="506"/>
+        <source>Analysis</source>
+        <translation>分析</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="509"/>
-        <source>Waveform</source>
-        <translation>波形图</translation>
-    </message>
-    <message>
-        <location filename="../../windows/main_window.py" line="510"/>
+        <location filename="../../windows/main_window.py" line="507"/>
         <source>Metadata</source>
         <translation>元数据</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="512"/>
+        <location filename="../../windows/main_window.py" line="509"/>
         <source>General</source>
         <translation>通用</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="517"/>
+        <location filename="../../windows/main_window.py" line="514"/>
         <source>Analysis Mode</source>
         <translation>分析模式</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="520"/>
+        <location filename="../../windows/main_window.py" line="517"/>
         <source>Not Applicable</source>
         <translation>不适用</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="521"/>
+        <location filename="../../windows/main_window.py" line="518"/>
         <source>Pseudo Color State</source>
         <translation>伪色状态</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="522"/>
+        <location filename="../../windows/main_window.py" line="519"/>
         <source>Off</source>
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="530"/>
+        <location filename="../../windows/main_window.py" line="527"/>
         <source>Histogram Placeholder</source>
         <translation>直方图占位图</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="531"/>
+        <location filename="../../windows/main_window.py" line="528"/>
         <source>Show/Hide Underexposed Areas</source>
         <translation>显示/隐藏欠曝区域</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="531"/>
+        <location filename="../../windows/main_window.py" line="528"/>
         <source>Show/Hide Overexposed Areas</source>
         <translation>显示/隐藏过曝区域</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="535"/>
+        <location filename="../../windows/main_window.py" line="532"/>
         <source>Waveform Placeholder</source>
         <translation>波形图占位图</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="539"/>
+        <location filename="../../windows/main_window.py" line="536"/>
         <source>Key</source>
         <translation>键</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="539"/>
+        <location filename="../../windows/main_window.py" line="536"/>
         <source>Value</source>
         <translation>值</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="495"/>
+        <location filename="../../windows/main_window.py" line="493"/>
         <source>High</source>
         <translation>高</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="496"/>
+        <location filename="../../windows/main_window.py" line="494"/>
         <source>Medium</source>
         <translation>中</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="497"/>
+        <location filename="../../windows/main_window.py" line="495"/>
         <source>Low</source>
         <translation>低</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="505"/>
+        <location filename="../../windows/main_window.py" line="503"/>
         <source>Show Peaks</source>
         <translation>显示峰值</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="522"/>
+        <location filename="../../windows/main_window.py" line="519"/>
         <source>Underexposed: {under} / Overexposed: {over} / Peaks: {peaks}</source>
         <translation>欠曝：{under} / 过曝：{over} / 峰值：{peaks}</translation>
     </message>
