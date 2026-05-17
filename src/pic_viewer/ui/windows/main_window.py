@@ -19,6 +19,10 @@ class MainWindowUI:
     INFO_PANEL_MIN_WIDTH = 320
     IMAGE_PANEL_MIN_WIDTH = 500
     METADATA_KEY_COLUMN_WIDTH = 112
+    FILMSTRIP_ICON_SIDE = 72
+    FILMSTRIP_MIN_ICON_SIDE = 48
+    FILMSTRIP_ITEM_WIDTH = 108
+    FILMSTRIP_ITEM_VERTICAL_PADDING = 18
 
     def setup_ui(self, main_window: QtWidgets.QMainWindow) -> None:
         self._main_window = main_window
@@ -392,12 +396,24 @@ class MainWindowUI:
         self.listFilmstrip.setWrapping(False)
         self.listFilmstrip.setResizeMode(QtWidgets.QListView.Adjust)
         self.listFilmstrip.setViewMode(QtWidgets.QListView.IconMode)
-        self.listFilmstrip.setIconSize(QtCore.QSize(96, 96))
+        self.listFilmstrip.setIconSize(QtCore.QSize(self.FILMSTRIP_ICON_SIDE, self.FILMSTRIP_ICON_SIDE))
+        self.listFilmstrip.setGridSize(self.filmstrip_item_size())
+        self.listFilmstrip.setUniformItemSizes(True)
+        self.listFilmstrip.setWordWrap(False)
+        self.listFilmstrip.setTextElideMode(QtCore.Qt.ElideRight)
         self.listFilmstrip.setMovement(QtWidgets.QListView.Static)
-        self.listFilmstrip.setSpacing(6)
+        self.listFilmstrip.setSpacing(4)
         self.listFilmstrip.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.listFilmstrip.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         film_layout.addWidget(self.listFilmstrip)
+
+    def filmstrip_item_size(self, icon_side: int | None = None) -> QtCore.QSize:
+        """Return the fixed filmstrip item size for the current font metrics."""
+
+        side = icon_side if icon_side is not None else self.FILMSTRIP_ICON_SIDE
+        font_height = self.listFilmstrip.fontMetrics().height()
+        height = side + font_height + self.FILMSTRIP_ITEM_VERTICAL_PADDING
+        return QtCore.QSize(self.FILMSTRIP_ITEM_WIDTH, height)
 
     def create_layouts(self) -> None:
         self.layoutMain = QtWidgets.QVBoxLayout(self.central)

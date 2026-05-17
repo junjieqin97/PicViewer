@@ -20,6 +20,9 @@ from pic_viewer.controllers.main_controller_tabs_mixin import MainControllerTabs
 from pic_viewer.controllers.main_controller_interaction_mixin import (  # noqa: E402
     MainControllerInteractionMixin,
 )
+from pic_viewer.controllers.main_controller_filmstrip_mixin import (  # noqa: E402
+    MainControllerFilmstripMixin,
+)
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 
 
@@ -39,6 +42,10 @@ class MainWindowTabsTests(unittest.TestCase):
         self.addCleanup(window.deleteLater)
 
         self.assertFalse(ui.tabsImages.tabBar().expanding())
+
+    def tearDown(self) -> None:
+        self._app.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
+        self._app.processEvents()
 
     def test_main_window_loads_left_aligned_tab_bar_style(self) -> None:
         window = QtWidgets.QMainWindow()
@@ -93,6 +100,43 @@ class MainWindowTabsTests(unittest.TestCase):
         expected_alignment = QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop
         self.assertEqual(expected_alignment, histogram_layout_item.alignment())
         self.assertEqual(expected_alignment, waveform_layout_item.alignment())
+
+    def test_filmstrip_uses_compact_uniform_layout_defaults(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        self.assertEqual(QtCore.QSize(72, 72), ui.listFilmstrip.iconSize())
+        self.assertEqual(
+            QtCore.QSize(ui.FILMSTRIP_ITEM_WIDTH, ui.filmstrip_item_size().height()),
+            ui.listFilmstrip.gridSize(),
+        )
+        self.assertEqual(4, ui.listFilmstrip.spacing())
+        self.assertTrue(ui.listFilmstrip.uniformItemSizes())
+        self.assertFalse(ui.listFilmstrip.wordWrap())
+        self.assertEqual(QtCore.Qt.ElideRight, ui.listFilmstrip.textElideMode())
+
+    def test_filmstrip_item_uses_short_name_tooltip_and_fixed_size(self) -> None:
+        window, ui, controller = self._build_tabs_controller()
+        self.addCleanup(window.deleteLater)
+        path = Path("/tmp/very-long-camera-filename-00123.raw")
+
+        controller._add_filmstrip_placeholder_item(path)
+
+        item = ui.listFilmstrip.item(0)
+        self.assertIsNotNone(item)
+        self.assertEqual("very-...3.raw", item.text())
+        self.assertEqual(path.name, item.toolTip())
+        self.assertEqual(QtCore.Qt.AlignCenter, item.textAlignment())
+        self.assertEqual(ui.filmstrip_item_size(), item.sizeHint())
+
+    def test_filmstrip_thumbnail_size_is_capped_for_default_height(self) -> None:
+        controller = _FilmstripSizingController()
+        controller._ui = _FakeFilmstripUi(viewport_height=104, font_height=14)  # type: ignore[attr-defined]
+        controller._filmstrip_icon_side = 96  # type: ignore[attr-defined]
+
+        self.assertLessEqual(controller._calculate_filmstrip_icon_side(), 72)
 
     def test_analysis_mode_summary_is_visible_above_info_tabs(self) -> None:
         window = QtWidgets.QMainWindow()
@@ -319,6 +363,7 @@ class MainWindowTabsTests(unittest.TestCase):
         ui.setup_ui(window)
         controller = MainControllerTabsMixin()
         controller._ui = ui  # type: ignore[attr-defined]
+        controller._main_window = window  # type: ignore[attr-defined]
         controller._tr = lambda text: text  # type: ignore[attr-defined]
         return window, ui, controller
 
@@ -401,6 +446,47 @@ class _DropController(
     QtCore.QObject,
 ):
     """Minimal controller for file-drop helper tests."""
+
+
+class _FilmstripSizingController(MainControllerFilmstripMixin):
+    """Minimal controller for filmstrip sizing tests."""
+
+
+class _FakeViewport:
+    def __init__(self, height: int) -> None:
+        self._height = height
+
+    def height(self) -> int:
+        return self._height
+
+
+class _FakeFontMetrics:
+    def __init__(self, height: int) -> None:
+        self._height = height
+
+    def height(self) -> int:
+        return self._height
+
+
+class _FakeFilmstripList:
+    def __init__(self, viewport_height: int, font_height: int) -> None:
+        self._viewport = _FakeViewport(viewport_height)
+        self._font_metrics = _FakeFontMetrics(font_height)
+
+    def viewport(self) -> _FakeViewport:
+        return self._viewport
+
+    def fontMetrics(self) -> _FakeFontMetrics:
+        return self._font_metrics
+
+
+class _FakeFilmstripUi:
+    FILMSTRIP_ICON_SIDE = 72
+    FILMSTRIP_MIN_ICON_SIDE = 48
+    FILMSTRIP_ITEM_VERTICAL_PADDING = 18
+
+    def __init__(self, viewport_height: int, font_height: int) -> None:
+        self.listFilmstrip = _FakeFilmstripList(viewport_height, font_height)
 
 
 if __name__ == "__main__":

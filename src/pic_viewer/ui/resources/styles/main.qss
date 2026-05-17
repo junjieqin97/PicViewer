@@ -239,18 +239,18 @@ QListWidget#listFilmstrip {
 
 QListWidget#listFilmstrip::item {
     border: 1px solid transparent;
-    border-radius: 4px;
-    padding: 4px;
+    border-radius: 3px;
+    padding: 2px;
 }
 
 QListWidget#listFilmstrip::item:hover {
-    background: #2f3741;
-    border-color: #53606f;
+    background: #29313a;
+    border-color: #546170;
 }
 
 QListWidget#listFilmstrip::item:selected {
-    background: #3d4d60;
-    border-color: #89a8cf;
+    background: #33465b;
+    border-color: #9bbce3;
     color: #ffffff;
 }
 

@@ -51,17 +51,18 @@ class MainControllerFilmstripMixin:
         if not self._ui.frameFilmstrip.isVisible():
             return
         icon_side = self._calculate_filmstrip_icon_side()
-        if icon_side <= 0 or icon_side == self._filmstrip_icon_side:
+        if icon_side <= 0:
+            return
+
+        item_size = self._filmstrip_item_size(icon_side)
+        self._ui.listFilmstrip.setGridSize(item_size)
+        self._apply_filmstrip_item_size_hints(item_size)
+        if icon_side == self._filmstrip_icon_side:
             return
 
         self._filmstrip_icon_side = icon_side
         icon_size = QtCore.QSize(icon_side, icon_side)
         self._ui.listFilmstrip.setIconSize(icon_size)
-
-        font_height = self._ui.listFilmstrip.fontMetrics().height()
-        grid_height = icon_side + font_height + 16
-        grid_width = icon_side + 20
-        self._ui.listFilmstrip.setGridSize(QtCore.QSize(grid_width, grid_height))
         self._refresh_filmstrip_icons()
 
     def _calculate_filmstrip_icon_side(self) -> int:
@@ -72,10 +73,31 @@ class MainControllerFilmstripMixin:
             return self._filmstrip_icon_side
 
         font_height = self._ui.listFilmstrip.fontMetrics().height()
-        available = viewport_height - font_height - 12
+        vertical_padding = getattr(self._ui, "FILMSTRIP_ITEM_VERTICAL_PADDING", 18)
+        available = viewport_height - font_height - vertical_padding
         if available <= 0:
             return self._filmstrip_icon_side
-        return max(24, min(available, 256))
+        min_side = getattr(self._ui, "FILMSTRIP_MIN_ICON_SIDE", 48)
+        max_side = getattr(self._ui, "FILMSTRIP_ICON_SIDE", 72)
+        return max(min_side, min(available, max_side))
+
+    def _filmstrip_item_size(self, icon_side: int) -> QtCore.QSize:
+        """Return the fixed item size for the current filmstrip thumbnail side."""
+
+        if hasattr(self._ui, "filmstrip_item_size"):
+            return self._ui.filmstrip_item_size(icon_side)
+        font_height = self._ui.listFilmstrip.fontMetrics().height()
+        width = icon_side + 36
+        height = icon_side + font_height + 18
+        return QtCore.QSize(width, height)
+
+    def _apply_filmstrip_item_size_hints(self, item_size: QtCore.QSize) -> None:
+        """Apply fixed filmstrip size hints to all existing items."""
+
+        for row in range(self._ui.listFilmstrip.count()):
+            item = self._ui.listFilmstrip.item(row)
+            if item is not None:
+                item.setSizeHint(item_size)
 
     def _refresh_filmstrip_icons(self) -> None:
         """Regenerate filmstrip icons using the current thumbnail size."""

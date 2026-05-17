@@ -216,6 +216,9 @@ class MainControllerTabsMixin:
         item = QtWidgets.QListWidgetItem()
         item.setData(QtCore.Qt.UserRole, str(path))
         self._apply_display_name_to_item(item, path)
+        item.setTextAlignment(QtCore.Qt.AlignCenter)
+        if hasattr(self._ui, "filmstrip_item_size"):
+            item.setSizeHint(self._ui.filmstrip_item_size())
         item.setIcon(self._placeholder_icon())
         self._ui.listFilmstrip.addItem(item)
 
