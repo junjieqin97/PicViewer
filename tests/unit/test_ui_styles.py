@@ -39,6 +39,7 @@ class UiStylesTests(unittest.TestCase):
         self.assertIn("QScrollArea#scrollImage QScrollBar:horizontal", style_sheet)
         self.assertIn("QScrollArea#scrollImage QScrollBar:vertical", style_sheet)
         self.assertIn("QStatusBar", style_sheet)
+        self.assertIn("QLabel#labelFilmstripSummary", style_sheet)
 
     def test_stylesheet_does_not_override_native_tab_close_button(self) -> None:
         style_sheet = styles.load_stylesheet()

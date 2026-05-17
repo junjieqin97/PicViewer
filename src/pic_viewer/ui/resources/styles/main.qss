@@ -317,3 +317,11 @@ QStatusBar {
     color: #c7ced7;
     border-top: 1px solid #343b44;
 }
+
+QLabel#labelFilmstripSummary {
+    color: #edf1f5;
+    background: #2b3036;
+    border: 1px solid #46505b;
+    border-radius: 4px;
+    padding: 2px 8px;
+}

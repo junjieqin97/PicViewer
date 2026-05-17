@@ -406,6 +406,16 @@ class MainWindowUI:
         self.listFilmstrip.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         film_layout.addWidget(self.listFilmstrip)
 
+        self.labelFilmstripSummary = QtWidgets.QLabel(self._main_window.statusBar())
+        self.labelFilmstripSummary.setObjectName("labelFilmstripSummary")
+        self.labelFilmstripSummary.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        self.labelFilmstripSummary.setSizePolicy(
+            QtWidgets.QSizePolicy.Maximum,
+            QtWidgets.QSizePolicy.Fixed,
+        )
+        self.labelFilmstripSummary.setVisible(False)
+        self._main_window.statusBar().addPermanentWidget(self.labelFilmstripSummary)
+
     def filmstrip_item_size(self, icon_side: int | None = None) -> QtCore.QSize:
         """Return the fixed filmstrip item size for the current font metrics."""
 

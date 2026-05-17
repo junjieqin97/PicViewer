@@ -117,6 +117,8 @@ CentralWidget 使用 QVBoxLayout，上下两块：
 - 如果该图片 Tab 存在：切换到对应 Tab。
 - 如果不存在（理论上不应该）：忽略或 TODO。
 - 切换 Tab 时：胶卷条选中项同步变化。
+- 当胶卷窗格被隐藏时，状态栏右侧必须显示当前文件摘要，格式为 `Current: {name} ({index}/{total})`；
+  其中 `name` 沿用 Tab/胶卷条的长文件名截断规则，tooltip 显示完整路径。胶卷窗格重新显示或没有当前图片时，该摘要必须隐藏。
 - 选中态要求：清晰可见（可先使用系统默认选中样式）。
 
 ## 5. 组件清单（必须逐一创建 & 命名一致）
@@ -133,6 +135,7 @@ CentralWidget 使用 QVBoxLayout，上下两块：
 - tabsInfo: QTabWidget
 - frameFilmstrip: QFrame
 - listFilmstrip: QListWidget
+- labelFilmstripSummary: QLabel（状态栏右侧，胶卷窗格隐藏时显示当前文件摘要）
 
 5.2 MenuBar Actions（先骨架）
 顶层菜单：menuFile menuView menuTools menuHelp

@@ -17,6 +17,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.controllers.main_controller_tabs_mixin import MainControllerTabsMixin  # noqa: E402
+from pic_viewer.controllers.main_controller import MainController  # noqa: E402
 from pic_viewer.controllers.main_controller_interaction_mixin import (  # noqa: E402
     MainControllerInteractionMixin,
 )
@@ -129,6 +130,80 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertEqual(ui.FILMSTRIP_HEIGHT, ui.frameFilmstrip.minimumHeight())
         self.assertEqual(ui.FILMSTRIP_HEIGHT, ui.frameFilmstrip.maximumHeight())
         self.assertEqual(QtWidgets.QSizePolicy.Fixed, ui.frameFilmstrip.sizePolicy().verticalPolicy())
+
+    def test_status_bar_has_hidden_filmstrip_summary_label(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        status_labels = window.statusBar().findChildren(QtWidgets.QLabel, "labelFilmstripSummary")
+
+        self.assertIn(ui.labelFilmstripSummary, status_labels)
+        self.assertEqual("labelFilmstripSummary", ui.labelFilmstripSummary.objectName())
+        self.assertTrue(ui.labelFilmstripSummary.isHidden())
+        self.assertEqual("", ui.labelFilmstripSummary.text())
+
+    def test_hidden_filmstrip_shows_current_file_summary(self) -> None:
+        window, ui, controller = self._build_filmstrip_summary_controller()
+        self.addCleanup(window.deleteLater)
+        self._add_summary_image(ui, controller, Path("/tmp/first.jpg"))
+        self._add_summary_image(ui, controller, Path("/tmp/second.jpg"))
+        ui.tabsImages.setCurrentIndex(1)
+        ui.listFilmstrip.setCurrentRow(1)
+
+        MainController._toggle_filmstrip(controller, False)
+
+        self.assertFalse(ui.labelFilmstripSummary.isHidden())
+        self.assertEqual("Current: second.jpg (2/2)", ui.labelFilmstripSummary.text())
+        self.assertEqual(
+            "Filmstrip hidden. Current file: /tmp/second.jpg",
+            ui.labelFilmstripSummary.toolTip(),
+        )
+
+    def test_hidden_filmstrip_summary_updates_when_tab_changes(self) -> None:
+        window, ui, controller = self._build_filmstrip_summary_controller()
+        self.addCleanup(window.deleteLater)
+        self._add_summary_image(ui, controller, Path("/tmp/first.jpg"))
+        self._add_summary_image(ui, controller, Path("/tmp/second.jpg"))
+        MainController._toggle_filmstrip(controller, False)
+
+        ui.tabsImages.setCurrentIndex(1)
+        MainController._on_tab_changed(controller, 1)
+
+        self.assertEqual("Current: second.jpg (2/2)", ui.labelFilmstripSummary.text())
+
+    def test_showing_filmstrip_hides_current_file_summary(self) -> None:
+        window, ui, controller = self._build_filmstrip_summary_controller()
+        self.addCleanup(window.deleteLater)
+        self._add_summary_image(ui, controller, Path("/tmp/current.jpg"))
+        MainController._toggle_filmstrip(controller, False)
+
+        MainController._toggle_filmstrip(controller, True)
+
+        self.assertTrue(ui.labelFilmstripSummary.isHidden())
+        self.assertEqual("", ui.labelFilmstripSummary.text())
+        self.assertEqual("", ui.labelFilmstripSummary.toolTip())
+
+    def test_closing_last_image_hides_filmstrip_summary(self) -> None:
+        window, ui, controller = self._build_filmstrip_summary_controller()
+        self.addCleanup(window.deleteLater)
+        self._add_summary_image(ui, controller, Path("/tmp/current.jpg"))
+        MainController._toggle_filmstrip(controller, False)
+        controller._images_by_path = {}  # type: ignore[attr-defined]
+        controller._preview_by_path = {}  # type: ignore[attr-defined]
+        controller._load_error_by_path = {}  # type: ignore[attr-defined]
+        controller._zoom_by_path = {}  # type: ignore[attr-defined]
+        controller._fit_to_window_by_path = {}  # type: ignore[attr-defined]
+        controller._analysis_render_key_by_path = {}  # type: ignore[attr-defined]
+        controller._tab_preview_render_key_by_path = {}  # type: ignore[attr-defined]
+        controller._cancel_tasks_for_path = MagicMock()  # type: ignore[method-assign]
+        controller._ensure_empty_image_placeholder = MagicMock()  # type: ignore[method-assign]
+
+        MainController.close_tab(controller, 0)
+
+        self.assertTrue(ui.labelFilmstripSummary.isHidden())
+        self.assertEqual("", ui.labelFilmstripSummary.text())
 
     def test_filmstrip_item_uses_short_name_tooltip_and_fixed_size(self) -> None:
         window, ui, controller = self._build_tabs_controller()
@@ -420,6 +495,35 @@ class MainWindowTabsTests(unittest.TestCase):
         controller._open_image_paths = MagicMock()  # type: ignore[method-assign]
         controller._show_no_supported_drop_files_message = MagicMock()  # type: ignore[method-assign]
         return window, ui, controller
+
+    def _build_filmstrip_summary_controller(
+        self,
+    ) -> tuple[QtWidgets.QMainWindow, MainWindowUI, MainController]:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        controller = MainController.__new__(MainController)
+        QtCore.QObject.__init__(controller, window)
+        controller._ui = ui
+        controller._main_window = window
+        controller._tr = lambda text: text  # type: ignore[method-assign]
+        controller._syncing_selection = False
+        controller._schedule_filmstrip_resize = MagicMock()  # type: ignore[method-assign]
+        controller.update_info_for_image = MagicMock()  # type: ignore[method-assign]
+        controller._refresh_actions_state = MagicMock()  # type: ignore[method-assign]
+        controller._ensure_full_load = MagicMock()  # type: ignore[method-assign]
+        return window, ui, controller
+
+    def _add_summary_image(
+        self,
+        ui: MainWindowUI,
+        controller: MainController,
+        path: Path,
+    ) -> None:
+        tab = QtWidgets.QWidget()
+        tab.setProperty("image_path", str(path))
+        ui.tabsImages.addTab(tab, path.name)
+        controller._add_filmstrip_placeholder_item(path)
 
     class _TemporaryDropFiles:
         def __init__(self) -> None:

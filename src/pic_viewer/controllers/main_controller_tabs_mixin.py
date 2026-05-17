@@ -91,6 +91,7 @@ class MainControllerTabsMixin:
             self._ensure_preview_load(path)
             if activate:
                 self._ensure_full_load(path)
+            self._sync_filmstrip_summary()
             return
 
         self._remove_empty_image_placeholder()
@@ -113,6 +114,7 @@ class MainControllerTabsMixin:
             self._ui.listFilmstrip.setCurrentRow(self._ui.listFilmstrip.count() - 1)
             self._ensure_full_load(path, session)
         self._refresh_actions_state()
+        self._sync_filmstrip_summary()
 
     def close_current_tab(self) -> None:
         index = self._ui.tabsImages.currentIndex()
@@ -145,6 +147,7 @@ class MainControllerTabsMixin:
         self._refresh_actions_state()
         self.update_info_for_image(self._current_image_path())
         self._ensure_empty_image_placeholder()
+        self._sync_filmstrip_summary()
 
     def _build_image_tab_container(self, path: Path) -> QtWidgets.QWidget:
         tab_container = QtWidgets.QWidget()
@@ -295,6 +298,7 @@ class MainControllerTabsMixin:
         self._sync_filmstrip_selection_from_tab(path)
         self._refresh_actions_state()
         self._ensure_full_load(path)
+        self._sync_filmstrip_summary()
 
     def _on_filmstrip_row_changed(self, row: int) -> None:
         if self._syncing_selection:
@@ -581,3 +585,35 @@ class MainControllerTabsMixin:
         if item is None:
             return
         self._apply_display_name_to_item(item, path)
+        self._sync_filmstrip_summary()
+
+    def _sync_filmstrip_summary(self) -> None:
+        """Show current-file context when the filmstrip pane is collapsed."""
+
+        label = getattr(self._ui, "labelFilmstripSummary", None)
+        if label is None:
+            return
+
+        path = self._current_image_path()
+        row = self._find_filmstrip_row_by_path(path) if path is not None else None
+        total = self._ui.listFilmstrip.count()
+        if not self._ui.frameFilmstrip.isHidden() or path is None or row is None or total <= 0:
+            label.clear()
+            label.setToolTip("")
+            label.setVisible(False)
+            return
+
+        label.setText(self._format_filmstrip_summary(path, row + 1, total))
+        label.setToolTip(
+            self._tr("Filmstrip hidden. Current file: {path}").format(path=str(path))
+        )
+        label.setVisible(True)
+
+    def _format_filmstrip_summary(self, path: Path, index: int, total: int) -> str:
+        """Return localized context text for a collapsed filmstrip pane."""
+
+        return self._tr("Current: {name} ({index}/{total})").format(
+            name=self._format_display_name(path.name),
+            index=index,
+            total=total,
+        )

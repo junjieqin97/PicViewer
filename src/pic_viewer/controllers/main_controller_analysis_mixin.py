@@ -96,6 +96,7 @@ class MainControllerAnalysisMixin:
 
     def _toggle_filmstrip(self, visible: bool) -> None:
         self._ui.frameFilmstrip.setVisible(visible)
+        self._sync_filmstrip_summary()
         if visible:
             self._schedule_filmstrip_resize()
 
