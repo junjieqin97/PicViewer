@@ -38,6 +38,8 @@ class UiStylesTests(unittest.TestCase):
         self.assertIn("QWidget#viewportImageCanvas", style_sheet)
         self.assertIn("QScrollArea#scrollImage QScrollBar:horizontal", style_sheet)
         self.assertIn("QScrollArea#scrollImage QScrollBar:vertical", style_sheet)
+        self.assertIn("QFrame#widgetAnalysisToolbar", style_sheet)
+        self.assertIn("QFrame#widgetAnalysisToolbar QToolButton:checked", style_sheet)
         self.assertIn("QStatusBar", style_sheet)
         self.assertIn("QLabel#labelFilmstripSummary", style_sheet)
 

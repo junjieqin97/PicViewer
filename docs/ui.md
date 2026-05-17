@@ -15,6 +15,7 @@
 [QMainWindow: MainWindow]
   ├─ MenuBar (顶部，所有功能入口)
   └─ CentralWidget (垂直布局 VBox)
+       ├─ AnalysisToolbar (顶部轻量分析工具栏，可隐藏)                 [fixed height]
        ├─ TopContentArea (水平分割 Splitter: 左/中图片区  + 右侧信息区)  [expand]
        └─ FilmstripArea (底部胶卷窗格)                                [fixed height]
 ```
@@ -25,7 +26,7 @@
 - 菜单栏作为所有功能入口（本版本先提供菜单结构骨架，具体 QAction 回调可留空或 TODO）。
 - 至少包含这些顶层菜单（名称必须一致）：
     - 文件(File)：打开图片、打开文件夹、关闭当前标签、退出
-    - 查看(View)：缩放、适配窗口、信息区（checkable，勾选=显示）、胶卷窗格（checkable，勾选=显示）
+    - 查看(View)：缩放、适配窗口、信息区（checkable，勾选=显示）、分析工具栏（checkable，勾选=显示）、胶卷窗格（checkable，勾选=显示）
     - 工具(Tools)：直方图/波形图选项 + 伪色选项
       - 伪色(Pseudo Color)：显示欠曝（checkable）、显示过曝（checkable）、显示峰值（高/中/低，checkable，三档互斥且点击当前档关闭）
     - 帮助(Help)：关于
@@ -33,10 +34,29 @@
 
 ## 2. 中央区域（CentralWidget）
 
-CentralWidget 使用 QVBoxLayout，上下两块：
+CentralWidget 使用 QVBoxLayout，自上而下三块：
 
+- 顶部轻量分析工具栏 widgetAnalysisToolbar（固定高度，可隐藏）
 - 上部内容区 splitMain（占据剩余空间，可伸缩）
 - 下部胶卷窗格 filmstrip（固定高度）
+
+### 2.1 顶部轻量分析工具栏（AnalysisToolbar）
+
+- 控件：widgetAnalysisToolbar
+- 位置：菜单栏下方、splitMain 上方，横跨整个 CentralWidget 顶部。
+- 行为：
+  - 默认显示；可通过 `查看(View) > 分析工具栏` 隐藏/显示。
+  - 工具栏是菜单动作的快捷入口，不替代菜单栏；明度/RGB、RGB通道、伪色相关功能仍必须保留在 `工具(Tools)` 菜单中。
+  - 工具栏按钮必须复用对应 QAction，确保菜单、快捷键、工具栏状态同步。
+- 视觉：
+  - 固定低高度，建议不超过 30 逻辑像素。
+  - 按钮只显示小图标，不显示文字；功能说明通过 tooltip 提供。
+  - 图标建议尺寸不超过 18×18 逻辑像素。
+- 工具按钮必须包含：
+  - 明度模式、RGB模式
+  - RGB全部通道、仅红通道、仅绿通道、仅蓝通道
+  - 显示欠曝、显示过曝
+  - 显示峰值高/中/低
 
 ## 3. 上部内容区：图片标签页 + 右侧信息区（QSplitter）
 
@@ -132,6 +152,18 @@ CentralWidget 使用 QVBoxLayout，上下两块：
 - tabsImages: QTabWidget
 - scrollInfo: QWidget
 - layoutInfo: QVBoxLayout
+- widgetAnalysisToolbar: QWidget 或 QFrame
+- buttonToolbarModeLuma: QToolButton
+- buttonToolbarModeRgb: QToolButton
+- buttonToolbarChannelAll: QToolButton
+- buttonToolbarChannelRed: QToolButton
+- buttonToolbarChannelGreen: QToolButton
+- buttonToolbarChannelBlue: QToolButton
+- buttonToolbarUnderexposed: QToolButton
+- buttonToolbarOverexposed: QToolButton
+- buttonToolbarPeakHigh: QToolButton
+- buttonToolbarPeakMedium: QToolButton
+- buttonToolbarPeakLow: QToolButton
 - tabsInfo: QTabWidget
 - tabAnalysis: QWidget
 - tabMetadata: QWidget
@@ -151,6 +183,7 @@ Actions（命名必须一致，文案可中英混排但建议一致）：
 - actZoomOut：缩小
 - actFitToWindow：适配窗口
 - actToggleInfoPanel：信息区（可 checkable，勾选=显示）
+- actToggleAnalysisToolbar：分析工具栏（可 checkable，勾选=显示）
 - actToggleFilmstrip：胶卷窗格（可 checkable，勾选=显示）
 - actToggleUnderexposed：显示欠曝（可 checkable）
 - actToggleOverexposed：显示过曝（可 checkable）
@@ -220,7 +253,7 @@ UI 文件内禁止写业务逻辑；controller 里可以先用 TODO/占位实现
 
 ## 9. 验收清单（Codex 自检）
 
-- UI 结构严格为：MenuBar + (上部 Splitter) + (底部 Filmstrip)
+- UI 结构严格为：MenuBar + (顶部 AnalysisToolbar) + (上部 Splitter) + (底部 Filmstrip)
 - 图片显示区为 QTabWidget，Tab 标题=文件名
 - 右侧信息区包含：分析/元数据 两个 Tab；分析 Tab 内同时显示直方图和波形图（占位可）
 - 底部胶卷条横向缩略图列表，可点击切换 Tab

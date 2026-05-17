@@ -18,6 +18,7 @@ class MainControllerTabsMixin:
         """Sync initial panel visibility with menu action states."""
 
         self._toggle_info_panel(self._ui.actToggleInfoPanel.isChecked())
+        self._toggle_analysis_toolbar(self._ui.actToggleAnalysisToolbar.isChecked())
         self._toggle_filmstrip(self._ui.actToggleFilmstrip.isChecked())
 
     def _open_file(self) -> None:

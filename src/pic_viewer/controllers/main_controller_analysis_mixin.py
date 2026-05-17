@@ -94,6 +94,11 @@ class MainControllerAnalysisMixin:
         info_widget.setVisible(False)
         splitter.setSizes([1, 0])
 
+    def _toggle_analysis_toolbar(self, visible: bool) -> None:
+        """Show or hide the top analysis toolbar."""
+
+        self._ui.widgetAnalysisToolbar.setVisible(visible)
+
     def _toggle_filmstrip(self, visible: bool) -> None:
         self._ui.frameFilmstrip.setVisible(visible)
         self._sync_filmstrip_summary()

@@ -51,10 +51,13 @@ class MainWindowShortcutTests(unittest.TestCase):
         self.addCleanup(window.deleteLater)
 
         self.assertTrue(ui.actToggleInfoPanel.isCheckable())
+        self.assertTrue(ui.actToggleAnalysisToolbar.isCheckable())
         self.assertTrue(ui.actToggleFilmstrip.isCheckable())
         self.assertEqual("Info Panel", ui.actToggleInfoPanel.text())
+        self.assertEqual("Analysis Toolbar", ui.actToggleAnalysisToolbar.text())
         self.assertEqual("Filmstrip", ui.actToggleFilmstrip.text())
         self.assertNotIn("Show/Hide", ui.actToggleInfoPanel.text())
+        self.assertNotIn("Show/Hide", ui.actToggleAnalysisToolbar.text())
         self.assertNotIn("Show/Hide", ui.actToggleFilmstrip.text())
 
     def test_focus_peaking_menu_has_three_checkable_levels(self) -> None:

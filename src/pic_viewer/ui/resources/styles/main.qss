@@ -199,6 +199,38 @@ QWidget#scrollInfo {
     border-left: 1px solid #343a42;
 }
 
+QFrame#widgetAnalysisToolbar {
+    background: #20242a;
+    border: 1px solid #343b44;
+    border-radius: 3px;
+}
+
+QFrame#widgetAnalysisToolbar QToolButton {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    padding: 1px;
+}
+
+QFrame#widgetAnalysisToolbar QToolButton:hover {
+    background: #2b333c;
+    border-color: #4e5965;
+}
+
+QFrame#widgetAnalysisToolbar QToolButton:checked {
+    background: #33465b;
+    border-color: #8eb4df;
+}
+
+QFrame#separatorAnalysisToolbar {
+    color: #3c434d;
+    background: #3c434d;
+    max-width: 1px;
+    min-width: 1px;
+    margin-left: 4px;
+    margin-right: 4px;
+}
+
 QWidget#widgetAnalysisModeSummary {
     background: #20242a;
     border: 1px solid #384049;

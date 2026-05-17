@@ -130,6 +130,7 @@ class MainController(
         self._ui.actFitToWindow.triggered.connect(self._fit_to_window)
 
         self._ui.actToggleInfoPanel.toggled.connect(self._toggle_info_panel)
+        self._ui.actToggleAnalysisToolbar.toggled.connect(self._toggle_analysis_toolbar)
         self._ui.actToggleFilmstrip.toggled.connect(self._toggle_filmstrip)
         self._ui.actModeLuma.triggered.connect(lambda: self._change_view_mode(LumaRgbMode.LUMA))
         self._ui.actModeRgb.triggered.connect(lambda: self._change_view_mode(LumaRgbMode.RGB))

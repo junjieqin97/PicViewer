@@ -6,6 +6,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.analysis_view_service import AnalysisViewService
 from pic_viewer.app.services.image_service import ImageService
+from pic_viewer.ui.resources.icons import icon_path
 from pic_viewer.ui.resources.styles import apply_stylesheet
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel
 
@@ -24,6 +25,8 @@ class MainWindowUI:
     FILMSTRIP_ITEM_WIDTH = 108
     FILMSTRIP_ITEM_VERTICAL_PADDING = 18
     FILMSTRIP_HEIGHT = 140
+    ANALYSIS_TOOLBAR_HEIGHT = 26
+    ANALYSIS_TOOLBAR_ICON_SIZE = QtCore.QSize(16, 16)
 
     def setup_ui(self, main_window: QtWidgets.QMainWindow) -> None:
         self._main_window = main_window
@@ -39,6 +42,7 @@ class MainWindowUI:
         self.retranslate_ui()
 
         self.actToggleInfoPanel.setChecked(True)
+        self.actToggleAnalysisToolbar.setChecked(True)
         self.actToggleFilmstrip.setChecked(True)
 
     def _tr(self, text: str) -> str:
@@ -64,6 +68,9 @@ class MainWindowUI:
         self.actToggleInfoPanel = QtWidgets.QAction(self._main_window)
         self.actToggleInfoPanel.setObjectName("actToggleInfoPanel")
         self.actToggleInfoPanel.setCheckable(True)
+        self.actToggleAnalysisToolbar = QtWidgets.QAction(self._main_window)
+        self.actToggleAnalysisToolbar.setObjectName("actToggleAnalysisToolbar")
+        self.actToggleAnalysisToolbar.setCheckable(True)
         self.actToggleFilmstrip = QtWidgets.QAction(self._main_window)
         self.actToggleFilmstrip.setObjectName("actToggleFilmstrip")
         self.actToggleFilmstrip.setCheckable(True)
@@ -120,7 +127,29 @@ class MainWindowUI:
 
         self.actModeLuma.setChecked(True)
         self.actChannelAll.setChecked(True)
+        self._apply_analysis_action_icons()
         self._apply_shortcuts()
+
+    def _apply_analysis_action_icons(self) -> None:
+        """Assign compact analysis toolbar icons to shared actions."""
+
+        icon_by_action = {
+            self.actModeLuma: "analysis-luma.svg",
+            self.actModeRgb: "analysis-rgb.svg",
+            self.actChannelAll: "analysis-channel-all.svg",
+            self.actChannelRed: "analysis-channel-red.svg",
+            self.actChannelGreen: "analysis-channel-green.svg",
+            self.actChannelBlue: "analysis-channel-blue.svg",
+            self.actToggleUnderexposed: "analysis-underexposed.svg",
+            self.actToggleOverexposed: "analysis-overexposed.svg",
+            self.actPeakHigh: "analysis-peak-high.svg",
+            self.actPeakMedium: "analysis-peak-medium.svg",
+            self.actPeakLow: "analysis-peak-low.svg",
+        }
+        for action, file_name in icon_by_action.items():
+            path = icon_path(file_name)
+            if path.is_file():
+                action.setIcon(QtGui.QIcon(str(path)))
 
     def _apply_shortcuts(self) -> None:
         """Assign platform-specific shortcuts for common menu actions."""
@@ -166,6 +195,7 @@ class MainWindowUI:
         self.menuView.addAction(self.actFitToWindow)
         self.menuView.addSeparator()
         self.menuView.addAction(self.actToggleInfoPanel)
+        self.menuView.addAction(self.actToggleAnalysisToolbar)
         self.menuView.addAction(self.actToggleFilmstrip)
 
         self.menuTools = menu_bar.addMenu("")
@@ -220,6 +250,79 @@ class MainWindowUI:
         self.central = QtWidgets.QWidget(self._main_window)
         self.central.setObjectName("central")
         self._main_window.setCentralWidget(self.central)
+
+        self.widgetAnalysisToolbar = QtWidgets.QFrame(self.central)
+        self.widgetAnalysisToolbar.setObjectName("widgetAnalysisToolbar")
+        self.widgetAnalysisToolbar.setFixedHeight(self.ANALYSIS_TOOLBAR_HEIGHT)
+        self.widgetAnalysisToolbar.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Fixed,
+        )
+        toolbar_layout = QtWidgets.QHBoxLayout(self.widgetAnalysisToolbar)
+        toolbar_layout.setObjectName("layoutAnalysisToolbar")
+        toolbar_layout.setContentsMargins(6, 2, 6, 2)
+        toolbar_layout.setSpacing(2)
+
+        self.buttonToolbarModeLuma = self._create_analysis_toolbar_button(
+            "buttonToolbarModeLuma",
+            self.actModeLuma,
+        )
+        self.buttonToolbarModeRgb = self._create_analysis_toolbar_button(
+            "buttonToolbarModeRgb",
+            self.actModeRgb,
+        )
+        self.buttonToolbarChannelAll = self._create_analysis_toolbar_button(
+            "buttonToolbarChannelAll",
+            self.actChannelAll,
+        )
+        self.buttonToolbarChannelRed = self._create_analysis_toolbar_button(
+            "buttonToolbarChannelRed",
+            self.actChannelRed,
+        )
+        self.buttonToolbarChannelGreen = self._create_analysis_toolbar_button(
+            "buttonToolbarChannelGreen",
+            self.actChannelGreen,
+        )
+        self.buttonToolbarChannelBlue = self._create_analysis_toolbar_button(
+            "buttonToolbarChannelBlue",
+            self.actChannelBlue,
+        )
+        self.buttonToolbarUnderexposed = self._create_analysis_toolbar_button(
+            "buttonToolbarUnderexposed",
+            self.actToggleUnderexposed,
+        )
+        self.buttonToolbarOverexposed = self._create_analysis_toolbar_button(
+            "buttonToolbarOverexposed",
+            self.actToggleOverexposed,
+        )
+        self.buttonToolbarPeakHigh = self._create_analysis_toolbar_button(
+            "buttonToolbarPeakHigh",
+            self.actPeakHigh,
+        )
+        self.buttonToolbarPeakMedium = self._create_analysis_toolbar_button(
+            "buttonToolbarPeakMedium",
+            self.actPeakMedium,
+        )
+        self.buttonToolbarPeakLow = self._create_analysis_toolbar_button(
+            "buttonToolbarPeakLow",
+            self.actPeakLow,
+        )
+
+        toolbar_layout.addWidget(self.buttonToolbarModeLuma)
+        toolbar_layout.addWidget(self.buttonToolbarModeRgb)
+        self._add_analysis_toolbar_separator(toolbar_layout)
+        toolbar_layout.addWidget(self.buttonToolbarChannelAll)
+        toolbar_layout.addWidget(self.buttonToolbarChannelRed)
+        toolbar_layout.addWidget(self.buttonToolbarChannelGreen)
+        toolbar_layout.addWidget(self.buttonToolbarChannelBlue)
+        self._add_analysis_toolbar_separator(toolbar_layout)
+        toolbar_layout.addWidget(self.buttonToolbarUnderexposed)
+        toolbar_layout.addWidget(self.buttonToolbarOverexposed)
+        self._add_analysis_toolbar_separator(toolbar_layout)
+        toolbar_layout.addWidget(self.buttonToolbarPeakHigh)
+        toolbar_layout.addWidget(self.buttonToolbarPeakMedium)
+        toolbar_layout.addWidget(self.buttonToolbarPeakLow)
+        toolbar_layout.addStretch(1)
 
         self.splitMain = QtWidgets.QSplitter(QtCore.Qt.Horizontal, self.central)
         self.splitMain.setObjectName("splitMain")
@@ -422,12 +525,37 @@ class MainWindowUI:
         height = side + font_height + self.FILMSTRIP_ITEM_VERTICAL_PADDING
         return QtCore.QSize(self.FILMSTRIP_ITEM_WIDTH, height)
 
+    def _create_analysis_toolbar_button(
+        self,
+        object_name: str,
+        action: QtWidgets.QAction,
+    ) -> QtWidgets.QToolButton:
+        button = QtWidgets.QToolButton(self.widgetAnalysisToolbar)
+        button.setObjectName(object_name)
+        button.setAutoRaise(True)
+        button.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
+        button.setIconSize(self.ANALYSIS_TOOLBAR_ICON_SIZE)
+        button.setDefaultAction(action)
+        button.setFixedSize(
+            self.ANALYSIS_TOOLBAR_HEIGHT - 4,
+            self.ANALYSIS_TOOLBAR_HEIGHT - 4,
+        )
+        return button
+
+    def _add_analysis_toolbar_separator(self, layout: QtWidgets.QHBoxLayout) -> None:
+        separator = QtWidgets.QFrame(self.widgetAnalysisToolbar)
+        separator.setObjectName("separatorAnalysisToolbar")
+        separator.setFrameShape(QtWidgets.QFrame.VLine)
+        separator.setFrameShadow(QtWidgets.QFrame.Plain)
+        layout.addWidget(separator)
+
     def create_layouts(self) -> None:
         self.layoutMain = QtWidgets.QVBoxLayout(self.central)
         self.layoutMain.setObjectName("layoutMain")
         self.layoutMain.setContentsMargins(8, 8, 8, 8)
         self.layoutMain.setSpacing(8)
 
+        self.layoutMain.addWidget(self.widgetAnalysisToolbar)
         self.layoutMain.addWidget(self.splitMain, 1)
         self.layoutMain.addWidget(self.frameFilmstrip)
 
@@ -480,6 +608,7 @@ class MainWindowUI:
         self.actZoomOut.setText(self._tr("Zoom Out"))
         self.actFitToWindow.setText(self._tr("Fit to Window"))
         self.actToggleInfoPanel.setText(self._tr("Info Panel"))
+        self.actToggleAnalysisToolbar.setText(self._tr("Analysis Toolbar"))
         self.actToggleFilmstrip.setText(self._tr("Filmstrip"))
         self.actAbout.setText(self._tr("About"))
         self.actModeLuma.setText(self._tr("Luma Mode"))
@@ -493,6 +622,7 @@ class MainWindowUI:
         self.actPeakHigh.setText(self._tr("High"))
         self.actPeakMedium.setText(self._tr("Medium"))
         self.actPeakLow.setText(self._tr("Low"))
+        self._sync_analysis_action_tooltips()
 
         self.menuFile.setTitle(self._tr("File"))
         self.menuView.setTitle(self._tr("View"))
@@ -531,6 +661,25 @@ class MainWindowUI:
         )
         self.widgetWaveform.setText(self._tr("Waveform Placeholder"))
         self._set_metadata_headers()
+
+    def _sync_analysis_action_tooltips(self) -> None:
+        """Keep icon-only analysis toolbar actions discoverable."""
+
+        actions = (
+            self.actModeLuma,
+            self.actModeRgb,
+            self.actChannelAll,
+            self.actChannelRed,
+            self.actChannelGreen,
+            self.actChannelBlue,
+            self.actToggleUnderexposed,
+            self.actToggleOverexposed,
+            self.actPeakHigh,
+            self.actPeakMedium,
+            self.actPeakLow,
+        )
+        for action in actions:
+            action.setToolTip(action.text())
 
     def _set_metadata_headers(self) -> None:
         headers = [self._tr("Key"), self._tr("Value")]

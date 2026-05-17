@@ -132,8 +132,9 @@ class MainWindowTabsTests(unittest.TestCase):
         self.addCleanup(window.deleteLater)
 
         self.assertFalse(hasattr(ui, "splitVertical"))
-        self.assertIs(ui.splitMain, ui.layoutMain.itemAt(0).widget())
-        self.assertIs(ui.frameFilmstrip, ui.layoutMain.itemAt(1).widget())
+        self.assertIs(ui.widgetAnalysisToolbar, ui.layoutMain.itemAt(0).widget())
+        self.assertIs(ui.splitMain, ui.layoutMain.itemAt(1).widget())
+        self.assertIs(ui.frameFilmstrip, ui.layoutMain.itemAt(2).widget())
         self.assertEqual(ui.FILMSTRIP_HEIGHT, ui.frameFilmstrip.minimumHeight())
         self.assertEqual(ui.FILMSTRIP_HEIGHT, ui.frameFilmstrip.maximumHeight())
         self.assertEqual(QtWidgets.QSizePolicy.Fixed, ui.frameFilmstrip.sizePolicy().verticalPolicy())
