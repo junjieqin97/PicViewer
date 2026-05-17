@@ -101,14 +101,14 @@ CentralWidget 使用 QVBoxLayout，上下两块：
 底部为类似 Lightroom 的胶卷条：横向缩略图列表，点击切换当前显示图片。
 
 - 容器：frameFilmstrip: QFrame（或 QWidget）
-- 固定高度：建议 h=140（允许你后续改，但先固定）
+- 固定高度：h=140，不支持通过上下拖动调节高度
 - 内部控件：二选一实现（推荐 1）
   1. listFilmstrip: QListWidget（横向排列）
      - setFlow(QListView.LeftToRight)
      - setWrapping(False)
      - setResizeMode(QListView.Adjust)
      - setViewMode(QListView.IconMode)
-     - setIconSize(QSize(96, 96))（占位）
+     - setIconSize(QSize(72, 72))
      - 支持水平滚动条
   2. tableFilmstrip: QTableWidget（不推荐，除非你要更复杂布局）
 - 行为：
@@ -224,5 +224,5 @@ UI 文件内禁止写业务逻辑；controller 里可以先用 TODO/占位实现
 - 无绝对定位 move()/resize()
 - `右侧信息区`和`底部胶卷窗格`可隐藏。
 - 若图片的文件名超过15个字符，则在`Tab标题`和`底部胶卷条`上显示的文件名按此规则显示：只显示开头的5个字符和末尾的5个字符，中间的字符用3个点号替代。
-- 当鼠标指针位于`图片显示区`和`右侧信息区`交界处，或位于`图片显示区`和`底部胶卷窗格`的交界处时，鼠标指针的`样式`要自动变成`双箭头`（即`移动箭头`）。
+- 当鼠标指针位于`图片显示区`和`右侧信息区`交界处时，鼠标指针的`样式`要自动变成`双箭头`（即`移动箭头`）。
 - 鼠标悬停在`图片显示区`应立即变成`手形`，按住可以拖拽平移放大后的图片。

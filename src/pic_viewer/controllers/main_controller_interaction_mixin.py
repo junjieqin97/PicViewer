@@ -28,7 +28,6 @@ class MainControllerInteractionMixin:
         """Enable local image file drops in the central workspace."""
 
         self._track_file_drop_widget(self._ui.central)
-        self._track_file_drop_widget(self._ui.splitVertical)
         self._track_file_drop_widget(self._ui.splitMain)
         self._track_file_drop_widget(self._ui.tabsImages)
         for widget in self._ui.central.findChildren(QtWidgets.QWidget):
@@ -73,7 +72,6 @@ class MainControllerInteractionMixin:
 
     def _set_splitter_handle_cursor(self) -> None:
         self._set_splitter_cursor(self._ui.splitMain, QtCore.Qt.SplitHCursor)
-        self._set_splitter_cursor(self._ui.splitVertical, QtCore.Qt.SplitVCursor)
 
     def _set_splitter_cursor(self, splitter: QtWidgets.QSplitter, cursor: QtCore.Qt.CursorShape) -> None:
         for index in range(1, splitter.count()):
@@ -86,7 +84,6 @@ class MainControllerInteractionMixin:
         if self._handle_image_drag_event(watched, event):
             return True
         if event.type() in (QtCore.QEvent.MouseMove, QtCore.QEvent.Enter, QtCore.QEvent.Leave):
-            self._update_boundary_cursor()
             self._refresh_image_cursor(watched, event)
         return super().eventFilter(watched, event)
 
@@ -288,42 +285,6 @@ class MainControllerInteractionMixin:
         widget = scroll_area.widget()
         if widget is not None:
             widget.setCursor(cursor)
-
-    def _update_boundary_cursor(self) -> None:
-        """Show resize cursor when hovering over the filmstrip boundary."""
-
-        if not self._ui.frameFilmstrip.isVisible():
-            self._clear_cursor_override()
-            return
-
-        global_pos = QtGui.QCursor.pos()
-        if not self._is_near_filmstrip_boundary(global_pos):
-            self._clear_cursor_override()
-            return
-
-        target = QtWidgets.QApplication.widgetAt(global_pos)
-        if target is None or target.window() is not self._main_window:
-            self._clear_cursor_override()
-            return
-
-        self._apply_cursor_override(target, QtCore.Qt.SplitVCursor)
-
-    def _is_near_filmstrip_boundary(self, global_pos: QtCore.QPoint) -> bool:
-        """Return True when the cursor is near the top edge of the filmstrip."""
-
-        split_bottom = self._ui.splitMain.mapToGlobal(
-            QtCore.QPoint(0, self._ui.splitMain.height())
-        ).y()
-        film_top = self._ui.frameFilmstrip.mapToGlobal(QtCore.QPoint(0, 0)).y()
-        y = global_pos.y()
-        if y < split_bottom - self._cursor_boundary_margin:
-            return False
-        if y > film_top + self._cursor_boundary_margin:
-            return False
-
-        left = self._ui.central.mapToGlobal(QtCore.QPoint(0, 0)).x()
-        right = left + self._ui.central.width()
-        return left <= global_pos.x() <= right
 
     def _apply_cursor_override(self, widget: QtWidgets.QWidget, cursor: QtCore.Qt.CursorShape) -> None:
         if self._cursor_override_target is widget and widget.cursor().shape() == cursor:

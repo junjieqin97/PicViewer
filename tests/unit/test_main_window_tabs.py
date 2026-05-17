@@ -117,6 +117,19 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertFalse(ui.listFilmstrip.wordWrap())
         self.assertEqual(QtCore.Qt.ElideRight, ui.listFilmstrip.textElideMode())
 
+    def test_filmstrip_has_fixed_height_without_vertical_splitter(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        self.assertFalse(hasattr(ui, "splitVertical"))
+        self.assertIs(ui.splitMain, ui.layoutMain.itemAt(0).widget())
+        self.assertIs(ui.frameFilmstrip, ui.layoutMain.itemAt(1).widget())
+        self.assertEqual(ui.FILMSTRIP_HEIGHT, ui.frameFilmstrip.minimumHeight())
+        self.assertEqual(ui.FILMSTRIP_HEIGHT, ui.frameFilmstrip.maximumHeight())
+        self.assertEqual(QtWidgets.QSizePolicy.Fixed, ui.frameFilmstrip.sizePolicy().verticalPolicy())
+
     def test_filmstrip_item_uses_short_name_tooltip_and_fixed_size(self) -> None:
         window, ui, controller = self._build_tabs_controller()
         self.addCleanup(window.deleteLater)

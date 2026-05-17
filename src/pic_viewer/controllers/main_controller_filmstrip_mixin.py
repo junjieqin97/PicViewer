@@ -19,7 +19,6 @@ class MainControllerFilmstripMixin:
         self._filmstrip_resize_timer.setSingleShot(True)
         self._filmstrip_resize_timer.setInterval(120)
         self._filmstrip_resize_timer.timeout.connect(self._apply_filmstrip_icon_size)
-        self._ui.splitVertical.splitterMoved.connect(self._on_vertical_splitter_moved)
 
     def _update_filmstrip_icon(self, path: Path, preview_rgb: np.ndarray) -> None:
         item = self._find_filmstrip_item_by_path(path)
@@ -31,11 +30,6 @@ class MainControllerFilmstripMixin:
         dpr = self._device_pixel_ratio_for(self._ui.listFilmstrip)
         pix = to_qpixmap(preview_rgb, icon_size, device_pixel_ratio=dpr)
         item.setIcon(QtGui.QIcon(pix))
-
-    def _on_vertical_splitter_moved(self, _: int, __: int) -> None:
-        """Handle vertical splitter changes for filmstrip resizing."""
-
-        self._schedule_filmstrip_resize()
 
     def _schedule_filmstrip_resize(self) -> None:
         """Debounce filmstrip icon size updates during resize."""

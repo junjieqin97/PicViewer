@@ -23,6 +23,7 @@ class MainWindowUI:
     FILMSTRIP_MIN_ICON_SIDE = 48
     FILMSTRIP_ITEM_WIDTH = 108
     FILMSTRIP_ITEM_VERTICAL_PADDING = 18
+    FILMSTRIP_HEIGHT = 140
 
     def setup_ui(self, main_window: QtWidgets.QMainWindow) -> None:
         self._main_window = main_window
@@ -220,10 +221,7 @@ class MainWindowUI:
         self.central.setObjectName("central")
         self._main_window.setCentralWidget(self.central)
 
-        self.splitVertical = QtWidgets.QSplitter(QtCore.Qt.Vertical, self.central)
-        self.splitVertical.setObjectName("splitVertical")
-
-        self.splitMain = QtWidgets.QSplitter(QtCore.Qt.Horizontal, self.splitVertical)
+        self.splitMain = QtWidgets.QSplitter(QtCore.Qt.Horizontal, self.central)
         self.splitMain.setObjectName("splitMain")
 
         self.tabsImages = QtWidgets.QTabWidget(self.splitMain)
@@ -383,10 +381,11 @@ class MainWindowUI:
         meta_layout.addWidget(self.tabsMetadata, 1)
         self.tabsInfo.addTab(self.tabMetadata, "")
 
-        self.frameFilmstrip = QtWidgets.QFrame(self.splitVertical)
+        self.frameFilmstrip = QtWidgets.QFrame(self.central)
         self.frameFilmstrip.setObjectName("frameFilmstrip")
         self.frameFilmstrip.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frameFilmstrip.setMinimumHeight(100)
+        self.frameFilmstrip.setFixedHeight(self.FILMSTRIP_HEIGHT)
+        self.frameFilmstrip.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         film_layout = QtWidgets.QVBoxLayout(self.frameFilmstrip)
         film_layout.setContentsMargins(8, 6, 8, 6)
 
@@ -421,17 +420,13 @@ class MainWindowUI:
         self.layoutMain.setContentsMargins(8, 8, 8, 8)
         self.layoutMain.setSpacing(8)
 
-        self.layoutMain.addWidget(self.splitVertical, 1)
+        self.layoutMain.addWidget(self.splitMain, 1)
+        self.layoutMain.addWidget(self.frameFilmstrip)
 
         self.splitMain.setStretchFactor(0, 3)
         self.splitMain.setStretchFactor(1, 1)
         self.splitMain.setCollapsible(1, False)
         self.splitMain.setSizes(self.default_split_main_sizes())
-
-        self.splitVertical.setStretchFactor(0, 3)
-        self.splitVertical.setStretchFactor(1, 1)
-        default_filmstrip = 140
-        self.splitVertical.setSizes([max(self._main_window.height() - default_filmstrip, 1), default_filmstrip])
 
     def default_split_main_sizes(self, total_width: int | None = None) -> list[int]:
         """Return default splitter sizes for the image area and info panel."""
