@@ -205,6 +205,7 @@ Actions（命名必须一致，文案可中英混排但建议一致）：
 | 打开文件夹     | `Shift + Ctrl + O` | `Shift + Command + O` | 已实现   |
 | 关闭当前标签    | `Esc`              | `Esc`                 | 已实现   |
 | 信息区       | `Ctrl + →`         | `Command + →`         | 已实现   |
+| 分析工具栏     | `Ctrl + ↑`         | `Command + ↑`         | 已实现   |
 | 胶卷窗格      | `Ctrl + ↓`         | `Command + ↓`         | 已实现   |
 | 放大        | `Ctrl + +`         | `Command + +`         | 已实现   |
 | 缩小        | `Ctrl + -`         | `Command + -`         | 已实现   |

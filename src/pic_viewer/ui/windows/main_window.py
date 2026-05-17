@@ -160,6 +160,7 @@ class MainWindowUI:
         self.actOpenFolder.setShortcut(QtGui.QKeySequence(f"{modifier}+Shift+O"))
         self.actCloseTab.setShortcut(QtGui.QKeySequence("Esc"))
         self.actToggleInfoPanel.setShortcut(QtGui.QKeySequence(f"{modifier}+Right"))
+        self.actToggleAnalysisToolbar.setShortcut(QtGui.QKeySequence(f"{modifier}+Up"))
         self.actToggleFilmstrip.setShortcut(QtGui.QKeySequence(f"{modifier}+Down"))
         self.actZoomIn.setShortcut(QtGui.QKeySequence(f"{modifier}++"))
         self.actZoomOut.setShortcut(QtGui.QKeySequence(f"{modifier}+-"))

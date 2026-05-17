@@ -60,6 +60,18 @@ class MainWindowShortcutTests(unittest.TestCase):
         self.assertNotIn("Show/Hide", ui.actToggleAnalysisToolbar.text())
         self.assertNotIn("Show/Hide", ui.actToggleFilmstrip.text())
 
+    def test_analysis_toolbar_shortcut(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        shortcut = ui.actToggleAnalysisToolbar.shortcut().toString(
+            QtGui.QKeySequence.PortableText
+        )
+
+        self.assertEqual("Ctrl+Up", shortcut)
+
     def test_focus_peaking_menu_has_three_checkable_levels(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
