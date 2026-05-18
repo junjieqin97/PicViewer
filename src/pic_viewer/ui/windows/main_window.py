@@ -154,6 +154,9 @@ class MainWindowUI:
             self.actPeakHigh: "analysis-peak-high.svg",
             self.actPeakMedium: "analysis-peak-medium.svg",
             self.actPeakLow: "analysis-peak-low.svg",
+            self.actToggleCrossReferenceLine: "reference-line-cross.svg",
+            self.actToggleDiagonalReferenceLine: "reference-line-diagonal.svg",
+            self.actToggleThirdsReferenceLine: "reference-line-thirds.svg",
         }
         for action, file_name in icon_by_action.items():
             path = icon_path(file_name)
@@ -207,12 +210,6 @@ class MainWindowUI:
         self.menuView.addAction(self.actToggleInfoPanel)
         self.menuView.addAction(self.actToggleAnalysisToolbar)
         self.menuView.addAction(self.actToggleFilmstrip)
-        self.menuView.addSeparator()
-        self.menuReferenceLines = self.menuView.addMenu("")
-        self.menuReferenceLines.setObjectName("menuReferenceLines")
-        self.menuReferenceLines.addAction(self.actToggleCrossReferenceLine)
-        self.menuReferenceLines.addAction(self.actToggleDiagonalReferenceLine)
-        self.menuReferenceLines.addAction(self.actToggleThirdsReferenceLine)
 
         self.menuTools = menu_bar.addMenu("")
         self.menuTools.setObjectName("menuTools")
@@ -236,6 +233,12 @@ class MainWindowUI:
         self.menuFocusPeaking.addAction(self.actPeakHigh)
         self.menuFocusPeaking.addAction(self.actPeakMedium)
         self.menuFocusPeaking.addAction(self.actPeakLow)
+
+        self.menuReferenceLines = self.menuTools.addMenu("")
+        self.menuReferenceLines.setObjectName("menuReferenceLines")
+        self.menuReferenceLines.addAction(self.actToggleCrossReferenceLine)
+        self.menuReferenceLines.addAction(self.actToggleDiagonalReferenceLine)
+        self.menuReferenceLines.addAction(self.actToggleThirdsReferenceLine)
 
         self.menuHelp = menu_bar.addMenu("")
         self.menuHelp.setObjectName("menuHelp")
@@ -323,6 +326,18 @@ class MainWindowUI:
             "buttonToolbarPeakLow",
             self.actPeakLow,
         )
+        self.buttonToolbarCrossReferenceLine = self._create_analysis_toolbar_button(
+            "buttonToolbarCrossReferenceLine",
+            self.actToggleCrossReferenceLine,
+        )
+        self.buttonToolbarDiagonalReferenceLine = self._create_analysis_toolbar_button(
+            "buttonToolbarDiagonalReferenceLine",
+            self.actToggleDiagonalReferenceLine,
+        )
+        self.buttonToolbarThirdsReferenceLine = self._create_analysis_toolbar_button(
+            "buttonToolbarThirdsReferenceLine",
+            self.actToggleThirdsReferenceLine,
+        )
 
         toolbar_layout.addStretch(1)
         toolbar_layout.addWidget(self.buttonToolbarModeLuma)
@@ -339,6 +354,10 @@ class MainWindowUI:
         toolbar_layout.addWidget(self.buttonToolbarPeakHigh)
         toolbar_layout.addWidget(self.buttonToolbarPeakMedium)
         toolbar_layout.addWidget(self.buttonToolbarPeakLow)
+        self._add_analysis_toolbar_separator(toolbar_layout)
+        toolbar_layout.addWidget(self.buttonToolbarCrossReferenceLine)
+        toolbar_layout.addWidget(self.buttonToolbarDiagonalReferenceLine)
+        toolbar_layout.addWidget(self.buttonToolbarThirdsReferenceLine)
         toolbar_layout.addStretch(1)
 
         self.splitMain = QtWidgets.QSplitter(QtCore.Qt.Horizontal, self.central)

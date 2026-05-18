@@ -27,8 +27,9 @@
 - 至少包含这些顶层菜单（名称必须一致）：
     - 文件(File)：打开图片、打开文件夹、关闭当前标签、退出
     - 查看(View)：缩放、适配窗口、信息区（checkable，勾选=显示）、分析工具栏（checkable，勾选=显示）、胶卷窗格（checkable，勾选=显示）
-    - 工具(Tools)：直方图/波形图选项 + 伪色选项
+    - 工具(Tools)：直方图/波形图选项 + 伪色选项 + 参考线选项
       - 伪色(Pseudo Color)：显示欠曝（checkable）、显示过曝（checkable）、显示峰值（高/中/低，checkable，三档互斥且点击当前档关闭）
+      - 参考线(Reference Lines)：十字形参考线、对角线参考线、三等分井字形参考线（均为 checkable，可独立开关并叠加显示）
     - 帮助(Help)：关于
 - 要求：每个菜单项用 QAction 创建并命名（见“组件清单”）。
 
@@ -46,7 +47,7 @@ CentralWidget 使用 QVBoxLayout，自上而下三块：
 - 位置：菜单栏下方、splitMain 上方，横跨整个 CentralWidget 顶部。
 - 行为：
   - 默认显示；可通过 `查看(View) > 分析工具栏` 隐藏/显示。
-  - 工具栏是菜单动作的快捷入口，不替代菜单栏；明度/RGB、RGB通道、伪色相关功能仍必须保留在 `工具(Tools)` 菜单中。
+  - 工具栏是菜单动作的快捷入口，不替代菜单栏；明度/RGB、RGB通道、伪色、参考线相关功能仍必须保留在 `工具(Tools)` 菜单中。
   - 工具栏按钮必须复用对应 QAction，确保菜单、快捷键、工具栏状态同步。
 - 视觉：
   - 固定低高度，建议不超过 30 逻辑像素。
@@ -58,6 +59,7 @@ CentralWidget 使用 QVBoxLayout，自上而下三块：
   - RGB全部通道、仅红通道、仅绿通道、仅蓝通道
   - 显示欠曝、显示过曝
   - 显示峰值高/中/低
+  - 十字形参考线、对角线参考线、三等分井字形参考线
 
 ## 3. 上部内容区：图片标签页 + 右侧信息区（QSplitter）
 
@@ -165,6 +167,9 @@ CentralWidget 使用 QVBoxLayout，自上而下三块：
 - buttonToolbarPeakHigh: QToolButton
 - buttonToolbarPeakMedium: QToolButton
 - buttonToolbarPeakLow: QToolButton
+- buttonToolbarCrossReferenceLine: QToolButton
+- buttonToolbarDiagonalReferenceLine: QToolButton
+- buttonToolbarThirdsReferenceLine: QToolButton
 - tabsInfo: QTabWidget
 - tabAnalysis: QWidget
 - tabMetadata: QWidget
@@ -191,6 +196,9 @@ Actions（命名必须一致，文案可中英混排但建议一致）：
 - actPeakHigh：高（可 checkable，焦点峰值高档）
 - actPeakMedium：中（可 checkable，焦点峰值中档）
 - actPeakLow：低（可 checkable，焦点峰值低档）
+- actToggleCrossReferenceLine：十字形参考线（可 checkable）
+- actToggleDiagonalReferenceLine：对角线参考线（可 checkable）
+- actToggleThirdsReferenceLine：三等分井字形参考线（可 checkable）
 - actAbout：关于
 
 ## 6. 快捷键

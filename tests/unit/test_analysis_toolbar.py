@@ -64,6 +64,9 @@ class AnalysisToolbarTests(unittest.TestCase):
             ui.buttonToolbarPeakHigh: ui.actPeakHigh,
             ui.buttonToolbarPeakMedium: ui.actPeakMedium,
             ui.buttonToolbarPeakLow: ui.actPeakLow,
+            ui.buttonToolbarCrossReferenceLine: ui.actToggleCrossReferenceLine,
+            ui.buttonToolbarDiagonalReferenceLine: ui.actToggleDiagonalReferenceLine,
+            ui.buttonToolbarThirdsReferenceLine: ui.actToggleThirdsReferenceLine,
         }
 
         for button, action in action_by_button.items():
@@ -86,7 +89,7 @@ class AnalysisToolbarTests(unittest.TestCase):
         self.assertIsNotNone(layout.itemAt(0).spacerItem())
         self.assertIsNotNone(layout.itemAt(layout.count() - 1).spacerItem())
         self.assertIs(ui.buttonToolbarModeLuma, layout.itemAt(1).widget())
-        self.assertIs(ui.buttonToolbarPeakLow, layout.itemAt(layout.count() - 2).widget())
+        self.assertIs(ui.buttonToolbarThirdsReferenceLine, layout.itemAt(layout.count() - 2).widget())
 
     def test_controller_toggle_analysis_toolbar_changes_toolbar_visibility(self) -> None:
         window = QtWidgets.QMainWindow()
