@@ -200,28 +200,28 @@ Actions（命名必须一致，文案可中英混排但建议一致）：
 
 常用功能的快捷键需要按照如下键位设置：
 
-| 功能        | 快捷键（Windows/Linux） | 快捷键（MacOS）            | 是否已实现 |
-|-----------|--------------------|-----------------------|-------|
-| 打开图片      | `Ctrl + O`         | `Command + O`         | 已实现   |
-| 打开文件夹     | `Shift + Ctrl + O` | `Shift + Command + O` | 已实现   |
-| 关闭当前标签    | `Esc`              | `Esc`                 | 已实现   |
-| 信息区       | `Ctrl + →`         | `Command + →`         | 已实现   |
-| 分析工具栏     | `Ctrl + ↑`         | `Command + ↑`         | 已实现   |
-| 胶卷窗格      | `Ctrl + ↓`         | `Command + ↓`         | 已实现   |
-| 放大        | `Ctrl + +`         | `Command + +`         | 已实现   |
-| 缩小        | `Ctrl + -`         | `Command + -`         | 已实现   |
-| 适配窗口      | `Ctrl + 0`         | `Command + 0`         | 已实现   |
-| 明度模式      | `Ctrl + L`         | `Command + L`         | 已实现   |
-| RGB模式     | `Ctrl + K`         | `Command + K`         | 已实现   |
-| RGB全部通道   | `Ctrl + K`         | `Command + K`         | 已实现   |
-| 仅红通道      | `Ctrl + R`         | `Command + R`         | 已实现   |
-| 仅绿通道      | `Ctrl + G`         | `Command + G`         | 已实现   |
-| 仅蓝通道      | `Ctrl + B`         | `Command + B`         | 已实现   |
-| 显示欠曝      | `Shift + Ctrl + P` | `Shift + Command + P` | 已实现   |
-| 显示过曝      | `Ctrl + P`         | `Command + P`         | 已实现   |
-| 显示峰值（高）  | `F3`               | `F3`                  | 已实现   |
-| 显示峰值（中）  | `F2`               | `F2`                  | 已实现   |
-| 显示峰值（低）  | `F1`               | `F1`                  | 已实现   |
+| 功能      | 快捷键（Windows/Linux） | 快捷键（MacOS）            |
+|---------|--------------------|-----------------------|
+| 打开图片    | `Ctrl + O`         | `Command + O`         |
+| 打开文件夹   | `Shift + Ctrl + O` | `Shift + Command + O` |
+| 关闭当前标签  | `Esc`              | `Esc`                 |
+| 信息区     | `Ctrl + →`         | `Command + →`         |
+| 分析工具栏   | `Ctrl + ↑`         | `Command + ↑`         |
+| 胶卷窗格    | `Ctrl + ↓`         | `Command + ↓`         |
+| 放大      | `Ctrl + +`         | `Command + +`         |
+| 缩小      | `Ctrl + -`         | `Command + -`         |
+| 适配窗口    | `Ctrl + 0`         | `Command + 0`         |
+| 明度模式    | `Ctrl + L`         | `Command + L`         |
+| RGB模式   | `Ctrl + K`         | `Command + K`         |
+| RGB全部通道 | `Ctrl + K`         | `Command + K`         |
+| 仅红通道    | `Ctrl + R`         | `Command + R`         |
+| 仅绿通道    | `Ctrl + G`         | `Command + G`         |
+| 仅蓝通道    | `Ctrl + B`         | `Command + B`         |
+| 显示欠曝    | `Shift + Ctrl + P` | `Shift + Command + P` |
+| 显示过曝    | `Ctrl + P`         | `Command + P`         |
+| 显示峰值（高） | `F3`               | `F3`                  |
+| 显示峰值（中） | `F2`               | `F2`                  |
+| 显示峰值（低） | `F1`               | `F1`                  |
 
 ## 7. 交互规则（必须实现的同步关系）
 
