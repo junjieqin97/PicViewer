@@ -14,6 +14,7 @@ class ImageDisplayLabel(QtWidgets.QLabel):
     """QLabel-compatible image display widget that draws reference overlays."""
 
     _REFERENCE_LINE_COLOR = QtGui.QColor(255, 255, 255)
+    _REFERENCE_LINE_WIDTH = 5
 
     def __init__(
         self,
@@ -59,7 +60,7 @@ class ImageDisplayLabel(QtWidgets.QLabel):
 
         painter = QtGui.QPainter(self)
         pen = QtGui.QPen(self._REFERENCE_LINE_COLOR)
-        pen.setWidth(1)
+        pen.setWidth(self._REFERENCE_LINE_WIDTH)
         pen.setCosmetic(True)
         painter.setPen(pen)
         for line in lines:
