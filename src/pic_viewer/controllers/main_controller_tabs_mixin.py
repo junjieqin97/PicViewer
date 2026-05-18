@@ -8,6 +8,7 @@ from typing import Optional
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.image_file_policy import filter_supported_image_paths
+from pic_viewer.ui.widgets.image_display_label import ImageDisplayLabel
 from pic_viewer.ui.widgets.image_load_state_widget import ImageLoadStateWidget
 
 
@@ -187,12 +188,14 @@ class MainControllerTabsMixin:
         scroll_area.setProperty("_image_drag_area", True)
         image_layout.addWidget(scroll_area)
 
-        lbl_image = QtWidgets.QLabel("")
+        lbl_image = ImageDisplayLabel("")
         lbl_image.setObjectName("lblImage")
         lbl_image.setAlignment(QtCore.Qt.AlignCenter)
         lbl_image.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
         lbl_image.setCursor(QtCore.Qt.OpenHandCursor)
         lbl_image.setProperty("_image_drag_area", True)
+        if hasattr(self, "_apply_reference_line_settings_to_label"):
+            self._apply_reference_line_settings_to_label(lbl_image)
         scroll_area.setWidget(lbl_image)
         scroll_area.viewport().setObjectName("viewportImageCanvas")
         scroll_area.viewport().setCursor(QtCore.Qt.OpenHandCursor)
