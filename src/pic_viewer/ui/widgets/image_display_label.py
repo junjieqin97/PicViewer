@@ -14,7 +14,7 @@ class ImageDisplayLabel(QtWidgets.QLabel):
     """QLabel-compatible image display widget that draws reference overlays."""
 
     _REFERENCE_LINE_COLOR = QtGui.QColor(255, 255, 255)
-    _REFERENCE_LINE_WIDTH = 5
+    _REFERENCE_LINE_WIDTH = 3
 
     def __init__(
         self,

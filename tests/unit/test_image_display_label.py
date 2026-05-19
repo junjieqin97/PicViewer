@@ -42,7 +42,7 @@ class ImageDisplayLabelTests(unittest.TestCase):
 
         self.assertEqual(QtGui.QColor(255, 255, 255), QtGui.QColor(image.pixel(45, 30)))
 
-    def test_reference_lines_render_five_pixels_wide(self) -> None:
+    def test_reference_lines_render_three_pixels_wide(self) -> None:
         label = ImageDisplayLabel()
         self.addCleanup(label.deleteLater)
         label.resize(90, 60)
@@ -57,11 +57,11 @@ class ImageDisplayLabelTests(unittest.TestCase):
 
         white = QtGui.QColor(255, 255, 255)
         self.assertEqual(
-            [white, white, white, white, white],
-            [QtGui.QColor(image.pixel(x, 20)) for x in range(43, 48)],
+            [white, white, white],
+            [QtGui.QColor(image.pixel(x, 20)) for x in range(44, 47)],
         )
-        self.assertNotEqual(white, QtGui.QColor(image.pixel(42, 20)))
-        self.assertNotEqual(white, QtGui.QColor(image.pixel(48, 20)))
+        self.assertNotEqual(white, QtGui.QColor(image.pixel(43, 20)))
+        self.assertNotEqual(white, QtGui.QColor(image.pixel(47, 20)))
 
     def tearDown(self) -> None:
         self._app.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
