@@ -186,6 +186,7 @@ class MainControllerTabsMixin:
         scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         scroll_area.setCursor(QtCore.Qt.OpenHandCursor)
         scroll_area.setProperty("_image_drag_area", True)
+        scroll_area.setProperty("_image_zoom_area", True)
         image_layout.addWidget(scroll_area)
 
         lbl_image = ImageDisplayLabel("")
@@ -194,12 +195,14 @@ class MainControllerTabsMixin:
         lbl_image.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
         lbl_image.setCursor(QtCore.Qt.OpenHandCursor)
         lbl_image.setProperty("_image_drag_area", True)
+        lbl_image.setProperty("_image_zoom_area", True)
         if hasattr(self, "_apply_reference_line_settings_to_label"):
             self._apply_reference_line_settings_to_label(lbl_image)
         scroll_area.setWidget(lbl_image)
         scroll_area.viewport().setObjectName("viewportImageCanvas")
         scroll_area.viewport().setCursor(QtCore.Qt.OpenHandCursor)
         scroll_area.viewport().setProperty("_image_drag_area", True)
+        scroll_area.viewport().setProperty("_image_zoom_area", True)
         self._track_image_display_widgets(scroll_area, lbl_image)
         return image_page
 

@@ -395,6 +395,59 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertTrue(scroll_area.property("_image_drag_area"))
         self.assertTrue(scroll_area.viewport().property("_image_drag_area"))
         self.assertTrue(lbl_image.property("_image_drag_area"))
+        self.assertTrue(scroll_area.property("_image_zoom_area"))
+        self.assertTrue(scroll_area.viewport().property("_image_zoom_area"))
+        self.assertTrue(lbl_image.property("_image_zoom_area"))
+
+    def test_wheel_up_on_image_zoom_area_zooms_in(self) -> None:
+        window, _ui, controller = self._build_image_preview_controller()
+        self.addCleanup(window.deleteLater)
+        widget = QtWidgets.QWidget(window)
+        self.addCleanup(widget.deleteLater)
+        widget.setProperty("_image_zoom_area", True)
+        controller._zoom_in = MagicMock()  # type: ignore[method-assign]
+        controller._zoom_out = MagicMock()  # type: ignore[method-assign]
+        event = self._wheel_event(120)
+
+        handled = controller._handle_image_wheel_zoom_event(widget, event)
+
+        self.assertTrue(handled)
+        self.assertTrue(event.accepted)
+        controller._zoom_in.assert_called_once_with()
+        controller._zoom_out.assert_not_called()
+
+    def test_wheel_down_on_image_zoom_area_zooms_out(self) -> None:
+        window, _ui, controller = self._build_image_preview_controller()
+        self.addCleanup(window.deleteLater)
+        widget = QtWidgets.QWidget(window)
+        self.addCleanup(widget.deleteLater)
+        widget.setProperty("_image_zoom_area", True)
+        controller._zoom_in = MagicMock()  # type: ignore[method-assign]
+        controller._zoom_out = MagicMock()  # type: ignore[method-assign]
+        event = self._wheel_event(-120)
+
+        handled = controller._handle_image_wheel_zoom_event(widget, event)
+
+        self.assertTrue(handled)
+        self.assertTrue(event.accepted)
+        controller._zoom_in.assert_not_called()
+        controller._zoom_out.assert_called_once_with()
+
+    def test_wheel_on_non_image_zoom_area_is_not_consumed(self) -> None:
+        window, _ui, controller = self._build_image_preview_controller()
+        self.addCleanup(window.deleteLater)
+        widget = QtWidgets.QWidget(window)
+        self.addCleanup(widget.deleteLater)
+        controller._zoom_in = MagicMock()  # type: ignore[method-assign]
+        controller._zoom_out = MagicMock()  # type: ignore[method-assign]
+        event = self._wheel_event(120)
+
+        handled = controller._handle_image_wheel_zoom_event(widget, event)
+
+        self.assertFalse(handled)
+        self.assertFalse(event.accepted)
+        controller._zoom_in.assert_not_called()
+        controller._zoom_out.assert_not_called()
 
     def test_drop_mime_data_filters_local_supported_image_files(self) -> None:
         window, _ui, controller = self._build_drop_controller()
@@ -560,6 +613,9 @@ class MainWindowTabsTests(unittest.TestCase):
     def _temporary_drop_files(self) -> "_TemporaryDropFiles":
         return self._TemporaryDropFiles()
 
+    def _wheel_event(self, angle_delta_y: int) -> "_FakeWheelEvent":
+        return _FakeWheelEvent(angle_delta_y)
+
 
 class _ImagePreviewController(
     MainControllerTabsMixin,
@@ -574,6 +630,24 @@ class _DropController(
     QtCore.QObject,
 ):
     """Minimal controller for file-drop helper tests."""
+
+
+class _FakeWheelEvent:
+    def __init__(self, angle_delta_y: int) -> None:
+        self.accepted = False
+        self._angle_delta = QtCore.QPoint(0, angle_delta_y)
+
+    def type(self) -> QtCore.QEvent.Type:
+        return QtCore.QEvent.Wheel
+
+    def angleDelta(self) -> QtCore.QPoint:
+        return self._angle_delta
+
+    def pixelDelta(self) -> QtCore.QPoint:
+        return QtCore.QPoint(0, 0)
+
+    def accept(self) -> None:
+        self.accepted = True
 
 
 class _FilmstripSizingController(MainControllerFilmstripMixin):

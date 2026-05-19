@@ -81,6 +81,8 @@ class MainControllerInteractionMixin:
     def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:  # type: ignore[override]
         if self._handle_file_drop_event(watched, event):
             return True
+        if self._handle_image_wheel_zoom_event(watched, event):
+            return True
         if self._handle_image_drag_event(watched, event):
             return True
         if event.type() in (QtCore.QEvent.MouseMove, QtCore.QEvent.Enter, QtCore.QEvent.Leave):
@@ -178,6 +180,31 @@ class MainControllerInteractionMixin:
             self._tr("Skipped {count} unsupported file(s).").format(count=skipped_count),
             5000,
         )
+
+    def _handle_image_wheel_zoom_event(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        """Convert mouse-wheel events in the image preview area into zoom actions."""
+
+        if not isinstance(watched, QtWidgets.QWidget):
+            return False
+        if watched.property("_image_zoom_area") is not True:
+            return False
+        if event.type() != QtCore.QEvent.Wheel:
+            return False
+        if not hasattr(event, "angleDelta") or not hasattr(event, "pixelDelta"):
+            return False
+
+        delta_y = event.angleDelta().y()
+        if delta_y == 0:
+            delta_y = event.pixelDelta().y()
+        if delta_y > 0:
+            self._zoom_in()
+        elif delta_y < 0:
+            self._zoom_out()
+        else:
+            return False
+
+        event.accept()
+        return True
 
     def _handle_image_drag_event(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
         """Handle drag-to-pan interactions inside image scroll areas."""
