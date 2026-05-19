@@ -101,8 +101,10 @@ python scripts/packaging/build_dmg.py
 - 将 `dist/PicViewer.app` 复制到临时 staging 目录。
 - 在 staging 目录中创建 `Applications -> /Applications` 捷径，方便用户拖拽安装。
 - 使用 macOS 自带 `hdiutil` 生成压缩 DMG。
+- 在 DMG 同级目录生成 SHA256 校验文件，文件名为 `*.dmg.sha256`。
 
 DMG 产物输出到 `dist/PicViewer-版本号.dmg`，例如 `dist/PicViewer-0.1.0.dmg`。
+SHA256 校验文件输出到 `dist/PicViewer-版本号.dmg.sha256`，内容格式为 `SHA256  DMG文件名`。
 
 ## 发布检查清单
 
@@ -113,6 +115,9 @@ python scripts/packaging/build_python_package.py
 python -m zipfile -l dist/*.whl
 python scripts/packaging/build_app.py
 python scripts/packaging/build_dmg.py
+cd dist
+shasum -a 256 -c *.dmg.sha256
+cd ..
 ```
 
 检查 wheel 内容时，应能看到：

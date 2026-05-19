@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 from pathlib import Path
 import tempfile
@@ -126,6 +127,7 @@ class PackagingScriptsTests(unittest.TestCase):
 
         def fake_runner(command: list[str], **_: object) -> None:
             commands.append(command)
+            Path(command[-1]).write_bytes(b"dmg bytes")
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -180,6 +182,41 @@ class PackagingScriptsTests(unittest.TestCase):
             )
 
             self.assertEqual("2.4.6", build_dmg.read_project_version(root / "pyproject.toml"))
+
+    def test_build_dmg_writes_sha256_checksum_next_to_dmg(self) -> None:
+        build_dmg = load_script("scripts/packaging/build_dmg.py")
+        dmg_bytes = b"deterministic dmg bytes"
+
+        def fake_runner(command: list[str], **_: object) -> None:
+            Path(command[-1]).write_bytes(dmg_bytes)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            dist_dir = root / "dist"
+            app_dir = dist_dir / "PicViewer.app"
+            app_dir.mkdir(parents=True)
+            (app_dir / "Contents").mkdir()
+            (root / "pyproject.toml").write_text(
+                '[project]\nname = "picviewer"\nversion = "1.2.3"\n',
+                encoding="utf-8",
+            )
+
+            dmg_path = build_dmg.build_dmg(
+                project_root=root,
+                env={"CONDA_DEFAULT_ENV": "PicViewer"},
+                runner=fake_runner,
+                platform="darwin",
+            )
+
+            checksum_path = dist_dir / "PicViewer-1.2.3.dmg.sha256"
+            expected_digest = hashlib.sha256(dmg_bytes).hexdigest()
+
+            self.assertEqual(dist_dir / "PicViewer-1.2.3.dmg", dmg_path)
+            self.assertTrue(checksum_path.exists())
+            self.assertEqual(
+                f"{expected_digest}  PicViewer-1.2.3.dmg\n",
+                checksum_path.read_text(encoding="utf-8"),
+            )
 
     def test_build_dmg_requires_existing_picviewer_app(self) -> None:
         build_dmg = load_script("scripts/packaging/build_dmg.py")

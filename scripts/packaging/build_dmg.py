@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import logging
 import os
 from pathlib import Path
@@ -90,6 +91,41 @@ def stage_dmg_contents(root: Path, app_path: Path) -> Path:
     return staging_dir
 
 
+def write_sha256_checksum(dmg_path: Path) -> Path:
+    """Write a SHA256 checksum file next to a generated DMG.
+
+    Args:
+        dmg_path: Path to the DMG file to hash.
+
+    Returns:
+        Path to the generated checksum file.
+
+    Raises:
+        RuntimeError: If the DMG cannot be read or the checksum file cannot be
+            written.
+    """
+
+    checksum_path = dmg_path.with_name(f"{dmg_path.name}.sha256")
+    sha256 = hashlib.sha256()
+
+    try:
+        with dmg_path.open("rb") as file_obj:
+            for chunk in iter(lambda: file_obj.read(1024 * 1024), b""):
+                sha256.update(chunk)
+
+        checksum_path.write_text(
+            f"{sha256.hexdigest()}  {dmg_path.name}\n",
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        raise RuntimeError(
+            f"Cannot write SHA256 checksum for DMG: {dmg_path}."
+        ) from exc
+
+    logger.info("SHA256 checksum written to: %s", checksum_path)
+    return checksum_path
+
+
 def build_dmg(
     project_root: Path,
     env: Optional[Mapping[str, str]] = None,
@@ -125,6 +161,7 @@ def build_dmg(
         cwd=project_root,
         check=True,
     )
+    write_sha256_checksum(dmg_path)
     return dmg_path
 
 
