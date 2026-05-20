@@ -13,6 +13,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.app.services.app_metadata_service import AppMetadata  # noqa: E402
+from pic_viewer.app.services.third_party_license_service import ThirdPartyLicenseInfo  # noqa: E402
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
 
 
@@ -124,6 +125,41 @@ class AboutDialogTests(unittest.TestCase):
         self.assertIn('class="about-light"', text)
         self.assertIn('font-weight: 300;', text)
         self.assertNotIn("demo", text.lower())
+
+    def test_show_third_party_licenses_loads_data_and_executes_dialog(self) -> None:
+        controller = MainController.__new__(MainController)
+        controller._main_window = object()
+        licenses = [
+            ThirdPartyLicenseInfo("PyQt5", "PyQt5", "5.15.11", "GPL-3.0-only", ""),
+        ]
+        shown_dialogs: list[object] = []
+
+        class FakeDialog:
+            def __init__(self, license_infos: list[ThirdPartyLicenseInfo], parent: object | None = None) -> None:
+                self.license_infos = license_infos
+                self.parent = parent
+
+            def exec_(self) -> int:
+                shown_dialogs.append(self)
+                return 0
+
+        with (
+            patch(
+                "pic_viewer.controllers.main_controller_interaction_mixin.load_third_party_licenses",
+                return_value=licenses,
+            ) as load_licenses,
+            patch(
+                "pic_viewer.controllers.main_controller_interaction_mixin.ThirdPartyLicenseDialog",
+                FakeDialog,
+            ),
+        ):
+            MainController._show_third_party_licenses(controller)
+
+        load_licenses.assert_called_once_with()
+        self.assertEqual(1, len(shown_dialogs))
+        dialog = shown_dialogs[0]
+        self.assertIs(licenses, dialog.license_infos)
+        self.assertIs(controller._main_window, dialog.parent)
 
 
 if __name__ == "__main__":

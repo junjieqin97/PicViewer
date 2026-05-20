@@ -130,6 +130,7 @@ class MainController(
         self._ui.actCloseTab.triggered.connect(self.close_current_tab)
         self._ui.actExit.triggered.connect(self._main_window.close)
         self._ui.actAbout.triggered.connect(self._show_about)
+        self._ui.actThirdPartyLicenses.triggered.connect(self._show_third_party_licenses)
 
         self._ui.actZoomIn.triggered.connect(self._zoom_in)
         self._ui.actZoomOut.triggered.connect(self._zoom_out)

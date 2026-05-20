@@ -30,7 +30,7 @@
     - 工具(Tools)：直方图/波形图选项 + 伪色选项 + 参考线选项
       - 伪色(Pseudo Color)：显示欠曝（checkable）、显示过曝（checkable）、显示峰值（高/中/低，checkable，三档互斥且点击当前档关闭）
       - 参考线(Reference Lines)：十字形参考线、对角线参考线、三等分井字形参考线（均为 checkable，可独立开关并叠加显示）
-    - 帮助(Help)：关于
+    - 帮助(Help)：关于、第三方库许可证信息
 - 要求：每个菜单项用 QAction 创建并命名（见“组件清单”）。
 
 ## 2. 中央区域（CentralWidget）
@@ -201,6 +201,7 @@ Actions（命名必须一致，文案可中英混排但建议一致）：
 - actToggleDiagonalReferenceLine：对角线参考线（可 checkable）
 - actToggleThirdsReferenceLine：三等分井字形参考线（可 checkable）
 - actAbout：关于
+- actThirdPartyLicenses：第三方库许可证信息
 
 ## 6. 快捷键
 

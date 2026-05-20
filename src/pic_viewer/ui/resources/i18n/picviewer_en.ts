@@ -107,32 +107,32 @@
 <context>
     <name>MainControllerInteractionMixin</name>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="303"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="332"/>
         <source>Info</source>
         <translation>Info</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="303"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="332"/>
         <source>This feature is not implemented yet (TODO).</source>
         <translation>This feature is not implemented yet (TODO).</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="312"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="341"/>
         <source>About</source>
         <translation>About</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="320"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="354"/>
         <source>&lt;div style=&quot;font-size: 12pt;&quot;&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;Version {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;A desktop photo viewer for common image formats and camera RAW files.&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;Copyright (c) {years} {owner}. All rights reserved.&lt;/p&gt;&lt;/div&gt;</source>
         <translation>&lt;div style=&quot;font-size: 12pt;&quot;&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;Version {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;A desktop photo viewer for common image formats and camera RAW files.&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;Copyright (c) {years} {owner}. All rights reserved.&lt;/p&gt;&lt;/div&gt;</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="166"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="170"/>
         <source>No supported image files were found in the dropped files.</source>
         <translation>No supported image files were found in the dropped files.</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="177"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="181"/>
         <source>Skipped {count} unsupported file(s).</source>
         <translation>Skipped {count} unsupported file(s).</translation>
     </message>
@@ -316,62 +316,62 @@
         <translation>No supported image files were found in this folder.</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="244"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="247"/>
         <source>Loading preview</source>
         <translation>Loading preview</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="244"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="247"/>
         <source>Loading preview: {name}</source>
         <translation>Loading preview: {name}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="266"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="269"/>
         <source>Unable to Open Image</source>
         <translation>Unable to Open Image</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="266"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="269"/>
         <source>File: {name}</source>
         <translation>File: {name}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="266"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="269"/>
         <source>Retry</source>
         <translation>Retry</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="358"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="361"/>
         <source>Start Browsing Photos</source>
         <translation>Start Browsing Photos</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="367"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="370"/>
         <source>Open an image or choose a folder to start previewing.</source>
         <translation>Open an image or choose a folder to start previewing.</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="425"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="428"/>
         <source>Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</source>
         <translation>Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="458"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="461"/>
         <source>Shortcut: {shortcut}</source>
         <translation>Shortcut: {shortcut}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="373"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="376"/>
         <source>Drop files here to open them</source>
         <translation>Drop files here to open them</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="611"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="614"/>
         <source>Filmstrip hidden. Current file: {path}</source>
         <translation>Filmstrip hidden. Current file: {path}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="619"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="622"/>
         <source>Current: {name} ({index}/{total})</source>
         <translation>Current: {name} ({index}/{total})</translation>
     </message>
@@ -379,7 +379,7 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../windows/main_window.py" line="724"/>
+        <location filename="../../windows/main_window.py" line="747"/>
         <source>Ready</source>
         <translation>Ready</translation>
     </message>
@@ -387,264 +387,317 @@
 <context>
     <name>MainWindowUI</name>
     <message>
-        <location filename="../../windows/main_window.py" line="618"/>
+        <location filename="../../windows/main_window.py" line="640"/>
         <source>PicViewer</source>
         <translation>PicViewer</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="661"/>
+        <location filename="../../windows/main_window.py" line="684"/>
         <source>Exif</source>
         <translation>Exif</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="662"/>
+        <location filename="../../windows/main_window.py" line="685"/>
         <source>IPTC</source>
         <translation>IPTC</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="663"/>
+        <location filename="../../windows/main_window.py" line="686"/>
         <source>TIFF</source>
         <translation>TIFF</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="620"/>
+        <location filename="../../windows/main_window.py" line="642"/>
         <source>Open Image...</source>
         <translation>Open Image...</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="621"/>
+        <location filename="../../windows/main_window.py" line="643"/>
         <source>Open Folder...</source>
         <translation>Open Folder...</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="622"/>
+        <location filename="../../windows/main_window.py" line="644"/>
         <source>Close Current Tab</source>
         <translation>Close Current Tab</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="623"/>
+        <location filename="../../windows/main_window.py" line="645"/>
         <source>Exit</source>
         <translation>Exit</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="624"/>
+        <location filename="../../windows/main_window.py" line="646"/>
         <source>Zoom In</source>
         <translation>Zoom In</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="625"/>
+        <location filename="../../windows/main_window.py" line="647"/>
         <source>Zoom Out</source>
         <translation>Zoom Out</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="626"/>
+        <location filename="../../windows/main_window.py" line="648"/>
         <source>Fit to Window</source>
         <translation>Fit to Window</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="627"/>
+        <location filename="../../windows/main_window.py" line="649"/>
         <source>Info Panel</source>
         <translation>Info Panel</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="629"/>
+        <location filename="../../windows/main_window.py" line="651"/>
         <source>Filmstrip</source>
         <translation>Filmstrip</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="633"/>
+        <location filename="../../windows/main_window.py" line="655"/>
         <source>About</source>
         <translation>About</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="666"/>
+        <location filename="../../windows/main_window.py" line="689"/>
         <source>Luma Mode</source>
         <translation>Luma Mode</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="635"/>
+        <location filename="../../windows/main_window.py" line="658"/>
         <source>RGB Mode</source>
         <translation>RGB Mode</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="636"/>
+        <location filename="../../windows/main_window.py" line="659"/>
         <source>All RGB Channels</source>
         <translation>All RGB Channels</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="637"/>
+        <location filename="../../windows/main_window.py" line="660"/>
         <source>Red Channel Only</source>
         <translation>Red Channel Only</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="638"/>
+        <location filename="../../windows/main_window.py" line="661"/>
         <source>Green Channel Only</source>
         <translation>Green Channel Only</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="639"/>
+        <location filename="../../windows/main_window.py" line="662"/>
         <source>Blue Channel Only</source>
         <translation>Blue Channel Only</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="640"/>
+        <location filename="../../windows/main_window.py" line="663"/>
         <source>Show Underexposed</source>
         <translation>Show Underexposed</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="641"/>
+        <location filename="../../windows/main_window.py" line="664"/>
         <source>Show Overexposed</source>
         <translation>Show Overexposed</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="647"/>
+        <location filename="../../windows/main_window.py" line="670"/>
         <source>File</source>
         <translation>File</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="648"/>
+        <location filename="../../windows/main_window.py" line="671"/>
         <source>View</source>
         <translation>View</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="650"/>
+        <location filename="../../windows/main_window.py" line="673"/>
         <source>Tools</source>
         <translation>Tools</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="651"/>
+        <location filename="../../windows/main_window.py" line="674"/>
         <source>Histogram/Waveform Mode</source>
         <translation>Histogram/Waveform Mode</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="667"/>
+        <location filename="../../windows/main_window.py" line="690"/>
         <source>RGB Channels</source>
         <translation>RGB Channels</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="653"/>
+        <location filename="../../windows/main_window.py" line="676"/>
         <source>Pseudo Color</source>
         <translation>Pseudo Color</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="655"/>
+        <location filename="../../windows/main_window.py" line="678"/>
         <source>Help</source>
         <translation>Help</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="657"/>
+        <location filename="../../windows/main_window.py" line="680"/>
         <source>Analysis</source>
         <translation>Analysis</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="658"/>
+        <location filename="../../windows/main_window.py" line="681"/>
         <source>Metadata</source>
         <translation>Metadata</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="660"/>
+        <location filename="../../windows/main_window.py" line="683"/>
         <source>General</source>
         <translation>General</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="665"/>
+        <location filename="../../windows/main_window.py" line="688"/>
         <source>Analysis Mode</source>
         <translation>Analysis Mode</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="668"/>
+        <location filename="../../windows/main_window.py" line="691"/>
         <source>Not Applicable</source>
         <translation>Not Applicable</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="669"/>
+        <location filename="../../windows/main_window.py" line="692"/>
         <source>Pseudo Color State</source>
         <translation>Pseudo Color State</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="670"/>
+        <location filename="../../windows/main_window.py" line="693"/>
         <source>Off</source>
         <translation>Off</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="678"/>
+        <location filename="../../windows/main_window.py" line="701"/>
         <source>Histogram Placeholder</source>
         <translation>Histogram Placeholder</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="679"/>
+        <location filename="../../windows/main_window.py" line="702"/>
         <source>Show/Hide Underexposed Areas</source>
         <translation>Show/Hide Underexposed Areas</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="679"/>
+        <location filename="../../windows/main_window.py" line="702"/>
         <source>Show/Hide Overexposed Areas</source>
         <translation>Show/Hide Overexposed Areas</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="683"/>
+        <location filename="../../windows/main_window.py" line="706"/>
         <source>Waveform Placeholder</source>
         <translation>Waveform Placeholder</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="706"/>
+        <location filename="../../windows/main_window.py" line="729"/>
         <source>Key</source>
         <translation>Key</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="706"/>
+        <location filename="../../windows/main_window.py" line="729"/>
         <source>Value</source>
         <translation>Value</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="642"/>
+        <location filename="../../windows/main_window.py" line="665"/>
         <source>High</source>
         <translation>High</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="643"/>
+        <location filename="../../windows/main_window.py" line="666"/>
         <source>Medium</source>
         <translation>Medium</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="644"/>
+        <location filename="../../windows/main_window.py" line="667"/>
         <source>Low</source>
         <translation>Low</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="654"/>
+        <location filename="../../windows/main_window.py" line="677"/>
         <source>Show Peaks</source>
         <translation>Show Peaks</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="670"/>
+        <location filename="../../windows/main_window.py" line="693"/>
         <source>Underexposed: {under} / Overexposed: {over} / Peaks: {peaks}</source>
         <translation>Underexposed: {under} / Overexposed: {over} / Peaks: {peaks}</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="628"/>
+        <location filename="../../windows/main_window.py" line="650"/>
         <source>Analysis Toolbar</source>
         <translation>Analysis Toolbar</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="630"/>
+        <location filename="../../windows/main_window.py" line="652"/>
         <source>Cross Reference Line</source>
         <translation>Cross Reference Line</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="631"/>
+        <location filename="../../windows/main_window.py" line="653"/>
         <source>Diagonal Reference Line</source>
         <translation>Diagonal Reference Line</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="632"/>
+        <location filename="../../windows/main_window.py" line="654"/>
         <source>Rule of Thirds Reference Line</source>
         <translation>Rule of Thirds Reference Line</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="649"/>
+        <location filename="../../windows/main_window.py" line="672"/>
         <source>Reference Lines</source>
         <translation>Reference Lines</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="656"/>
+        <source>Third-Party License Information</source>
+        <translation>Third-Party License Information</translation>
+    </message>
+</context>
+<context>
+    <name>ThirdPartyLicenseDialog</name>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="34"/>
+        <source>Third-Party License Information</source>
+        <translation>Third-Party License Information</translation>
+    </message>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="40"/>
+        <source>Library</source>
+        <translation>Library</translation>
+    </message>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="40"/>
+        <source>Version</source>
+        <translation>Version</translation>
+    </message>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="40"/>
+        <source>License</source>
+        <translation>License</translation>
+    </message>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="40"/>
+        <source>Notes</source>
+        <translation>Notes</translation>
+    </message>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="84"/>
+        <source>Not installed</source>
+        <translation>Not installed</translation>
+    </message>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="89"/>
+        <source>GPL v3 or commercial license depending on distribution.</source>
+        <translation>GPL v3 or commercial license depending on distribution.</translation>
+    </message>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="91"/>
+        <source>Includes OpenCV and bundled third-party components.</source>
+        <translation>Includes OpenCV and bundled third-party components.</translation>
+    </message>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="93"/>
+        <source>Optional RAW image support.</source>
+        <translation>Optional RAW image support.</translation>
     </message>
 </context>
 </TS>

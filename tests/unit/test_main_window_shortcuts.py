@@ -87,6 +87,19 @@ class MainWindowShortcutTests(unittest.TestCase):
         self.assertTrue(all(action.isCheckable() for action in actions))
         self.assertFalse(any(action.isChecked() for action in actions))
 
+    def test_help_menu_contains_about_and_third_party_license_actions(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        self.assertEqual("actThirdPartyLicenses", ui.actThirdPartyLicenses.objectName())
+        self.assertEqual("Third-Party License Information", ui.actThirdPartyLicenses.text())
+        self.assertEqual(
+            [ui.actAbout, ui.actThirdPartyLicenses],
+            [action for action in ui.menuHelp.actions() if not action.isSeparator()],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

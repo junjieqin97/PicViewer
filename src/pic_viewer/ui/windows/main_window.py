@@ -86,6 +86,8 @@ class MainWindowUI:
 
         self.actAbout = QtWidgets.QAction(self._main_window)
         self.actAbout.setObjectName("actAbout")
+        self.actThirdPartyLicenses = QtWidgets.QAction(self._main_window)
+        self.actThirdPartyLicenses.setObjectName("actThirdPartyLicenses")
 
         self.actModeLuma = QtWidgets.QAction(self._main_window)
         self.actModeLuma.setObjectName("actModeLuma")
@@ -243,6 +245,7 @@ class MainWindowUI:
         self.menuHelp = menu_bar.addMenu("")
         self.menuHelp.setObjectName("menuHelp")
         self.menuHelp.addAction(self.actAbout)
+        self.menuHelp.addAction(self.actThirdPartyLicenses)
 
     def create_context_menus(self) -> None:
         """Create shared context menus for the image display area."""
@@ -650,6 +653,7 @@ class MainWindowUI:
         self.actToggleDiagonalReferenceLine.setText(self._tr("Diagonal Reference Line"))
         self.actToggleThirdsReferenceLine.setText(self._tr("Rule of Thirds Reference Line"))
         self.actAbout.setText(self._tr("About"))
+        self.actThirdPartyLicenses.setText(self._tr("Third-Party License Information"))
         self.actModeLuma.setText(self._tr("Luma Mode"))
         self.actModeRgb.setText(self._tr("RGB Mode"))
         self.actChannelAll.setText(self._tr("All RGB Channels"))

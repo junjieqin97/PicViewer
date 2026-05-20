@@ -107,32 +107,32 @@
 <context>
     <name>MainControllerInteractionMixin</name>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="303"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="332"/>
         <source>Info</source>
         <translation>提示</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="303"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="332"/>
         <source>This feature is not implemented yet (TODO).</source>
         <translation>该功能尚未实现（TODO）</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="312"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="341"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="320"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="354"/>
         <source>&lt;div style=&quot;font-size: 12pt;&quot;&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;Version {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;A desktop photo viewer for common image formats and camera RAW files.&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;Copyright (c) {years} {owner}. All rights reserved.&lt;/p&gt;&lt;/div&gt;</source>
         <translation>&lt;div style=&quot;font-size: 12pt;&quot;&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;版本 {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;用于预览常见图片格式和相机 RAW 文件的桌面照片查看器。&lt;/p&gt;&lt;p class=&quot;about-light&quot; style=&quot;font-weight: 300;&quot;&gt;版权所有 (c) {years} {owner}。保留所有权利。&lt;/p&gt;&lt;/div&gt;</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="166"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="170"/>
         <source>No supported image files were found in the dropped files.</source>
         <translation>拖入的文件中未找到可打开的图片文件</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="177"/>
+        <location filename="../../../controllers/main_controller_interaction_mixin.py" line="181"/>
         <source>Skipped {count} unsupported file(s).</source>
         <translation>已跳过 {count} 个不支持的文件。</translation>
     </message>
@@ -316,62 +316,62 @@
         <translation>该文件夹未找到可打开的图片文件</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="244"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="247"/>
         <source>Loading preview</source>
         <translation>正在加载预览</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="244"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="247"/>
         <source>Loading preview: {name}</source>
         <translation>正在加载预览：{name}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="266"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="269"/>
         <source>Unable to Open Image</source>
         <translation>无法打开图片</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="266"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="269"/>
         <source>File: {name}</source>
         <translation>文件：{name}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="266"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="269"/>
         <source>Retry</source>
         <translation>重试</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="358"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="361"/>
         <source>Start Browsing Photos</source>
         <translation>开始浏览照片</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="367"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="370"/>
         <source>Open an image or choose a folder to start previewing.</source>
         <translation>打开单张图片或选择文件夹开始预览。</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="425"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="428"/>
         <source>Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</source>
         <translation>支持格式：JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="458"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="461"/>
         <source>Shortcut: {shortcut}</source>
         <translation>快捷键：{shortcut}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="373"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="376"/>
         <source>Drop files here to open them</source>
         <translation>将图片文件拖到这里即可打开</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="611"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="614"/>
         <source>Filmstrip hidden. Current file: {path}</source>
         <translation>胶卷窗格已隐藏。当前文件：{path}</translation>
     </message>
     <message>
-        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="619"/>
+        <location filename="../../../controllers/main_controller_tabs_mixin.py" line="622"/>
         <source>Current: {name} ({index}/{total})</source>
         <translation>当前：{name}（{index}/{total}）</translation>
     </message>
@@ -379,7 +379,7 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../windows/main_window.py" line="724"/>
+        <location filename="../../windows/main_window.py" line="747"/>
         <source>Ready</source>
         <translation>准备就绪</translation>
     </message>
@@ -387,264 +387,317 @@
 <context>
     <name>MainWindowUI</name>
     <message>
-        <location filename="../../windows/main_window.py" line="618"/>
+        <location filename="../../windows/main_window.py" line="640"/>
         <source>PicViewer</source>
         <translation>PicViewer</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="661"/>
+        <location filename="../../windows/main_window.py" line="684"/>
         <source>Exif</source>
         <translation>Exif</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="662"/>
+        <location filename="../../windows/main_window.py" line="685"/>
         <source>IPTC</source>
         <translation>IPTC</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="663"/>
+        <location filename="../../windows/main_window.py" line="686"/>
         <source>TIFF</source>
         <translation>TIFF</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="620"/>
+        <location filename="../../windows/main_window.py" line="642"/>
         <source>Open Image...</source>
         <translation>打开图片…</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="621"/>
+        <location filename="../../windows/main_window.py" line="643"/>
         <source>Open Folder...</source>
         <translation>打开文件夹…</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="622"/>
+        <location filename="../../windows/main_window.py" line="644"/>
         <source>Close Current Tab</source>
         <translation>关闭当前标签</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="623"/>
+        <location filename="../../windows/main_window.py" line="645"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="624"/>
+        <location filename="../../windows/main_window.py" line="646"/>
         <source>Zoom In</source>
         <translation>放大</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="625"/>
+        <location filename="../../windows/main_window.py" line="647"/>
         <source>Zoom Out</source>
         <translation>缩小</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="626"/>
+        <location filename="../../windows/main_window.py" line="648"/>
         <source>Fit to Window</source>
         <translation>适配窗口</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="627"/>
+        <location filename="../../windows/main_window.py" line="649"/>
         <source>Info Panel</source>
         <translation>信息区</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="629"/>
+        <location filename="../../windows/main_window.py" line="651"/>
         <source>Filmstrip</source>
         <translation>胶卷窗格</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="633"/>
+        <location filename="../../windows/main_window.py" line="655"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="666"/>
+        <location filename="../../windows/main_window.py" line="689"/>
         <source>Luma Mode</source>
         <translation>明度模式</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="635"/>
+        <location filename="../../windows/main_window.py" line="658"/>
         <source>RGB Mode</source>
         <translation>RGB模式</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="636"/>
+        <location filename="../../windows/main_window.py" line="659"/>
         <source>All RGB Channels</source>
         <translation>RGB全部通道</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="637"/>
+        <location filename="../../windows/main_window.py" line="660"/>
         <source>Red Channel Only</source>
         <translation>仅红通道</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="638"/>
+        <location filename="../../windows/main_window.py" line="661"/>
         <source>Green Channel Only</source>
         <translation>仅绿通道</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="639"/>
+        <location filename="../../windows/main_window.py" line="662"/>
         <source>Blue Channel Only</source>
         <translation>仅蓝通道</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="640"/>
+        <location filename="../../windows/main_window.py" line="663"/>
         <source>Show Underexposed</source>
         <translation>显示欠曝</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="641"/>
+        <location filename="../../windows/main_window.py" line="664"/>
         <source>Show Overexposed</source>
         <translation>显示过曝</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="647"/>
+        <location filename="../../windows/main_window.py" line="670"/>
         <source>File</source>
         <translation>文件</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="648"/>
+        <location filename="../../windows/main_window.py" line="671"/>
         <source>View</source>
         <translation>查看</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="650"/>
+        <location filename="../../windows/main_window.py" line="673"/>
         <source>Tools</source>
         <translation>工具</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="651"/>
+        <location filename="../../windows/main_window.py" line="674"/>
         <source>Histogram/Waveform Mode</source>
         <translation>直方图/波形图模式</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="667"/>
+        <location filename="../../windows/main_window.py" line="690"/>
         <source>RGB Channels</source>
         <translation>RGB通道</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="653"/>
+        <location filename="../../windows/main_window.py" line="676"/>
         <source>Pseudo Color</source>
         <translation>伪色</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="655"/>
+        <location filename="../../windows/main_window.py" line="678"/>
         <source>Help</source>
         <translation>帮助</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="657"/>
+        <location filename="../../windows/main_window.py" line="680"/>
         <source>Analysis</source>
         <translation>分析</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="658"/>
+        <location filename="../../windows/main_window.py" line="681"/>
         <source>Metadata</source>
         <translation>元数据</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="660"/>
+        <location filename="../../windows/main_window.py" line="683"/>
         <source>General</source>
         <translation>通用</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="665"/>
+        <location filename="../../windows/main_window.py" line="688"/>
         <source>Analysis Mode</source>
         <translation>分析模式</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="668"/>
+        <location filename="../../windows/main_window.py" line="691"/>
         <source>Not Applicable</source>
         <translation>不适用</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="669"/>
+        <location filename="../../windows/main_window.py" line="692"/>
         <source>Pseudo Color State</source>
         <translation>伪色状态</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="670"/>
+        <location filename="../../windows/main_window.py" line="693"/>
         <source>Off</source>
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="678"/>
+        <location filename="../../windows/main_window.py" line="701"/>
         <source>Histogram Placeholder</source>
         <translation>直方图占位图</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="679"/>
+        <location filename="../../windows/main_window.py" line="702"/>
         <source>Show/Hide Underexposed Areas</source>
         <translation>显示/隐藏欠曝区域</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="679"/>
+        <location filename="../../windows/main_window.py" line="702"/>
         <source>Show/Hide Overexposed Areas</source>
         <translation>显示/隐藏过曝区域</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="683"/>
+        <location filename="../../windows/main_window.py" line="706"/>
         <source>Waveform Placeholder</source>
         <translation>波形图占位图</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="706"/>
+        <location filename="../../windows/main_window.py" line="729"/>
         <source>Key</source>
         <translation>键</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="706"/>
+        <location filename="../../windows/main_window.py" line="729"/>
         <source>Value</source>
         <translation>值</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="642"/>
+        <location filename="../../windows/main_window.py" line="665"/>
         <source>High</source>
         <translation>高</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="643"/>
+        <location filename="../../windows/main_window.py" line="666"/>
         <source>Medium</source>
         <translation>中</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="644"/>
+        <location filename="../../windows/main_window.py" line="667"/>
         <source>Low</source>
         <translation>低</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="654"/>
+        <location filename="../../windows/main_window.py" line="677"/>
         <source>Show Peaks</source>
         <translation>显示峰值</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="670"/>
+        <location filename="../../windows/main_window.py" line="693"/>
         <source>Underexposed: {under} / Overexposed: {over} / Peaks: {peaks}</source>
         <translation>欠曝：{under} / 过曝：{over} / 峰值：{peaks}</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="628"/>
+        <location filename="../../windows/main_window.py" line="650"/>
         <source>Analysis Toolbar</source>
         <translation>分析工具栏</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="630"/>
+        <location filename="../../windows/main_window.py" line="652"/>
         <source>Cross Reference Line</source>
         <translation>十字形参考线</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="631"/>
+        <location filename="../../windows/main_window.py" line="653"/>
         <source>Diagonal Reference Line</source>
         <translation>对角线参考线</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="632"/>
+        <location filename="../../windows/main_window.py" line="654"/>
         <source>Rule of Thirds Reference Line</source>
         <translation>三等分井字形参考线</translation>
     </message>
     <message>
-        <location filename="../../windows/main_window.py" line="649"/>
+        <location filename="../../windows/main_window.py" line="672"/>
         <source>Reference Lines</source>
         <translation>参考线</translation>
+    </message>
+    <message>
+        <location filename="../../windows/main_window.py" line="656"/>
+        <source>Third-Party License Information</source>
+        <translation>第三方库许可证信息</translation>
+    </message>
+</context>
+<context>
+    <name>ThirdPartyLicenseDialog</name>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="34"/>
+        <source>Third-Party License Information</source>
+        <translation>第三方库许可证信息</translation>
+    </message>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="40"/>
+        <source>Library</source>
+        <translation>库</translation>
+    </message>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="40"/>
+        <source>Version</source>
+        <translation>版本</translation>
+    </message>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="40"/>
+        <source>License</source>
+        <translation>许可证</translation>
+    </message>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="40"/>
+        <source>Notes</source>
+        <translation>备注</translation>
+    </message>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="84"/>
+        <source>Not installed</source>
+        <translation>未安装</translation>
+    </message>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="89"/>
+        <source>GPL v3 or commercial license depending on distribution.</source>
+        <translation>根据分发版本适用 GPL v3 或商业许可证。</translation>
+    </message>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="91"/>
+        <source>Includes OpenCV and bundled third-party components.</source>
+        <translation>包含 OpenCV 及随附第三方组件。</translation>
+    </message>
+    <message>
+        <location filename="../../windows/third_party_license_dialog.py" line="93"/>
+        <source>Optional RAW image support.</source>
+        <translation>可选 RAW 图像支持。</translation>
     </message>
 </context>
 </TS>

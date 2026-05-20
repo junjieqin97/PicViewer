@@ -10,7 +10,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.app_metadata_service import AppMetadata, load_app_metadata
 from pic_viewer.app.services.image_file_policy import filter_supported_image_paths
+from pic_viewer.app.services.third_party_license_service import load_third_party_licenses
 from pic_viewer.ui.resources.icons import load_app_icon
+from pic_viewer.ui.windows.third_party_license_dialog import ThirdPartyLicenseDialog
 
 
 class MainControllerInteractionMixin:
@@ -342,6 +344,11 @@ class MainControllerInteractionMixin:
         message_box.setIconPixmap(load_app_icon().pixmap(64, 64))
         message_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
         message_box.exec_()
+
+    def _show_third_party_licenses(self) -> None:
+        licenses = load_third_party_licenses()
+        dialog = ThirdPartyLicenseDialog(licenses, self._main_window)
+        dialog.exec_()
 
     def _build_about_text(self, metadata: AppMetadata) -> str:
         return self._tr(
