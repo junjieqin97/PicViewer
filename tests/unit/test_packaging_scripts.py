@@ -262,3 +262,174 @@ class PackagingScriptsTests(unittest.TestCase):
             build_dmg.ensure_conda_environment({"CONDA_DEFAULT_ENV": "base"})
 
         build_dmg.ensure_conda_environment({"CONDA_DEFAULT_ENV": "PicViewer"})
+
+    def test_build_msi_creates_installer_from_existing_onedir_app(self) -> None:
+        build_msi = load_script("scripts/packaging/build_msi.py")
+        commands: list[list[str]] = []
+        msi_bytes = b"deterministic msi bytes"
+
+        def fake_runner(command: list[str], **_: object) -> None:
+            commands.append(command)
+            Path(command[command.index("-out") + 1]).write_bytes(msi_bytes)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            dist_dir = root / "dist"
+            app_dir = dist_dir / "PicViewer"
+            (app_dir / "_internal").mkdir(parents=True)
+            (app_dir / "PicViewer.exe").write_bytes(b"exe")
+            (app_dir / "_internal" / "runtime.dll").write_bytes(b"dll")
+            (root / "pyproject.toml").write_text(
+                '[project]\nname = "picviewer"\nversion = "1.2.3"\n',
+                encoding="utf-8",
+            )
+
+            msi_path = build_msi.build_msi(
+                project_root=root,
+                env={"CONDA_DEFAULT_ENV": "PicViewer"},
+                runner=fake_runner,
+                platform="win32",
+                wix_executable="wix-test",
+                path_lookup=lambda _: "wix-test",
+            )
+
+            wxs_path = root / "build" / "msi" / "PicViewer.wxs"
+            intermediate_dir = root / "build" / "msi" / "obj"
+            wxs_text = wxs_path.read_text(encoding="utf-8")
+
+            self.assertEqual(dist_dir / "PicViewer-1.2.3.msi", msi_path)
+            self.assertIn('Scope="perMachine"', wxs_text)
+            self.assertIn('Id="ProgramFiles64Folder"', wxs_text)
+            self.assertIn('Id="ProgramMenuFolder"', wxs_text)
+            self.assertIn('Id="DesktopFolder"', wxs_text)
+            self.assertIn('Id="StartMenuShortcut"', wxs_text)
+            self.assertIn('Id="DesktopShortcut"', wxs_text)
+            self.assertIn(r"$(var.AppSourceDir)\PicViewer.exe", wxs_text)
+            self.assertIn(r"$(var.AppSourceDir)\_internal\runtime.dll", wxs_text)
+            self.assertEqual(
+                [
+                    "wix-test",
+                    "build",
+                    "-arch",
+                    "x64",
+                    "-define",
+                    f"AppSourceDir={app_dir}",
+                    "-define",
+                    f"ProjectRoot={root}",
+                    "-intermediateFolder",
+                    str(intermediate_dir),
+                    "-out",
+                    str(dist_dir / "PicViewer-1.2.3.msi"),
+                    str(wxs_path),
+                ],
+                commands[0],
+            )
+
+    def test_build_msi_reads_version_from_pyproject(self) -> None:
+        build_msi = load_script("scripts/packaging/build_msi.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                '[project]\nname = "picviewer"\nversion = "2.4.6"\n',
+                encoding="utf-8",
+            )
+
+            self.assertEqual("2.4.6", build_msi.read_project_version(root / "pyproject.toml"))
+
+    def test_build_msi_rejects_non_msi_product_version(self) -> None:
+        build_msi = load_script("scripts/packaging/build_msi.py")
+
+        with self.assertRaisesRegex(RuntimeError, "MAJOR.MINOR.PATCH"):
+            build_msi.validate_msi_version("1.2.3.4")
+
+    def test_build_msi_writes_sha256_checksum_next_to_msi(self) -> None:
+        build_msi = load_script("scripts/packaging/build_msi.py")
+        msi_bytes = b"deterministic msi bytes"
+
+        def fake_runner(command: list[str], **_: object) -> None:
+            Path(command[command.index("-out") + 1]).write_bytes(msi_bytes)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            dist_dir = root / "dist"
+            app_dir = dist_dir / "PicViewer"
+            app_dir.mkdir(parents=True)
+            (app_dir / "PicViewer.exe").write_bytes(b"exe")
+            (root / "pyproject.toml").write_text(
+                '[project]\nname = "picviewer"\nversion = "1.2.3"\n',
+                encoding="utf-8",
+            )
+
+            msi_path = build_msi.build_msi(
+                project_root=root,
+                env={"CONDA_DEFAULT_ENV": "PicViewer"},
+                runner=fake_runner,
+                platform="win32",
+                path_lookup=lambda _: "wix",
+            )
+
+            checksum_path = dist_dir / "PicViewer-1.2.3.msi.sha256"
+            expected_digest = hashlib.sha256(msi_bytes).hexdigest()
+
+            self.assertEqual(dist_dir / "PicViewer-1.2.3.msi", msi_path)
+            self.assertTrue(checksum_path.exists())
+            self.assertEqual(
+                f"{expected_digest}  PicViewer-1.2.3.msi\n",
+                checksum_path.read_text(encoding="utf-8"),
+            )
+
+    def test_build_msi_requires_existing_picviewer_app(self) -> None:
+        build_msi = load_script("scripts/packaging/build_msi.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                '[project]\nname = "picviewer"\nversion = "1.0.0"\n',
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "build_app.py"):
+                build_msi.build_msi(
+                    project_root=root,
+                    env={"CONDA_DEFAULT_ENV": "PicViewer"},
+                    runner=lambda *_: None,
+                    platform="win32",
+                    path_lookup=lambda _: "wix",
+                )
+
+    def test_build_msi_requires_windows(self) -> None:
+        build_msi = load_script("scripts/packaging/build_msi.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                '[project]\nname = "picviewer"\nversion = "1.0.0"\n',
+                encoding="utf-8",
+            )
+            app_dir = root / "dist" / "PicViewer"
+            app_dir.mkdir(parents=True)
+            (app_dir / "PicViewer.exe").write_bytes(b"exe")
+
+            with self.assertRaisesRegex(RuntimeError, "Windows"):
+                build_msi.build_msi(
+                    project_root=root,
+                    env={"CONDA_DEFAULT_ENV": "PicViewer"},
+                    runner=lambda *_: None,
+                    platform="linux",
+                    path_lookup=lambda _: "wix",
+                )
+
+    def test_build_msi_checks_conda_environment(self) -> None:
+        build_msi = load_script("scripts/packaging/build_msi.py")
+
+        with self.assertRaisesRegex(RuntimeError, "PicViewer"):
+            build_msi.ensure_conda_environment({"CONDA_DEFAULT_ENV": "base"})
+
+        build_msi.ensure_conda_environment({"CONDA_DEFAULT_ENV": "PicViewer"})
+
+    def test_build_msi_reports_missing_wix_cli(self) -> None:
+        build_msi = load_script("scripts/packaging/build_msi.py")
+
+        with self.assertRaisesRegex(RuntimeError, "WiX CLI"):
+            build_msi.ensure_wix_executable("wix-missing", path_lookup=lambda _: None)

@@ -2,12 +2,12 @@
 
 ## 目标
 
-PicViewer 支持两种发布模式：
+PicViewer 支持两类发布模式：
 
 - Python 包：生成 `sdist` 和 `wheel`，专业用户安装后可执行 `python -m pic_viewer` 或 `picviewer`。
-- 桌面 App：使用 PyInstaller 在 Windows/macOS 本机构建可分发 App，普通用户无需了解 Python 环境。
+- 桌面 App 与安装器：使用 PyInstaller 在 Windows/macOS 本机构建可分发 App，并按平台生成 MSI 或 DMG，普通用户无需了解 Python 环境。
 
-本阶段不包含代码签名、公证、MSI 安装器、自动更新或 PyPI 上传自动化。
+本阶段不包含代码签名、公证、自动更新或 PyPI 上传自动化。
 
 ## 前置条件
 
@@ -22,6 +22,8 @@ conda activate PicViewer
 ```bash
 pip install ".[packaging]"
 ```
+
+Windows MSI 构建需要安装 WiX Toolset，并确保 `wix` 命令位于 `PATH`。如果命令不在 `PATH`，可在执行脚本时通过 `--wix` 指定 `wix.exe` 路径。
 
 生成翻译资源需要 Qt 的 `lrelease` 命令位于 `PATH`。若本机命令名不同，可直接使用：
 
@@ -84,6 +86,35 @@ PyInstaller 使用 `onedir` 模式。Windows 产物为 `dist/PicViewer/`，macOS
 
 不支持交叉构建：Windows App 必须在 Windows 构建，macOS App 必须在 macOS 构建。
 
+## Windows MSI 模式
+
+构建命令：
+
+```bash
+python scripts/packaging/build_msi.py
+```
+
+脚本会执行以下步骤：
+
+- 校验当前 conda 环境名为 `PicViewer`。
+- 校验当前平台为 Windows。
+- 校验 WiX CLI 可用。
+- 从 `pyproject.toml` 读取版本号，版本号必须符合 Windows Installer 的 `MAJOR.MINOR.PATCH` 数字格式。
+- 校验 `dist/PicViewer/PicViewer.exe` 已存在；若不存在，应先运行 `python scripts/packaging/build_app.py`。
+- 根据 `dist/PicViewer/` 的实际文件树生成临时 WiX 源文件 `build/msi/PicViewer.wxs`。
+- 使用 WiX 构建 x64、per-machine MSI，安装目录为 `C:\Program Files\PicViewer`。
+- 在开始菜单和桌面创建 `PicViewer` 快捷方式。
+- 在 MSI 同级目录生成 SHA256 校验文件，文件名为 `*.msi.sha256`。
+
+MSI 产物输出到 `dist/PicViewer-版本号.msi`，例如 `dist/PicViewer-0.1.0.msi`。
+SHA256 校验文件输出到 `dist/PicViewer-版本号.msi.sha256`，内容格式为 `SHA256  MSI文件名`。
+
+如果 WiX 命令不叫 `wix`，可使用：
+
+```bash
+python scripts/packaging/build_msi.py --wix C:\Path\To\wix.exe
+```
+
 ## macOS DMG 模式
 
 构建命令：
@@ -114,6 +145,12 @@ python -m unittest discover -s tests/unit
 python scripts/packaging/build_python_package.py
 python -m zipfile -l dist/*.whl
 python scripts/packaging/build_app.py
+# Windows:
+python scripts/packaging/build_msi.py
+cd dist
+certutil -hashfile PicViewer-0.1.0.msi SHA256
+cd ..
+# macOS:
 python scripts/packaging/build_dmg.py
 cd dist
 shasum -a 256 -c *.dmg.sha256
