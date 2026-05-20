@@ -84,10 +84,13 @@ def _read_pyproject_version(pyproject_path: Path) -> Optional[str]:
                 return version
         return None
 
-    return _read_pyproject_version_without_tomllib(pyproject_text)
+    return _read_pyproject_version_without_tomllib(pyproject_text, pyproject_path)
 
 
-def _read_pyproject_version_without_tomllib(pyproject_text: str) -> Optional[str]:
+def _read_pyproject_version_without_tomllib(
+    pyproject_text: str,
+    pyproject_path: Optional[Path] = None,
+) -> Optional[str]:
     in_project_section = False
     for raw_line in pyproject_text.splitlines():
         line = raw_line.strip()
@@ -105,6 +108,9 @@ def _read_pyproject_version_without_tomllib(pyproject_text: str) -> Optional[str
             parsed = _literal_string(value.strip())
             if parsed is not None:
                 return parsed
+            if pyproject_path is not None:
+                logger.error("Failed to parse pyproject metadata: %s", pyproject_path)
+            return None
     return None
 
 
