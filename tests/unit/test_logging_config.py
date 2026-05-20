@@ -74,6 +74,9 @@ class LoggingConfigTests(unittest.TestCase):
             self.assertIn("Developer mode logging test", log_file.read_text(encoding="utf-8"))
             self.assertEqual(1, len(self.root_logger.handlers))
             self.assertIsInstance(self.root_logger.handlers[0], RotatingFileHandler)
+            for handler in self.root_logger.handlers[:]:
+                self.root_logger.removeHandler(handler)
+                handler.close()
 
     def test_developer_mode_falls_back_to_console_when_file_logging_fails(self) -> None:
         error_stream = io.StringIO()

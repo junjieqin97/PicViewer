@@ -165,7 +165,7 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertFalse(ui.labelFilmstripSummary.isHidden())
         self.assertEqual("Current: second.jpg (2/2)", ui.labelFilmstripSummary.text())
         self.assertEqual(
-            "Filmstrip hidden. Current file: /tmp/second.jpg",
+            f"Filmstrip hidden. Current file: {Path('/tmp/second.jpg')}",
             ui.labelFilmstripSummary.toolTip(),
         )
 
