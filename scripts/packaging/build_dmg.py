@@ -79,7 +79,17 @@ def ensure_app_bundle(app_path: Path) -> None:
         )
 
 
-def stage_dmg_contents(root: Path, app_path: Path) -> Path:
+def create_applications_symlink(link_path: Path) -> None:
+    """Create the Applications shortcut expected in a macOS DMG."""
+
+    link_path.symlink_to("/Applications", target_is_directory=True)
+
+
+def stage_dmg_contents(
+    root: Path,
+    app_path: Path,
+    applications_linker: Callable[[Path], None] = create_applications_symlink,
+) -> Path:
     """Prepare the DMG staging directory with the app and Applications shortcut."""
 
     staging_dir = root / "build" / "dmg" / "staging"
@@ -87,7 +97,7 @@ def stage_dmg_contents(root: Path, app_path: Path) -> Path:
     staging_dir.mkdir(parents=True, exist_ok=True)
 
     shutil.copytree(app_path, staging_dir / f"{APP_NAME}.app", symlinks=True)
-    (staging_dir / "Applications").symlink_to("/Applications", target_is_directory=True)
+    applications_linker(staging_dir / "Applications")
     return staging_dir
 
 
@@ -131,6 +141,7 @@ def build_dmg(
     env: Optional[Mapping[str, str]] = None,
     runner: Callable[..., object] = subprocess.run,
     platform: str = sys.platform,
+    applications_linker: Callable[[Path], None] = create_applications_symlink,
 ) -> Path:
     """Create a compressed macOS DMG from dist/PicViewer.app."""
 
@@ -143,7 +154,7 @@ def build_dmg(
 
     version = read_project_version(project_root / "pyproject.toml")
     dmg_path = dist_dir / f"{APP_NAME}-{version}.dmg"
-    staging_dir = stage_dmg_contents(project_root, app_path)
+    staging_dir = stage_dmg_contents(project_root, app_path, applications_linker)
 
     runner(
         [

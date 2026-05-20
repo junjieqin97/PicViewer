@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 
@@ -17,6 +18,12 @@ def load_script(relative_path: str):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def fake_applications_linker(link_path: Path) -> None:
+    """Create a test marker instead of a platform-specific macOS symlink."""
+
+    link_path.write_text("/Applications", encoding="utf-8")
 
 
 class PackagingScriptsTests(unittest.TestCase):
@@ -146,6 +153,7 @@ class PackagingScriptsTests(unittest.TestCase):
                 env={"CONDA_DEFAULT_ENV": "PicViewer"},
                 runner=fake_runner,
                 platform="darwin",
+                applications_linker=fake_applications_linker,
             )
 
             staging_dir = root / "build" / "dmg" / "staging"
@@ -153,8 +161,7 @@ class PackagingScriptsTests(unittest.TestCase):
 
             self.assertEqual(dist_dir / "PicViewer-1.2.3.dmg", dmg_path)
             self.assertTrue((staging_dir / "PicViewer.app" / "Contents" / "Info.plist").exists())
-            self.assertTrue(applications_link.is_symlink())
-            self.assertEqual(Path("/Applications"), Path(applications_link.readlink()))
+            self.assertEqual("/Applications", applications_link.read_text(encoding="utf-8"))
             self.assertEqual(
                 [
                     "hdiutil",
@@ -206,6 +213,7 @@ class PackagingScriptsTests(unittest.TestCase):
                 env={"CONDA_DEFAULT_ENV": "PicViewer"},
                 runner=fake_runner,
                 platform="darwin",
+                applications_linker=fake_applications_linker,
             )
 
             checksum_path = dist_dir / "PicViewer-1.2.3.dmg.sha256"
@@ -324,6 +332,69 @@ class PackagingScriptsTests(unittest.TestCase):
                 ],
                 commands[0],
             )
+
+    def test_build_msi_can_pass_wix_eula_acceptance(self) -> None:
+        build_msi = load_script("scripts/packaging/build_msi.py")
+        commands: list[list[str]] = []
+        msi_bytes = b"deterministic msi bytes"
+
+        def fake_runner(command: list[str], **_: object) -> None:
+            commands.append(command)
+            Path(command[command.index("-out") + 1]).write_bytes(msi_bytes)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            dist_dir = root / "dist"
+            app_dir = dist_dir / "PicViewer"
+            app_dir.mkdir(parents=True)
+            (app_dir / "PicViewer.exe").write_bytes(b"exe")
+            (root / "pyproject.toml").write_text(
+                '[project]\nname = "picviewer"\nversion = "1.2.3"\n',
+                encoding="utf-8",
+            )
+
+            build_msi.build_msi(
+                project_root=root,
+                env={"CONDA_DEFAULT_ENV": "PicViewer"},
+                runner=fake_runner,
+                platform="win32",
+                path_lookup=lambda _: "wix",
+                accept_wix_eula=True,
+            )
+
+            self.assertEqual(["-acceptEula", "wix7"], commands[0][2:4])
+
+    def test_build_msi_reports_wix_osmf_eula_failure(self) -> None:
+        build_msi = load_script("scripts/packaging/build_msi.py")
+
+        def fake_runner(command: list[str], **_: object) -> None:
+            raise subprocess.CalledProcessError(
+                returncode=1,
+                cmd=command,
+                stderr=(
+                    "wix.exe : error WIX7015: You must accept the Open Source "
+                    "Maintenance Fee (OSMF) EULA to use WiX Toolset v7."
+                ),
+            )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            app_dir = root / "dist" / "PicViewer"
+            app_dir.mkdir(parents=True)
+            (app_dir / "PicViewer.exe").write_bytes(b"exe")
+            (root / "pyproject.toml").write_text(
+                '[project]\nname = "picviewer"\nversion = "1.2.3"\n',
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "--accept-wix-eula"):
+                build_msi.build_msi(
+                    project_root=root,
+                    env={"CONDA_DEFAULT_ENV": "PicViewer"},
+                    runner=fake_runner,
+                    platform="win32",
+                    path_lookup=lambda _: "wix",
+                )
 
     def test_build_msi_reads_version_from_pyproject(self) -> None:
         build_msi = load_script("scripts/packaging/build_msi.py")

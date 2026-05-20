@@ -28,6 +28,8 @@ MANUFACTURER = "PicViewer Team"
 PRODUCT_UPGRADE_CODE = "{E85C5722-4F09-5B7E-A7F2-76B6273E9C23}"
 WIX_NAMESPACE = "http://wixtoolset.org/schemas/v4/wxs"
 WIX_GUID_NAMESPACE = uuid.UUID("d79067c6-0ac7-5cb8-9d91-d015fa6b615c")
+WIX_EULA_ID = "wix7"
+WIX_OSMF_URL = "https://wixtoolset.org/osmf/"
 
 ET.register_namespace("", WIX_NAMESPACE)
 
@@ -344,6 +346,89 @@ def write_sha256_checksum(msi_path: Path) -> Path:
     return checksum_path
 
 
+def build_wix_command(
+    wix_executable: str,
+    app_dir: Path,
+    project_root: Path,
+    intermediate_dir: Path,
+    msi_path: Path,
+    wxs_path: Path,
+    accept_wix_eula: bool = False,
+) -> list[str]:
+    """Build the WiX CLI command used to create the MSI."""
+
+    command = [wix_executable, "build"]
+    if accept_wix_eula:
+        command.extend(["-acceptEula", WIX_EULA_ID])
+
+    command.extend(
+        [
+            "-arch",
+            "x64",
+            "-define",
+            f"AppSourceDir={app_dir}",
+            "-define",
+            f"ProjectRoot={project_root}",
+            "-intermediateFolder",
+            str(intermediate_dir),
+            "-out",
+            str(msi_path),
+            str(wxs_path),
+        ]
+    )
+    return command
+
+
+def subprocess_output(exc: subprocess.CalledProcessError) -> str:
+    """Return stdout and stderr text captured from a failed subprocess."""
+
+    output_parts: list[str] = []
+    for stream in (exc.stdout, exc.stderr):
+        if not stream:
+            continue
+        if isinstance(stream, bytes):
+            output_parts.append(stream.decode("utf-8", errors="replace").strip())
+        else:
+            output_parts.append(str(stream).strip())
+    return "\n".join(part for part in output_parts if part)
+
+
+def format_wix_build_error(exc: subprocess.CalledProcessError) -> str:
+    """Return a user-actionable error message for a failed WiX build."""
+
+    output = subprocess_output(exc)
+    if "WIX7015" in output or "Open Source Maintenance Fee" in output:
+        return (
+            "WiX Toolset v7 requires OSMF EULA acceptance before building an MSI. "
+            f"Review {WIX_OSMF_URL}, then run 'wix eula accept {WIX_EULA_ID}' once "
+            "per user/machine or rerun this script with '--accept-wix-eula'."
+            f"\n\nWiX output:\n{output}"
+        )
+
+    if output:
+        return f"WiX build failed.\n\nWiX output:\n{output}"
+    return str(exc)
+
+
+def run_wix_build(
+    command: Sequence[str],
+    project_root: Path,
+    runner: Callable[..., object] = subprocess.run,
+) -> None:
+    """Run WiX and convert known failures into actionable RuntimeError messages."""
+
+    try:
+        runner(
+            list(command),
+            cwd=project_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        raise RuntimeError(format_wix_build_error(exc)) from exc
+
+
 def build_msi(
     project_root: Path,
     env: Optional[Mapping[str, str]] = None,
@@ -351,6 +436,7 @@ def build_msi(
     platform: str = sys.platform,
     wix_executable: str = "wix",
     path_lookup: Callable[[str], Optional[str]] = shutil.which,
+    accept_wix_eula: bool = False,
 ) -> Path:
     """Create a Windows MSI from dist/PicViewer."""
 
@@ -368,25 +454,16 @@ def build_msi(
     intermediate_dir = project_root / "build" / "msi" / "obj"
     intermediate_dir.mkdir(parents=True, exist_ok=True)
 
-    runner(
-        [
-            wix_executable,
-            "build",
-            "-arch",
-            "x64",
-            "-define",
-            f"AppSourceDir={app_dir}",
-            "-define",
-            f"ProjectRoot={project_root}",
-            "-intermediateFolder",
-            str(intermediate_dir),
-            "-out",
-            str(msi_path),
-            str(wxs_path),
-        ],
-        cwd=project_root,
-        check=True,
+    command = build_wix_command(
+        wix_executable=wix_executable,
+        app_dir=app_dir,
+        project_root=project_root,
+        intermediate_dir=intermediate_dir,
+        msi_path=msi_path,
+        wxs_path=wxs_path,
+        accept_wix_eula=accept_wix_eula,
     )
+    run_wix_build(command, project_root, runner)
     write_sha256_checksum(msi_path)
     return msi_path
 
@@ -406,6 +483,14 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         default="wix",
         help="WiX CLI executable. Defaults to wix on PATH.",
     )
+    parser.add_argument(
+        "--accept-wix-eula",
+        action="store_true",
+        help=(
+            "Pass '-acceptEula wix7' to WiX. Use only after reviewing the WiX "
+            "OSMF EULA requirements."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -416,7 +501,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parse_args(argv)
 
     try:
-        msi_path = build_msi(args.project_root.resolve(), wix_executable=args.wix)
+        msi_path = build_msi(
+            args.project_root.resolve(),
+            wix_executable=args.wix,
+            accept_wix_eula=args.accept_wix_eula,
+        )
     except (RuntimeError, subprocess.CalledProcessError, OSError) as exc:
         logger.error("%s", exc)
         return 1

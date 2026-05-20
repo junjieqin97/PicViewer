@@ -25,6 +25,21 @@ pip install ".[packaging]"
 
 Windows MSI 构建需要安装 WiX Toolset，并确保 `wix` 命令位于 `PATH`。如果命令不在 `PATH`，可在执行脚本时通过 `--wix` 指定 `wix.exe` 路径。
 
+WiX Toolset v7 及以上版本在首次构建前可能会报错 `WIX7015`，提示需要接受 OSMF EULA。请先阅读并确认
+<https://wixtoolset.org/osmf/> 中的要求，然后选择一种方式处理：
+
+```bash
+wix eula accept wix7
+```
+
+或在单次构建命令中显式传递接受参数：
+
+```bash
+python scripts/packaging/build_msi.py --accept-wix-eula
+```
+
+`--accept-wix-eula` 会向 WiX 传递 `-acceptEula wix7`，只应在已经确认 WiX OSMF EULA 要求后使用。
+
 生成翻译资源需要 Qt 的 `lrelease` 命令位于 `PATH`。若本机命令名不同，可直接使用：
 
 ```bash
@@ -113,6 +128,12 @@ SHA256 校验文件输出到 `dist/PicViewer-版本号.msi.sha256`，内容格�
 
 ```bash
 python scripts/packaging/build_msi.py --wix C:\Path\To\wix.exe
+```
+
+如果使用 WiX v7 且尚未做过按用户/机器保存的 EULA 接受，也可使用：
+
+```bash
+python scripts/packaging/build_msi.py --accept-wix-eula
 ```
 
 ## macOS DMG 模式
