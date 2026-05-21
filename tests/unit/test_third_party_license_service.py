@@ -23,15 +23,15 @@ class ThirdPartyLicenseServiceTests(unittest.TestCase):
 
     def test_load_third_party_licenses_prefers_license_expression(self) -> None:
         metadata_by_package = {
-            "PyQt5": self._message({"License-Expression": "GPL-3.0-only", "License": "Legacy License"}),
+            "PySide2": self._message({"License-Expression": "GPL-3.0-only", "License": "Legacy License"}),
         }
 
         licenses = self._load_with_metadata(metadata_by_package)
 
-        pyqt = self._find_license(licenses, "PyQt5")
-        self.assertEqual("PyQt5", pyqt.display_name)
-        self.assertEqual("1.2.3", pyqt.version)
-        self.assertEqual("GPL-3.0-only", pyqt.license_text)
+        pyside = self._find_license(licenses, "PySide2")
+        self.assertEqual("PySide2", pyside.display_name)
+        self.assertEqual("1.2.3", pyside.version)
+        self.assertEqual("GPL-3.0-only", pyside.license_text)
 
     def test_load_third_party_licenses_falls_back_to_license_and_classifier(self) -> None:
         metadata_by_package = {

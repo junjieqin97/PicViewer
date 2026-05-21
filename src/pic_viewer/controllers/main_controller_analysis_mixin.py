@@ -6,12 +6,13 @@ from pathlib import Path
 from typing import Optional
 
 import numpy as np
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.dto.analysis_view import AnalysisViewSettings, LumaRgbMode, RgbChannel
 from pic_viewer.app.dto.image_analysis import ImageAnalysis
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
 from pic_viewer.ui.utils.image_qt import to_qpixmap
+from pic_viewer.ui.utils.signal_blocker import block_signals
 
 
 class MainControllerAnalysisMixin:
@@ -142,11 +143,11 @@ class MainControllerAnalysisMixin:
         ]
 
         for action, checked in mode_pairs + channel_pairs:
-            with QtCore.QSignalBlocker(action):
+            with block_signals(action):
                 action.setChecked(checked)
 
         if not rgb_mode:
-            with QtCore.QSignalBlocker(self._ui.actChannelAll):
+            with block_signals(self._ui.actChannelAll):
                 self._ui.actChannelAll.setChecked(True)
         self._sync_analysis_mode_summary()
 
@@ -204,10 +205,10 @@ class MainControllerAnalysisMixin:
         """Keep histogram clipping widget state in sync with controller flags."""
 
         if hasattr(self._ui, "actToggleUnderexposed"):
-            with QtCore.QSignalBlocker(self._ui.actToggleUnderexposed):
+            with block_signals(self._ui.actToggleUnderexposed):
                 self._ui.actToggleUnderexposed.setChecked(self._show_underexposed)
         if hasattr(self._ui, "actToggleOverexposed"):
-            with QtCore.QSignalBlocker(self._ui.actToggleOverexposed):
+            with block_signals(self._ui.actToggleOverexposed):
                 self._ui.actToggleOverexposed.setChecked(self._show_overexposed)
         self._sync_focus_peak_actions()
 
@@ -216,7 +217,7 @@ class MainControllerAnalysisMixin:
         histogram_widget = self._ui.widgetHistogram
         if not hasattr(histogram_widget, "set_clipping_state"):
             return
-        with QtCore.QSignalBlocker(histogram_widget):
+        with block_signals(histogram_widget):
             histogram_widget.set_clipping_state(
                 self._show_underexposed,
                 self._show_overexposed,
@@ -254,7 +255,7 @@ class MainControllerAnalysisMixin:
             if not hasattr(self._ui, action_name):
                 continue
             action = getattr(self._ui, action_name)
-            with QtCore.QSignalBlocker(action):
+            with block_signals(action):
                 action.setChecked(current_level == level)
 
     def _focus_peak_level_summary_text(self) -> str:

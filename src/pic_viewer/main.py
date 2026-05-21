@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 # Third-party dependencies:
-# - PyQt5>=5.15
+# - PySide2>=5.15.2.1,<5.16
 # - opencv-python>=4.7
 # - numpy>=1.23
 # - rawpy>=0.17 (optional, for RAW formats)
@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-from PyQt5 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 if __name__ == "__main__" and __package__ is None:
     sys.path.append(str(Path(__file__).resolve().parents[1]))

@@ -53,7 +53,7 @@ def find_lrelease(
             return resolved
 
     raise RuntimeError(
-        "Cannot find Qt lrelease. Install Qt/PyQt tools and ensure lrelease is on PATH."
+        "Cannot find Qt lrelease. Install Qt/PySide2 tools and ensure lrelease is on PATH."
     )
 
 

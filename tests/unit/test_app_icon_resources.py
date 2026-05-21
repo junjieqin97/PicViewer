@@ -5,7 +5,7 @@ import importlib.util
 from pathlib import Path
 import unittest
 
-from PyQt5 import QtWidgets
+from PySide2 import QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 

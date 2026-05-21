@@ -7,7 +7,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PyQt5 import QtWidgets
+from PySide2 import QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -29,7 +29,13 @@ class ThirdPartyLicenseDialogTests(unittest.TestCase):
 
     def test_dialog_renders_license_rows_in_read_only_table(self) -> None:
         licenses = [
-            ThirdPartyLicenseInfo("PyQt5", "PyQt5", "5.15.11", "GPL-3.0-only", ""),
+            ThirdPartyLicenseInfo(
+                "PySide2",
+                "PySide2",
+                "5.15.2.1",
+                "LGPL-3.0-only / GPL-2.0-only / Commercial",
+                "",
+            ),
             ThirdPartyLicenseInfo("rawpy", "rawpy", "Not installed", "MIT", "Optional RAW image support."),
         ]
 
@@ -41,9 +47,9 @@ class ThirdPartyLicenseDialogTests(unittest.TestCase):
         self.assertEqual(2, table.rowCount())
         self.assertEqual(4, table.columnCount())
         self.assertEqual(["Library", "Version", "License", "Notes"], self._headers(table))
-        self.assertEqual("PyQt5", table.item(0, 0).text())
-        self.assertEqual("5.15.11", table.item(0, 1).text())
-        self.assertEqual("GPL-3.0-only", table.item(0, 2).text())
+        self.assertEqual("PySide2", table.item(0, 0).text())
+        self.assertEqual("5.15.2.1", table.item(0, 1).text())
+        self.assertEqual("LGPL-3.0-only / GPL-2.0-only / Commercial", table.item(0, 2).text())
         self.assertEqual("rawpy", table.item(1, 0).text())
         self.assertEqual("Not installed", table.item(1, 1).text())
         self.assertEqual("MIT", table.item(1, 2).text())

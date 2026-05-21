@@ -30,10 +30,10 @@ class _DependencyLicenseSpec:
 
 _RUNTIME_DEPENDENCIES: tuple[_DependencyLicenseSpec, ...] = (
     _DependencyLicenseSpec(
-        display_name="PyQt5",
-        package_name="PyQt5",
-        fallback_license="GPL-3.0-only / Commercial",
-        notes="GPL v3 or commercial license depending on distribution.",
+        display_name="PySide2",
+        package_name="PySide2",
+        fallback_license="LGPL-3.0-only / GPL-2.0-only / Commercial",
+        notes="LGPL v3, GPL v2, or commercial license depending on distribution.",
     ),
     _DependencyLicenseSpec(
         display_name="opencv-python",

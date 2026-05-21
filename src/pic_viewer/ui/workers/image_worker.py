@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from PyQt5 import QtCore
+from PySide2 import QtCore
 
 from pic_viewer.app.services.image_service import ImageService
 from pic_viewer.common.errors import ImageLoadError, ImageProcessError
@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 class ImageTaskSignals(QtCore.QObject):
     """Signals emitted by background image tasks."""
 
-    finished = QtCore.pyqtSignal(object)
-    error = QtCore.pyqtSignal(str)
+    finished = QtCore.Signal(object)
+    error = QtCore.Signal(str)
 
 
 class PreviewLoadTask(QtCore.QRunnable):
@@ -30,7 +30,7 @@ class PreviewLoadTask(QtCore.QRunnable):
         self.signals = ImageTaskSignals()
         self.setAutoDelete(True)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def run(self) -> None:
         """Execute lightweight preview loading."""
 
@@ -57,7 +57,7 @@ class ImageLoadTask(QtCore.QRunnable):
         self.signals = ImageTaskSignals()
         self.setAutoDelete(True)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def run(self) -> None:
         """Execute full load + analysis task."""
 

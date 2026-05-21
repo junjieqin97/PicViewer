@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from PyQt5 import QtCore
+from PySide2 import QtCore
 
 logger = logging.getLogger(__name__)
 

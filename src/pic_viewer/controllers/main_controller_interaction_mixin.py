@@ -6,7 +6,7 @@ from html import escape
 from pathlib import Path
 from typing import Optional
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.app_metadata_service import AppMetadata, load_app_metadata
 from pic_viewer.app.services.image_file_policy import filter_supported_image_paths
@@ -89,7 +89,12 @@ class MainControllerInteractionMixin:
             return True
         if event.type() in (QtCore.QEvent.MouseMove, QtCore.QEvent.Enter, QtCore.QEvent.Leave):
             self._refresh_image_cursor(watched, event)
-        return super().eventFilter(watched, event)
+        try:
+            return super().eventFilter(watched, event)
+        except RuntimeError as exc:
+            if "already deleted" in str(exc):
+                return False
+            raise
 
     def _handle_file_drop_event(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
         """Accept and open supported local image files dropped on the workspace."""

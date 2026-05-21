@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, call
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PyQt5 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -538,8 +538,7 @@ class MainWindowTabsTests(unittest.TestCase):
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
         ui.setup_ui(window)
-        controller = _ImagePreviewController()
-        QtCore.QObject.__init__(controller, window)
+        controller = _ImagePreviewController(window)
         controller._ui = ui  # type: ignore[attr-defined]
         controller._tr = lambda text: text  # type: ignore[attr-defined]
         controller._image_context_menu = ui.menuImageContext  # type: ignore[attr-defined]
@@ -552,8 +551,7 @@ class MainWindowTabsTests(unittest.TestCase):
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
         ui.setup_ui(window)
-        controller = _DropController()
-        QtCore.QObject.__init__(controller, window)
+        controller = _DropController(window)
         controller._ui = ui  # type: ignore[attr-defined]
         controller._tr = lambda text: text  # type: ignore[attr-defined]
         controller._open_image_paths = MagicMock()  # type: ignore[method-assign]
@@ -624,12 +622,18 @@ class _ImagePreviewController(
 ):
     """Minimal controller for image preview widget construction tests."""
 
+    def __init__(self, parent: QtCore.QObject) -> None:
+        QtCore.QObject.__init__(self, parent)
+
 
 class _DropController(
     MainControllerInteractionMixin,
     QtCore.QObject,
 ):
     """Minimal controller for file-drop helper tests."""
+
+    def __init__(self, parent: QtCore.QObject) -> None:
+        QtCore.QObject.__init__(self, parent)
 
 
 class _FakeWheelEvent:

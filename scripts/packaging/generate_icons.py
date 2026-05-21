@@ -7,7 +7,7 @@ import subprocess
 from pathlib import Path
 
 from PIL import Image
-from PyQt5 import QtCore, QtGui, QtSvg
+from PySide2 import QtCore, QtGui, QtSvg
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 RUNTIME_ICON_DIR = PROJECT_ROOT / "src" / "pic_viewer" / "ui" / "resources" / "icons"

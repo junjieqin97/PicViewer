@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PyQt5 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
 

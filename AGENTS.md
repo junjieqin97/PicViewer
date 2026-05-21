@@ -1,6 +1,6 @@
 # Agent Instructions
 
-Project: PicViewer (Python 3 + PyQt5 + OpenCV)
+Project: PicViewer (Python 3 + PySide2 + OpenCV)
 
 ## 1. Agent Role & Responsibility
 
@@ -33,11 +33,11 @@ code comments or commit messages.
 
 Do NOT change these unless explicitly instructed.
 
-- Language: Python 3
+- Language: Python 3.10
 - Package Manager: Anaconda
   - Conda Env Name: PicViewer
   - You MUST activate the conda environment by running `conda activate PicViewer` before executing the python command.
-- GUI Framework: PyQt5
+- GUI Framework: PySide2
 - Image Processing: OpenCV
 - Target OS: cross-platform (Windows / macOS / Linux)
 

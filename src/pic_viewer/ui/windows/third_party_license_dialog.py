@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from PyQt5 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 from pic_viewer.app.services.third_party_license_service import (
     NOT_INSTALLED_VERSION,
@@ -85,8 +85,8 @@ class ThirdPartyLicenseDialog(QtWidgets.QDialog):
         return version
 
     def _translate_notes(self, notes: str) -> str:
-        if notes == "GPL v3 or commercial license depending on distribution.":
-            return self._tr("GPL v3 or commercial license depending on distribution.")
+        if notes == "LGPL v3, GPL v2, or commercial license depending on distribution.":
+            return self._tr("LGPL v3, GPL v2, or commercial license depending on distribution.")
         if notes == "Includes OpenCV and bundled third-party components.":
             return self._tr("Includes OpenCV and bundled third-party components.")
         if notes == "Optional RAW image support.":

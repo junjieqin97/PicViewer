@@ -17,6 +17,16 @@ PicViewer 支持两类发布模式：
 conda activate PicViewer
 ```
 
+`PicViewer` 环境必须使用 Python 3.10。项目 GUI 绑定为 PySide2，PySide2 不支持 Python 3.11 及以上版本。
+
+如需重建环境，可使用：
+
+```bash
+conda create -n PicViewer python=3.10
+conda activate PicViewer
+pip install -e ".[packaging]"
+```
+
 打包工具通过可选依赖安装：
 
 ```bash
@@ -40,7 +50,8 @@ python scripts/packaging/build_msi.py --accept-wix-eula
 
 `--accept-wix-eula` 会向 WiX 传递 `-acceptEula wix7`，只应在已经确认 WiX OSMF EULA 要求后使用。
 
-生成翻译资源需要 Qt 的 `lrelease` 命令位于 `PATH`。若本机命令名不同，可直接使用：
+生成翻译源文件需要 PySide2 的 `pyside2-lupdate` 命令位于 `PATH`。生成翻译资源需要 Qt 的
+`lrelease` 命令位于 `PATH`。若本机 `lrelease` 命令名不同，可直接使用：
 
 ```bash
 python scripts/i18n/build_qm.py --lrelease /path/to/lrelease
@@ -162,6 +173,7 @@ SHA256 校验文件输出到 `dist/PicViewer-版本号.dmg.sha256`，内容格�
 
 ```bash
 conda activate PicViewer
+python --version  # 应输出 Python 3.10.x
 python -m unittest discover -s tests/unit
 python scripts/packaging/build_python_package.py
 python -m zipfile -l dist/*.whl

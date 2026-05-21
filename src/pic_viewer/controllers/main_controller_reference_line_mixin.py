@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from PyQt5 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 from pic_viewer.domain.rules.reference_lines import ReferenceLineSettings
+from pic_viewer.ui.utils.signal_blocker import block_signals
 from pic_viewer.ui.widgets.image_display_label import ImageDisplayLabel
 
 
@@ -61,7 +62,7 @@ class MainControllerReferenceLineMixin:
             if not hasattr(self._ui, action_name):
                 continue
             action = getattr(self._ui, action_name)
-            with QtCore.QSignalBlocker(action):
+            with block_signals(action):
                 action.setChecked(checked)
 
     def _sync_reference_line_widgets(self) -> None:

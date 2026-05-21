@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from PyQt5 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 
 class ImageLoadStateWidget(QtWidgets.QWidget):
     """Show image loading progress or a recoverable load failure."""
 
-    retry_requested = QtCore.pyqtSignal()
+    retry_requested = QtCore.Signal()
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)

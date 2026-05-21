@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 
 TriangleName = Literal["underexposed", "overexposed"] | None
 
@@ -12,8 +12,8 @@ TriangleName = Literal["underexposed", "overexposed"] | None
 class HistogramClippingLabel(QtWidgets.QLabel):
     """QLabel variant that renders and toggles histogram clipping markers."""
 
-    underexposed_toggled = QtCore.pyqtSignal(bool)
-    overexposed_toggled = QtCore.pyqtSignal(bool)
+    underexposed_toggled = QtCore.Signal(bool)
+    overexposed_toggled = QtCore.Signal(bool)
 
     def __init__(self, text: str = "", parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(text, parent)

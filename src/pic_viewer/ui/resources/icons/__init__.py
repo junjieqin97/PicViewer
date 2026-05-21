@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from PyQt5 import QtCore, QtGui
+from PySide2 import QtCore, QtGui
 
 logger = logging.getLogger(__name__)
 

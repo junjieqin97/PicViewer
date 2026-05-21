@@ -5,9 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.image_file_policy import filter_supported_image_paths
+from pic_viewer.ui.utils.signal_blocker import block_signals
 from pic_viewer.ui.widgets.image_display_label import ImageDisplayLabel
 from pic_viewer.ui.widgets.image_load_state_widget import ImageLoadStateWidget
 
@@ -66,7 +67,7 @@ class MainControllerTabsMixin:
             return
 
         last_path: Optional[Path] = None
-        with QtCore.QSignalBlocker(self._ui.tabsImages), QtCore.QSignalBlocker(self._ui.listFilmstrip):
+        with block_signals(self._ui.tabsImages), block_signals(self._ui.listFilmstrip):
             for path in paths:
                 self.open_image(path, activate=False)
                 last_path = path
