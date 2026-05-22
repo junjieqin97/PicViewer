@@ -262,6 +262,15 @@ QLabel#widgetWaveform {
     color: #cdd3da;
 }
 
+QTextBrowser#textThirdPartyLicenses,
+QPlainTextEdit#textLicenseDocument {
+    background: #1b1f24;
+    color: #d8dde3;
+    border: 1px solid #343b44;
+    selection-background-color: #3d4d60;
+    selection-color: #ffffff;
+}
+
 QFrame#frameFilmstrip {
     background: #20242a;
     border: 1px solid #343b44;

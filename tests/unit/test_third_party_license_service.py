@@ -12,14 +12,55 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.app.services.third_party_license_service import (  # noqa: E402
+    LicenseTextPart,
     NOT_INSTALLED_VERSION,
+    load_license_document,
     load_third_party_licenses,
     metadata,
+    split_license_text,
 )
 
 
 class ThirdPartyLicenseServiceTests(unittest.TestCase):
     """Validate third-party dependency license metadata resolution."""
+
+    def test_split_license_text_links_known_licenses_in_compound_expression(self) -> None:
+        parts = split_license_text("LGPL-3.0-only / GPL-2.0-only / Commercial")
+
+        self.assertEqual(
+            (
+                LicenseTextPart("LGPL-3.0-only", "LGPL-3.0-only"),
+                LicenseTextPart(" / ", None),
+                LicenseTextPart("GPL-2.0-only", "GPL-2.0-only"),
+                LicenseTextPart(" / Commercial", None),
+            ),
+            parts,
+        )
+
+    def test_split_license_text_prefers_longest_license_identifier(self) -> None:
+        parts = split_license_text("MIT-CMU / MIT")
+
+        self.assertEqual(
+            (
+                LicenseTextPart("MIT-CMU", "MIT-CMU"),
+                LicenseTextPart(" / ", None),
+                LicenseTextPart("MIT", "MIT"),
+            ),
+            parts,
+        )
+
+    def test_load_license_document_reads_local_english_text(self) -> None:
+        document = load_license_document("LGPL-3.0-only")
+
+        self.assertIsNotNone(document)
+        assert document is not None
+        self.assertEqual("LGPL-3.0-only", document.key)
+        self.assertEqual("GNU Lesser General Public License v3.0 only", document.title)
+        self.assertIn("GNU LESSER GENERAL PUBLIC LICENSE", document.body)
+        self.assertIn("Version 3, 29 June 2007", document.body)
+
+    def test_load_license_document_returns_none_for_unknown_key(self) -> None:
+        self.assertIsNone(load_license_document("Commercial"))
 
     def test_load_third_party_licenses_prefers_license_expression(self) -> None:
         metadata_by_package = {

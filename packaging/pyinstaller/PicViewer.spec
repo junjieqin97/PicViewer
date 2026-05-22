@@ -21,6 +21,7 @@ datas = collect_data_files(
         "ui/resources/styles/*.qss",
         "ui/resources/icons/*.svg",
         "ui/resources/icons/*.png",
+        "assets/licenses/*.txt",
     ],
 )
 

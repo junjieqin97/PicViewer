@@ -663,5 +663,10 @@
         <source>Not installed</source>
         <translation>未安装</translation>
     </message>
+    <message>
+        <location filename="third_party_license_dialog.py" line="120"/>
+        <source>License text is not available.</source>
+        <translation>许可证正文不可用。</translation>
+    </message>
 </context>
 </TS>

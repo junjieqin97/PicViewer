@@ -44,4 +44,5 @@ pic_viewer = [
   "ui/resources/styles/*.qss",
   "ui/resources/icons/*.svg",
   "ui/resources/icons/*.png",
+  "assets/licenses/*.txt",
 ]

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
-from importlib import metadata
+from importlib import metadata, resources
+
+logger = logging.getLogger(__name__)
 
 NOT_INSTALLED_VERSION = "Not installed"
 UNKNOWN_LICENSE = "Unknown"
@@ -18,6 +21,28 @@ class ThirdPartyLicenseInfo:
     version: str
     license_text: str
     notes: str
+
+
+@dataclass(frozen=True)
+class LicenseTextPart:
+    """A display fragment from a license expression.
+
+    Args:
+        text: Literal text to render in the dependency license row.
+        document_key: Local license document key when the fragment is clickable.
+    """
+
+    text: str
+    document_key: str | None
+
+
+@dataclass(frozen=True)
+class LicenseDocument:
+    """Full text for a bundled third-party license document."""
+
+    key: str
+    title: str
+    body: str
 
 
 @dataclass(frozen=True)
@@ -59,11 +84,79 @@ _RUNTIME_DEPENDENCIES: tuple[_DependencyLicenseSpec, ...] = (
     ),
 )
 
+_LICENSE_DOCUMENT_TITLES: dict[str, str] = {
+    "LGPL-3.0-only": "GNU Lesser General Public License v3.0 only",
+    "GPL-2.0-only": "GNU General Public License v2.0 only",
+    "Apache-2.0": "Apache License 2.0",
+    "BSD-3-Clause": 'BSD 3-Clause "New" or "Revised" License',
+    "MIT": "MIT License",
+    "MIT-CMU": "CMU License",
+}
+_LICENSE_DOCUMENT_KEYS = tuple(sorted(_LICENSE_DOCUMENT_TITLES, key=len, reverse=True))
+
 
 def load_third_party_licenses() -> list[ThirdPartyLicenseInfo]:
     """Load license metadata for PicViewer runtime dependencies."""
 
     return [_load_license_info(spec) for spec in _RUNTIME_DEPENDENCIES]
+
+
+def split_license_text(license_text: str) -> tuple[LicenseTextPart, ...]:
+    """Split a license expression into literal and clickable fragments."""
+
+    parts: list[LicenseTextPart] = []
+    index = 0
+    plain_start = 0
+    while index < len(license_text):
+        document_key = _matching_document_key(license_text, index)
+        if document_key is None:
+            index += 1
+            continue
+
+        if plain_start < index:
+            parts.append(LicenseTextPart(license_text[plain_start:index], None))
+        parts.append(LicenseTextPart(document_key, document_key))
+        index += len(document_key)
+        plain_start = index
+
+    if plain_start < len(license_text):
+        parts.append(LicenseTextPart(license_text[plain_start:], None))
+    return tuple(parts)
+
+
+def load_license_document(document_key: str) -> LicenseDocument | None:
+    """Load a bundled license document by key.
+
+    Args:
+        document_key: SPDX-like local document identifier.
+
+    Returns:
+        The license document, or None when the key/resource is unavailable.
+    """
+
+    title = _LICENSE_DOCUMENT_TITLES.get(document_key)
+    if title is None:
+        logger.info("Unknown license document key: %s", document_key)
+        return None
+
+    try:
+        resource = resources.files("pic_viewer").joinpath(
+            "assets",
+            "licenses",
+            f"{document_key}.txt",
+        )
+        body = resource.read_text(encoding="utf-8")
+    except (FileNotFoundError, OSError):
+        logger.exception("Failed to load license document: %s", document_key)
+        return None
+    return LicenseDocument(key=document_key, title=title, body=body)
+
+
+def _matching_document_key(license_text: str, index: int) -> str | None:
+    for document_key in _LICENSE_DOCUMENT_KEYS:
+        if license_text.startswith(document_key, index):
+            return document_key
+    return None
 
 
 def _load_license_info(spec: _DependencyLicenseSpec) -> ThirdPartyLicenseInfo:
