@@ -54,55 +54,55 @@ PicViewer/
 ├─ src/
 │  └─ pic_viewer/
 │     ├─ __init__.py
-│     ├─ main.py                 # 程序入口（创建App、装配依赖、启动主窗口）
+│     ├─ main.py                 # Program entry point: create the app, assemble dependencies, and launch the main window
 │     │
-│     ├─ ui/                     # 视图层：窗口、控件、资源、UI状态
+│     ├─ ui/                     # View layer: windows, widgets, resources, and UI state
 │     │  ├─ __init__.py
-│     │  ├─ windows/             # 主窗口/对话框/页面
-│     │  ├─ widgets/             # 可复用组件
-│     │  ├─ i18n/                # 国际化辅助
-│     │  ├─ presenters/          # (可选) MVP/MVVM 的展示逻辑 / view-model
-│     │  └─ resources/           # 图标、qss/css、图片、字体、翻译文件等
+│     │  ├─ windows/             # Main windows, dialogs, and pages
+│     │  ├─ widgets/             # Reusable components
+│     │  ├─ i18n/                # Internationalization helpers
+│     │  ├─ presenters/          # Optional: MVP/MVVM presentation logic or view models
+│     │  └─ resources/           # Icons, QSS/CSS, images, fonts, translation files, etc.
 │     │
-│     ├─ app/                    # 应用层：用例编排（“点击按钮后要做什么”）
+│     ├─ app/                    # Application layer: use-case orchestration, such as what to do after a button is clicked
 │     │  ├─ __init__.py
-│     │  ├─ services/            # 应用服务/用例（例如：导入文件、生成报告）
-│     │  ├─ commands/            # (可选) 命令对象、撤销/重做
-│     │  └─ dto/                 # (可选) 跨层数据结构（避免domain对象直出到UI）
+│     │  ├─ services/            # Application services / use cases, such as importing files or generating reports
+│     │  ├─ commands/            # Optional: command objects, undo/redo
+│     │  └─ dto/                 # Optional: cross-layer data structures to avoid exposing domain objects directly to the UI
 │     │
-│     ├─ domain/                 # 领域层：核心业务模型与规则（尽量不依赖GUI/IO）
+│     ├─ domain/                 # Domain layer: core business models and rules, preferably independent of GUI/IO
 │     │  ├─ __init__.py
-│     │  ├─ models/              # 实体、值对象
-│     │  ├─ rules/               # 校验规则、计算逻辑
-│     │  └─ ports/               # 抽象接口（Repository、Gateway、Clock等）
+│     │  ├─ models/              # Entities and value objects
+│     │  ├─ rules/               # Validation rules and calculation logic
+│     │  └─ ports/               # Abstract interfaces, such as Repository, Gateway, Clock, etc.
 │     │
-│     ├─ infra/                  # 基础设施层：domain ports 的具体实现
+│     ├─ infra/                  # Infrastructure layer: concrete implementations of domain ports
 │     │  ├─ __init__.py
-│     │  ├─ persistence/         # sqlite/sqlalchemy/文件存储等
-│     │  ├─ network/             # http/grpc/websocket等
-│     │  ├─ system/              # OS相关：剪贴板、通知、开机自启
-│     │  └─ adapters/            # 第三方SDK封装
+│     │  ├─ persistence/         # SQLite, SQLAlchemy, file storage, etc.
+│     │  ├─ network/             # HTTP, gRPC, WebSocket, etc.
+│     │  ├─ system/              # OS-related features: clipboard, notifications, auto-start on boot
+│     │  └─ adapters/            # Wrappers around third-party SDKs
 │     │
-│     ├─ config/                 # 配置与环境
+│     ├─ config/                 # Configuration and environment
 │     │  ├─ __init__.py
-│     │  ├─ settings.py          # 统一读取配置（env/ini/yaml）
+│     │  ├─ settings.py          # Unified configuration loading, such as env/ini/yaml
 │     │  └─ logging.yaml
 │     │
-│     ├─ common/                 # 通用工具：不会反向依赖业务
+│     ├─ common/                 # Common utilities that do not depend back on business logic
 │     │  ├─ __init__.py
-│     │  ├─ errors.py            # 自定义异常
-│     │  ├─ event_bus.py         # (可选) 事件总线
+│     │  ├─ errors.py            # Custom exceptions
+│     │  ├─ event_bus.py         # Optional: event bus
 │     │  └─ utils.py
 │     │
-│     └─ assets/                 # (可选) 静态资源集中管理（也可放ui/resources）
+│     └─ assets/                 # Optional: centralized static resources, alternatively placed under ui/resources
 │
 ├─ tests/
-│  ├─ unit/                      # domain/app 层单元测试
-│  ├─ integration/               # infra 集成测试
-│  └─ e2e/                       # (可选) UI自动化
+│  ├─ unit/                      # Unit tests for the domain/app layers
+│  ├─ integration/               # Integration tests for the infra layer
+│  └─ e2e/                       # Optional: UI automation
 │
-├─ scripts/                      # 开发脚本（格式化、打包、生成版本号等）
-└─ packaging/                    # PyInstaller/Briefcase/cx_Freeze 打包相关
+├─ scripts/                      # Development scripts, such as formatting, packaging, version generation, etc.
+└─ packaging/                    # Packaging-related files for PyInstaller, Briefcase, cx_Freeze, etc.
    ├─ pyinstaller.spec
    └─ icons/
 ```
