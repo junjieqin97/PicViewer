@@ -1,25 +1,25 @@
-# PicViewer 打包方案
+# PicViewer Packaging Plan
 
-## 目标
+## Goals
 
-PicViewer 支持两类发布模式：
+PicViewer supports two release modes:
 
-- Python 包：生成 `sdist` 和 `wheel`，专业用户安装后可执行 `python -m pic_viewer` 或 `picviewer`。
-- 桌面 App 与安装器：使用 PyInstaller 在 Windows/macOS 本机构建可分发 App，并按平台生成 MSI 或 DMG，普通用户无需了解 Python 环境。
+- Python package: generate `sdist` and `wheel`; after installation, advanced users can run `python -m pic_viewer` or `picviewer`.
+- Desktop app and installer: use PyInstaller to build distributable apps natively on Windows/macOS, and generate MSI or DMG packages by platform; ordinary users do not need to understand the Python environment.
 
-本阶段不包含代码签名、公证、自动更新或 PyPI 上传自动化。
+This phase does not include code signing, notarization, auto-updates, or PyPI upload automation.
 
-## 前置条件
+## Prerequisites
 
-所有 Python 命令必须先进入项目 conda 环境：
+All Python commands must be run after entering the project conda environment:
 
 ```bash
 conda activate PicViewer
 ```
 
-`PicViewer` 环境必须使用 Python 3.10。项目 GUI 绑定为 PySide2，PySide2 不支持 Python 3.11 及以上版本。
+The `PicViewer` environment must use Python 3.10. The project GUI binding is PySide2, and PySide2 does not support Python 3.11 or later.
 
-如需重建环境，可使用：
+To rebuild the environment, use:
 
 ```bash
 conda create -n PicViewer python=3.10
@@ -27,156 +27,153 @@ conda activate PicViewer
 pip install -e ".[packaging]"
 ```
 
-打包工具通过可选依赖安装：
+Packaging tools are installed through optional dependencies:
 
 ```bash
 pip install ".[packaging]"
 ```
 
-Windows MSI 构建需要安装 WiX Toolset，并确保 `wix` 命令位于 `PATH`。如果命令不在 `PATH`，可在执行脚本时通过 `--wix` 指定 `wix.exe` 路径。
+Windows MSI builds require WiX Toolset to be installed, and the `wix` command must be available in `PATH`. If the command is not in `PATH`, specify the path to `wix.exe` with `--wix` when running the script.
 
-WiX Toolset v7 及以上版本在首次构建前可能会报错 `WIX7015`，提示需要接受 OSMF EULA。请先阅读并确认
-<https://wixtoolset.org/osmf/> 中的要求，然后选择一种方式处理：
+WiX Toolset v7 and later may report `WIX7015` before the first build, indicating that the OSMF EULA must be accepted. First read and confirm the requirements at <https://wixtoolset.org/osmf/>, then choose one of the following approaches:
 
 ```bash
 wix eula accept wix7
 ```
 
-或在单次构建命令中显式传递接受参数：
+Or explicitly pass the acceptance option in a one-off build command:
 
 ```bash
 python scripts/packaging/build_msi.py --accept-wix-eula
 ```
 
-`--accept-wix-eula` 会向 WiX 传递 `-acceptEula wix7`，只应在已经确认 WiX OSMF EULA 要求后使用。
+`--accept-wix-eula` passes `-acceptEula wix7` to WiX and should only be used after the WiX OSMF EULA requirements have been confirmed.
 
-生成翻译源文件需要 PySide2 的 `pyside2-lupdate` 命令位于 `PATH`。生成翻译资源需要 Qt 的
-`lrelease` 命令位于 `PATH`。若本机 `lrelease` 命令名不同，可直接使用：
+Generating translation source files requires the PySide2 `pyside2-lupdate` command to be available in `PATH`. Generating translation resources requires Qt's `lrelease` command to be available in `PATH`. If the local `lrelease` command has a different name, use:
 
 ```bash
 python scripts/i18n/build_qm.py --lrelease /path/to/lrelease
 ```
 
-当 `lrelease` 和 `lrelease-qt5` 都不在 `PATH` 中时，`build_qm.py` 也会在
-`~/.conda/envs/PicViewer/Lib/site-packages/PySide2` 下查找这些工具。
+When neither `lrelease` nor `lrelease-qt5` is in `PATH`, `build_qm.py` also searches for these tools under `~/.conda/envs/PicViewer/Lib/site-packages/PySide2`.
 
-应用图标资源由 `src/pic_viewer/ui/resources/icons/picviewer.svg` 作为主源生成：
+Application icon resources are generated from `src/pic_viewer/ui/resources/icons/picviewer.svg` as the primary source:
 
 ```bash
 python scripts/packaging/generate_icons.py
 ```
 
-脚本会生成运行时 PNG 尺寸族、Windows `.ico` 和 macOS `.icns`。macOS 会优先调用 `iconutil`，不可用时回退到 Pillow 生成 `.icns`。
+The script generates the runtime PNG size family, Windows `.ico`, and macOS `.icns`. On macOS, it calls `iconutil` first and falls back to Pillow for generating `.icns` if `iconutil` is unavailable.
 
-## Python 包模式
+## Python Package Mode
 
-构建命令：
+Build command:
 
 ```bash
 python scripts/packaging/build_python_package.py
 ```
 
-脚本会执行以下步骤：
+The script performs the following steps:
 
-- 校验当前 conda 环境名为 `PicViewer`。
-- 生成 `src/pic_viewer/ui/resources/i18n/*.qm`。
-- 清理旧的 `dist/`、`build/`、`src/picviewer.egg-info/`。
-- 执行 `python -m build`，产物输出到 `dist/`。
+- Verify that the current conda environment name is `PicViewer`.
+- Generate `src/pic_viewer/ui/resources/i18n/*.qm`.
+- Clean old `dist/`, `build/`, and `src/picviewer.egg-info/`.
+- Run `python -m build`, with artifacts written to `dist/`.
 
-发布包包含 QSS、TS、QM 资源。安装后支持：
+The release package includes QSS, TS, and QM resources. After installation, it supports:
 
 ```bash
 python -m pic_viewer
 picviewer
 ```
 
-RAW 支持对 pip 用户保持可选：
+RAW support remains optional for pip users:
 
 ```bash
 pip install "picviewer[raw]"
 ```
 
-## PyInstaller App 模式
+## PyInstaller App Mode
 
-构建命令：
+Build command:
 
 ```bash
 python scripts/packaging/build_app.py
 ```
 
-脚本会执行以下步骤：
+The script performs the following steps:
 
-- 校验当前 conda 环境名为 `PicViewer`。
-- 生成 `.qm` 翻译资源。
-- 使用 `packaging/pyinstaller/PicViewer.spec` 调用 PyInstaller。
-- 在 `dist/` 输出平台本机产物。
+- Verify that the current conda environment name is `PicViewer`.
+- Generate `.qm` translation resources.
+- Invoke PyInstaller with `packaging/pyinstaller/PicViewer.spec`.
+- Output native platform artifacts to `dist/`.
 
-PyInstaller 使用 `onedir` 模式。Windows 产物为 `dist/PicViewer/`，macOS 产物为 `dist/PicViewer.app`。Windows 使用 `packaging/icons/picviewer.ico`，macOS 使用 `packaging/icons/picviewer.icns` 作为应用图标。App 版本默认通过 `packaging` extra 安装并收集 `rawpy`，面向普通用户提供 RAW 支持。
+PyInstaller uses `onedir` mode. The Windows artifact is `dist/PicViewer/`, and the macOS artifact is `dist/PicViewer.app`. Windows uses `packaging/icons/picviewer.ico` as the application icon, and macOS uses `packaging/icons/picviewer.icns`. The app version installs and collects `rawpy` through the `packaging` extra by default, providing RAW support for ordinary users.
 
-不支持交叉构建：Windows App 必须在 Windows 构建，macOS App 必须在 macOS 构建。
+Cross-building is not supported: the Windows app must be built on Windows, and the macOS app must be built on macOS.
 
-## Windows MSI 模式
+## Windows MSI Mode
 
-构建命令：
+Build command:
 
 ```bash
 python scripts/packaging/build_msi.py
 ```
 
-脚本会执行以下步骤：
+The script performs the following steps:
 
-- 校验当前 conda 环境名为 `PicViewer`。
-- 校验当前平台为 Windows。
-- 校验 WiX CLI 可用。
-- 从 `pyproject.toml` 读取版本号，版本号必须符合 Windows Installer 的 `MAJOR.MINOR.PATCH` 数字格式。
-- 校验 `dist/PicViewer/PicViewer.exe` 已存在；若不存在，应先运行 `python scripts/packaging/build_app.py`。
-- 根据 `dist/PicViewer/` 的实际文件树生成临时 WiX 源文件 `build/msi/PicViewer.wxs`。
-- 使用 WiX 构建 x64、per-machine MSI，安装目录为 `C:\Program Files\PicViewer`。
-- 在开始菜单和桌面创建 `PicViewer` 快捷方式。
-- 在 MSI 同级目录生成 SHA256 校验文件，文件名为 `*.msi.sha256`。
+- Verify that the current conda environment name is `PicViewer`.
+- Verify that the current platform is Windows.
+- Verify that the WiX CLI is available.
+- Read the version number from `pyproject.toml`; the version must follow Windows Installer's numeric `MAJOR.MINOR.PATCH` format.
+- Verify that `dist/PicViewer/PicViewer.exe` already exists; if it does not, run `python scripts/packaging/build_app.py` first.
+- Generate a temporary WiX source file, `build/msi/PicViewer.wxs`, from the actual file tree under `dist/PicViewer/`.
+- Use WiX to build an x64, per-machine MSI, with the installation directory set to `C:\Program Files\PicViewer`.
+- Create `PicViewer` shortcuts in the Start menu and on the desktop.
+- Generate a SHA256 checksum file next to the MSI, with the file name `*.msi.sha256`.
 
-MSI 产物输出到 `dist/PicViewer-版本号.msi`，例如 `dist/PicViewer-0.1.0.msi`。
-SHA256 校验文件输出到 `dist/PicViewer-版本号.msi.sha256`，内容格式为 `SHA256  MSI文件名`。
+The MSI artifact is written to `dist/PicViewer-version.msi`, for example `dist/PicViewer-0.1.0.msi`.
+The SHA256 checksum file is written to `dist/PicViewer-version.msi.sha256`, with content in the format `SHA256  MSI file name`.
 
-如果 WiX 命令不叫 `wix`，可使用：
+If the WiX command is not named `wix`, use:
 
 ```bash
 python scripts/packaging/build_msi.py --wix C:\Path\To\wix.exe
 ```
 
-如果使用 WiX v7 且尚未做过按用户/机器保存的 EULA 接受，也可使用：
+If using WiX v7 and no user-level or machine-level EULA acceptance has been saved yet, you can also use:
 
 ```bash
 python scripts/packaging/build_msi.py --accept-wix-eula
 ```
 
-## macOS DMG 模式
+## macOS DMG Mode
 
-构建命令：
+Build command:
 
 ```bash
 python scripts/packaging/build_dmg.py
 ```
 
-脚本会执行以下步骤：
+The script performs the following steps:
 
-- 校验当前 conda 环境名为 `PicViewer`。
-- 校验当前平台为 macOS。
-- 从 `pyproject.toml` 读取版本号。
-- 校验 `dist/PicViewer.app` 已存在；若不存在，应先运行 `python scripts/packaging/build_app.py`。
-- 将 `dist/PicViewer.app` 复制到临时 staging 目录。
-- 在 staging 目录中创建 `Applications -> /Applications` 捷径，方便用户拖拽安装。
-- 使用 macOS 自带 `hdiutil` 生成压缩 DMG。
-- 在 DMG 同级目录生成 SHA256 校验文件，文件名为 `*.dmg.sha256`。
+- Verify that the current conda environment name is `PicViewer`.
+- Verify that the current platform is macOS.
+- Read the version number from `pyproject.toml`.
+- Verify that `dist/PicViewer.app` already exists; if it does not, run `python scripts/packaging/build_app.py` first.
+- Copy `dist/PicViewer.app` to a temporary staging directory.
+- Create an `Applications -> /Applications` shortcut in the staging directory so users can install by dragging.
+- Use macOS built-in `hdiutil` to generate a compressed DMG.
+- Generate a SHA256 checksum file next to the DMG, with the file name `*.dmg.sha256`.
 
-DMG 产物输出到 `dist/PicViewer-版本号.dmg`，例如 `dist/PicViewer-0.1.0.dmg`。
-SHA256 校验文件输出到 `dist/PicViewer-版本号.dmg.sha256`，内容格式为 `SHA256  DMG文件名`。
+The DMG artifact is written to `dist/PicViewer-version.dmg`, for example `dist/PicViewer-0.1.0.dmg`.
+The SHA256 checksum file is written to `dist/PicViewer-version.dmg.sha256`, with content in the format `SHA256  DMG file name`.
 
-## 发布检查清单
+## Release Checklist
 
 ```bash
 conda activate PicViewer
-python --version  # 应输出 Python 3.10.x
+python --version  # Should output Python 3.10.x
 python -m unittest discover -s tests/unit
 python scripts/packaging/build_python_package.py
 python -m zipfile -l dist/*.whl
@@ -193,7 +190,7 @@ shasum -a 256 -c *.dmg.sha256
 cd ..
 ```
 
-检查 wheel 内容时，应能看到：
+When checking wheel contents, the following files should be visible:
 
 - `pic_viewer/ui/resources/styles/main.qss`
 - `pic_viewer/ui/resources/icons/picviewer.svg`
@@ -201,11 +198,11 @@ cd ..
 - `pic_viewer/ui/resources/i18n/picviewer_zh_CN.qm`
 - `pic_viewer/ui/resources/i18n/picviewer_en.qm`
 
-App 验证至少覆盖：
+App verification should cover at least:
 
-- 默认语言启动。
-- `PICVIEWER_LANG=zh_CN` 启动。
-- 必要时用 `PICVIEWER_LANG=en` 显式验证英文 source 回退。
-- 打开普通 JPG/PNG 图片。
-- 打开 RAW 图片。
-- `--developer-mode` 能写入开发日志。
+- Starting with the default language.
+- Starting with `PICVIEWER_LANG=zh_CN`.
+- Explicitly verifying the English source fallback with `PICVIEWER_LANG=en` when needed.
+- Opening ordinary JPG/PNG images.
+- Opening RAW images.
+- Confirming that `--developer-mode` can write development logs.
