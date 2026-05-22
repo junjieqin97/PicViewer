@@ -4,16 +4,16 @@ This project is developed by AI.
 
 Please see the [AGENTS.md](AGENTS.md).
 
-## 安装与启动
+## Installation and Startup
 
-开发源码运行：
+Run from development source:
 
 ```bash
 conda activate PicViewer
 python -m pic_viewer.main
 ```
 
-安装为 Python 包后运行：
+Run after installing as a Python package:
 
 ```bash
 pip install picviewer
@@ -21,80 +21,80 @@ python -m pic_viewer
 picviewer
 ```
 
-需要 RAW 支持的专业用户可安装：
+Professional users who need RAW support can install:
 
 ```bash
 pip install "picviewer[raw]"
 ```
 
-## 打包
+## Packaging
 
-发布前请先激活项目环境：
+Activate the project environment before release:
 
 ```bash
 conda activate PicViewer
 ```
 
-构建 Python 源码包和 wheel：
+Build the Python source distribution and wheel:
 
 ```bash
 python scripts/packaging/build_python_package.py
 ```
 
-构建 Windows/macOS 本机 PyInstaller App：
+Build native PyInstaller apps for Windows/macOS:
 
 ```bash
 python scripts/packaging/build_app.py
 ```
 
-详细规则见 [docs/packaging.md](docs/packaging.md)。
+For detailed rules, see [docs/packaging.md](docs/packaging.md).
 
 ## Notes
 
-- High-DPI 支持已启用：图片显示区与信息区分析图会按 DPR 渲染。
+- High-DPI support is enabled: the image display area and analysis charts in the info panel render according to DPR.
 
-## 国际化（简体中文/英文）
+## Internationalization (Simplified Chinese/English)
 
-- 语言优先级：`PICVIEWER_LANG` > 系统语言 > `zh_CN`。
-- 支持值：
-  - 中文：`zh` / `zh_CN` / `zh-CN`
-  - 英文：`en` / `en_US` / `en-GB`
-- 不支持运行时切换，语言在应用启动时确定。
+- Language priority: `PICVIEWER_LANG` > system language > `zh_CN`.
+- Supported values:
+  - Chinese: `zh` / `zh_CN` / `zh-CN`
+  - English: `en` / `en_US` / `en-GB`
+- Runtime switching is not supported; the language is determined when the application starts.
 
-### 环境变量示例
+### Environment Variable Examples
 
 ```bash
 PICVIEWER_LANG=en python -m pic_viewer.main
 PICVIEWER_LANG=en python -m pic_viewer
 ```
 
-## 日志
+### Fallback Rules
 
-- 默认模式：日志输出到控制台。
-- 开发者模式：日志输出到 `~/.PicViewer/logs/picviewer.log`，单文件最大 5MB，保留 5 个滚动备份。
-- 日志级别仍由 `PICVIEWER_LOG_LEVEL` 控制，默认值为 `INFO`。
+- If English is selected but `picviewer_en.qm` cannot be found at runtime, the application automatically falls back to Chinese and continues startup.
+- By default, the source repository commits only `.ts` files; `.qm` files are generated during CI/packaging.
 
-### 开发者模式示例
+### Translation File Maintenance
+
+```bash
+# Update ts files from Python source code
+scripts/i18n/update_ts.sh
+
+# Generate qm files from ts files (defaults to output under src/pic_viewer/ui/resources/i18n)
+scripts/i18n/build_qm.sh
+```
+
+For more conventions, see [docs/i18n.md](docs/i18n.md).
+
+## Logging
+
+- Default mode: logs are output to the console.
+- Developer mode: logs are output to `~/.PicViewer/logs/picviewer.log`; each file is capped at 5 MB, with 5 rotating backups retained.
+- The log level is still controlled by `PICVIEWER_LOG_LEVEL`; the default value is `INFO`.
+
+### Developer Mode Examples
 
 ```bash
 python -m pic_viewer.main --developer-mode
 python -m pic_viewer --developer-mode
 PICVIEWER_LOG_LEVEL=DEBUG python -m pic_viewer.main --developer-mode
 ```
-
-### 回退规则
-
-- 若选择英文但运行时找不到 `picviewer_en.qm`，应用会自动回退到中文并继续启动。
-- 源码仓库默认只提交 `.ts`，`.qm` 由 CI/打包阶段生成。
-
-### 翻译文件维护
-
-```bash
-# 从 Python 源码更新 ts
-scripts/i18n/update_ts.sh
-
-# 从 ts 生成 qm（默认输出到 src/pic_viewer/ui/resources/i18n）
-scripts/i18n/build_qm.sh
-```
-
-更多约定见 [docs/i18n.md](docs/i18n.md)。
