@@ -57,6 +57,9 @@ python scripts/packaging/build_msi.py --accept-wix-eula
 python scripts/i18n/build_qm.py --lrelease /path/to/lrelease
 ```
 
+当 `lrelease` 和 `lrelease-qt5` 都不在 `PATH` 中时，`build_qm.py` 也会在
+`~/.conda/envs/PicViewer/Lib/site-packages/PySide2` 下查找这些工具。
+
 应用图标资源由 `src/pic_viewer/ui/resources/icons/picviewer.svg` 作为主源生成：
 
 ```bash
