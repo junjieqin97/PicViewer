@@ -22,6 +22,7 @@ class MetadataOverlayServiceTests(unittest.TestCase):
         metadata = ImageMetadata(
             general=(("Resolution", "6000 x 4000"),),
             exif=(
+                ("Make", "FUJIFILM"),
                 ("Model", "X-T5"),
                 ("LensModel", "XF 33mm F1.4"),
                 ("FNumber", "2.8"),
@@ -36,31 +37,43 @@ class MetadataOverlayServiceTests(unittest.TestCase):
 
         self.assertEqual(
             (
-                "X-T5 XF 33mm F1.4",
+                "FUJIFILM X-T5 XF 33mm F1.4",
                 "f/2.8 1/125s ISO 400",
                 "6000 x 4000",
             ),
             lines,
         )
 
-    def test_missing_metadata_uses_unknown_and_resolution_fallback(self) -> None:
+    def test_missing_metadata_is_omitted_and_resolution_fallback_remains(self) -> None:
         metadata = ImageMetadata(general=tuple(), exif=tuple(), iptc=tuple(), tiff=tuple())
 
         lines = build_metadata_overlay_lines(metadata, source_size=(1080, 1920))
 
-        self.assertEqual(
-            (
-                "Unknown Unknown",
-                "f/Unknown Unknowns ISO Unknown",
-                "1920 x 1080",
+        self.assertEqual(("1920 x 1080",), lines)
+        self.assertNotIn("Unknown", "\n".join(lines))
+
+    def test_partial_exposure_metadata_omits_missing_fields(self) -> None:
+        metadata = ImageMetadata(
+            general=tuple(),
+            exif=(
+                ("Make", "Canon"),
+                ("Model", "EOS R5"),
+                ("ExposureTime", "1/250"),
             ),
-            lines,
+            iptc=tuple(),
+            tiff=tuple(),
         )
+
+        lines = build_metadata_overlay_lines(metadata, source_size=None)
+
+        self.assertEqual(("Canon EOS R5", "1/250s"), lines)
+        self.assertNotIn("Unknown", "\n".join(lines))
 
     def test_decimal_exposure_time_is_rendered_as_fraction_when_under_one_second(self) -> None:
         metadata = ImageMetadata(
             general=tuple(),
             exif=(
+                ("Make", "Canon"),
                 ("Model", "EOS R5"),
                 ("LensModel", "RF 50mm"),
                 ("FNumber", "4/1"),

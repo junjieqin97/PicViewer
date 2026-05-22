@@ -242,6 +242,7 @@ class InfoPanelLoadStateTests(unittest.TestCase):
             metadata=ImageMetadata(
                 general=(("Resolution", "6000 x 4000"),),
                 exif=(
+                    ("Make", "FUJIFILM"),
                     ("Model", "X-T5"),
                     ("LensModel", "XF 33mm F1.4"),
                     ("FNumber", "2.8"),
@@ -260,7 +261,7 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         self.assertTrue(lbl_image.is_metadata_overlay_visible())
         self.assertEqual(
             (
-                "X-T5 XF 33mm F1.4",
+                "FUJIFILM X-T5 XF 33mm F1.4",
                 "f/2.8 1/125s ISO 400",
                 "6000 x 4000",
             ),

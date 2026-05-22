@@ -63,7 +63,7 @@ The main window uses a typical four-area structure:
   - Crosshair Reference Line, Diagonal Reference Line, Rule-of-Thirds Grid Reference Line
   - Show Metadata Overlay
 - The Show Metadata Overlay button is pinned to the far right side of the toolbar. The centered analysis button group must remain visually centered by reserving equal space on the left side.
-- The Show Metadata Overlay button is enabled by default. When enabled, the current image shows three metadata lines at the upper-left corner of the actual displayed image: camera/lens, exposure settings, and resolution. The text is drawn in semi-transparent white.
+- The Show Metadata Overlay button is enabled by default. When enabled, the current image shows up to three metadata lines at the upper-left corner of the actual displayed image: camera/lens, exposure settings, and resolution. The camera name combines camera maker and camera model when both are available. Missing metadata fields are omitted instead of shown as placeholders. The text is drawn in semi-transparent white.
 
 ## 3. Upper Content Area: Image Tabs + Right Info Area (QSplitter)
 

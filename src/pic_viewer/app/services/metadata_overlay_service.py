@@ -7,13 +7,10 @@ from typing import Optional
 
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
 
-UNKNOWN_METADATA_VALUE = "Unknown"
-
-
 def build_metadata_overlay_lines(
     metadata: ImageMetadata,
     source_size: Optional[tuple[int, int]],
-) -> tuple[str, str, str]:
+) -> tuple[str, ...]:
     """Build the fixed three-line metadata overlay shown over an image preview.
 
     Args:
@@ -22,12 +19,13 @@ def build_metadata_overlay_lines(
             metadata does not include a General/Resolution entry.
 
     Returns:
-        Three display lines: camera/lens, exposure settings, and resolution.
+        Available display lines: camera/lens, exposure settings, and resolution.
+        Missing metadata fields are omitted instead of shown as placeholders.
     """
 
     general = _section_dict(metadata.general)
     exif = _section_dict(metadata.exif)
-    camera_model = _first_value(exif, ("Model", "Camera Model Name"))
+    camera_name = _camera_name(exif)
     lens_model = _first_value(exif, ("LensModel", "Lens", "LensInfo"))
     aperture = _format_aperture(_first_value(exif, ("FNumber", "ApertureValue")))
     exposure = _format_exposure_time(_first_value(exif, ("ExposureTime", "ShutterSpeedValue")))
@@ -41,11 +39,12 @@ def build_metadata_overlay_lines(
         ),
     )
     resolution = _resolution_text(general, source_size)
-    return (
-        f"{camera_model} {lens_model}",
-        f"f/{aperture} {exposure}s ISO {iso}",
+    lines = (
+        _join_parts(camera_name, lens_model),
+        _join_parts(_prefix_value("f/", aperture), _suffix_value(exposure, "s"), _prefix_value("ISO ", iso)),
         resolution,
     )
+    return tuple(line for line in lines if line)
 
 
 def _section_dict(entries: MetadataSection) -> dict[str, str]:
@@ -56,13 +55,21 @@ def _first_value(entries: dict[str, str], keys: tuple[str, ...]) -> str:
     for key in keys:
         value = entries.get(key)
         if value:
-            return value
-    return UNKNOWN_METADATA_VALUE
+            return value.strip()
+    return ""
+
+
+def _camera_name(exif: dict[str, str]) -> str:
+    make = _first_value(exif, ("Make", "Camera Make"))
+    model = _first_value(exif, ("Model", "Camera Model Name"))
+    if make and model.lower().startswith(make.lower()):
+        return model
+    return _join_parts(make, model)
 
 
 def _format_aperture(value: str) -> str:
-    if value == UNKNOWN_METADATA_VALUE:
-        return value
+    if not value:
+        return ""
     normalized = value.strip()
     if normalized.lower().startswith("f/"):
         normalized = normalized[2:].strip()
@@ -70,8 +77,8 @@ def _format_aperture(value: str) -> str:
 
 
 def _format_exposure_time(value: str) -> str:
-    if value == UNKNOWN_METADATA_VALUE:
-        return value
+    if not value:
+        return ""
     normalized = value.strip()
     if normalized.lower().endswith("s"):
         normalized = normalized[:-1].strip()
@@ -104,7 +111,7 @@ def _format_fraction(value: Fraction) -> str:
         return str(value.numerator)
     as_float = value.numerator / value.denominator
     formatted = f"{as_float:.2f}".rstrip("0").rstrip(".")
-    return formatted or UNKNOWN_METADATA_VALUE
+    return formatted
 
 
 def _resolution_text(general: dict[str, str], source_size: Optional[tuple[int, int]]) -> str:
@@ -112,9 +119,25 @@ def _resolution_text(general: dict[str, str], source_size: Optional[tuple[int, i
     if resolution:
         return resolution
     if source_size is None:
-        return UNKNOWN_METADATA_VALUE
+        return ""
     try:
         height, width = source_size
     except (TypeError, ValueError):
-        return UNKNOWN_METADATA_VALUE
+        return ""
     return f"{width} x {height}"
+
+
+def _join_parts(*parts: str) -> str:
+    return " ".join(part.strip() for part in parts if part and part.strip())
+
+
+def _prefix_value(prefix: str, value: str) -> str:
+    if not value:
+        return ""
+    return f"{prefix}{value}"
+
+
+def _suffix_value(value: str, suffix: str) -> str:
+    if not value:
+        return ""
+    return f"{value}{suffix}"
