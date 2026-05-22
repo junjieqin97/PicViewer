@@ -659,44 +659,9 @@
         <translation>第三方库许可证信息</translation>
     </message>
     <message>
-        <location filename="third_party_license_dialog.py" line="42"/>
-        <source>Library</source>
-        <translation>库</translation>
-    </message>
-    <message>
-        <location filename="third_party_license_dialog.py" line="43"/>
-        <source>Version</source>
-        <translation>版本</translation>
-    </message>
-    <message>
-        <location filename="third_party_license_dialog.py" line="44"/>
-        <source>License</source>
-        <translation>许可证</translation>
-    </message>
-    <message>
-        <location filename="third_party_license_dialog.py" line="45"/>
-        <source>Notes</source>
-        <translation>备注</translation>
-    </message>
-    <message>
-        <location filename="third_party_license_dialog.py" line="85"/>
+        <location filename="third_party_license_dialog.py" line="59"/>
         <source>Not installed</source>
         <translation>未安装</translation>
-    </message>
-    <message>
-        <location filename="third_party_license_dialog.py" line="92"/>
-        <source>Includes OpenCV and bundled third-party components.</source>
-        <translation>包含 OpenCV 及随附第三方组件。</translation>
-    </message>
-    <message>
-        <location filename="third_party_license_dialog.py" line="94"/>
-        <source>Optional RAW image support.</source>
-        <translation>可选 RAW 图像支持。</translation>
-    </message>
-    <message>
-        <location filename="third_party_license_dialog.py" line="90"/>
-        <source>LGPL v3, GPL v2, or commercial license depending on distribution.</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

@@ -13,7 +13,7 @@ from pic_viewer.app.services.third_party_license_service import (
 
 
 class ThirdPartyLicenseDialog(QtWidgets.QDialog):
-    """Read-only table dialog for runtime dependency license metadata."""
+    """Read-only plain text dialog for runtime dependency license metadata."""
 
     def __init__(
         self,
@@ -25,7 +25,7 @@ class ThirdPartyLicenseDialog(QtWidgets.QDialog):
         self.setObjectName("dialogThirdPartyLicenses")
         self.resize(720, 360)
         self._setup_ui()
-        self._populate_table()
+        self._populate_text()
 
     def _tr(self, text: str) -> str:
         return QtCore.QCoreApplication.translate("ThirdPartyLicenseDialog", text)
@@ -34,61 +34,26 @@ class ThirdPartyLicenseDialog(QtWidgets.QDialog):
         self.setWindowTitle(self._tr("Third-Party License Information"))
 
         layout = QtWidgets.QVBoxLayout(self)
-        self.tableThirdPartyLicenses = QtWidgets.QTableWidget(self)
-        self.tableThirdPartyLicenses.setObjectName("tableThirdPartyLicenses")
-        self.tableThirdPartyLicenses.setColumnCount(4)
-        self.tableThirdPartyLicenses.setHorizontalHeaderLabels(
-            [
-                self._tr("Library"),
-                self._tr("Version"),
-                self._tr("License"),
-                self._tr("Notes"),
-            ]
-        )
-        self.tableThirdPartyLicenses.verticalHeader().setVisible(False)
-        self.tableThirdPartyLicenses.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.tableThirdPartyLicenses.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.tableThirdPartyLicenses.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.tableThirdPartyLicenses.setWordWrap(True)
-        header = self.tableThirdPartyLicenses.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
-        layout.addWidget(self.tableThirdPartyLicenses)
+        self.textThirdPartyLicenses = QtWidgets.QPlainTextEdit(self)
+        self.textThirdPartyLicenses.setObjectName("textThirdPartyLicenses")
+        self.textThirdPartyLicenses.setReadOnly(True)
+        self.textThirdPartyLicenses.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
+        layout.addWidget(self.textThirdPartyLicenses)
 
         buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok, self)
         buttons.accepted.connect(self.accept)
         layout.addWidget(buttons)
 
-    def _populate_table(self) -> None:
-        self.tableThirdPartyLicenses.setRowCount(len(self._licenses))
-        for row, license_info in enumerate(self._licenses):
-            values = (
-                license_info.display_name,
-                self._translate_version(license_info.version),
-                license_info.license_text,
-                self._translate_notes(license_info.notes),
-            )
-            for column, value in enumerate(values):
-                self.tableThirdPartyLicenses.setItem(row, column, self._create_item(value))
-        self.tableThirdPartyLicenses.resizeRowsToContents()
+    def _populate_text(self) -> None:
+        self.textThirdPartyLicenses.setPlainText(
+            "\n".join(self._format_license_line(license_info) for license_info in self._licenses)
+        )
 
-    def _create_item(self, text: str) -> QtWidgets.QTableWidgetItem:
-        item = QtWidgets.QTableWidgetItem(text)
-        item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
-        return item
+    def _format_license_line(self, license_info: ThirdPartyLicenseInfo) -> str:
+        version = self._translate_version(license_info.version)
+        return f"{license_info.display_name} {version} {license_info.license_text}"
 
     def _translate_version(self, version: str) -> str:
         if version == NOT_INSTALLED_VERSION:
             return self._tr("Not installed")
         return version
-
-    def _translate_notes(self, notes: str) -> str:
-        if notes == "LGPL v3, GPL v2, or commercial license depending on distribution.":
-            return self._tr("LGPL v3, GPL v2, or commercial license depending on distribution.")
-        if notes == "Includes OpenCV and bundled third-party components.":
-            return self._tr("Includes OpenCV and bundled third-party components.")
-        if notes == "Optional RAW image support.":
-            return self._tr("Optional RAW image support.")
-        return notes
