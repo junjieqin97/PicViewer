@@ -49,6 +49,43 @@ class ThirdPartyLicenseServiceTests(unittest.TestCase):
             parts,
         )
 
+    def test_split_license_text_does_not_link_license_key_inside_words(self) -> None:
+        parts = split_license_text("NOT LIMITED TO CONSEQUENTIAL DAMAGES")
+
+        self.assertEqual((LicenseTextPart("NOT LIMITED TO CONSEQUENTIAL DAMAGES", None),), parts)
+
+    def test_load_third_party_licenses_normalizes_common_license_aliases(self) -> None:
+        metadata_by_package = {
+            "PySide2": self._message({"License": "LGPL"}),
+            "opencv-python": self._message({"License": "Apache 2.0"}),
+        }
+
+        licenses = self._load_with_metadata(metadata_by_package)
+
+        pyside = self._find_license(licenses, "PySide2")
+        opencv = self._find_license(licenses, "opencv-python")
+        self.assertEqual("LGPL-3.0-only", pyside.license_text)
+        self.assertEqual("Apache-2.0", opencv.license_text)
+
+    def test_load_third_party_licenses_prefers_classifier_over_embedded_license_body(self) -> None:
+        metadata_by_package = {
+            "numpy": self._message(
+                {
+                    "License": (
+                        "Copyright (c) 2005-2024, NumPy Developers.\n"
+                        "Redistribution and use in source and binary forms are permitted.\n"
+                        "THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS."
+                    ),
+                },
+                classifiers=["License :: OSI Approved :: BSD License"],
+            ),
+        }
+
+        licenses = self._load_with_metadata(metadata_by_package)
+
+        numpy = self._find_license(licenses, "numpy")
+        self.assertEqual("BSD-3-Clause", numpy.license_text)
+
     def test_load_license_document_reads_local_english_text(self) -> None:
         document = load_license_document("LGPL-3.0-only")
 

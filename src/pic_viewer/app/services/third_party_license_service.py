@@ -93,6 +93,16 @@ _LICENSE_DOCUMENT_TITLES: dict[str, str] = {
     "MIT-CMU": "CMU License",
 }
 _LICENSE_DOCUMENT_KEYS = tuple(sorted(_LICENSE_DOCUMENT_TITLES, key=len, reverse=True))
+_LICENSE_ALIASES: dict[str, str] = {
+    "apache 2.0": "Apache-2.0",
+    "apache license 2.0": "Apache-2.0",
+    "apache software license": "Apache-2.0",
+    "bsd license": "BSD-3-Clause",
+    "cmu license": "MIT-CMU",
+    "gnu library or lesser general public license (lgpl)": "LGPL-3.0-only",
+    "lgpl": "LGPL-3.0-only",
+    "mit license": "MIT",
+}
 
 
 def load_third_party_licenses() -> list[ThirdPartyLicenseInfo]:
@@ -154,9 +164,23 @@ def load_license_document(document_key: str) -> LicenseDocument | None:
 
 def _matching_document_key(license_text: str, index: int) -> str | None:
     for document_key in _LICENSE_DOCUMENT_KEYS:
-        if license_text.startswith(document_key, index):
+        if license_text.startswith(document_key, index) and _has_license_key_boundaries(
+            license_text,
+            index,
+            index + len(document_key),
+        ):
             return document_key
     return None
+
+
+def _has_license_key_boundaries(license_text: str, start: int, end: int) -> bool:
+    before = license_text[start - 1] if start > 0 else ""
+    after = license_text[end] if end < len(license_text) else ""
+    return not _is_identifier_boundary_char(before) and not _is_identifier_boundary_char(after)
+
+
+def _is_identifier_boundary_char(char: str) -> bool:
+    return bool(char) and (char.isalnum() or char in {"-", "_"})
 
 
 def _load_license_info(spec: _DependencyLicenseSpec) -> ThirdPartyLicenseInfo:
@@ -184,11 +208,11 @@ def _load_license_info(spec: _DependencyLicenseSpec) -> ThirdPartyLicenseInfo:
 def _resolve_license_text(package_metadata: metadata.PackageMetadata, fallback_license: str) -> str:
     license_expression = _clean_metadata_value(package_metadata.get("License-Expression"))
     if license_expression:
-        return license_expression
+        return _canonicalize_license_text(license_expression)
 
     license_text = _clean_metadata_value(package_metadata.get("License"))
-    if license_text:
-        return license_text
+    if license_text and not _is_embedded_license_body(license_text):
+        return _canonicalize_license_text(license_text)
 
     classifier_license = _resolve_classifier_license(package_metadata)
     if classifier_license:
@@ -203,8 +227,20 @@ def _resolve_classifier_license(package_metadata: metadata.PackageMetadata) -> s
             continue
         classifier_parts = [part.strip() for part in classifier.split("::") if part.strip()]
         if classifier_parts:
-            return classifier_parts[-1]
+            return _canonicalize_license_text(classifier_parts[-1])
     return None
+
+
+def _canonicalize_license_text(license_text: str) -> str:
+    if license_text in _LICENSE_DOCUMENT_TITLES:
+        return license_text
+    return _LICENSE_ALIASES.get(license_text.strip().lower(), license_text)
+
+
+def _is_embedded_license_body(license_text: str) -> bool:
+    if "\n" in license_text:
+        return True
+    return len(license_text) > 160 and "copyright" in license_text.lower()
 
 
 def _clean_metadata_value(value: str | None) -> str | None:

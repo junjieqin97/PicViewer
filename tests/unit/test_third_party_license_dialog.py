@@ -59,6 +59,26 @@ class ThirdPartyLicenseDialogTests(unittest.TestCase):
         self.assertNotIn('href="license:Commercial"', html)
         self.assertIsNone(dialog.findChild(QtWidgets.QPlainTextEdit, "textThirdPartyLicenses"))
 
+    def test_dialog_does_not_link_license_keys_inside_regular_words(self) -> None:
+        licenses = [
+            ThirdPartyLicenseInfo(
+                "NumPy",
+                "numpy",
+                "2.2.6",
+                "NOT LIMITED TO CONSEQUENTIAL DAMAGES",
+                "",
+            ),
+        ]
+
+        dialog = ThirdPartyLicenseDialog(licenses)
+        self.addCleanup(dialog.deleteLater)
+
+        text = dialog.findChild(QtWidgets.QTextBrowser, "textThirdPartyLicenses")
+        self.assertIsNotNone(text)
+        assert text is not None
+        self.assertIn("NOT LIMITED TO CONSEQUENTIAL DAMAGES", text.toPlainText())
+        self.assertNotIn('href="license:MIT"', text.toHtml())
+
     def test_license_link_opens_document_dialog(self) -> None:
         licenses = [
             ThirdPartyLicenseInfo(
