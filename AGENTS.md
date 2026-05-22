@@ -170,6 +170,7 @@ Unless explicitly instructed:
 
 ## 10. Documentation Rules
 
+- All documents must be written in English
 - Update docs/ when architecture or behavior changes
 - Keep doc changes in the same commit as code changes
 
