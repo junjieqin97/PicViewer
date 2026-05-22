@@ -1,14 +1,14 @@
-# PicViewer项目开发计划
+# PicViewer Project Development Plan
 
-* 正在开发一个桌面端的照片预览工具，支持打开JPG、PNG、TIFF等常见的图片格式文件，同时支持打开各种相机的RAW文件。
+* You are developing a desktop photo preview tool. It supports opening common image formats such as JPG, PNG, and TIFF, and also supports opening RAW files from various cameras.
 
-## 基本功能
+## Basic Features
 
-* 使用该照片预览工具打开照片后，支持显示该照片对应的`直方图`、`波形图`、`元数据`。
-* `直方图`和`波形图`支持在`明度模式`和`RGB模式`之间切换，默认显示的是`明度模式`。
-* `直方图`和`波形图`在`RGB模式`下，支持在同时显示RGB三个通道和只显示其中一个通道之间切换。
-* `元数据`可以像`MacOS`的`预览App`那样显示`通用`、`Exif`、`IPTC`、`TIFF`四种类型的`元数据`，默认显示的是`通用`。
-* `波形图`左侧Y轴从下至上显示`曝光值`（分别是0、20、40、60、80、100），其中20、40、60、80的`曝光值`要显示`刻度线`，`曝光值`和`刻度线`用`黄色`显示。
-* `直方图`的左上角和右上角有`小三角形`，激活左上角的三角形可以显示照片中`欠曝`的区域，激活右上角的三角形可以显示照片中`过曝`的区域；其中`欠曝`的区域用`绿色`的伪色显示，`过曝`的区域用`红色`的伪色显示。
-* `伪色`菜单支持`显示峰值`功能，开启后使用`蓝色`伪色显示图片中的焦点峰值；`显示峰值`下提供`高`、`中`、`低`三个档位，其中`高`更敏感、显示更多峰值，`低`更严格、只显示最强峰值。
-* 图片显示区支持`参考线`功能，包括`十字形参考线`、`对角线参考线`、`三等分井字形参考线`三种类型；三种参考线都支持独立开关，可以同时开启并叠加显示，参考线统一使用`白色`、`3px`线宽绘制在图片预览区域上。
+* After a photo is opened with this photo preview tool, the tool supports displaying the photo's corresponding `histogram`, `waveform`, and `metadata`.
+* The `histogram` and `waveform` support switching between `luma mode` and `RGB mode`. The default display mode is `luma mode`.
+* In `RGB mode`, the `histogram` and `waveform` support switching between displaying all three RGB channels at the same time and displaying only one of the channels.
+* `Metadata` can display four types of `metadata`, `General`, `Exif`, `IPTC`, and `TIFF`. The default display type is `General`.
+* The left Y-axis of the `waveform` displays `exposure values` from bottom to top (`0`, `20`, `40`, `60`, `80`, and `100`). The `exposure values` `20`, `40`, `60`, and `80` should show `tick marks`. The `exposure values` and `tick marks` are displayed in `yellow`.
+* The upper-left and upper-right corners of the `histogram` have `small triangles`. Activating the upper-left triangle displays the `underexposed` areas in the photo, and activating the upper-right triangle displays the `overexposed` areas in the photo. The `underexposed` areas are shown with `green` pseudo color, and the `overexposed` areas are shown with `red` pseudo color.
+* The `Pseudo Color` menu supports the `Show Peaking` feature. When enabled, it uses `blue` pseudo color to display focus peaks in the image. `Show Peaking` provides three levels: `High`, `Medium`, and `Low`; `High` is more sensitive and shows more peaks, while `Low` is stricter and shows only the strongest peaks.
+* The image display area supports `reference lines`, including three types: `crosshair reference line`, `diagonal reference line`, and `rule-of-thirds grid reference line`. All three reference lines support independent toggles, can be enabled at the same time, and can be displayed as overlays. Reference lines are uniformly drawn in `white` with a `3px` line width over the image preview area.
