@@ -502,6 +502,8 @@ class MainControllerAnalysisMixin:
             lbl.resize(self._pixmap_logical_size(pixmap))
             self._show_tab_image_state(path)
         self._tab_preview_render_key_by_path[path_key] = render_key
+        if hasattr(self, "_sync_metadata_overlay_for_path"):
+            self._sync_metadata_overlay_for_path(path)
 
     def _target_pixmap_size(self, path: Path, base_size: QtCore.QSize) -> QtCore.QSize:
         """Calculate the target pixmap size based on zoom settings."""

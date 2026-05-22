@@ -93,6 +93,7 @@ class MainController(
         self._show_underexposed = False
         self._show_overexposed = False
         self._focus_peak_level: FocusPeakLevel | None = None
+        self._show_metadata_overlay = self._ui.actToggleMetadataOverlay.isChecked()
         self._reference_line_settings = ReferenceLineSettings()
         self._zoom_step = 1.25
         self._zoom_min = 0.1
@@ -167,6 +168,8 @@ class MainController(
             self._ui.actToggleDiagonalReferenceLine.toggled.connect(self._on_diagonal_reference_line_toggled)
         if hasattr(self._ui, "actToggleThirdsReferenceLine"):
             self._ui.actToggleThirdsReferenceLine.toggled.connect(self._on_thirds_reference_line_toggled)
+        if hasattr(self._ui, "actToggleMetadataOverlay"):
+            self._ui.actToggleMetadataOverlay.toggled.connect(self._on_metadata_overlay_toggled)
 
         self._ui.tabsImages.currentChanged.connect(self._on_tab_changed)
         self._ui.tabsImages.tabCloseRequested.connect(self.close_tab)

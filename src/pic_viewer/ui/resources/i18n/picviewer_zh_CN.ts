@@ -451,6 +451,11 @@
         <translation>胶卷窗格</translation>
     </message>
     <message>
+        <location filename="main_window.py" line="652"/>
+        <source>Show Metadata Overlay</source>
+        <translation>显示元数据叠加</translation>
+    </message>
+    <message>
         <location filename="main_window.py" line="655"/>
         <source>About</source>
         <translation>关于</translation>

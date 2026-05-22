@@ -67,6 +67,7 @@ class AnalysisToolbarTests(unittest.TestCase):
             ui.buttonToolbarCrossReferenceLine: ui.actToggleCrossReferenceLine,
             ui.buttonToolbarDiagonalReferenceLine: ui.actToggleDiagonalReferenceLine,
             ui.buttonToolbarThirdsReferenceLine: ui.actToggleThirdsReferenceLine,
+            ui.buttonToolbarMetadataOverlay: ui.actToggleMetadataOverlay,
         }
 
         for button, action in action_by_button.items():
@@ -78,6 +79,10 @@ class AnalysisToolbarTests(unittest.TestCase):
                 self.assertFalse(button.icon().isNull())
                 self.assertEqual(action.text(), button.toolTip())
 
+        self.assertTrue(ui.actToggleMetadataOverlay.isCheckable())
+        self.assertTrue(ui.actToggleMetadataOverlay.isChecked())
+        self.assertIn(ui.actToggleMetadataOverlay, ui.menuView.actions())
+
     def test_toolbar_button_group_is_centered_between_stretches(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
@@ -87,9 +92,15 @@ class AnalysisToolbarTests(unittest.TestCase):
         layout = ui.widgetAnalysisToolbar.layout()
 
         self.assertIsNotNone(layout.itemAt(0).spacerItem())
-        self.assertIsNotNone(layout.itemAt(layout.count() - 1).spacerItem())
-        self.assertIs(ui.buttonToolbarModeLuma, layout.itemAt(1).widget())
-        self.assertIs(ui.buttonToolbarThirdsReferenceLine, layout.itemAt(layout.count() - 2).widget())
+        self.assertEqual(
+            ui.buttonToolbarMetadataOverlay.minimumSize(),
+            layout.itemAt(0).spacerItem().sizeHint(),
+        )
+        self.assertIsNotNone(layout.itemAt(1).spacerItem())
+        self.assertIsNotNone(layout.itemAt(layout.count() - 2).spacerItem())
+        self.assertIs(ui.buttonToolbarModeLuma, layout.itemAt(2).widget())
+        self.assertIs(ui.buttonToolbarThirdsReferenceLine, layout.itemAt(layout.count() - 3).widget())
+        self.assertIs(ui.buttonToolbarMetadataOverlay, layout.itemAt(layout.count() - 1).widget())
 
     def test_controller_toggle_analysis_toolbar_changes_toolbar_visibility(self) -> None:
         window = QtWidgets.QMainWindow()

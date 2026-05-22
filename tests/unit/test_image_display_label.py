@@ -63,6 +63,54 @@ class ImageDisplayLabelTests(unittest.TestCase):
         self.assertNotEqual(white, QtGui.QColor(image.pixel(43, 20)))
         self.assertNotEqual(white, QtGui.QColor(image.pixel(47, 20)))
 
+    def test_metadata_overlay_state_can_be_set_and_hidden(self) -> None:
+        label = ImageDisplayLabel()
+        self.addCleanup(label.deleteLater)
+
+        label.set_metadata_overlay(("Camera Lens", "f/2.8 1/125s ISO 400", "6000 x 4000"), True)
+
+        self.assertEqual(
+            ("Camera Lens", "f/2.8 1/125s ISO 400", "6000 x 4000"),
+            label.metadata_overlay_lines(),
+        )
+        self.assertTrue(label.is_metadata_overlay_visible())
+
+        label.set_metadata_overlay(tuple(), False)
+
+        self.assertEqual(tuple(), label.metadata_overlay_lines())
+        self.assertFalse(label.is_metadata_overlay_visible())
+
+    def test_metadata_overlay_renders_at_pixmap_top_left(self) -> None:
+        label = ImageDisplayLabel()
+        self.addCleanup(label.deleteLater)
+        self._use_black_label_background(label)
+        label.resize(120, 80)
+        pixmap = QtGui.QPixmap(80, 40)
+        pixmap.fill(QtGui.QColor(0, 0, 0))
+        label.setPixmap(pixmap)
+        label.set_metadata_overlay(("INFO", "f/2.8 1/125s ISO 400", "6000 x 4000"), True)
+
+        image = QtGui.QImage(label.size(), QtGui.QImage.Format_RGB32)
+        image.fill(QtGui.QColor(0, 0, 0))
+        label.render(image)
+
+        self.assertFalse(self._has_light_pixel(image, QtCore.QRect(0, 0, 18, 18)))
+        self.assertTrue(self._has_light_pixel(image, QtCore.QRect(20, 20, 80, 32)))
+
+    def _has_light_pixel(self, image: QtGui.QImage, rect: QtCore.QRect) -> bool:
+        for y in range(rect.top(), rect.bottom() + 1):
+            for x in range(rect.left(), rect.right() + 1):
+                color = QtGui.QColor(image.pixel(x, y))
+                if color.red() > 120 and color.green() > 120 and color.blue() > 120:
+                    return True
+        return False
+
+    def _use_black_label_background(self, label: ImageDisplayLabel) -> None:
+        palette = label.palette()
+        palette.setColor(QtGui.QPalette.Window, QtGui.QColor(0, 0, 0))
+        label.setPalette(palette)
+        label.setAutoFillBackground(True)
+
     def tearDown(self) -> None:
         self._app.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
         self._app.processEvents()

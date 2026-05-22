@@ -2,15 +2,70 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from PySide2 import QtCore, QtWidgets
 
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
+from pic_viewer.app.services.metadata_overlay_service import build_metadata_overlay_lines
+from pic_viewer.ui.utils.signal_blocker import block_signals
+from pic_viewer.ui.widgets.image_display_label import ImageDisplayLabel
 
 
 class MainControllerMetadataMixin:
     """Provide metadata table rendering helpers."""
 
     METADATA_TOOLTIP_VALUE_LENGTH = 48
+
+    def _on_metadata_overlay_toggled(self, active: bool) -> None:
+        """Handle metadata overlay visibility changes from shared actions."""
+
+        if self._show_metadata_overlay == active:
+            self._sync_metadata_overlay_action()
+            return
+        self._show_metadata_overlay = active
+        self._sync_metadata_overlay_action()
+        if active:
+            self._sync_metadata_overlay_for_current_image()
+        else:
+            self._clear_metadata_overlay_for_all_images()
+
+    def _sync_metadata_overlay_action(self) -> None:
+        if not hasattr(self._ui, "actToggleMetadataOverlay"):
+            return
+        with block_signals(self._ui.actToggleMetadataOverlay):
+            self._ui.actToggleMetadataOverlay.setChecked(self._show_metadata_overlay)
+
+    def _sync_metadata_overlay_for_current_image(self) -> None:
+        self._sync_metadata_overlay_for_path(self._current_image_path())
+
+    def _sync_metadata_overlay_for_path(self, image_path: Path | None) -> None:
+        """Update metadata overlay text for a loaded image or hide it otherwise."""
+
+        if image_path is None:
+            self._clear_metadata_overlay_for_all_images()
+            return
+
+        label = self._metadata_overlay_label_for_path(image_path)
+        if label is None:
+            return
+        data = self._images_by_path.get(str(image_path))
+        if not self._show_metadata_overlay or data is None or str(image_path) in self._load_error_by_path:
+            label.set_metadata_overlay(tuple(), False)
+            return
+
+        lines = build_metadata_overlay_lines(data.metadata, data.analysis.source_size)
+        label.set_metadata_overlay(lines, True)
+
+    def _metadata_overlay_label_for_path(self, image_path: Path) -> ImageDisplayLabel | None:
+        tab = self._tab_widget_for_path(image_path)
+        if tab is None:
+            return None
+        return tab.findChild(ImageDisplayLabel, "lblImage")
+
+    def _clear_metadata_overlay_for_all_images(self) -> None:
+        for label in self._ui.tabsImages.findChildren(ImageDisplayLabel, "lblImage"):
+            label.set_metadata_overlay(tuple(), False)
 
     def _clear_metadata_tables(self) -> None:
         self._populate_metadata_table(self._ui.tableMetadataGeneral, tuple(), self._tr("No general metadata"))

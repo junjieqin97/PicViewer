@@ -74,6 +74,10 @@ class MainWindowUI:
         self.actToggleFilmstrip = QtWidgets.QAction(self._main_window)
         self.actToggleFilmstrip.setObjectName("actToggleFilmstrip")
         self.actToggleFilmstrip.setCheckable(True)
+        self.actToggleMetadataOverlay = QtWidgets.QAction(self._main_window)
+        self.actToggleMetadataOverlay.setObjectName("actToggleMetadataOverlay")
+        self.actToggleMetadataOverlay.setCheckable(True)
+        self.actToggleMetadataOverlay.setChecked(True)
         self.actToggleCrossReferenceLine = QtWidgets.QAction(self._main_window)
         self.actToggleCrossReferenceLine.setObjectName("actToggleCrossReferenceLine")
         self.actToggleCrossReferenceLine.setCheckable(True)
@@ -159,6 +163,7 @@ class MainWindowUI:
             self.actToggleCrossReferenceLine: "reference-line-cross.svg",
             self.actToggleDiagonalReferenceLine: "reference-line-diagonal.svg",
             self.actToggleThirdsReferenceLine: "reference-line-thirds.svg",
+            self.actToggleMetadataOverlay: "metadata-info.svg",
         }
         for action, file_name in icon_by_action.items():
             path = icon_path(file_name)
@@ -212,6 +217,7 @@ class MainWindowUI:
         self.menuView.addAction(self.actToggleInfoPanel)
         self.menuView.addAction(self.actToggleAnalysisToolbar)
         self.menuView.addAction(self.actToggleFilmstrip)
+        self.menuView.addAction(self.actToggleMetadataOverlay)
 
         self.menuTools = menu_bar.addMenu("")
         self.menuTools.setObjectName("menuTools")
@@ -341,7 +347,20 @@ class MainWindowUI:
             "buttonToolbarThirdsReferenceLine",
             self.actToggleThirdsReferenceLine,
         )
+        self.buttonToolbarMetadataOverlay = self._create_analysis_toolbar_button(
+            "buttonToolbarMetadataOverlay",
+            self.actToggleMetadataOverlay,
+        )
 
+        balance_size = self.buttonToolbarMetadataOverlay.minimumSize()
+        toolbar_layout.addSpacerItem(
+            QtWidgets.QSpacerItem(
+                balance_size.width(),
+                balance_size.height(),
+                QtWidgets.QSizePolicy.Fixed,
+                QtWidgets.QSizePolicy.Fixed,
+            )
+        )
         toolbar_layout.addStretch(1)
         toolbar_layout.addWidget(self.buttonToolbarModeLuma)
         toolbar_layout.addWidget(self.buttonToolbarModeRgb)
@@ -362,6 +381,7 @@ class MainWindowUI:
         toolbar_layout.addWidget(self.buttonToolbarDiagonalReferenceLine)
         toolbar_layout.addWidget(self.buttonToolbarThirdsReferenceLine)
         toolbar_layout.addStretch(1)
+        toolbar_layout.addWidget(self.buttonToolbarMetadataOverlay)
 
         self.splitMain = QtWidgets.QSplitter(QtCore.Qt.Horizontal, self.central)
         self.splitMain.setObjectName("splitMain")
@@ -649,6 +669,7 @@ class MainWindowUI:
         self.actToggleInfoPanel.setText(self._tr("Info Panel"))
         self.actToggleAnalysisToolbar.setText(self._tr("Analysis Toolbar"))
         self.actToggleFilmstrip.setText(self._tr("Filmstrip"))
+        self.actToggleMetadataOverlay.setText(self._tr("Show Metadata Overlay"))
         self.actToggleCrossReferenceLine.setText(self._tr("Cross Reference Line"))
         self.actToggleDiagonalReferenceLine.setText(self._tr("Diagonal Reference Line"))
         self.actToggleThirdsReferenceLine.setText(self._tr("Rule of Thirds Reference Line"))
@@ -721,6 +742,7 @@ class MainWindowUI:
             self.actPeakHigh,
             self.actPeakMedium,
             self.actPeakLow,
+            self.actToggleMetadataOverlay,
         )
         for action in actions:
             action.setToolTip(action.text())

@@ -230,6 +230,58 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         self.assertEqual("Make", table.item(0, 0).text())
         self.assertEqual("Example", table.item(0, 1).text())
 
+    def test_loaded_image_updates_metadata_overlay_on_image_label(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        self._configure_analysis_rendering(controller)
+        path = Path("/tmp/overlay.jpg")
+        controller._show_metadata_overlay = True
+        self._add_image_tab(controller, path)
+        controller._images_by_path[str(path)] = self._image_result(
+            (20, 30, 40),
+            metadata=ImageMetadata(
+                general=(("Resolution", "6000 x 4000"),),
+                exif=(
+                    ("Model", "X-T5"),
+                    ("LensModel", "XF 33mm F1.4"),
+                    ("FNumber", "2.8"),
+                    ("ExposureTime", "1/125"),
+                    ("ISOSpeedRatings", "400"),
+                ),
+                iptc=tuple(),
+                tiff=tuple(),
+            ),
+        )
+
+        MainController.update_info_for_image(controller, path)
+
+        lbl_image = ui.tabsImages.findChild(QtWidgets.QLabel, "lblImage")
+        self.assertIsNotNone(lbl_image)
+        self.assertTrue(lbl_image.is_metadata_overlay_visible())
+        self.assertEqual(
+            (
+                "X-T5 XF 33mm F1.4",
+                "f/2.8 1/125s ISO 400",
+                "6000 x 4000",
+            ),
+            lbl_image.metadata_overlay_lines(),
+        )
+
+    def test_metadata_overlay_toggle_hides_current_image_overlay(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        path = Path("/tmp/overlay.jpg")
+        controller._show_metadata_overlay = True
+        self._add_image_tab(controller, path)
+        controller._images_by_path[str(path)] = self._image_result((20, 30, 40))
+        MainController._sync_metadata_overlay_for_path(controller, path)
+
+        MainController._on_metadata_overlay_toggled(controller, False)
+
+        lbl_image = ui.tabsImages.findChild(QtWidgets.QLabel, "lblImage")
+        self.assertIsNotNone(lbl_image)
+        self.assertFalse(lbl_image.is_metadata_overlay_visible())
+
     def _build_controller(self) -> tuple[QtWidgets.QMainWindow, MainWindowUI, MainController]:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
@@ -244,6 +296,19 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         controller._preview_tasks_by_path = {}
         controller._load_error_by_path = {}
         controller._last_metadata_path = None
+        controller._show_underexposed = False
+        controller._show_overexposed = False
+        controller._focus_peak_level = None
+        controller._show_metadata_overlay = True
+        controller._zoom_by_path = {}
+        controller._fit_to_window_by_path = {}
+        controller._tab_preview_render_key_by_path = {}
+        controller._image_context_menu = ui.menuImageContext
+        controller._cursor_override_target = None
+        controller._image_dragging = False
+        controller._image_drag_start_pos = None
+        controller._image_drag_start_scroll = None
+        controller._image_drag_scroll_area = None
         return window, ui, controller
 
     def _configure_analysis_rendering(self, controller: MainController) -> None:
@@ -260,6 +325,9 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         controller._view_service.build_view.side_effect = self._build_luma_view
         controller._image_service = MagicMock()
         controller._image_service.render_analysis_view.side_effect = self._render_luma_view
+        controller._image_service.build_preview_with_pseudo_color_overlay.side_effect = (
+            lambda preview_rgb, **_kwargs: preview_rgb
+        )
 
     def _build_luma_view(self, analysis: ImageAnalysis, _settings: AnalysisViewSettings) -> AnalysisView:
         return AnalysisView(
@@ -277,7 +345,11 @@ class InfoPanelLoadStateTests(unittest.TestCase):
     ) -> AnalysisView:
         return self._build_luma_view(analysis, settings)
 
-    def _image_result(self, color_rgb: tuple[int, int, int]) -> ImageLoadResult:
+    def _image_result(
+        self,
+        color_rgb: tuple[int, int, int],
+        metadata: ImageMetadata | None = None,
+    ) -> ImageLoadResult:
         rgb = np.zeros((8, 8, 3), dtype=np.uint8)
         rgb[:] = color_rgb
         analysis = ImageAnalysis(
@@ -297,8 +369,13 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         )
         return ImageLoadResult(
             analysis=analysis,
-            metadata=ImageMetadata(general=tuple(), exif=tuple(), iptc=tuple(), tiff=tuple()),
+            metadata=metadata or ImageMetadata(general=tuple(), exif=tuple(), iptc=tuple(), tiff=tuple()),
         )
+
+    def _add_image_tab(self, controller: MainController, path: Path) -> None:
+        tab_container = MainController._build_image_tab_container(controller, path)
+        controller._ui.tabsImages.addTab(tab_container, path.name)
+        controller._ui.tabsImages.setCurrentIndex(0)
 
     def _center_pixmap_color(self, label: QtWidgets.QLabel) -> tuple[int, int, int]:
         pixmap = label.pixmap()

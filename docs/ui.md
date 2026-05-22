@@ -61,6 +61,9 @@ The main window uses a typical four-area structure:
   - Show Underexposed, Show Overexposed
   - Show Peaking High/Medium/Low
   - Crosshair Reference Line, Diagonal Reference Line, Rule-of-Thirds Grid Reference Line
+  - Show Metadata Overlay
+- The Show Metadata Overlay button is pinned to the far right side of the toolbar. The centered analysis button group must remain visually centered by reserving equal space on the left side.
+- The Show Metadata Overlay button is enabled by default. When enabled, the current image shows three metadata lines at the upper-left corner of the actual displayed image: camera/lens, exposure settings, and resolution. The text is drawn in semi-transparent white.
 
 ## 3. Upper Content Area: Image Tabs + Right Info Area (QSplitter)
 
@@ -172,6 +175,7 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `buttonToolbarCrossReferenceLine: QToolButton`
 - `buttonToolbarDiagonalReferenceLine: QToolButton`
 - `buttonToolbarThirdsReferenceLine: QToolButton`
+- `buttonToolbarMetadataOverlay: QToolButton`
 - `tabsInfo: QTabWidget`
 - `tabAnalysis: QWidget`
 - `tabMetadata: QWidget`
@@ -194,6 +198,7 @@ Actions (names must be consistent; copy may mix Chinese and English, but consist
 - `actToggleInfoPanel`: Info Panel (checkable, checked = visible)
 - `actToggleAnalysisToolbar`: Analysis Toolbar (checkable, checked = visible)
 - `actToggleFilmstrip`: Filmstrip Pane (checkable, checked = visible)
+- `actToggleMetadataOverlay`: Show Metadata Overlay (checkable, checked = visible)
 - `actToggleUnderexposed`: Show Underexposed (checkable)
 - `actToggleOverexposed`: Show Overexposed (checkable)
 - `actPeakHigh`: High (checkable, focus peaking high level)

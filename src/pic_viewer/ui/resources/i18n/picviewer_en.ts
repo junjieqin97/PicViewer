@@ -451,6 +451,11 @@
         <translation>Filmstrip</translation>
     </message>
     <message>
+        <location filename="main_window.py" line="652"/>
+        <source>Show Metadata Overlay</source>
+        <translation>Show Metadata Overlay</translation>
+    </message>
+    <message>
         <location filename="main_window.py" line="655"/>
         <source>About</source>
         <translation>About</translation>
