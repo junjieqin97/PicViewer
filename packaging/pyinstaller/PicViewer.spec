@@ -11,7 +11,16 @@ PROJECT_ROOT = Path(SPECPATH).resolve().parents[1]
 SRC_ROOT = PROJECT_ROOT / "src"
 WINDOWS_ICON = PROJECT_ROOT / "packaging" / "icons" / "picviewer.ico"
 MACOS_ICON = PROJECT_ROOT / "packaging" / "icons" / "picviewer.icns"
+HOMEBREW_INIH_DYLIBS = (
+    Path("/opt/homebrew/opt/inih/lib/libINIReader.0.dylib"),
+    Path("/opt/homebrew/opt/inih/lib/libinih.0.dylib"),
+)
 sys.path.insert(0, str(SRC_ROOT))
+
+
+def _existing_dylib_binaries(paths, target_dir):
+    return [(str(path), target_dir) for path in paths if path.exists()]
+
 
 datas = collect_data_files(
     "pic_viewer",
@@ -29,6 +38,8 @@ binaries = []
 hiddenimports = []
 try:
     binaries += collect_dynamic_libs("pyexiv2")
+    if sys.platform == "darwin":
+        binaries += _existing_dylib_binaries(HOMEBREW_INIH_DYLIBS, "pyexiv2/lib")
     hiddenimports += collect_submodules("pyexiv2")
 except Exception:
     hiddenimports.append("pyexiv2")

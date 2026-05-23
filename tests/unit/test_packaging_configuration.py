@@ -68,6 +68,15 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn('collect_submodules("pyexiv2")', spec)
         self.assertIn('collect_dynamic_libs("pyexiv2")', spec)
 
+    def test_pyinstaller_spec_collects_pyexiv2_inih_runtime(self) -> None:
+        spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")
+
+        self.assertIn("HOMEBREW_INIH_DYLIBS", spec)
+        self.assertIn("libINIReader.0.dylib", spec)
+        self.assertIn("libinih.0.dylib", spec)
+        self.assertIn("_existing_dylib_binaries(HOMEBREW_INIH_DYLIBS", spec)
+        self.assertIn('"pyexiv2/lib"', spec)
+
     def test_setup_py_delegates_metadata_to_pyproject(self) -> None:
         setup_py = (PROJECT_ROOT / "setup.py").read_text(encoding="utf-8")
 
