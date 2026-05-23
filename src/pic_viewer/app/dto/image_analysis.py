@@ -15,6 +15,7 @@ class ImageAnalysis:
     """Image analysis output for UI layer.
 
     Attributes:
+        analysis_bgr: Downscaled BGR source for analysis re-rendering.
         preview_rgb: Downscaled RGB image for display.
         source_size: Original image size as (height, width).
         histogram_rgb: Combined RGB histogram plot.
@@ -29,6 +30,7 @@ class ImageAnalysis:
         waveform_b: Blue channel waveform plot.
     """
 
+    analysis_bgr: np.ndarray
     preview_rgb: np.ndarray
     source_size: Tuple[int, int]
     histogram_rgb: np.ndarray
@@ -49,3 +51,10 @@ class ImageLoadResult:
 
     analysis: ImageAnalysis
     metadata: ImageMetadata
+
+
+@dataclass(frozen=True)
+class PreviewLoadResult:
+    """Fast preview payload used for incremental loading."""
+
+    preview_rgb: np.ndarray

@@ -1,15 +1,16 @@
-"""Metadata reader backed by Pillow.
+"""Metadata reader backed by pyexiv2.
 
-依赖: Pillow>=10 (`pip install "Pillow>=10"`).
+Dependency: pyexiv2>=2.15.5 (`pip install "pyexiv2>=2.15.5,<3"`).
 """
 
 from __future__ import annotations
 
+import importlib
 import logging
 from pathlib import Path
-from typing import Any, Iterable, Tuple
-
-from PIL import ExifTags, Image, JpegImagePlugin, TiffTags  # type: ignore
+import threading
+from types import ModuleType
+from typing import Any, Iterable, Mapping, Tuple
 
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataEntry, MetadataSection
 
@@ -19,74 +20,108 @@ logger = logging.getLogger(__name__)
 class MetadataReader:
     """Read image metadata into structured sections."""
 
+    _read_lock = threading.RLock()
+    _TIFF_PREFIXES = ("Exif.Image.", "Exif.Thumbnail.")
+
     def read(self, path: Path) -> ImageMetadata:
-        """Extract metadata; failures degrade gracefully to empty sections."""
+        """Extract metadata; failures degrade gracefully to empty sections.
+
+        Args:
+            path: Image file path.
+
+        Returns:
+            ImageMetadata: Structured metadata grouped for the existing UI.
+        """
+
+        if not path.exists() or not path.is_file():
+            logger.warning("Metadata read failed, file not found: %s", path)
+            return self._empty()
 
         try:
-            with Image.open(path) as image:
-                exif = self._extract_exif(image)
-                iptc = self._extract_iptc(image)
-                tiff = self._extract_tiff(image)
-        except FileNotFoundError:
-            logger.warning("元数据读取失败，文件不存在: %s", path)
+            pyexiv2 = self._load_pyexiv2()
+        except (ImportError, OSError):
+            logger.warning("pyexiv2 is not available, metadata read skipped: %s", path, exc_info=True)
             return self._empty()
-        except Exception:  # pragma: no cover - 防御性兜底
-            logger.exception("提取元数据时出错: %s", path)
+
+        try:
+            with self._read_lock:
+                with pyexiv2.Image(str(path), "utf-8") as image:
+                    exif_data = image.read_exif("utf-8")
+                    iptc_data = image.read_iptc("utf-8")
+        except FileNotFoundError:
+            logger.warning("Metadata read failed, file not found: %s", path)
+            return self._empty()
+        except Exception:  # pragma: no cover - defensive fallback for native parser failures
+            logger.exception("Error extracting metadata: %s", path)
             return self._empty()
 
         return ImageMetadata(
             general=tuple(),
-            exif=exif,
-            iptc=iptc,
-            tiff=tiff,
+            exif=self._normalize_items(exif_data.items()),
+            iptc=self._normalize_items(iptc_data.items()),
+            tiff=self._extract_tiff(exif_data),
         )
 
-    def _extract_exif(self, image: Image.Image) -> MetadataSection:
-        mapping = getattr(image, "getexif", None)
-        if mapping is None:
-            return tuple()
-        exif = image.getexif()
-        if not exif:
-            return tuple()
-        name_lookup = ExifTags.TAGS
-        return self._normalize_items(exif.items(), name_lookup)
+    def _load_pyexiv2(self) -> ModuleType:
+        """Import pyexiv2 lazily so startup is not blocked by native load errors."""
 
-    def _extract_iptc(self, image: Image.Image) -> MetadataSection:
-        try:
-            data = JpegImagePlugin.getiptcinfo(image)
-        except Exception:  # pragma: no cover - 防御性兜底
-            logger.debug("解析IPTC信息失败", exc_info=True)
-            return tuple()
-        if not data:
-            return tuple()
-        return self._normalize_items(data.items(), None)
+        return importlib.import_module("pyexiv2")
 
-    def _extract_tiff(self, image: Image.Image) -> MetadataSection:
-        tags = getattr(image, "tag_v2", None)
-        if tags is None:
-            return tuple()
-        name_lookup = getattr(TiffTags, "TAGS_V2", getattr(TiffTags, "TAGS", {}))
-        return self._normalize_items(tags.items(), name_lookup)
+    def _extract_tiff(self, exif_data: Mapping[Any, Any]) -> MetadataSection:
+        """Derive the TIFF section from Exif.Image and Exif.Thumbnail tags."""
 
-    def _normalize_items(
-        self, items: Iterable[Tuple[Any, Any]], name_lookup: dict[Any, str] | None
-    ) -> MetadataSection:
+        items = (
+            (key, value)
+            for key, value in exif_data.items()
+            if any(str(key).startswith(prefix) for prefix in self._TIFF_PREFIXES)
+        )
+        return self._normalize_items(items)
+
+    def _normalize_items(self, items: Iterable[Tuple[Any, Any]]) -> MetadataSection:
+        """Normalize backend tag keys and values for display."""
+
         entries: list[MetadataEntry] = []
         for key, value in items:
-            label = name_lookup.get(key, str(key)) if name_lookup is not None else str(key)
-            entries.append((str(label), self._stringify(value)))
-        entries.sort(key=lambda pair: pair[0])
+            label = self._label_for_key(key)
+            entries.append((label, self._stringify(value)))
+        entries.sort(key=lambda pair: (pair[0], pair[1]))
         return tuple(entries)
 
+    def _label_for_key(self, key: Any) -> str:
+        """Return the final tag component used by the current UI tables."""
+
+        key_text = str(key)
+        if "." not in key_text:
+            return key_text
+        return key_text.rsplit(".", maxsplit=1)[-1]
+
     def _stringify(self, value: Any) -> str:
+        """Convert pyexiv2 metadata values into deterministic display text."""
+
+        if value is None:
+            return ""
         if isinstance(value, bytes):
-            try:
-                return value.decode("utf-8", errors="ignore") or value.hex()
-            except Exception:  # pragma: no cover - 防御性兜底
-                return value.hex()
-        if isinstance(value, (list, tuple)):
-            return ", ".join(self._stringify(v) for v in value)
+            return self._stringify_bytes(value)
+        if isinstance(value, Mapping):
+            return ", ".join(
+                f"{self._stringify(key)}: {self._stringify(value[key])}"
+                for key in sorted(value, key=lambda item: str(item))
+            )
+        if isinstance(value, (list, tuple, set, frozenset)):
+            ordered = value if isinstance(value, (list, tuple)) else sorted(value, key=lambda item: str(item))
+            return ", ".join(self._stringify(item) for item in ordered)
         return str(value)
+
+    def _stringify_bytes(self, value: bytes) -> str:
+        try:
+            decoded = value.decode("utf-8")
+        except UnicodeDecodeError:
+            return value.hex()
+
+        cleaned = decoded.strip("\x00")
+        if cleaned and all(char.isprintable() or char in "\n\r\t" for char in cleaned):
+            return cleaned
+        return value.hex()
 
     def _empty(self) -> ImageMetadata:
         empty: MetadataSection = tuple()

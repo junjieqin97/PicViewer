@@ -1,0 +1,14 @@
+# PicViewer Project Development Plan
+
+* You are developing a desktop photo preview tool. It supports opening common image formats such as JPG, PNG, and TIFF, and also supports opening RAW files from various cameras.
+
+## Basic Features
+
+* After a photo is opened with this photo preview tool, the tool supports displaying the photo's corresponding `histogram`, `waveform`, and `metadata`.
+* The `histogram` and `waveform` support switching between `luma mode` and `RGB mode`. The default display mode is `luma mode`.
+* In `RGB mode`, the `histogram` and `waveform` support switching between displaying all three RGB channels at the same time and displaying only one of the channels.
+* `Metadata` can display four types of `metadata`, `General`, `Exif`, `IPTC`, and `TIFF`. The default display type is `General`.
+* The left Y-axis of the `waveform` displays `exposure values` from bottom to top (`0`, `20`, `40`, `60`, `80`, and `100`). The `exposure values` `20`, `40`, `60`, and `80` should show `tick marks`. The `exposure values` and `tick marks` are displayed in `yellow`.
+* The upper-left and upper-right corners of the `histogram` have `small triangles`. Activating the upper-left triangle displays the `underexposed` areas in the photo, and activating the upper-right triangle displays the `overexposed` areas in the photo. The `underexposed` areas are shown with `green` pseudo color, and the `overexposed` areas are shown with `red` pseudo color.
+* The `Pseudo Color` menu supports the `Show Peaking` feature. When enabled, it uses `blue` pseudo color to display focus peaks in the image. `Show Peaking` provides three levels: `High`, `Medium`, and `Low`; `High` is more sensitive and shows more peaks, while `Low` is stricter and shows only the strongest peaks.
+* The image display area supports `reference lines`, including three types: `crosshair reference line`, `diagonal reference line`, and `rule-of-thirds grid reference line`. All three reference lines support independent toggles, can be enabled at the same time, and can be displayed as overlays. Reference lines are uniformly drawn in `white` with a `3px` line width over the image preview area.

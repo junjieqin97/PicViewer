@@ -7,21 +7,43 @@ name = "picviewer"
 version = "0.1.0"
 description = "A desktop photo viewer."
 readme = "README.md"
-requires-python = ">=3.9"
-license = { text = "Proprietary" }
-authors = [{ name = "PicViewer Team" }]
+requires-python = ">=3.10,<3.11"
+license = "GPL-3.0-only"
+authors = [{ name = "junjieqin" }]
 dependencies = [
-  "PyQt5>=5.15",
+  "PySide2>=5.15.2.1,<5.16",
   "opencv-python>=4.7",
   "numpy>=1.23",
-  "Pillow>=10.0",
+  "pyexiv2>=2.15.5,<3",
 ]
 
 [project.optional-dependencies]
 raw = ["rawpy>=0.17"]
+packaging = [
+  "build>=1.2",
+  "twine>=5.0",
+  "pyinstaller>=6.0",
+  "tomli>=2.0; python_version < \"3.11\"",
+  "Pillow>=10.0",
+  "rawpy>=0.17",
+]
+
+[project.scripts]
+picviewer = "pic_viewer.main:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+pic_viewer = [
+  "ui/resources/i18n/*.ts",
+  "ui/resources/i18n/*.qm",
+  "ui/resources/styles/*.qss",
+  "ui/resources/icons/*.svg",
+  "ui/resources/icons/*.png",
+  "assets/licenses/*.txt",
+]
