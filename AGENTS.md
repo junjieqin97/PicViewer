@@ -39,6 +39,7 @@ Do NOT change these unless explicitly instructed.
   - You MUST activate the conda environment by running `conda activate PicViewer` before executing the python command.
 - GUI Framework: PySide2
 - Image Processing: OpenCV
+- Image Metadata: pyexiv2
 - Target OS: cross-platform (Windows / macOS / Linux)
 
 ## 4. Project Architecture Guidelines
