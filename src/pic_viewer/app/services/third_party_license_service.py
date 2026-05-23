@@ -72,9 +72,10 @@ _RUNTIME_DEPENDENCIES: tuple[_DependencyLicenseSpec, ...] = (
         fallback_license="BSD-3-Clause",
     ),
     _DependencyLicenseSpec(
-        display_name="Pillow",
-        package_name="Pillow",
-        fallback_license="MIT-CMU",
+        display_name="pyexiv2",
+        package_name="pyexiv2",
+        fallback_license="GPL-3.0-only",
+        notes="Runtime metadata backend based on Exiv2.",
     ),
     _DependencyLicenseSpec(
         display_name="rawpy",
@@ -86,6 +87,7 @@ _RUNTIME_DEPENDENCIES: tuple[_DependencyLicenseSpec, ...] = (
 
 _LICENSE_DOCUMENT_TITLES: dict[str, str] = {
     "LGPL-3.0-only": "GNU Lesser General Public License v3.0 only",
+    "GPL-3.0-only": "GNU General Public License v3.0 only",
     "GPL-2.0-only": "GNU General Public License v2.0 only",
     "Apache-2.0": "Apache License 2.0",
     "BSD-3-Clause": 'BSD 3-Clause "New" or "Revised" License',
@@ -99,6 +101,10 @@ _LICENSE_ALIASES: dict[str, str] = {
     "apache software license": "Apache-2.0",
     "bsd license": "BSD-3-Clause",
     "cmu license": "MIT-CMU",
+    "gpl v3": "GPL-3.0-only",
+    "gplv3": "GPL-3.0-only",
+    "gnu general public license v3": "GPL-3.0-only",
+    "gnu general public license v3 (gplv3)": "GPL-3.0-only",
     "gnu library or lesser general public license (lgpl)": "LGPL-3.0-only",
     "lgpl": "LGPL-3.0-only",
     "mit license": "MIT",

@@ -24,6 +24,18 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn('"pyinstaller', pyproject)
         self.assertIn('"tomli>=2.0; python_version < \\"3.11\\""', pyproject)
 
+    def test_metadata_backend_dependencies_are_declared_in_correct_groups(self) -> None:
+        pyproject = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        runtime_dependencies = pyproject.split("dependencies = [", maxsplit=1)[1].split(
+            "]\n\n[project.optional-dependencies]",
+            maxsplit=1,
+        )[0]
+        packaging_extra = pyproject.split("packaging = [", maxsplit=1)[1].split("]\n", maxsplit=1)[0]
+
+        self.assertIn('"pyexiv2>=2.15.5,<3"', runtime_dependencies)
+        self.assertNotIn('"Pillow>=10.0"', runtime_dependencies)
+        self.assertIn('"Pillow>=10.0"', packaging_extra)
+
     def test_manifest_includes_runtime_resources_and_release_files(self) -> None:
         manifest = (PROJECT_ROOT / "MANIFEST.in").read_text(encoding="utf-8")
 
@@ -48,6 +60,13 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn('icon=str(WINDOWS_ICON) if sys.platform == "win32" else None', spec)
         self.assertIn("icon=str(MACOS_ICON)", spec)
         self.assertNotIn("icon=None", spec)
+
+    def test_pyinstaller_spec_collects_pyexiv2_native_runtime(self) -> None:
+        spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")
+
+        self.assertIn("collect_dynamic_libs", spec)
+        self.assertIn('collect_submodules("pyexiv2")', spec)
+        self.assertIn('collect_dynamic_libs("pyexiv2")', spec)
 
     def test_setup_py_delegates_metadata_to_pyproject(self) -> None:
         setup_py = (PROJECT_ROOT / "setup.py").read_text(encoding="utf-8")

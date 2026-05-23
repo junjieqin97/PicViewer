@@ -6,6 +6,7 @@ from __future__ import annotations
 # - PySide2>=5.15.2.1,<5.16
 # - opencv-python>=4.7
 # - numpy>=1.23
+# - pyexiv2>=2.15.5,<3
 # - rawpy>=0.17 (optional, for RAW formats)
 
 import argparse

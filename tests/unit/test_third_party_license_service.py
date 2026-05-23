@@ -96,6 +96,16 @@ class ThirdPartyLicenseServiceTests(unittest.TestCase):
         self.assertIn("GNU LESSER GENERAL PUBLIC LICENSE", document.body)
         self.assertIn("Version 3, 29 June 2007", document.body)
 
+    def test_load_license_document_reads_gplv3_text(self) -> None:
+        document = load_license_document("GPL-3.0-only")
+
+        self.assertIsNotNone(document)
+        assert document is not None
+        self.assertEqual("GPL-3.0-only", document.key)
+        self.assertEqual("GNU General Public License v3.0 only", document.title)
+        self.assertIn("GNU GENERAL PUBLIC LICENSE", document.body)
+        self.assertIn("Version 3, 29 June 2007", document.body)
+
     def test_load_license_document_returns_none_for_unknown_key(self) -> None:
         self.assertIsNone(load_license_document("Commercial"))
 
@@ -114,7 +124,7 @@ class ThirdPartyLicenseServiceTests(unittest.TestCase):
     def test_load_third_party_licenses_falls_back_to_license_and_classifier(self) -> None:
         metadata_by_package = {
             "numpy": self._message({"License": "BSD-3-Clause"}),
-            "Pillow": self._message(
+            "PySide2": self._message(
                 {},
                 classifiers=["License :: OSI Approved :: MIT-CMU License"],
             ),
@@ -123,9 +133,22 @@ class ThirdPartyLicenseServiceTests(unittest.TestCase):
         licenses = self._load_with_metadata(metadata_by_package)
 
         numpy = self._find_license(licenses, "numpy")
-        pillow = self._find_license(licenses, "Pillow")
+        pyside = self._find_license(licenses, "PySide2")
         self.assertEqual("BSD-3-Clause", numpy.license_text)
-        self.assertEqual("MIT-CMU License", pillow.license_text)
+        self.assertEqual("MIT-CMU License", pyside.license_text)
+
+    def test_load_third_party_licenses_reports_pyexiv2_gplv3(self) -> None:
+        metadata_by_package = {
+            "pyexiv2": self._message({"License-Expression": "GPL-3.0-only"}),
+        }
+
+        licenses = self._load_with_metadata(metadata_by_package)
+
+        pyexiv2 = self._find_license(licenses, "pyexiv2")
+        self.assertEqual("pyexiv2", pyexiv2.display_name)
+        self.assertEqual("1.2.3", pyexiv2.version)
+        self.assertEqual("GPL-3.0-only", pyexiv2.license_text)
+        self.assertEqual("Runtime metadata backend based on Exiv2.", pyexiv2.notes)
 
     def test_optional_rawpy_missing_is_reported_without_failing(self) -> None:
         def fake_version(package_name: str) -> str:

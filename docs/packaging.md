@@ -33,6 +33,12 @@ Packaging tools are installed through optional dependencies:
 pip install ".[packaging]"
 ```
 
+PicViewer uses `pyexiv2` as the runtime metadata backend. It is installed
+with the base package and includes native Exiv2 runtime files in its wheels.
+Packaging builds must keep those native files bundled with the application.
+On macOS, if importing `pyexiv2` reports a missing `libINIReader.0.dylib`,
+install the native dependency with `brew install inih` before building.
+
 Windows MSI builds require WiX Toolset to be installed, and the `wix` command must be available in `PATH`. If the command is not in `PATH`, specify the path to `wix.exe` with `--wix` when running the script.
 
 WiX Toolset v7 and later may report `WIX7015` before the first build, indicating that the OSMF EULA must be accepted. First read and confirm the requirements at <https://wixtoolset.org/osmf/>, then choose one of the following approaches:
@@ -109,6 +115,7 @@ The script performs the following steps:
 - Output native platform artifacts to `dist/`.
 
 PyInstaller uses `onedir` mode. The Windows artifact is `dist/PicViewer/`, and the macOS artifact is `dist/PicViewer.app`. Windows uses `packaging/icons/picviewer.ico` as the application icon, and macOS uses `packaging/icons/picviewer.icns`. The app version installs and collects `rawpy` through the `packaging` extra by default, providing RAW support for ordinary users.
+The spec also collects `pyexiv2` submodules and dynamic libraries so Exiv2 metadata reading works in packaged apps.
 
 Cross-building is not supported: the Windows app must be built on Windows, and the macOS app must be built on macOS.
 
@@ -205,4 +212,5 @@ App verification should cover at least:
 - Explicitly verifying the English source fallback with `PICVIEWER_LANG=en` when needed.
 - Opening ordinary JPG/PNG images.
 - Opening RAW images.
+- Confirming that Exif/IPTC metadata appears in the Metadata tab for images that contain it.
 - Confirming that `--developer-mode` can write development logs.

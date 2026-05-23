@@ -3,7 +3,7 @@
 from pathlib import Path
 import sys
 
-from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs, collect_submodules
 
 block_cipher = None
 
@@ -25,7 +25,14 @@ datas = collect_data_files(
     ],
 )
 
+binaries = []
 hiddenimports = []
+try:
+    binaries += collect_dynamic_libs("pyexiv2")
+    hiddenimports += collect_submodules("pyexiv2")
+except Exception:
+    hiddenimports.append("pyexiv2")
+
 try:
     hiddenimports += collect_submodules("rawpy")
 except Exception:
@@ -34,7 +41,7 @@ except Exception:
 a = Analysis(
     [str(SRC_ROOT / "pic_viewer" / "main.py")],
     pathex=[str(SRC_ROOT)],
-    binaries=[],
+    binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],

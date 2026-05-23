@@ -14,7 +14,7 @@ dependencies = [
   "PySide2>=5.15.2.1,<5.16",
   "opencv-python>=4.7",
   "numpy>=1.23",
-  "Pillow>=10.0",
+  "pyexiv2>=2.15.5,<3",
 ]
 
 [project.optional-dependencies]
@@ -24,6 +24,7 @@ packaging = [
   "twine>=5.0",
   "pyinstaller>=6.0",
   "tomli>=2.0; python_version < \"3.11\"",
+  "Pillow>=10.0",
   "rawpy>=0.17",
 ]
 
