@@ -1,0 +1,53 @@
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+import tempfile
+import unittest
+from unittest.mock import patch
+
+import cv2
+import numpy as np
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+SRC_ROOT = PROJECT_ROOT / "src"
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
+
+from pic_viewer.common.errors import ImageLoadError  # noqa: E402
+from pic_viewer.infra.adapters.image_reader import ImageReader  # noqa: E402
+
+
+class ImageReaderPreviewTests(unittest.TestCase):
+    """Validate reduced-cost preview decoding behavior."""
+
+    def test_read_preview_prefers_reduced_decode(self) -> None:
+        reader = ImageReader(allow_raw=False)
+        reduced = np.zeros((12, 12, 3), dtype=np.uint8)
+
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
+            path = Path(tmp.name)
+
+            def fake_imread(_: str, flag: int) -> np.ndarray | None:
+                if flag == cv2.IMREAD_REDUCED_COLOR_8:
+                    return reduced
+                return None
+
+            with patch("pic_viewer.infra.adapters.image_reader.cv2.imread", side_effect=fake_imread) as imread:
+                image = reader.read_preview(path, max_edge=2000)
+
+        np.testing.assert_array_equal(image, reduced)
+        self.assertGreaterEqual(imread.call_count, 1)
+
+    def test_read_preview_raises_for_unsupported_format_when_raw_disabled(self) -> None:
+        reader = ImageReader(allow_raw=False)
+        with tempfile.NamedTemporaryFile(suffix=".raw") as tmp:
+            path = Path(tmp.name)
+            with patch("pic_viewer.infra.adapters.image_reader.cv2.imread", return_value=None):
+                with self.assertRaises(ImageLoadError) as ctx:
+                    reader.read_preview(path)
+        self.assertEqual("Unsupported image format", str(ctx.exception))
+
+
+if __name__ == "__main__":
+    unittest.main()

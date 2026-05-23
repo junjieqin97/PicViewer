@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" role="img" aria-label="Red channel">
+  <circle cx="10" cy="10" r="6" fill="#e35d5d"/>
+  <circle cx="10" cy="10" r="8" fill="none" stroke="#f1aaaa" stroke-width="1.2"/>
+</svg>
