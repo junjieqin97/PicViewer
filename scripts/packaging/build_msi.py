@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 EXPECTED_CONDA_ENV = "PicViewer"
 APP_NAME = "PicViewer"
-MANUFACTURER = "PicViewer Team"
+MANUFACTURER = "junjieqin"
 PRODUCT_UPGRADE_CODE = "{E85C5722-4F09-5B7E-A7F2-76B6273E9C23}"
 WIX_NAMESPACE = "http://wixtoolset.org/schemas/v4/wxs"
 WIX_GUID_NAMESPACE = uuid.UUID("d79067c6-0ac7-5cb8-9d91-d015fa6b615c")

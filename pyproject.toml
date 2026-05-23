@@ -9,7 +9,7 @@ description = "A desktop photo viewer."
 readme = "README.md"
 requires-python = ">=3.10,<3.11"
 license = "GPL-3.0-only"
-authors = [{ name = "PicViewer Team" }]
+authors = [{ name = "junjieqin" }]
 dependencies = [
   "PySide2>=5.15.2.1,<5.16",
   "opencv-python>=4.7",
