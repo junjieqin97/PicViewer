@@ -54,7 +54,8 @@ jobs:
         run: python scripts/packaging/build_dmg.py
 
       - name: Verify DMG checksum
-        run: shasum -a 256 -c dist/*.dmg.sha256
+        working-directory: dist
+        run: shasum -a 256 -c *.dmg.sha256
 
       - name: Read release version
         id: release
