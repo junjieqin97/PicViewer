@@ -15,6 +15,14 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("[project.scripts]", pyproject)
         self.assertIn('picviewer = "pic_viewer.main:main"', pyproject)
 
+    def test_pyproject_declares_gplv3_license(self) -> None:
+        pyproject = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        license_text = (PROJECT_ROOT / "LICENSE").read_text(encoding="utf-8")
+
+        self.assertIn('license = "GPL-3.0-only"', pyproject)
+        self.assertIn("GNU GENERAL PUBLIC LICENSE", license_text)
+        self.assertIn("Version 3, 29 June 2007", license_text)
+
     def test_pyproject_declares_packaging_extra(self) -> None:
         pyproject = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
 
