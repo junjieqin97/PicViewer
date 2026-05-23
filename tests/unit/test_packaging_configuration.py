@@ -83,3 +83,54 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("setup()", setup_py)
         self.assertNotIn("install_requires=", setup_py)
         self.assertNotIn("extras_require=", setup_py)
+
+    def test_macos_release_workflow_publishes_dmg_from_develop_merge(self) -> None:
+        workflow = (
+            PROJECT_ROOT
+            / ".github"
+            / "workflows"
+            / "release-macos.yml"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("pull_request:", workflow)
+        self.assertIn("types:", workflow)
+        self.assertIn("- closed", workflow)
+        self.assertIn("- 'release-*'", workflow)
+        self.assertIn("github.event.pull_request.merged == true", workflow)
+        self.assertIn("github.event.pull_request.head.ref == 'develop'", workflow)
+        self.assertIn("github.event.pull_request.head.repo.full_name == github.repository", workflow)
+        self.assertIn("contents: write", workflow)
+        self.assertIn("runs-on: macos-15", workflow)
+        self.assertIn("shell: bash -el {0}", workflow)
+        self.assertIn("conda-incubator/setup-miniconda", workflow)
+        self.assertIn("activate-environment: PicViewer", workflow)
+        self.assertIn("python-version: \"3.10\"", workflow)
+        self.assertIn("brew install inih", workflow)
+        self.assertIn("conda install -y -c conda-forge pyside2", workflow)
+        self.assertIn("python -m unittest discover -s tests/unit", workflow)
+        self.assertIn("python scripts/packaging/build_app.py", workflow)
+        self.assertIn("python scripts/packaging/build_dmg.py", workflow)
+        self.assertIn("shasum -a 256 -c dist/*.dmg.sha256", workflow)
+        self.assertIn("gh release create", workflow)
+        self.assertIn("dist/PicViewer-$VERSION.dmg", workflow)
+        self.assertIn("dist/PicViewer-$VERSION.dmg.sha256", workflow)
+        self.assertIn("--target", workflow)
+        self.assertIn("--generate-notes", workflow)
+        self.assertNotIn("--clobber", workflow)
+
+    def test_ci_documentation_describes_macos_release_automation(self) -> None:
+        ci_doc = (PROJECT_ROOT / "docs" / "ci.md").read_text(encoding="utf-8")
+        packaging_doc = (PROJECT_ROOT / "docs" / "packaging.md").read_text(encoding="utf-8")
+
+        self.assertIn("# Continuous Integration", ci_doc)
+        self.assertIn("develop", ci_doc)
+        self.assertIn("release-*", ci_doc)
+        self.assertIn("macOS", ci_doc)
+        self.assertIn("Apple Silicon", ci_doc)
+        self.assertIn("arm64", ci_doc)
+        self.assertIn("pyproject.toml", ci_doc)
+        self.assertIn("v<version>", ci_doc)
+        self.assertIn("PicViewer-<version>.dmg", ci_doc)
+        self.assertIn("PicViewer-<version>.dmg.sha256", ci_doc)
+        self.assertIn("does not overwrite", ci_doc)
+        self.assertNotIn("GitHub Release automation", packaging_doc)
