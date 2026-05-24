@@ -2,8 +2,14 @@
 
 from pathlib import Path
 import sys
+import warnings
 
-from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs, collect_submodules
+from PyInstaller.utils.hooks import (
+    collect_data_files,
+    collect_dynamic_libs,
+    collect_submodules,
+    copy_metadata,
+)
 
 block_cipher = None
 
@@ -15,11 +21,31 @@ HOMEBREW_INIH_DYLIBS = (
     Path("/opt/homebrew/opt/inih/lib/libINIReader.0.dylib"),
     Path("/opt/homebrew/opt/inih/lib/libinih.0.dylib"),
 )
+RUNTIME_METADATA_PACKAGES = (
+    "PySide2",
+    "opencv-python",
+    "numpy",
+    "pyexiv2",
+    "rawpy",
+)
+OPTIONAL_METADATA_PACKAGES = {"rawpy"}
 sys.path.insert(0, str(SRC_ROOT))
 
 
 def _existing_dylib_binaries(paths, target_dir):
     return [(str(path), target_dir) for path in paths if path.exists()]
+
+
+def _collect_runtime_metadata(package_names):
+    metadata_datas = []
+    for package_name in package_names:
+        try:
+            metadata_datas += copy_metadata(package_name)
+        except Exception as exc:
+            if package_name not in OPTIONAL_METADATA_PACKAGES:
+                raise
+            warnings.warn(f"Skipping optional package metadata for {package_name}: {exc}")
+    return metadata_datas
 
 
 datas = collect_data_files(
@@ -33,6 +59,7 @@ datas = collect_data_files(
         "assets/licenses/*.txt",
     ],
 )
+datas += _collect_runtime_metadata(RUNTIME_METADATA_PACKAGES)
 
 binaries = []
 hiddenimports = []

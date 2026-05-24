@@ -85,6 +85,15 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("_existing_dylib_binaries(HOMEBREW_INIH_DYLIBS", spec)
         self.assertIn('"pyexiv2/lib"', spec)
 
+    def test_pyinstaller_spec_collects_runtime_dependency_metadata(self) -> None:
+        spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")
+
+        self.assertIn("copy_metadata", spec)
+        self.assertIn("RUNTIME_METADATA_PACKAGES", spec)
+        for package_name in ("PySide2", "opencv-python", "numpy", "pyexiv2", "rawpy"):
+            self.assertIn(f'"{package_name}"', spec)
+        self.assertIn("_collect_runtime_metadata(RUNTIME_METADATA_PACKAGES)", spec)
+
     def test_setup_py_delegates_metadata_to_pyproject(self) -> None:
         setup_py = (PROJECT_ROOT / "setup.py").read_text(encoding="utf-8")
 
