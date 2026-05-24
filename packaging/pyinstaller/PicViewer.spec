@@ -4,6 +4,11 @@ from pathlib import Path
 import sys
 import warnings
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib
+
 from PyInstaller.utils.hooks import (
     collect_data_files,
     collect_dynamic_libs,
@@ -22,6 +27,7 @@ HOMEBREW_INIH_DYLIBS = (
     Path("/opt/homebrew/opt/inih/lib/libinih.0.dylib"),
 )
 RUNTIME_METADATA_PACKAGES = (
+    "picviewer",
     "PySide2",
     "opencv-python",
     "numpy",
@@ -30,6 +36,21 @@ RUNTIME_METADATA_PACKAGES = (
 )
 OPTIONAL_METADATA_PACKAGES = {"rawpy"}
 sys.path.insert(0, str(SRC_ROOT))
+
+
+def _read_project_version(pyproject_path: Path) -> str:
+    """Read the app version from pyproject.toml for packaged artifacts."""
+
+    with pyproject_path.open("rb") as file_obj:
+        pyproject = tomllib.load(file_obj)
+
+    version = pyproject.get("project", {}).get("version")
+    if not isinstance(version, str) or not version:
+        raise RuntimeError(f"Cannot read project.version from {pyproject_path}.")
+    return version
+
+
+APP_VERSION = _read_project_version(PROJECT_ROOT / "pyproject.toml")
 
 
 def _existing_dylib_binaries(paths, target_dir):
@@ -129,4 +150,6 @@ if sys.platform == "darwin":
         name="PicViewer.app",
         icon=str(MACOS_ICON),
         bundle_identifier="com.picviewer.app",
+        version=APP_VERSION,
+        info_plist={"CFBundleVersion": APP_VERSION},
     )
