@@ -1,6 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 from pathlib import Path
+import shutil
 import sys
 import warnings
 
@@ -27,7 +28,6 @@ HOMEBREW_INIH_DYLIBS = (
     Path("/opt/homebrew/opt/inih/lib/libinih.0.dylib"),
 )
 RUNTIME_METADATA_PACKAGES = (
-    "picviewer",
     "PySide2",
     "opencv-python",
     "numpy",
@@ -69,6 +69,27 @@ def _collect_runtime_metadata(package_names):
     return metadata_datas
 
 
+def _build_picviewer_metadata_datas(version: str):
+    """Build PicViewer metadata from pyproject.toml instead of installed state."""
+
+    metadata_dir = PROJECT_ROOT / "build" / "pyinstaller-metadata"
+    if metadata_dir.exists():
+        shutil.rmtree(metadata_dir)
+    dist_info_dir = metadata_dir / f"picviewer-{version}.dist-info"
+    dist_info_dir.mkdir(parents=True)
+    (dist_info_dir / "METADATA").write_text(
+        "".join(
+            (
+                "Metadata-Version: 2.1\n",
+                "Name: picviewer\n",
+                f"Version: {version}\n",
+            )
+        ),
+        encoding="utf-8",
+    )
+    return [(str(dist_info_dir / "METADATA"), dist_info_dir.name)]
+
+
 datas = collect_data_files(
     "pic_viewer",
     includes=[
@@ -81,6 +102,7 @@ datas = collect_data_files(
     ],
 )
 datas += _collect_runtime_metadata(RUNTIME_METADATA_PACKAGES)
+datas += _build_picviewer_metadata_datas(APP_VERSION)
 
 binaries = []
 hiddenimports = []

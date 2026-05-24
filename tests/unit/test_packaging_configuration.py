@@ -90,9 +90,22 @@ class PackagingConfigurationTests(unittest.TestCase):
 
         self.assertIn("copy_metadata", spec)
         self.assertIn("RUNTIME_METADATA_PACKAGES", spec)
-        for package_name in ("picviewer", "PySide2", "opencv-python", "numpy", "pyexiv2", "rawpy"):
+        metadata_packages = spec.split("RUNTIME_METADATA_PACKAGES = (", maxsplit=1)[1].split(")", maxsplit=1)[0]
+        self.assertNotIn('"picviewer"', metadata_packages)
+        for package_name in ("PySide2", "opencv-python", "numpy", "pyexiv2", "rawpy"):
             self.assertIn(f'"{package_name}"', spec)
         self.assertIn("_collect_runtime_metadata(RUNTIME_METADATA_PACKAGES)", spec)
+
+    def test_pyinstaller_spec_generates_picviewer_metadata_from_pyproject(self) -> None:
+        spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")
+
+        self.assertIn("def _build_picviewer_metadata_datas(", spec)
+        self.assertIn('metadata_dir = PROJECT_ROOT / "build" / "pyinstaller-metadata"', spec)
+        self.assertIn('dist_info_dir = metadata_dir / f"picviewer-{version}.dist-info"', spec)
+        self.assertIn('"Name: picviewer\\n"', spec)
+        self.assertIn('"Version: {version}\\n"', spec)
+        self.assertIn('return [(str(dist_info_dir / "METADATA"), dist_info_dir.name)]', spec)
+        self.assertIn("datas += _build_picviewer_metadata_datas(APP_VERSION)", spec)
 
     def test_pyinstaller_spec_sets_macos_bundle_version_from_pyproject(self) -> None:
         spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")

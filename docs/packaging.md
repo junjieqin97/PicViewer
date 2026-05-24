@@ -116,7 +116,7 @@ The script performs the following steps:
 
 PyInstaller uses `onedir` mode. The Windows artifact is `dist/PicViewer/`, and the macOS artifact is `dist/PicViewer.app`. Windows uses `packaging/icons/picviewer.ico` as the application icon, and macOS uses `packaging/icons/picviewer.icns`. The app version installs and collects `rawpy` through the `packaging` extra by default, providing RAW support for ordinary users.
 The spec also collects `pyexiv2` submodules, `pyexiv2` dynamic libraries, and macOS Homebrew `inih` dynamic libraries so Exiv2 metadata reading works in packaged apps.
-The spec collects PicViewer's own package metadata for the About dialog and sets the macOS bundle version from `pyproject.toml`.
+The spec generates PicViewer's own package metadata for the About dialog from `pyproject.toml` and sets the macOS bundle version from the same source.
 
 Cross-building is not supported: the Windows app must be built on Windows, and the macOS app must be built on macOS.
 
