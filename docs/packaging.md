@@ -17,7 +17,7 @@ All Python commands must be run after entering the project conda environment:
 conda activate PicViewer
 ```
 
-The `PicViewer` environment must use Python 3.10. The project GUI binding is PySide2, and PySide2 does not support Python 3.11 or later.
+The `PicViewer` environment must use Python 3.10. The project GUI binding is PySide6. Python remains pinned to 3.10 for this release line to avoid changing the interpreter and GUI binding at the same time.
 
 To rebuild the environment, use:
 
@@ -55,13 +55,13 @@ python scripts/packaging/build_msi.py --accept-wix-eula
 
 `--accept-wix-eula` passes `-acceptEula wix7` to WiX and should only be used after the WiX OSMF EULA requirements have been confirmed.
 
-Generating translation source files requires the PySide2 `pyside2-lupdate` command to be available in `PATH`. Generating translation resources requires Qt's `lrelease` command to be available in `PATH`. If the local `lrelease` command has a different name, use:
+Generating translation source files requires the PySide6 `pyside6-lupdate` command to be available in `PATH`. Generating translation resources requires Qt's `lrelease` command to be available in `PATH`. If the local `lrelease` command has a different name, use:
 
 ```bash
 python scripts/i18n/build_qm.py --lrelease /path/to/lrelease
 ```
 
-When neither `lrelease` nor `lrelease-qt5` is in `PATH`, `build_qm.py` also searches for these tools under `~/.conda/envs/PicViewer/Lib/site-packages/PySide2`.
+When neither `pyside6-lrelease` nor `lrelease` is in `PATH`, `build_qm.py` also searches for these tools under `~/.conda/envs/PicViewer/Lib/site-packages/PySide6`.
 
 Application icon resources are generated from `src/pic_viewer/ui/resources/icons/picviewer.svg` as the primary source:
 

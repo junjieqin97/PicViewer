@@ -28,7 +28,7 @@ HOMEBREW_INIH_DYLIBS = (
     Path("/opt/homebrew/opt/inih/lib/libinih.0.dylib"),
 )
 RUNTIME_METADATA_PACKAGES = (
-    "PySide2",
+    "PySide6",
     "opencv-python",
     "numpy",
     "pyexiv2",

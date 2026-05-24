@@ -30,7 +30,7 @@ if [[ ${#SOURCES[@]} -eq 0 ]]; then
 fi
 
 echo "更新 TS 文件到: $TS_DIR"
-pyside2-lupdate \
+pyside6-lupdate \
   -noobsolete \
   "${SOURCES[@]}" \
   -ts \

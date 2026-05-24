@@ -23,7 +23,7 @@ scripts:
 
 - Create and activate the `PicViewer` conda environment with Python 3.10.
 - Install the native `inih` library required by the packaged `pyexiv2` runtime.
-- Install PySide2 from conda-forge so Qt tools such as `lrelease` are available.
+- Install PySide6 from conda-forge so Qt tools such as `lrelease` are available.
 - Install the project with the `packaging` extra.
 - Run the unit test suite.
 - Build `dist/PicViewer.app`.

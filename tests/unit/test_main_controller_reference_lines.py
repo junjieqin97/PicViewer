@@ -8,7 +8,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -59,7 +59,7 @@ class MainControllerReferenceLineTests(unittest.TestCase):
         self.assertEqual(controller._reference_line_settings, lbl_image.reference_line_settings())
 
     def tearDown(self) -> None:
-        self._app.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
+        self._app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
         self._app.processEvents()
 
     def _build_controller_with_labels(self):
@@ -80,11 +80,11 @@ class MainControllerReferenceLineTests(unittest.TestCase):
 
         controller = MainController.__new__(MainController)
         QtCore.QObject.__init__(controller)
-        action_cross = QtWidgets.QAction()
+        action_cross = QtGui.QAction()
         action_cross.setCheckable(True)
-        action_diagonal = QtWidgets.QAction()
+        action_diagonal = QtGui.QAction()
         action_diagonal.setCheckable(True)
-        action_thirds = QtWidgets.QAction()
+        action_thirds = QtGui.QAction()
         action_thirds.setCheckable(True)
         controller._ui = SimpleNamespace(
             tabsImages=tabs,

@@ -11,7 +11,7 @@ requires-python = ">=3.10,<3.11"
 license = "GPL-3.0-only"
 authors = [{ name = "junjieqin" }]
 dependencies = [
-  "PySide2>=5.15.2.1,<5.16",
+  "PySide6>=6.8,<7",
   "opencv-python>=4.7",
   "numpy>=1.23",
   "pyexiv2>=2.15.5,<3",

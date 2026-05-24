@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -58,7 +58,10 @@ class AboutDialogTests(unittest.TestCase):
         fake_icon = FakeIcon()
 
         class FakeMessageBox:
-            Ok = QtWidgets.QMessageBox.Ok
+            Ok = QtWidgets.QMessageBox.StandardButton.Ok
+
+            class StandardButton:
+                Ok = QtWidgets.QMessageBox.StandardButton.Ok
 
             def __init__(self, parent: object) -> None:
                 self.parent = parent
@@ -87,7 +90,7 @@ class AboutDialogTests(unittest.TestCase):
             def setStandardButtons(self, buttons) -> None:  # type: ignore[no-untyped-def]
                 self.standard_buttons = buttons
 
-            def exec_(self) -> int:
+            def exec(self) -> int:
                 shown_boxes.append(self)
                 return self.Ok
 
@@ -114,7 +117,7 @@ class AboutDialogTests(unittest.TestCase):
         message_box = shown_boxes[0]
         text = message_box.text()
         self.assertEqual("About", message_box.title)
-        self.assertEqual(QtCore.Qt.RichText, message_box.text_format)
+        self.assertEqual(QtCore.Qt.TextFormat.RichText, message_box.text_format)
         self.assertEqual(FakeMessageBox.Ok, message_box.standard_buttons)
         self.assertEqual((64, 64), fake_icon.requested_size)
         self.assertIs(fake_pixmap, message_box.iconPixmap())
@@ -131,10 +134,10 @@ class AboutDialogTests(unittest.TestCase):
         controller._main_window = object()
         licenses = [
             ThirdPartyLicenseInfo(
-                "PySide2",
-                "PySide2",
-                "5.15.2.1",
-                "LGPL-3.0-only / GPL-2.0-only / Commercial",
+                "PySide6",
+                "PySide6",
+                "6.8.0",
+                "LGPL-3.0-only / GPL-2.0-only / GPL-3.0-only / Commercial",
                 "",
             ),
         ]
@@ -145,7 +148,7 @@ class AboutDialogTests(unittest.TestCase):
                 self.license_infos = license_infos
                 self.parent = parent
 
-            def exec_(self) -> int:
+            def exec(self) -> int:
                 shown_dialogs.append(self)
                 return 0
 

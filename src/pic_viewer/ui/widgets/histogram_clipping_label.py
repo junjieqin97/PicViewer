@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 TriangleName = Literal["underexposed", "overexposed"] | None
 
@@ -60,7 +60,7 @@ class HistogramClippingLabel(QtWidgets.QLabel):
 
         super().paintEvent(event)
         painter = QtGui.QPainter(self)
-        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
         self._paint_triangle(
             painter,
             self._left_triangle(),
@@ -80,8 +80,8 @@ class HistogramClippingLabel(QtWidgets.QLabel):
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:  # type: ignore[override]
         """Toggle clipping marker state when a triangle is clicked."""
 
-        if event.button() == QtCore.Qt.LeftButton:
-            triangle = self._triangle_at(event.pos())
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
+            triangle = self._triangle_at(event.position().toPoint())
             if triangle == "underexposed":
                 self._underexposed_active = not self._underexposed_active
                 self.underexposed_toggled.emit(self._underexposed_active)
@@ -99,10 +99,10 @@ class HistogramClippingLabel(QtWidgets.QLabel):
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:  # type: ignore[override]
         """Show hand cursor when hovering clipping triangles."""
 
-        triangle = self._triangle_at(event.pos())
+        triangle = self._triangle_at(event.position().toPoint())
         self._set_hovered_triangle(triangle)
         if triangle is not None:
-            self.setCursor(QtCore.Qt.PointingHandCursor)
+            self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         else:
             self.unsetCursor()
         super().mouseMoveEvent(event)
@@ -110,7 +110,7 @@ class HistogramClippingLabel(QtWidgets.QLabel):
     def event(self, event: QtCore.QEvent) -> bool:  # type: ignore[override]
         """Handle tooltip events for clipping triangles."""
 
-        if event.type() == QtCore.QEvent.ToolTip and isinstance(event, QtGui.QHelpEvent):
+        if event.type() == QtCore.QEvent.Type.ToolTip and isinstance(event, QtGui.QHelpEvent):
             triangle = self._triangle_at(event.pos())
             if triangle == "underexposed":
                 QtWidgets.QToolTip.showText(event.globalPos(), self._underexposed_tooltip, self)
@@ -165,9 +165,9 @@ class HistogramClippingLabel(QtWidgets.QLabel):
     def _triangle_at(self, pos: QtCore.QPoint) -> TriangleName:
         """Return the clipping triangle under the given widget position."""
 
-        if self._left_triangle().containsPoint(pos, QtCore.Qt.OddEvenFill):
+        if self._left_triangle().containsPoint(pos, QtCore.Qt.FillRule.OddEvenFill):
             return "underexposed"
-        if self._right_triangle().containsPoint(pos, QtCore.Qt.OddEvenFill):
+        if self._right_triangle().containsPoint(pos, QtCore.Qt.FillRule.OddEvenFill):
             return "overexposed"
         return None
 
@@ -201,8 +201,8 @@ class HistogramClippingLabel(QtWidgets.QLabel):
             glow_color = QtGui.QColor(semantic_color)
             glow_color.setAlpha(72)
             glow_pen = QtGui.QPen(glow_color, 5)
-            glow_pen.setJoinStyle(QtCore.Qt.RoundJoin)
-            painter.setBrush(QtCore.Qt.NoBrush)
+            glow_pen.setJoinStyle(QtCore.Qt.PenJoinStyle.RoundJoin)
+            painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
             painter.setPen(glow_pen)
             painter.drawPolygon(polygon)
 
@@ -213,6 +213,6 @@ class HistogramClippingLabel(QtWidgets.QLabel):
         if active:
             highlight_color = semantic_color.lighter(160)
             highlight_color.setAlpha(150)
-            painter.setBrush(QtCore.Qt.NoBrush)
+            painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
             painter.setPen(QtGui.QPen(highlight_color, 1))
             painter.drawPolyline(polygon)

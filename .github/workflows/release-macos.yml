@@ -40,7 +40,7 @@ jobs:
       - name: Install packaging dependencies
         run: |
           brew install inih
-          conda install -y -c conda-forge pyside2
+          conda install -y -c conda-forge pyside6
           python -m pip install --upgrade pip
           python -m pip install -e ".[packaging]"
 

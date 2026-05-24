@@ -92,8 +92,9 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("RUNTIME_METADATA_PACKAGES", spec)
         metadata_packages = spec.split("RUNTIME_METADATA_PACKAGES = (", maxsplit=1)[1].split(")", maxsplit=1)[0]
         self.assertNotIn('"picviewer"', metadata_packages)
-        for package_name in ("PySide2", "opencv-python", "numpy", "pyexiv2", "rawpy"):
+        for package_name in ("PySide6", "opencv-python", "numpy", "pyexiv2", "rawpy"):
             self.assertIn(f'"{package_name}"', spec)
+        self.assertNotIn('"PySide2"', spec)
         self.assertIn("_collect_runtime_metadata(RUNTIME_METADATA_PACKAGES)", spec)
 
     def test_pyinstaller_spec_generates_picviewer_metadata_from_pyproject(self) -> None:
@@ -143,7 +144,8 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("activate-environment: PicViewer", workflow)
         self.assertIn("python-version: \"3.10\"", workflow)
         self.assertIn("brew install inih", workflow)
-        self.assertIn("conda install -y -c conda-forge pyside2", workflow)
+        self.assertIn("conda install -y -c conda-forge pyside6", workflow)
+        self.assertNotIn("conda install -y -c conda-forge pyside2", workflow)
         self.assertIn("python -m unittest discover -s tests/unit", workflow)
         self.assertIn("python scripts/packaging/build_app.py", workflow)
         self.assertIn("python scripts/packaging/build_dmg.py", workflow)

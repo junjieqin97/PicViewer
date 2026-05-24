@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
-from PySide2 import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 
 from pic_viewer.ui.utils.image_qt import to_qpixmap
 

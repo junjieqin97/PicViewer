@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 TRANSLATION_PATTERN = "picviewer_*.ts"
 CONDA_ENV_NAME = "PicViewer"
-LRELEASE_NAMES = ("lrelease", "lrelease-qt5")
+LRELEASE_NAMES = ("pyside6-lrelease", "lrelease")
 
 
 def project_root() -> Path:
@@ -30,8 +30,8 @@ def default_translation_dir(root: Optional[Path] = None) -> Path:
     return base / "src" / "pic_viewer" / "ui" / "resources" / "i18n"
 
 
-def default_pyside2_tools_dir() -> Path:
-    """Return the PySide2 tool directory in the default PicViewer conda env."""
+def default_pyside6_tools_dir() -> Path:
+    """Return the PySide6 tool directory in the default PicViewer conda env."""
 
     return (
         Path.home()
@@ -40,7 +40,7 @@ def default_pyside2_tools_dir() -> Path:
         / CONDA_ENV_NAME
         / "Lib"
         / "site-packages"
-        / "PySide2"
+        / "PySide6"
     )
 
 
@@ -55,14 +55,14 @@ def lrelease_file_candidates(name: str) -> list[str]:
 def find_lrelease(
     explicit: Optional[str] = None,
     path_lookup: Callable[[str], Optional[str]] = shutil.which,
-    pyside2_tools_dir: Optional[Path] = None,
+    pyside6_tools_dir: Optional[Path] = None,
 ) -> str:
     """Resolve the Qt ``lrelease`` executable.
 
     Args:
         explicit: User-provided executable path or command name.
         path_lookup: Lookup function used for tests and PATH resolution.
-        pyside2_tools_dir: Fallback PySide2 tools directory.
+        pyside6_tools_dir: Fallback PySide6 tools directory.
 
     Returns:
         The executable path or command name to run.
@@ -80,9 +80,9 @@ def find_lrelease(
             return resolved
 
     tools_dir = (
-        default_pyside2_tools_dir()
-        if pyside2_tools_dir is None
-        else pyside2_tools_dir
+        default_pyside6_tools_dir()
+        if pyside6_tools_dir is None
+        else pyside6_tools_dir
     )
     for candidate in LRELEASE_NAMES:
         for file_name in lrelease_file_candidates(candidate):
@@ -91,7 +91,7 @@ def find_lrelease(
                 return str(executable)
 
     raise RuntimeError(
-        "Cannot find Qt lrelease. Install Qt/PySide2 tools, ensure lrelease is on PATH, "
+        "Cannot find Qt lrelease. Install Qt/PySide6 tools, ensure lrelease is on PATH, "
         f"or place it in {tools_dir}."
     )
 

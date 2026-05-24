@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from PySide2 import QtWidgets
+from PySide6 import QtWidgets
 
 logger = logging.getLogger(__name__)
 
