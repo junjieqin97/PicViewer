@@ -1,9 +1,21 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 from pathlib import Path
+import shutil
 import sys
+import warnings
 
-from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs, collect_submodules
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib
+
+from PyInstaller.utils.hooks import (
+    collect_data_files,
+    collect_dynamic_libs,
+    collect_submodules,
+    copy_metadata,
+)
 
 block_cipher = None
 
@@ -15,11 +27,67 @@ HOMEBREW_INIH_DYLIBS = (
     Path("/opt/homebrew/opt/inih/lib/libINIReader.0.dylib"),
     Path("/opt/homebrew/opt/inih/lib/libinih.0.dylib"),
 )
+RUNTIME_METADATA_PACKAGES = (
+    "PySide2",
+    "opencv-python",
+    "numpy",
+    "pyexiv2",
+    "rawpy",
+)
+OPTIONAL_METADATA_PACKAGES = {"rawpy"}
 sys.path.insert(0, str(SRC_ROOT))
+
+
+def _read_project_version(pyproject_path: Path) -> str:
+    """Read the app version from pyproject.toml for packaged artifacts."""
+
+    with pyproject_path.open("rb") as file_obj:
+        pyproject = tomllib.load(file_obj)
+
+    version = pyproject.get("project", {}).get("version")
+    if not isinstance(version, str) or not version:
+        raise RuntimeError(f"Cannot read project.version from {pyproject_path}.")
+    return version
+
+
+APP_VERSION = _read_project_version(PROJECT_ROOT / "pyproject.toml")
 
 
 def _existing_dylib_binaries(paths, target_dir):
     return [(str(path), target_dir) for path in paths if path.exists()]
+
+
+def _collect_runtime_metadata(package_names):
+    metadata_datas = []
+    for package_name in package_names:
+        try:
+            metadata_datas += copy_metadata(package_name)
+        except Exception as exc:
+            if package_name not in OPTIONAL_METADATA_PACKAGES:
+                raise
+            warnings.warn(f"Skipping optional package metadata for {package_name}: {exc}")
+    return metadata_datas
+
+
+def _build_picviewer_metadata_datas(version: str):
+    """Build PicViewer metadata from pyproject.toml instead of installed state."""
+
+    metadata_dir = PROJECT_ROOT / "build" / "pyinstaller-metadata"
+    if metadata_dir.exists():
+        shutil.rmtree(metadata_dir)
+    dist_info_dir = metadata_dir / f"picviewer-{version}.dist-info"
+    dist_info_dir.mkdir(parents=True)
+    (dist_info_dir / "METADATA").write_text(
+        "".join(
+            (
+                "Metadata-Version: 2.1\n",
+                "Name: picviewer\n",
+                f"Version: {version}\n",
+            )
+        ),
+        encoding="utf-8",
+    )
+    return [(str(dist_info_dir / "METADATA"), dist_info_dir.name)]
 
 
 datas = collect_data_files(
@@ -33,6 +101,8 @@ datas = collect_data_files(
         "assets/licenses/*.txt",
     ],
 )
+datas += _collect_runtime_metadata(RUNTIME_METADATA_PACKAGES)
+datas += _build_picviewer_metadata_datas(APP_VERSION)
 
 binaries = []
 hiddenimports = []
@@ -102,4 +172,6 @@ if sys.platform == "darwin":
         name="PicViewer.app",
         icon=str(MACOS_ICON),
         bundle_identifier="com.picviewer.app",
+        version=APP_VERSION,
+        info_plist={"CFBundleVersion": APP_VERSION},
     )
