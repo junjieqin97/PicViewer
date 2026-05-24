@@ -3,6 +3,27 @@ QMainWindow {
     color: #d7dbe0;
 }
 
+QMenuBar {
+    background: #1f2226;
+    color: #f0f3f6;
+}
+
+QMenuBar::item {
+    background: transparent;
+    color: #f0f3f6;
+    padding: 4px 10px;
+}
+
+QMenuBar::item:selected {
+    background: #353b43;
+    color: #f0f3f6;
+}
+
+QMenuBar::item:pressed {
+    background: #3f4a56;
+    color: #ffffff;
+}
+
 QWidget#central {
     background: #1f2226;
     color: #d7dbe0;
