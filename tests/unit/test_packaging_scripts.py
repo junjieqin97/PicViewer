@@ -109,6 +109,25 @@ class PackagingScriptsTests(unittest.TestCase):
                 ),
             )
 
+    def test_find_lrelease_uses_conda_prefix_qt6_tool_dir(self) -> None:
+        build_qm = load_script("scripts/i18n/build_qm.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            conda_prefix = Path(tmp) / "envs" / "PicViewer"
+            tools_dir = conda_prefix / "lib" / "qt6" / "bin"
+            tools_dir.mkdir(parents=True)
+            lrelease = tools_dir / "lrelease"
+            lrelease.write_text("tool", encoding="utf-8")
+
+            self.assertEqual(
+                str(lrelease),
+                build_qm.find_lrelease(
+                    explicit=None,
+                    path_lookup=lambda _: None,
+                    env={"CONDA_PREFIX": str(conda_prefix)},
+                ),
+            )
+
     def test_build_python_package_checks_conda_environment(self) -> None:
         build_package = load_script("scripts/packaging/build_python_package.py")
 

@@ -61,7 +61,7 @@ Generating translation source files requires the PySide6 `pyside6-lupdate` comma
 python scripts/i18n/build_qm.py --lrelease /path/to/lrelease
 ```
 
-When neither `pyside6-lrelease` nor `lrelease` is in `PATH`, `build_qm.py` also searches for these tools under `~/.conda/envs/PicViewer/Lib/site-packages/PySide6`.
+When neither `pyside6-lrelease` nor `lrelease` is in `PATH`, `build_qm.py` also searches common Qt tool directories under the active conda prefix, including `$CONDA_PREFIX/lib/qt6/bin`, `$CONDA_PREFIX/Library/bin`, and the PySide6 package directory. The legacy `~/.conda/envs/PicViewer/Lib/site-packages/PySide6` location is still checked last for older local setups.
 
 Application icon resources are generated from `src/pic_viewer/ui/resources/icons/picviewer.svg` as the primary source:
 

@@ -8,7 +8,8 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-from typing import Callable, Optional, Sequence
+import sys
+from typing import Callable, Mapping, Optional, Sequence
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,62 @@ def default_pyside6_tools_dir() -> Path:
     )
 
 
+def _site_packages_dir(prefix: Path) -> Path:
+    """Return the platform-specific site-packages directory for a Python prefix."""
+
+    if os.name == "nt":
+        return prefix / "Lib" / "site-packages"
+    return (
+        prefix
+        / "lib"
+        / f"python{sys.version_info.major}.{sys.version_info.minor}"
+        / "site-packages"
+    )
+
+
+def _unique_paths(paths: Sequence[Path]) -> list[Path]:
+    """Return paths without duplicates while preserving lookup order."""
+
+    unique: list[Path] = []
+    seen: set[str] = set()
+    for path in paths:
+        key = str(path)
+        if key not in seen:
+            unique.append(path)
+            seen.add(key)
+    return unique
+
+
+def default_lrelease_tool_dirs(env: Optional[Mapping[str, str]] = None) -> list[Path]:
+    """Return fallback directories that can contain Qt lrelease executables.
+
+    Conda-forge Qt packages may keep Qt command-line tools under the active
+    environment prefix instead of exposing every executable on PATH.
+    """
+
+    current_env = os.environ if env is None else env
+    prefixes: list[Path] = []
+    conda_prefix = current_env.get("CONDA_PREFIX")
+    if conda_prefix:
+        prefixes.append(Path(conda_prefix))
+    prefixes.append(Path(sys.prefix))
+
+    tool_dirs: list[Path] = []
+    for prefix in _unique_paths(prefixes):
+        tool_dirs.extend(
+            [
+                prefix / "bin",
+                prefix / "Scripts",
+                prefix / "Library" / "bin",
+                prefix / "lib" / "qt6" / "bin",
+                prefix / "Library" / "lib" / "qt6" / "bin",
+                _site_packages_dir(prefix) / "PySide6",
+            ]
+        )
+    tool_dirs.append(default_pyside6_tools_dir())
+    return _unique_paths(tool_dirs)
+
+
 def lrelease_file_candidates(name: str) -> list[str]:
     """Return platform-appropriate executable file names for ``lrelease``."""
 
@@ -56,6 +113,7 @@ def find_lrelease(
     explicit: Optional[str] = None,
     path_lookup: Callable[[str], Optional[str]] = shutil.which,
     pyside6_tools_dir: Optional[Path] = None,
+    env: Optional[Mapping[str, str]] = None,
 ) -> str:
     """Resolve the Qt ``lrelease`` executable.
 
@@ -63,6 +121,7 @@ def find_lrelease(
         explicit: User-provided executable path or command name.
         path_lookup: Lookup function used for tests and PATH resolution.
         pyside6_tools_dir: Fallback PySide6 tools directory.
+        env: Environment mapping used to resolve the active conda prefix.
 
     Returns:
         The executable path or command name to run.
@@ -79,20 +138,22 @@ def find_lrelease(
         if resolved:
             return resolved
 
-    tools_dir = (
-        default_pyside6_tools_dir()
-        if pyside6_tools_dir is None
-        else pyside6_tools_dir
+    search_dirs = (
+        [pyside6_tools_dir]
+        if pyside6_tools_dir is not None
+        else default_lrelease_tool_dirs(env)
     )
-    for candidate in LRELEASE_NAMES:
-        for file_name in lrelease_file_candidates(candidate):
-            executable = tools_dir / file_name
-            if executable.is_file():
-                return str(executable)
+    for tools_dir in search_dirs:
+        for candidate in LRELEASE_NAMES:
+            for file_name in lrelease_file_candidates(candidate):
+                executable = tools_dir / file_name
+                if executable.is_file():
+                    return str(executable)
 
+    searched = ", ".join(str(path) for path in search_dirs)
     raise RuntimeError(
-        "Cannot find Qt lrelease. Install Qt/PySide6 tools, ensure lrelease is on PATH, "
-        f"or place it in {tools_dir}."
+        "Cannot find Qt lrelease. Install Qt/PySide6 tools, ensure lrelease is on "
+        f"PATH, or place it in one of: {searched}."
     )
 
 
