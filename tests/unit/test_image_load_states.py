@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import numpy as np
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -215,8 +215,8 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         empty_item = table.item(0, 0)
         self.assertEqual("No Exif metadata", empty_item.text())
         self.assertEqual(2, table.columnSpan(0, 0))
-        self.assertEqual(QtCore.Qt.AlignCenter, empty_item.textAlignment())
-        self.assertFalse(empty_item.flags() & QtCore.Qt.ItemIsSelectable)
+        self.assertEqual(QtCore.Qt.AlignmentFlag.AlignCenter, empty_item.textAlignment())
+        self.assertFalse(empty_item.flags() & QtCore.Qt.ItemFlag.ItemIsSelectable)
 
     def test_metadata_table_clears_empty_span_when_entries_return(self) -> None:
         window, ui, controller = self._build_controller()

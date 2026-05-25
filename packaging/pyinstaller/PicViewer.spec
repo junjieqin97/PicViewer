@@ -28,14 +28,17 @@ HOMEBREW_INIH_DYLIBS = (
     Path("/opt/homebrew/opt/inih/lib/libinih.0.dylib"),
 )
 RUNTIME_METADATA_PACKAGES = (
-    "PySide2",
+    "PySide6",
     "opencv-python",
     "numpy",
     "pyexiv2",
     "rawpy",
 )
 OPTIONAL_METADATA_PACKAGES = {"rawpy"}
+sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(SRC_ROOT))
+
+from scripts.packaging.pyinstaller_filters import filter_pyinstaller_analysis_toc
 
 
 def _read_project_version(pyproject_path: Path) -> str:
@@ -134,6 +137,8 @@ a = Analysis(
     cipher=block_cipher,
     noarchive=False,
 )
+a.binaries = filter_pyinstaller_analysis_toc(a.binaries, sys.platform)
+a.datas = filter_pyinstaller_analysis_toc(a.datas, sys.platform)
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 exe = EXE(

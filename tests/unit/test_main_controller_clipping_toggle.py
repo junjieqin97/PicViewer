@@ -5,11 +5,11 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -32,15 +32,15 @@ class MainControllerClippingToggleTests(unittest.TestCase):
 
     def setUp(self) -> None:
         self.widget = HistogramClippingLabel()
-        self.act_toggle_underexposed = QtWidgets.QAction()
+        self.act_toggle_underexposed = QtGui.QAction()
         self.act_toggle_underexposed.setCheckable(True)
-        self.act_toggle_overexposed = QtWidgets.QAction()
+        self.act_toggle_overexposed = QtGui.QAction()
         self.act_toggle_overexposed.setCheckable(True)
-        self.act_peak_high = QtWidgets.QAction()
+        self.act_peak_high = QtGui.QAction()
         self.act_peak_high.setCheckable(True)
-        self.act_peak_medium = QtWidgets.QAction()
+        self.act_peak_medium = QtGui.QAction()
         self.act_peak_medium.setCheckable(True)
-        self.act_peak_low = QtWidgets.QAction()
+        self.act_peak_low = QtGui.QAction()
         self.act_peak_low.setCheckable(True)
         self.controller = MainController.__new__(MainController)
         QtCore.QObject.__init__(self.controller)
@@ -92,23 +92,23 @@ class MainControllerClippingToggleTests(unittest.TestCase):
         self._send_mouse_move(self.widget, QtCore.QPoint(10, 10))
 
         self.assertEqual("underexposed", self.widget._hovered_triangle)
-        self.assertEqual(QtCore.Qt.PointingHandCursor, self.widget.cursor().shape())
+        self.assertEqual(QtCore.Qt.CursorShape.PointingHandCursor, self.widget.cursor().shape())
 
         self._send_mouse_move(self.widget, QtCore.QPoint(245, 10))
 
         self.assertEqual("overexposed", self.widget._hovered_triangle)
-        self.assertEqual(QtCore.Qt.PointingHandCursor, self.widget.cursor().shape())
+        self.assertEqual(QtCore.Qt.CursorShape.PointingHandCursor, self.widget.cursor().shape())
 
         self._send_mouse_move(self.widget, QtCore.QPoint(128, 80))
 
         self.assertIsNone(self.widget._hovered_triangle)
-        self.assertNotEqual(QtCore.Qt.PointingHandCursor, self.widget.cursor().shape())
+        self.assertNotEqual(QtCore.Qt.CursorShape.PointingHandCursor, self.widget.cursor().shape())
 
         self._send_mouse_move(self.widget, QtCore.QPoint(10, 10))
-        self.widget.leaveEvent(QtCore.QEvent(QtCore.QEvent.Leave))
+        self.widget.leaveEvent(QtCore.QEvent(QtCore.QEvent.Type.Leave))
 
         self.assertIsNone(self.widget._hovered_triangle)
-        self.assertNotEqual(QtCore.Qt.PointingHandCursor, self.widget.cursor().shape())
+        self.assertNotEqual(QtCore.Qt.CursorShape.PointingHandCursor, self.widget.cursor().shape())
 
     def test_clicking_triangles_emits_toggle_signals(self) -> None:
         self.widget.resize(256, 100)
@@ -123,23 +123,38 @@ class MainControllerClippingToggleTests(unittest.TestCase):
         underexposed_toggled.assert_called_once_with(True)
         overexposed_toggled.assert_called_once_with(True)
 
+    def test_tooltip_event_uses_qhelp_event_positions(self) -> None:
+        self.widget.resize(256, 100)
+        self.widget.set_triangle_tooltips("Under", "Over")
+        event = QtGui.QHelpEvent(
+            QtCore.QEvent.Type.ToolTip,
+            QtCore.QPoint(10, 10),
+            QtCore.QPoint(100, 100),
+        )
+
+        with patch.object(QtWidgets.QToolTip, "showText") as show_text:
+            handled = self.widget.event(event)
+
+        self.assertTrue(handled)
+        show_text.assert_called_once_with(QtCore.QPoint(100, 100), "Under", self.widget)
+
     def _send_mouse_move(self, widget: HistogramClippingLabel, pos: QtCore.QPoint) -> None:
         event = QtGui.QMouseEvent(
-            QtCore.QEvent.MouseMove,
+            QtCore.QEvent.Type.MouseMove,
             QtCore.QPointF(pos),
-            QtCore.Qt.NoButton,
-            QtCore.Qt.NoButton,
-            QtCore.Qt.NoModifier,
+            QtCore.Qt.MouseButton.NoButton,
+            QtCore.Qt.MouseButton.NoButton,
+            QtCore.Qt.KeyboardModifier.NoModifier,
         )
         widget.mouseMoveEvent(event)
 
     def _send_mouse_press(self, widget: HistogramClippingLabel, pos: QtCore.QPoint) -> None:
         event = QtGui.QMouseEvent(
-            QtCore.QEvent.MouseButtonPress,
+            QtCore.QEvent.Type.MouseButtonPress,
             QtCore.QPointF(pos),
-            QtCore.Qt.LeftButton,
-            QtCore.Qt.LeftButton,
-            QtCore.Qt.NoModifier,
+            QtCore.Qt.MouseButton.LeftButton,
+            QtCore.Qt.MouseButton.LeftButton,
+            QtCore.Qt.KeyboardModifier.NoModifier,
         )
         widget.mousePressEvent(event)
 
@@ -188,9 +203,9 @@ class MainControllerClippingToggleTests(unittest.TestCase):
         controller = MainController.__new__(MainController)
         QtCore.QObject.__init__(controller)
         widget = HistogramClippingLabel()
-        action_under = QtWidgets.QAction()
+        action_under = QtGui.QAction()
         action_under.setCheckable(True)
-        action_over = QtWidgets.QAction()
+        action_over = QtGui.QAction()
         action_over.setCheckable(True)
         controller._ui = SimpleNamespace(
             widgetHistogram=widget,
@@ -218,9 +233,9 @@ class MainControllerClippingToggleTests(unittest.TestCase):
         controller = MainController.__new__(MainController)
         QtCore.QObject.__init__(controller)
         widget = HistogramClippingLabel()
-        action_under = QtWidgets.QAction()
+        action_under = QtGui.QAction()
         action_under.setCheckable(True)
-        action_over = QtWidgets.QAction()
+        action_over = QtGui.QAction()
         action_over.setCheckable(True)
         controller._ui = SimpleNamespace(
             widgetHistogram=widget,

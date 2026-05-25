@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 
 class ImageLoadStateWidget(QtWidgets.QWidget):
@@ -61,7 +61,7 @@ class ImageLoadStateWidget(QtWidgets.QWidget):
 
         self.label_title = QtWidgets.QLabel(content)
         self.label_title.setObjectName("labelImageLoadStateTitle")
-        self.label_title.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_title.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         title_font = self.label_title.font()
         title_font.setPointSize(title_font.pointSize() + 3)
         title_font.setBold(True)
@@ -70,19 +70,19 @@ class ImageLoadStateWidget(QtWidgets.QWidget):
 
         self.label_detail = QtWidgets.QLabel(content)
         self.label_detail.setObjectName("labelImageLoadStateDetail")
-        self.label_detail.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_detail.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.label_detail.setWordWrap(True)
         content_layout.addWidget(self.label_detail)
 
         self.label_reason = QtWidgets.QLabel(content)
         self.label_reason.setObjectName("labelImageLoadStateReason")
-        self.label_reason.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_reason.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.label_reason.setWordWrap(True)
         content_layout.addWidget(self.label_reason)
 
         self.label_file_name = QtWidgets.QLabel(content)
         self.label_file_name.setObjectName("labelImageLoadStateFileName")
-        self.label_file_name.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_file_name.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.label_file_name.setWordWrap(True)
         content_layout.addWidget(self.label_file_name)
 
@@ -91,13 +91,13 @@ class ImageLoadStateWidget(QtWidgets.QWidget):
         self.progress.setRange(0, 0)
         self.progress.setTextVisible(False)
         self.progress.setFixedWidth(220)
-        content_layout.addWidget(self.progress, 0, QtCore.Qt.AlignHCenter)
+        content_layout.addWidget(self.progress, 0, QtCore.Qt.AlignmentFlag.AlignHCenter)
 
         self.button_retry = QtWidgets.QPushButton(content)
         self.button_retry.setObjectName("buttonImageLoadRetry")
         self.button_retry.setMinimumWidth(120)
         self.button_retry.clicked.connect(self.retry_requested)
-        content_layout.addWidget(self.button_retry, 0, QtCore.Qt.AlignHCenter)
+        content_layout.addWidget(self.button_retry, 0, QtCore.Qt.AlignmentFlag.AlignHCenter)
 
-        layout.addWidget(content, 0, QtCore.Qt.AlignHCenter)
+        layout.addWidget(content, 0, QtCore.Qt.AlignmentFlag.AlignHCenter)
         layout.addStretch(1)

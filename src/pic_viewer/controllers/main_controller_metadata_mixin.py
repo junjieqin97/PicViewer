@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
 from pic_viewer.app.services.metadata_overlay_service import build_metadata_overlay_lines
@@ -160,8 +160,8 @@ class MainControllerMetadataMixin:
 
     def _create_metadata_state_item(self, text: str) -> QtWidgets.QTableWidgetItem:
         item = QtWidgets.QTableWidgetItem(text)
-        item.setTextAlignment(QtCore.Qt.AlignCenter)
-        item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
+        item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsSelectable)
         return item
 
     def _should_show_metadata_tooltip(self, text: str) -> bool:

@@ -1,0 +1,253 @@
+name: Release desktop installers
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - 'release-*'
+
+permissions:
+  contents: write
+
+jobs:
+  release-metadata:
+    name: Read release metadata
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.ref == 'develop' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      tag: ${{ steps.release.outputs.tag }}
+      dmg: ${{ steps.release.outputs.dmg }}
+      dmg_checksum: ${{ steps.release.outputs.dmg_checksum }}
+      msi: ${{ steps.release.outputs.msi }}
+      msi_checksum: ${{ steps.release.outputs.msi_checksum }}
+
+    steps:
+      - name: Check out release branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0
+
+      - name: Read release version
+        id: release
+        run: |
+          VERSION="$(sed -nE 's/^version = "([^"]+)"/\1/p' pyproject.toml | head -n 1)"
+          if [ -z "$VERSION" ]; then
+            echo "::error::Cannot read project.version from pyproject.toml."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "dmg=dist/PicViewer-$VERSION.dmg" >> "$GITHUB_OUTPUT"
+          echo "dmg_checksum=dist/PicViewer-$VERSION.dmg.sha256" >> "$GITHUB_OUTPUT"
+          echo "msi=dist/PicViewer-$VERSION.msi" >> "$GITHUB_OUTPUT"
+          echo "msi_checksum=dist/PicViewer-$VERSION.msi.sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure release does not already exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.release.outputs.tag }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error::Release $TAG already exists. Bump pyproject.toml project.version before re-running."
+            exit 1
+          fi
+
+  build-macos:
+    name: Build macOS DMG
+    needs: release-metadata
+    runs-on: macos-15
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+      - name: Check out release branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0
+
+      - name: Set up Conda environment
+        uses: conda-incubator/setup-miniconda@v4
+        with:
+          miniforge-version: latest
+          activate-environment: PicViewer
+          python-version: "3.10"
+          channels: conda-forge
+          channel-priority: strict
+
+      - name: Install packaging dependencies
+        run: |
+          brew install inih
+          conda install -y -c conda-forge pyside6 qt6-main
+          if [ -d "$CONDA_PREFIX/lib/qt6/bin" ]; then
+            echo "$CONDA_PREFIX/lib/qt6/bin" >> "$GITHUB_PATH"
+            export PATH="$CONDA_PREFIX/lib/qt6/bin:$PATH"
+          fi
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[packaging]"
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests/unit
+
+      - name: Build macOS app
+        run: python scripts/packaging/build_app.py
+
+      - name: Build macOS DMG
+        run: python scripts/packaging/build_dmg.py
+
+      - name: Verify DMG checksum
+        working-directory: dist
+        run: shasum -a 256 -c *.dmg.sha256
+
+      - name: Upload macOS release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-release-assets
+          path: |
+            ${{ needs.release-metadata.outputs.dmg }}
+            ${{ needs.release-metadata.outputs.dmg_checksum }}
+          if-no-files-found: error
+
+  build-windows:
+    name: Build Windows MSI
+    needs: release-metadata
+    runs-on: windows-2025
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Check out release branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0
+
+      - name: Set up Conda environment
+        uses: conda-incubator/setup-miniconda@v4
+        with:
+          miniforge-version: latest
+          activate-environment: PicViewer
+          python-version: "3.10"
+          channels: conda-forge
+          channel-priority: strict
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.x"
+
+      - name: Install WiX CLI
+        run: |
+          dotnet tool install --global wix
+          "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
+          wix --version
+
+      - name: Install packaging dependencies
+        run: |
+          conda activate PicViewer
+          conda install -y -c conda-forge pyside6 qt6-main
+          $qtToolDirs = @(
+            "$env:CONDA_PREFIX\Library\bin"
+            "$env:CONDA_PREFIX\lib\qt6\bin"
+          )
+          foreach ($dir in $qtToolDirs) {
+            if (Test-Path $dir) {
+              $dir | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+              $env:PATH = "$dir;$env:PATH"
+            }
+          }
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[packaging]"
+
+      - name: Run unit tests
+        run: |
+          conda activate PicViewer
+          python -m unittest discover -s tests/unit
+
+      - name: Build Windows app
+        run: |
+          conda activate PicViewer
+          python scripts/packaging/build_app.py
+
+      - name: Build Windows MSI
+        run: |
+          conda activate PicViewer
+          python scripts/packaging/build_msi.py --accept-wix-eula
+
+      - name: Verify MSI checksum
+        working-directory: dist
+        run: |
+          $checksumFile = Get-ChildItem -Path . -Filter *.msi.sha256 | Select-Object -First 1
+          if ($null -eq $checksumFile) {
+            throw "Cannot find MSI checksum file."
+          }
+          $checksumParts = (Get-Content -Path $checksumFile.FullName).Trim() -split '\s+'
+          if ($checksumParts.Length -lt 2) {
+            throw "Invalid MSI checksum format: $($checksumFile.Name)"
+          }
+          $expectedHash = $checksumParts[0].ToLowerInvariant()
+          $msiFile = $checksumParts[1]
+          $actualHash = (Get-FileHash -Path $msiFile -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualHash -ne $expectedHash) {
+            throw "MSI SHA256 mismatch for $msiFile."
+          }
+
+      - name: Upload Windows release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release-assets
+          path: |
+            ${{ needs.release-metadata.outputs.msi }}
+            ${{ needs.release-metadata.outputs.msi_checksum }}
+          if-no-files-found: error
+
+  publish-release:
+    name: Publish GitHub Release
+    needs:
+      - release-metadata
+      - build-macos
+      - build-windows
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download release assets
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.release-metadata.outputs.version }}
+          TAG: ${{ needs.release-metadata.outputs.tag }}
+        run: |
+          DMG="$(find release-assets -name "PicViewer-$VERSION.dmg" -print -quit)"
+          DMG_CHECKSUM="$(find release-assets -name "PicViewer-$VERSION.dmg.sha256" -print -quit)"
+          MSI="$(find release-assets -name "PicViewer-$VERSION.msi" -print -quit)"
+          MSI_CHECKSUM="$(find release-assets -name "PicViewer-$VERSION.msi.sha256" -print -quit)"
+          for ASSET in "$DMG" "$DMG_CHECKSUM" "$MSI" "$MSI_CHECKSUM"; do
+            if [ -z "$ASSET" ]; then
+              echo "::error::Missing release asset."
+              exit 1
+            fi
+          done
+
+          gh release create "$TAG" \
+            "$DMG#PicViewer $VERSION macOS arm64 DMG" \
+            "$DMG_CHECKSUM#PicViewer $VERSION macOS arm64 SHA256" \
+            "$MSI#PicViewer $VERSION Windows x64 MSI" \
+            "$MSI_CHECKSUM#PicViewer $VERSION Windows x64 SHA256" \
+            --target "${{ github.event.pull_request.merge_commit_sha }}" \
+            --title "PicViewer $VERSION" \
+            --generate-notes

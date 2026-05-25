@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 # Third-party dependencies:
-# - PySide2>=5.15.2.1,<5.16
+# - PySide6>=6.8,<7
 # - opencv-python>=4.7
 # - numpy>=1.23
 # - pyexiv2>=2.15.5,<3
@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtWidgets
 
 if __name__ == "__main__" and __package__ is None:
     sys.path.append(str(Path(__file__).resolve().parents[1]))
@@ -68,9 +68,6 @@ def main(argv: Sequence[str] | None = None) -> None:
     settings = load_settings(developer_mode=developer_mode)
     configure_logging(settings)
 
-    # 必须在 QApplication 创建前启用 High-DPI 支持。
-    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
-    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
     app = QtWidgets.QApplication(qt_args)
     app_icon = load_app_icon()
     app.setWindowIcon(app_icon)
@@ -85,7 +82,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     window = MainWindow(service, view_service)
     window.setWindowIcon(app_icon)
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ All Python commands must be run after entering the project conda environment:
 conda activate PicViewer
 ```
 
-The `PicViewer` environment must use Python 3.10. The project GUI binding is PySide2, and PySide2 does not support Python 3.11 or later.
+The `PicViewer` environment must use Python 3.10. The project GUI binding is PySide6. Python remains pinned to 3.10 for this release line to avoid changing the interpreter and GUI binding at the same time.
 
 To rebuild the environment, use:
 
@@ -55,13 +55,13 @@ python scripts/packaging/build_msi.py --accept-wix-eula
 
 `--accept-wix-eula` passes `-acceptEula wix7` to WiX and should only be used after the WiX OSMF EULA requirements have been confirmed.
 
-Generating translation source files requires the PySide2 `pyside2-lupdate` command to be available in `PATH`. Generating translation resources requires Qt's `lrelease` command to be available in `PATH`. If the local `lrelease` command has a different name, use:
+Generating translation source files requires the PySide6 `pyside6-lupdate` command to be available in `PATH`. Generating translation resources requires Qt's `lrelease` command to be available in `PATH`. If the local `lrelease` command has a different name, use:
 
 ```bash
 python scripts/i18n/build_qm.py --lrelease /path/to/lrelease
 ```
 
-When neither `lrelease` nor `lrelease-qt5` is in `PATH`, `build_qm.py` also searches for these tools under `~/.conda/envs/PicViewer/Lib/site-packages/PySide2`.
+When neither `pyside6-lrelease` nor `lrelease` is in `PATH`, `build_qm.py` also searches common Qt tool directories under the active conda prefix, including `$CONDA_PREFIX/lib/qt6/bin`, `$CONDA_PREFIX/Library/bin`, and the PySide6 package directory. The legacy `~/.conda/envs/PicViewer/Lib/site-packages/PySide6` location is still checked last for older local setups.
 
 Application icon resources are generated from `src/pic_viewer/ui/resources/icons/picviewer.svg` as the primary source:
 
@@ -117,6 +117,24 @@ The script performs the following steps:
 PyInstaller uses `onedir` mode. The Windows artifact is `dist/PicViewer/`, and the macOS artifact is `dist/PicViewer.app`. Windows uses `packaging/icons/picviewer.ico` as the application icon, and macOS uses `packaging/icons/picviewer.icns`. The app version installs and collects `rawpy` through the `packaging` extra by default, providing RAW support for ordinary users.
 The spec also collects `pyexiv2` submodules, `pyexiv2` dynamic libraries, and macOS Homebrew `inih` dynamic libraries so Exiv2 metadata reading works in packaged apps.
 The spec generates PicViewer's own package metadata for the About dialog from `pyproject.toml` and sets the macOS bundle version from the same source.
+
+The PyInstaller spec prunes unused PySide6 runtime entries after dependency
+analysis. It keeps QtCore, QtGui, QtWidgets, QtDBus, and QtSvg because the app
+uses Qt widgets and SVG toolbar icons. It removes QtNetwork, Qt network
+information plugins, TLS plugins, non-native platform plugins on macOS and
+Windows, non-SVG image format plugins, and unused Qt translation files. Linux
+platform plugins are not pruned so X11 and Wayland compatibility remains
+controlled by the Qt runtime. The pruning only applies to Qt runtime entries;
+OpenCV, rawpy, pyexiv2, and PicViewer resources are left unchanged.
+
+After building, inspect the packaged Qt runtime with platform-specific file
+listing tools. On macOS, for example:
+
+```bash
+find dist/PicViewer.app/Contents/Frameworks -name 'libQt6*.dylib' -print
+find dist/PicViewer.app/Contents/Frameworks/PySide6/Qt/plugins -type f -print
+find dist/PicViewer.app/Contents/Resources/PySide6/Qt/translations -type f -print
+```
 
 Cross-building is not supported: the Windows app must be built on Windows, and the macOS app must be built on macOS.
 

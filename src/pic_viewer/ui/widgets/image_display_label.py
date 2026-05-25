@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.domain.rules.reference_lines import (
     ReferenceLineSettings,
@@ -104,7 +104,7 @@ class ImageDisplayLabel(QtWidgets.QLabel):
 
         pixmap_rect = self._pixmap_logical_rect(pixmap)
         painter = QtGui.QPainter(self)
-        painter.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.TextAntialiasing, True)
         painter.setPen(self._METADATA_OVERLAY_COLOR)
         font_metrics = painter.fontMetrics()
         left = pixmap_rect.left() + self._METADATA_OVERLAY_MARGIN
@@ -119,7 +119,7 @@ class ImageDisplayLabel(QtWidgets.QLabel):
         painter.setClipRect(clip_rect)
         baseline = top + font_metrics.ascent()
         for line in self._metadata_overlay_lines[:3]:
-            text = font_metrics.elidedText(line, QtCore.Qt.ElideRight, max_width)
+            text = font_metrics.elidedText(line, QtCore.Qt.TextElideMode.ElideRight, max_width)
             painter.drawText(left, baseline, text)
             baseline += font_metrics.lineSpacing()
         painter.end()

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from html import escape
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from pic_viewer.app.services.third_party_license_service import (
     LicenseTextPart,
@@ -37,11 +37,11 @@ class LicenseDocumentDialog(QtWidgets.QDialog):
         self.textLicenseDocument = QtWidgets.QPlainTextEdit(self)
         self.textLicenseDocument.setObjectName("textLicenseDocument")
         self.textLicenseDocument.setReadOnly(True)
-        self.textLicenseDocument.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
+        self.textLicenseDocument.setLineWrapMode(QtWidgets.QPlainTextEdit.LineWrapMode.NoWrap)
         self.textLicenseDocument.setPlainText(body)
         layout.addWidget(self.textLicenseDocument)
 
-        buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok, self)
+        buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.StandardButton.Ok, self)
         buttons.accepted.connect(self.accept)
         layout.addWidget(buttons)
 
@@ -76,7 +76,7 @@ class ThirdPartyLicenseDialog(QtWidgets.QDialog):
         self.textThirdPartyLicenses.anchorClicked.connect(self._open_license_url)
         layout.addWidget(self.textThirdPartyLicenses)
 
-        buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok, self)
+        buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.StandardButton.Ok, self)
         buttons.accepted.connect(self.accept)
         layout.addWidget(buttons)
 
@@ -122,7 +122,7 @@ class ThirdPartyLicenseDialog(QtWidgets.QDialog):
             return
 
         dialog = LicenseDocumentDialog(document.title, document.body, self)
-        dialog.exec_()
+        dialog.exec()
 
     def _translate_version(self, version: str) -> str:
         if version == NOT_INSTALLED_VERSION:

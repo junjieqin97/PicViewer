@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from pic_viewer.domain.rules.reference_lines import ReferenceLineSettings
 from pic_viewer.ui.utils.signal_blocker import block_signals

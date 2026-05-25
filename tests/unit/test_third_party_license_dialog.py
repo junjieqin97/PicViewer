@@ -7,7 +7,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -34,10 +34,10 @@ class ThirdPartyLicenseDialogTests(unittest.TestCase):
     def test_dialog_renders_known_license_identifiers_as_links(self) -> None:
         licenses = [
             ThirdPartyLicenseInfo(
-                "PySide2",
-                "PySide2",
-                "5.15.2.1",
-                "LGPL-3.0-only / GPL-2.0-only / Commercial",
+                "PySide6",
+                "PySide6",
+                "6.8.0",
+                "LGPL-3.0-only / GPL-2.0-only / GPL-3.0-only / Commercial",
                 "",
             ),
             ThirdPartyLicenseInfo("rawpy", "rawpy", "Not installed", "MIT", "Optional RAW image support."),
@@ -54,6 +54,7 @@ class ThirdPartyLicenseDialogTests(unittest.TestCase):
         html = text.toHtml()
         self.assertIn('href="license:LGPL-3.0-only"', html)
         self.assertIn('href="license:GPL-2.0-only"', html)
+        self.assertIn('href="license:GPL-3.0-only"', html)
         self.assertIn('href="license:MIT"', html)
         self.assertIn("Commercial", text.toPlainText())
         self.assertNotIn('href="license:Commercial"', html)
@@ -82,10 +83,10 @@ class ThirdPartyLicenseDialogTests(unittest.TestCase):
     def test_license_link_opens_document_dialog(self) -> None:
         licenses = [
             ThirdPartyLicenseInfo(
-                "PySide2",
-                "PySide2",
-                "5.15.2.1",
-                "LGPL-3.0-only / GPL-2.0-only / Commercial",
+                "PySide6",
+                "PySide6",
+                "6.8.0",
+                "LGPL-3.0-only / GPL-2.0-only / GPL-3.0-only / Commercial",
                 "",
             ),
         ]
@@ -100,7 +101,7 @@ class ThirdPartyLicenseDialogTests(unittest.TestCase):
             ) -> None:
                 shown_documents.append((title, body, "created", parent))
 
-            def exec_(self) -> int:
+            def exec(self) -> int:
                 title, body, _, parent = shown_documents[-1]
                 shown_documents[-1] = (title, body, "executed", parent)
                 return 0
