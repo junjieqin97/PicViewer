@@ -178,6 +178,7 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertNotIn("shasum -a 256 -c dist/*.dmg.sha256", workflow)
         self.assertIn("actions/upload-artifact@v4", workflow)
         self.assertIn("actions/download-artifact@v4", workflow)
+        self.assertIn("GH_REPO: ${{ github.repository }}", workflow)
         self.assertIn("gh release create", workflow)
         self.assertIn("dist/PicViewer-$VERSION.dmg", workflow)
         self.assertIn("dist/PicViewer-$VERSION.dmg.sha256", workflow)

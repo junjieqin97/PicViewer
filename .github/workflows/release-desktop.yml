@@ -228,6 +228,7 @@ jobs:
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           VERSION: ${{ needs.release-metadata.outputs.version }}
           TAG: ${{ needs.release-metadata.outputs.tag }}
         run: |
