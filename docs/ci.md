@@ -1,37 +1,61 @@
 # Continuous Integration
 
-PicViewer uses GitHub Actions for release automation. The initial CI release
-workflow only builds the macOS desktop artifact and publishes it to GitHub
-Releases.
+PicViewer uses GitHub Actions for desktop release automation. The release
+workflow builds native macOS and Windows desktop installers, then publishes
+both platforms to one GitHub Release.
 
-## macOS Release Automation
+## Desktop Release Automation
 
-The macOS release workflow is defined in
-`.github/workflows/release-macos.yml`. It runs when a pull request from
+The desktop release workflow is defined in
+`.github/workflows/release-desktop.yml`. It runs when a pull request from
 `develop` is merged into a `release-*` branch, such as `release-0.1.0`.
 Closed pull requests that are not merged, pull requests from other branches,
 and pull requests from forks do not publish a release.
 
-The workflow runs on the `macos-15` GitHub-hosted runner. This runner is an
-Apple Silicon machine, so the initial release artifact is an arm64 DMG. Intel
-x64 and universal macOS builds are out of scope for the initial workflow.
+The workflow uses separate platform runners because PicViewer packaging does
+not support cross-building:
+
+- The macOS job runs on `macos-15`. This GitHub-hosted runner is an
+  Apple Silicon machine, so the macOS release artifact is an arm64 DMG.
+  Intel x64 and universal macOS builds are out of scope for this workflow.
+- The Windows job runs on `windows-2025` and builds an x64 MSI from the
+  Windows PyInstaller onedir app.
 
 ## Build Steps
 
-The workflow recreates the packaging environment used by the local release
-scripts:
+The workflow has four jobs:
 
-- Create and activate the `PicViewer` conda environment with Python 3.10.
-- Install the native `inih` library required by the packaged `pyexiv2` runtime.
-- Install PySide6 from conda-forge so Qt tools such as `lrelease` are available.
-- Install the project with the `packaging` extra.
-- Run the unit test suite.
-- Build `dist/PicViewer.app`.
-- Build `dist/PicViewer-<version>.dmg`.
-- Verify `dist/PicViewer-<version>.dmg.sha256`.
+- `release-metadata` checks out the release branch, reads `project.version`
+  from `pyproject.toml`, computes release asset names, and fails early if the
+  GitHub Release tag already exists.
+- `build-macos` recreates the macOS packaging environment, runs the unit test
+  suite, builds `dist/PicViewer.app`, builds `dist/PicViewer-<version>.dmg`,
+  verifies `dist/PicViewer-<version>.dmg.sha256`, and uploads the DMG assets
+  as workflow artifacts.
+- `build-windows` recreates the Windows packaging environment, installs WiX,
+  runs the unit test suite, builds `dist/PicViewer/`, builds
+  `dist/PicViewer-<version>.msi`, verifies
+  `dist/PicViewer-<version>.msi.sha256`, and uploads the MSI assets as
+  workflow artifacts.
+- `publish-release` downloads both platform artifact sets and creates one
+  GitHub Release containing all release assets.
 
-The packaging scripts remain the source of truth for generating the app bundle
-and DMG. The workflow only orchestrates those scripts in GitHub Actions.
+The packaging scripts remain the source of truth for generating the app
+bundle, DMG, and MSI. The workflow only orchestrates those scripts in GitHub
+Actions.
+
+## Windows WiX EULA Handling
+
+The Windows job installs WiX with the .NET SDK and runs:
+
+```bash
+python scripts/packaging/build_msi.py --accept-wix-eula
+```
+
+The `--accept-wix-eula` flag passes `-acceptEula wix7` to WiX. This CI
+configuration is intentional and should only be kept enabled while the project
+maintainer accepts the WiX v7 OSMF EULA requirements documented in
+`docs/packaging.md`.
 
 ## Version and Release Tag
 
@@ -40,9 +64,12 @@ workflow publishes tag `v<version>` and uploads these assets:
 
 - `PicViewer-<version>.dmg`
 - `PicViewer-<version>.dmg.sha256`
+- `PicViewer-<version>.msi`
+- `PicViewer-<version>.msi.sha256`
 
 For example, version `0.1.0` publishes GitHub Release tag `v0.1.0` with
-`PicViewer-0.1.0.dmg` and `PicViewer-0.1.0.dmg.sha256`.
+`PicViewer-0.1.0.dmg`, `PicViewer-0.1.0.dmg.sha256`,
+`PicViewer-0.1.0.msi`, and `PicViewer-0.1.0.msi.sha256`.
 
 ## Re-running Releases
 
@@ -50,5 +77,5 @@ The workflow does not overwrite an existing GitHub Release or existing release
 assets. If a release for `v<version>` already exists, the job fails and the
 project version must be bumped before the release is run again.
 
-This workflow does not perform code signing, notarization, PyPI upload,
-Windows packaging, Linux packaging, auto-update setup, or telemetry.
+This workflow does not perform code signing, notarization, PyPI upload, Linux
+packaging, auto-update setup, or telemetry.
