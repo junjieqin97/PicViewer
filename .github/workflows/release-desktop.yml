@@ -85,7 +85,11 @@ jobs:
       - name: Install packaging dependencies
         run: |
           brew install inih
-          conda install -y -c conda-forge pyside6
+          conda install -y -c conda-forge pyside6 qt6-main
+          if [ -d "$CONDA_PREFIX/lib/qt6/bin" ]; then
+            echo "$CONDA_PREFIX/lib/qt6/bin" >> "$GITHUB_PATH"
+            export PATH="$CONDA_PREFIX/lib/qt6/bin:$PATH"
+          fi
           python -m pip install --upgrade pip
           python -m pip install -e ".[packaging]"
 
@@ -150,7 +154,17 @@ jobs:
       - name: Install packaging dependencies
         run: |
           conda activate PicViewer
-          conda install -y -c conda-forge pyside6
+          conda install -y -c conda-forge pyside6 qt6-main
+          $qtToolDirs = @(
+            "$env:CONDA_PREFIX\Library\bin"
+            "$env:CONDA_PREFIX\lib\qt6\bin"
+          )
+          foreach ($dir in $qtToolDirs) {
+            if (Test-Path $dir) {
+              $dir | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+              $env:PATH = "$dir;$env:PATH"
+            }
+          }
           python -m pip install --upgrade pip
           python -m pip install -e ".[packaging]"
 
