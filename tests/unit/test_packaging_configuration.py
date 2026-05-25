@@ -115,6 +115,13 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("version=APP_VERSION", spec)
         self.assertIn('"CFBundleVersion": APP_VERSION', spec)
 
+    def test_pyinstaller_spec_prunes_unused_qt_runtime_entries(self) -> None:
+        spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")
+
+        self.assertIn("filter_pyinstaller_analysis_toc", spec)
+        self.assertIn("a.binaries = filter_pyinstaller_analysis_toc(a.binaries, sys.platform)", spec)
+        self.assertIn("a.datas = filter_pyinstaller_analysis_toc(a.datas, sys.platform)", spec)
+
     def test_setup_py_delegates_metadata_to_pyproject(self) -> None:
         setup_py = (PROJECT_ROOT / "setup.py").read_text(encoding="utf-8")
 

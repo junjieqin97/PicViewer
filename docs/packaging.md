@@ -118,6 +118,24 @@ PyInstaller uses `onedir` mode. The Windows artifact is `dist/PicViewer/`, and t
 The spec also collects `pyexiv2` submodules, `pyexiv2` dynamic libraries, and macOS Homebrew `inih` dynamic libraries so Exiv2 metadata reading works in packaged apps.
 The spec generates PicViewer's own package metadata for the About dialog from `pyproject.toml` and sets the macOS bundle version from the same source.
 
+The PyInstaller spec prunes unused PySide6 runtime entries after dependency
+analysis. It keeps QtCore, QtGui, QtWidgets, QtDBus, and QtSvg because the app
+uses Qt widgets and SVG toolbar icons. It removes QtNetwork, Qt network
+information plugins, TLS plugins, non-native platform plugins on macOS and
+Windows, non-SVG image format plugins, and unused Qt translation files. Linux
+platform plugins are not pruned so X11 and Wayland compatibility remains
+controlled by the Qt runtime. The pruning only applies to Qt runtime entries;
+OpenCV, rawpy, pyexiv2, and PicViewer resources are left unchanged.
+
+After building, inspect the packaged Qt runtime with platform-specific file
+listing tools. On macOS, for example:
+
+```bash
+find dist/PicViewer.app/Contents/Frameworks -name 'libQt6*.dylib' -print
+find dist/PicViewer.app/Contents/Frameworks/PySide6/Qt/plugins -type f -print
+find dist/PicViewer.app/Contents/Resources/PySide6/Qt/translations -type f -print
+```
+
 Cross-building is not supported: the Windows app must be built on Windows, and the macOS app must be built on macOS.
 
 ## Windows MSI Mode
