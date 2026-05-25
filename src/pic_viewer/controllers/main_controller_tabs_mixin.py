@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.image_file_policy import filter_supported_image_paths
 from pic_viewer.ui.utils.signal_blocker import block_signals
@@ -179,29 +179,29 @@ class MainControllerTabsMixin:
 
         scroll_area = QtWidgets.QScrollArea(image_page)
         scroll_area.setObjectName("scrollImage")
-        scroll_area.setFrameShape(QtWidgets.QFrame.NoFrame)
+        scroll_area.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
         scroll_area.setWidgetResizable(False)
-        scroll_area.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
-        scroll_area.setAlignment(QtCore.Qt.AlignCenter)
-        scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        scroll_area.setCursor(QtCore.Qt.OpenHandCursor)
+        scroll_area.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustIgnored)
+        scroll_area.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setCursor(QtCore.Qt.CursorShape.OpenHandCursor)
         scroll_area.setProperty("_image_drag_area", True)
         scroll_area.setProperty("_image_zoom_area", True)
         image_layout.addWidget(scroll_area)
 
         lbl_image = ImageDisplayLabel("")
         lbl_image.setObjectName("lblImage")
-        lbl_image.setAlignment(QtCore.Qt.AlignCenter)
-        lbl_image.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
-        lbl_image.setCursor(QtCore.Qt.OpenHandCursor)
+        lbl_image.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        lbl_image.setSizePolicy(QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Ignored)
+        lbl_image.setCursor(QtCore.Qt.CursorShape.OpenHandCursor)
         lbl_image.setProperty("_image_drag_area", True)
         lbl_image.setProperty("_image_zoom_area", True)
         if hasattr(self, "_apply_reference_line_settings_to_label"):
             self._apply_reference_line_settings_to_label(lbl_image)
         scroll_area.setWidget(lbl_image)
         scroll_area.viewport().setObjectName("viewportImageCanvas")
-        scroll_area.viewport().setCursor(QtCore.Qt.OpenHandCursor)
+        scroll_area.viewport().setCursor(QtCore.Qt.CursorShape.OpenHandCursor)
         scroll_area.viewport().setProperty("_image_drag_area", True)
         scroll_area.viewport().setProperty("_image_zoom_area", True)
         self._track_image_display_widgets(scroll_area, lbl_image)
@@ -225,9 +225,9 @@ class MainControllerTabsMixin:
 
     def _add_filmstrip_placeholder_item(self, path: Path) -> None:
         item = QtWidgets.QListWidgetItem()
-        item.setData(QtCore.Qt.UserRole, str(path))
+        item.setData(QtCore.Qt.ItemDataRole.UserRole, str(path))
         self._apply_display_name_to_item(item, path)
-        item.setTextAlignment(QtCore.Qt.AlignCenter)
+        item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         if hasattr(self._ui, "filmstrip_item_size"):
             item.setSizeHint(self._ui.filmstrip_item_size())
         item.setIcon(self._placeholder_icon())
@@ -314,7 +314,7 @@ class MainControllerTabsMixin:
         item = self._ui.listFilmstrip.item(row)
         if item is None:
             return
-        path_str = item.data(QtCore.Qt.UserRole)
+        path_str = item.data(QtCore.Qt.ItemDataRole.UserRole)
         if not path_str:
             return
         tab_index = self._find_tab_index_by_path(Path(str(path_str)))
@@ -333,8 +333,8 @@ class MainControllerTabsMixin:
             self._track_file_drop_widget(placeholder)
         tab_index = self._ui.tabsImages.addTab(placeholder, "")
         tab_bar = self._ui.tabsImages.tabBar()
-        tab_bar.setTabButton(tab_index, QtWidgets.QTabBar.LeftSide, None)
-        tab_bar.setTabButton(tab_index, QtWidgets.QTabBar.RightSide, None)
+        tab_bar.setTabButton(tab_index, QtWidgets.QTabBar.ButtonPosition.LeftSide, None)
+        tab_bar.setTabButton(tab_index, QtWidgets.QTabBar.ButtonPosition.RightSide, None)
         tab_bar.setVisible(False)
         self._ui.tabsImages.setCurrentIndex(tab_index)
 
@@ -361,7 +361,7 @@ class MainControllerTabsMixin:
 
         label_title = QtWidgets.QLabel(self._tr("Start Browsing Photos"), content)
         label_title.setObjectName("labelEmptyTitle")
-        label_title.setAlignment(QtCore.Qt.AlignCenter)
+        label_title.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         title_font = label_title.font()
         title_font.setPointSize(title_font.pointSize() + 4)
         title_font.setBold(True)
@@ -370,13 +370,13 @@ class MainControllerTabsMixin:
 
         label_description = QtWidgets.QLabel(self._tr("Open an image or choose a folder to start previewing."), content)
         label_description.setObjectName("labelEmptyDescription")
-        label_description.setAlignment(QtCore.Qt.AlignCenter)
+        label_description.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         label_description.setWordWrap(True)
         content_layout.addWidget(label_description)
 
         label_drop_hint = QtWidgets.QLabel(self._tr("Drop files here to open them"), content)
         label_drop_hint.setObjectName("labelEmptyDropHint")
-        label_drop_hint.setAlignment(QtCore.Qt.AlignCenter)
+        label_drop_hint.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         label_drop_hint.setWordWrap(True)
         content_layout.addWidget(label_drop_hint)
 
@@ -424,18 +424,18 @@ class MainControllerTabsMixin:
             1,
             1,
         )
-        content_layout.addWidget(actions_container, 0, QtCore.Qt.AlignHCenter)
+        content_layout.addWidget(actions_container, 0, QtCore.Qt.AlignmentFlag.AlignHCenter)
 
         label_formats = QtWidgets.QLabel(
             self._tr("Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF"),
             content,
         )
         label_formats.setObjectName("labelEmptyFormats")
-        label_formats.setAlignment(QtCore.Qt.AlignCenter)
+        label_formats.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         label_formats.setWordWrap(True)
         content_layout.addWidget(label_formats)
 
-        layout.addWidget(content, 0, QtCore.Qt.AlignHCenter)
+        layout.addWidget(content, 0, QtCore.Qt.AlignmentFlag.AlignHCenter)
         layout.addStretch(1)
         return placeholder
 
@@ -443,7 +443,7 @@ class MainControllerTabsMixin:
         self,
         parent: QtWidgets.QWidget,
         button_object_name: str,
-        action: QtWidgets.QAction,
+        action: QtGui.QAction,
     ) -> QtWidgets.QPushButton:
         button = QtWidgets.QPushButton(action.text(), parent)
         button.setObjectName(button_object_name)
@@ -456,17 +456,17 @@ class MainControllerTabsMixin:
         self,
         parent: QtWidgets.QWidget,
         label_object_name: str,
-        action: QtWidgets.QAction,
+        action: QtGui.QAction,
     ) -> QtWidgets.QLabel:
         shortcut = self._shortcut_text(action)
         shortcut_text = self._tr("Shortcut: {shortcut}").format(shortcut=shortcut) if shortcut else ""
         label_shortcut = QtWidgets.QLabel(shortcut_text, parent)
         label_shortcut.setObjectName(label_object_name)
-        label_shortcut.setAlignment(QtCore.Qt.AlignCenter)
+        label_shortcut.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         label_shortcut.setMinimumHeight(label_shortcut.fontMetrics().height() + 8)
         return label_shortcut
 
-    def _shortcut_text(self, action: QtWidgets.QAction) -> str:
+    def _shortcut_text(self, action: QtGui.QAction) -> str:
         sequence = action.shortcut()
         if sequence.isEmpty():
             return ""
@@ -553,7 +553,7 @@ class MainControllerTabsMixin:
             item = self._ui.listFilmstrip.item(i)
             if item is None:
                 continue
-            if str(item.data(QtCore.Qt.UserRole)) == target:
+            if str(item.data(QtCore.Qt.ItemDataRole.UserRole)) == target:
                 return i
         return None
 

@@ -56,13 +56,13 @@ class ThirdPartyLicenseServiceTests(unittest.TestCase):
 
     def test_load_third_party_licenses_normalizes_common_license_aliases(self) -> None:
         metadata_by_package = {
-            "PySide2": self._message({"License": "LGPL"}),
+            "PySide6": self._message({"License": "LGPL"}),
             "opencv-python": self._message({"License": "Apache 2.0"}),
         }
 
         licenses = self._load_with_metadata(metadata_by_package)
 
-        pyside = self._find_license(licenses, "PySide2")
+        pyside = self._find_license(licenses, "PySide6")
         opencv = self._find_license(licenses, "opencv-python")
         self.assertEqual("LGPL-3.0-only", pyside.license_text)
         self.assertEqual("Apache-2.0", opencv.license_text)
@@ -111,20 +111,20 @@ class ThirdPartyLicenseServiceTests(unittest.TestCase):
 
     def test_load_third_party_licenses_prefers_license_expression(self) -> None:
         metadata_by_package = {
-            "PySide2": self._message({"License-Expression": "GPL-3.0-only", "License": "Legacy License"}),
+            "PySide6": self._message({"License-Expression": "GPL-3.0-only", "License": "Legacy License"}),
         }
 
         licenses = self._load_with_metadata(metadata_by_package)
 
-        pyside = self._find_license(licenses, "PySide2")
-        self.assertEqual("PySide2", pyside.display_name)
+        pyside = self._find_license(licenses, "PySide6")
+        self.assertEqual("PySide6", pyside.display_name)
         self.assertEqual("1.2.3", pyside.version)
         self.assertEqual("GPL-3.0-only", pyside.license_text)
 
     def test_load_third_party_licenses_falls_back_to_license_and_classifier(self) -> None:
         metadata_by_package = {
             "numpy": self._message({"License": "BSD-3-Clause"}),
-            "PySide2": self._message(
+            "PySide6": self._message(
                 {},
                 classifiers=["License :: OSI Approved :: MIT-CMU License"],
             ),
@@ -133,7 +133,7 @@ class ThirdPartyLicenseServiceTests(unittest.TestCase):
         licenses = self._load_with_metadata(metadata_by_package)
 
         numpy = self._find_license(licenses, "numpy")
-        pyside = self._find_license(licenses, "PySide2")
+        pyside = self._find_license(licenses, "PySide6")
         self.assertEqual("BSD-3-Clause", numpy.license_text)
         self.assertEqual("MIT-CMU License", pyside.license_text)
 

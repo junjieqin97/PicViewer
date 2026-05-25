@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, call
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -45,7 +45,7 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertFalse(ui.tabsImages.tabBar().expanding())
 
     def tearDown(self) -> None:
-        self._app.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
+        self._app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
         self._app.processEvents()
 
     def test_main_window_loads_left_aligned_tab_bar_style(self) -> None:
@@ -65,7 +65,7 @@ class MainWindowTabsTests(unittest.TestCase):
 
         controller.open_image(Path("/tmp/sample.jpg"))
 
-        button = ui.tabsImages.tabBar().tabButton(0, QtWidgets.QTabBar.RightSide)
+        button = ui.tabsImages.tabBar().tabButton(0, QtWidgets.QTabBar.ButtonPosition.RightSide)
         self.assertIsNotNone(button)
         self.assertNotEqual("buttonImageTabClose", button.objectName())
 
@@ -92,10 +92,10 @@ class MainWindowTabsTests(unittest.TestCase):
 
         histogram_frame = ui.frameHistogramAnalysis
         waveform_frame = ui.frameWaveformAnalysis
-        self.assertEqual(QtWidgets.QSizePolicy.Fixed, histogram_frame.sizePolicy().horizontalPolicy())
-        self.assertEqual(QtWidgets.QSizePolicy.Fixed, histogram_frame.sizePolicy().verticalPolicy())
-        self.assertEqual(QtWidgets.QSizePolicy.Fixed, waveform_frame.sizePolicy().horizontalPolicy())
-        self.assertEqual(QtWidgets.QSizePolicy.Fixed, waveform_frame.sizePolicy().verticalPolicy())
+        self.assertEqual(QtWidgets.QSizePolicy.Policy.Fixed, histogram_frame.sizePolicy().horizontalPolicy())
+        self.assertEqual(QtWidgets.QSizePolicy.Policy.Fixed, histogram_frame.sizePolicy().verticalPolicy())
+        self.assertEqual(QtWidgets.QSizePolicy.Policy.Fixed, waveform_frame.sizePolicy().horizontalPolicy())
+        self.assertEqual(QtWidgets.QSizePolicy.Policy.Fixed, waveform_frame.sizePolicy().verticalPolicy())
 
         max_histogram_height = ui.info_panel_histogram_size.height() + 24
         max_waveform_height = ui.info_panel_waveform_size.height() + 24
@@ -105,7 +105,7 @@ class MainWindowTabsTests(unittest.TestCase):
         analysis_layout = ui.tabAnalysis.layout()
         self.assertIs(histogram_frame, analysis_layout.itemAt(0).widget())
         self.assertIs(waveform_frame, analysis_layout.itemAt(1).widget())
-        expected_alignment = QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop
+        expected_alignment = QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignTop
         self.assertEqual(expected_alignment, analysis_layout.itemAt(0).alignment())
         self.assertEqual(expected_alignment, analysis_layout.itemAt(1).alignment())
 
@@ -123,7 +123,7 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertEqual(4, ui.listFilmstrip.spacing())
         self.assertTrue(ui.listFilmstrip.uniformItemSizes())
         self.assertFalse(ui.listFilmstrip.wordWrap())
-        self.assertEqual(QtCore.Qt.ElideRight, ui.listFilmstrip.textElideMode())
+        self.assertEqual(QtCore.Qt.TextElideMode.ElideRight, ui.listFilmstrip.textElideMode())
 
     def test_filmstrip_has_fixed_height_without_vertical_splitter(self) -> None:
         window = QtWidgets.QMainWindow()
@@ -137,7 +137,7 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertIs(ui.frameFilmstrip, ui.layoutMain.itemAt(2).widget())
         self.assertEqual(ui.FILMSTRIP_HEIGHT, ui.frameFilmstrip.minimumHeight())
         self.assertEqual(ui.FILMSTRIP_HEIGHT, ui.frameFilmstrip.maximumHeight())
-        self.assertEqual(QtWidgets.QSizePolicy.Fixed, ui.frameFilmstrip.sizePolicy().verticalPolicy())
+        self.assertEqual(QtWidgets.QSizePolicy.Policy.Fixed, ui.frameFilmstrip.sizePolicy().verticalPolicy())
 
     def test_status_bar_has_hidden_filmstrip_summary_label(self) -> None:
         window = QtWidgets.QMainWindow()
@@ -224,7 +224,7 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertIsNotNone(item)
         self.assertEqual("very-...3.raw", item.text())
         self.assertEqual(path.name, item.toolTip())
-        self.assertEqual(QtCore.Qt.AlignCenter, item.textAlignment())
+        self.assertEqual(QtCore.Qt.AlignmentFlag.AlignCenter, item.textAlignment())
         self.assertEqual(ui.filmstrip_item_size(), item.sizeHint())
 
     def test_filmstrip_thumbnail_size_is_capped_for_default_height(self) -> None:
@@ -277,11 +277,11 @@ class MainWindowTabsTests(unittest.TestCase):
         )
         for table in tables:
             header = table.horizontalHeader()
-            self.assertEqual(QtWidgets.QHeaderView.Fixed, header.sectionResizeMode(0))
-            self.assertEqual(QtWidgets.QHeaderView.Stretch, header.sectionResizeMode(1))
+            self.assertEqual(QtWidgets.QHeaderView.ResizeMode.Fixed, header.sectionResizeMode(0))
+            self.assertEqual(QtWidgets.QHeaderView.ResizeMode.Stretch, header.sectionResizeMode(1))
             self.assertEqual(ui.METADATA_KEY_COLUMN_WIDTH, table.columnWidth(0))
             self.assertFalse(table.wordWrap())
-            self.assertEqual(QtCore.Qt.ElideRight, table.textElideMode())
+            self.assertEqual(QtCore.Qt.TextElideMode.ElideRight, table.textElideMode())
 
     def test_empty_image_placeholder_hides_tab_bar(self) -> None:
         window, ui, controller = self._build_tabs_controller()
@@ -388,10 +388,10 @@ class MainWindowTabsTests(unittest.TestCase):
         lbl_image = image_page.findChild(QtWidgets.QLabel, "lblImage")
         self.assertIsNotNone(scroll_area)
         self.assertIsNotNone(lbl_image)
-        self.assertEqual(QtWidgets.QFrame.NoFrame, scroll_area.frameShape())
+        self.assertEqual(QtWidgets.QFrame.Shape.NoFrame, scroll_area.frameShape())
         self.assertEqual("viewportImageCanvas", scroll_area.viewport().objectName())
-        self.assertEqual(QtCore.Qt.ScrollBarAsNeeded, scroll_area.horizontalScrollBarPolicy())
-        self.assertEqual(QtCore.Qt.ScrollBarAsNeeded, scroll_area.verticalScrollBarPolicy())
+        self.assertEqual(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded, scroll_area.horizontalScrollBarPolicy())
+        self.assertEqual(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded, scroll_area.verticalScrollBarPolicy())
         self.assertTrue(scroll_area.property("_image_drag_area"))
         self.assertTrue(scroll_area.viewport().property("_image_drag_area"))
         self.assertTrue(lbl_image.property("_image_drag_area"))
@@ -642,7 +642,7 @@ class _FakeWheelEvent:
         self._angle_delta = QtCore.QPoint(0, angle_delta_y)
 
     def type(self) -> QtCore.QEvent.Type:
-        return QtCore.QEvent.Wheel
+        return QtCore.QEvent.Type.Wheel
 
     def angleDelta(self) -> QtCore.QPoint:
         return self._angle_delta

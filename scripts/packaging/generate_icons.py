@@ -7,7 +7,7 @@ import subprocess
 from pathlib import Path
 
 from PIL import Image
-from PySide2 import QtCore, QtGui, QtSvg
+from PySide6 import QtCore, QtGui, QtSvg
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 RUNTIME_ICON_DIR = PROJECT_ROOT / "src" / "pic_viewer" / "ui" / "resources" / "icons"
@@ -24,11 +24,11 @@ def render_png(size: int) -> Path:
     if not renderer.isValid():
         raise RuntimeError(f"Invalid SVG icon source: {SVG_PATH}")
 
-    image = QtGui.QImage(size, size, QtGui.QImage.Format_ARGB32)
-    image.fill(QtCore.Qt.transparent)
+    image = QtGui.QImage(size, size, QtGui.QImage.Format.Format_ARGB32)
+    image.fill(QtCore.Qt.GlobalColor.transparent)
     painter = QtGui.QPainter(image)
-    painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
-    painter.setRenderHint(QtGui.QPainter.SmoothPixmapTransform, True)
+    painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
+    painter.setRenderHint(QtGui.QPainter.RenderHint.SmoothPixmapTransform, True)
     renderer.render(painter)
     painter.end()
 

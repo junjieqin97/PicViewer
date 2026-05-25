@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
-from PySide2 import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 
 
 def to_qpixmap(
@@ -30,7 +30,7 @@ def to_qpixmap(
 
     h, w, _ = rgb.shape
     bytes_per_line = w * 3
-    image = QtGui.QImage(rgb.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
+    image = QtGui.QImage(rgb.data, w, h, bytes_per_line, QtGui.QImage.Format.Format_RGB888)
     pixmap = QtGui.QPixmap.fromImage(image)
 
     dpr = max(1.0, float(device_pixel_ratio))
@@ -40,8 +40,8 @@ def to_qpixmap(
     )
     scaled = pixmap.scaled(
         physical_size,
-        QtCore.Qt.KeepAspectRatio,
-        QtCore.Qt.SmoothTransformation,
+        QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+        QtCore.Qt.TransformationMode.SmoothTransformation,
     )
     scaled.setDevicePixelRatio(dpr)
     return scaled

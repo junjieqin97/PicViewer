@@ -70,14 +70,32 @@ class PackagingScriptsTests(unittest.TestCase):
             build_qm.find_lrelease(
                 explicit=None,
                 path_lookup=lambda _: None,
-                pyside2_tools_dir=Path("missing"),
+                pyside6_tools_dir=Path("missing"),
             )
 
-    def test_find_lrelease_falls_back_to_pyside2_tools_dir(self) -> None:
+    def test_find_lrelease_falls_back_to_pyside6_tools_dir(self) -> None:
         build_qm = load_script("scripts/i18n/build_qm.py")
 
         with tempfile.TemporaryDirectory() as tmp:
-            tools_dir = Path(tmp) / "PySide2"
+            tools_dir = Path(tmp) / "PySide6"
+            tools_dir.mkdir()
+            lrelease = tools_dir / "pyside6-lrelease"
+            lrelease.write_text("tool", encoding="utf-8")
+
+            self.assertEqual(
+                str(lrelease),
+                build_qm.find_lrelease(
+                    explicit=None,
+                    path_lookup=lambda _: None,
+                    pyside6_tools_dir=tools_dir,
+                ),
+            )
+
+    def test_find_lrelease_falls_back_to_pyside6_lrelease(self) -> None:
+        build_qm = load_script("scripts/i18n/build_qm.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tools_dir = Path(tmp) / "PySide6"
             tools_dir.mkdir()
             lrelease = tools_dir / "lrelease"
             lrelease.write_text("tool", encoding="utf-8")
@@ -87,25 +105,7 @@ class PackagingScriptsTests(unittest.TestCase):
                 build_qm.find_lrelease(
                     explicit=None,
                     path_lookup=lambda _: None,
-                    pyside2_tools_dir=tools_dir,
-                ),
-            )
-
-    def test_find_lrelease_falls_back_to_pyside2_lrelease_qt5(self) -> None:
-        build_qm = load_script("scripts/i18n/build_qm.py")
-
-        with tempfile.TemporaryDirectory() as tmp:
-            tools_dir = Path(tmp) / "PySide2"
-            tools_dir.mkdir()
-            lrelease_qt5 = tools_dir / "lrelease-qt5"
-            lrelease_qt5.write_text("tool", encoding="utf-8")
-
-            self.assertEqual(
-                str(lrelease_qt5),
-                build_qm.find_lrelease(
-                    explicit=None,
-                    path_lookup=lambda _: None,
-                    pyside2_tools_dir=tools_dir,
+                    pyside6_tools_dir=tools_dir,
                 ),
             )
 

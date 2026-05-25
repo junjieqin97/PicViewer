@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.analysis_view_service import AnalysisViewService
 from pic_viewer.app.services.image_service import ImageService
@@ -49,91 +49,91 @@ class MainWindowUI:
         return QtCore.QCoreApplication.translate("MainWindowUI", text)
 
     def create_actions(self) -> None:
-        self.actOpenFile = QtWidgets.QAction(self._main_window)
+        self.actOpenFile = QtGui.QAction(self._main_window)
         self.actOpenFile.setObjectName("actOpenFile")
-        self.actOpenFolder = QtWidgets.QAction(self._main_window)
+        self.actOpenFolder = QtGui.QAction(self._main_window)
         self.actOpenFolder.setObjectName("actOpenFolder")
-        self.actCloseTab = QtWidgets.QAction(self._main_window)
+        self.actCloseTab = QtGui.QAction(self._main_window)
         self.actCloseTab.setObjectName("actCloseTab")
-        self.actExit = QtWidgets.QAction(self._main_window)
+        self.actExit = QtGui.QAction(self._main_window)
         self.actExit.setObjectName("actExit")
 
-        self.actZoomIn = QtWidgets.QAction(self._main_window)
+        self.actZoomIn = QtGui.QAction(self._main_window)
         self.actZoomIn.setObjectName("actZoomIn")
-        self.actZoomOut = QtWidgets.QAction(self._main_window)
+        self.actZoomOut = QtGui.QAction(self._main_window)
         self.actZoomOut.setObjectName("actZoomOut")
-        self.actFitToWindow = QtWidgets.QAction(self._main_window)
+        self.actFitToWindow = QtGui.QAction(self._main_window)
         self.actFitToWindow.setObjectName("actFitToWindow")
 
-        self.actToggleInfoPanel = QtWidgets.QAction(self._main_window)
+        self.actToggleInfoPanel = QtGui.QAction(self._main_window)
         self.actToggleInfoPanel.setObjectName("actToggleInfoPanel")
         self.actToggleInfoPanel.setCheckable(True)
-        self.actToggleAnalysisToolbar = QtWidgets.QAction(self._main_window)
+        self.actToggleAnalysisToolbar = QtGui.QAction(self._main_window)
         self.actToggleAnalysisToolbar.setObjectName("actToggleAnalysisToolbar")
         self.actToggleAnalysisToolbar.setCheckable(True)
-        self.actToggleFilmstrip = QtWidgets.QAction(self._main_window)
+        self.actToggleFilmstrip = QtGui.QAction(self._main_window)
         self.actToggleFilmstrip.setObjectName("actToggleFilmstrip")
         self.actToggleFilmstrip.setCheckable(True)
-        self.actToggleMetadataOverlay = QtWidgets.QAction(self._main_window)
+        self.actToggleMetadataOverlay = QtGui.QAction(self._main_window)
         self.actToggleMetadataOverlay.setObjectName("actToggleMetadataOverlay")
         self.actToggleMetadataOverlay.setCheckable(True)
         self.actToggleMetadataOverlay.setChecked(True)
-        self.actToggleCrossReferenceLine = QtWidgets.QAction(self._main_window)
+        self.actToggleCrossReferenceLine = QtGui.QAction(self._main_window)
         self.actToggleCrossReferenceLine.setObjectName("actToggleCrossReferenceLine")
         self.actToggleCrossReferenceLine.setCheckable(True)
-        self.actToggleDiagonalReferenceLine = QtWidgets.QAction(self._main_window)
+        self.actToggleDiagonalReferenceLine = QtGui.QAction(self._main_window)
         self.actToggleDiagonalReferenceLine.setObjectName("actToggleDiagonalReferenceLine")
         self.actToggleDiagonalReferenceLine.setCheckable(True)
-        self.actToggleThirdsReferenceLine = QtWidgets.QAction(self._main_window)
+        self.actToggleThirdsReferenceLine = QtGui.QAction(self._main_window)
         self.actToggleThirdsReferenceLine.setObjectName("actToggleThirdsReferenceLine")
         self.actToggleThirdsReferenceLine.setCheckable(True)
 
-        self.actAbout = QtWidgets.QAction(self._main_window)
+        self.actAbout = QtGui.QAction(self._main_window)
         self.actAbout.setObjectName("actAbout")
-        self.actThirdPartyLicenses = QtWidgets.QAction(self._main_window)
+        self.actThirdPartyLicenses = QtGui.QAction(self._main_window)
         self.actThirdPartyLicenses.setObjectName("actThirdPartyLicenses")
 
-        self.actModeLuma = QtWidgets.QAction(self._main_window)
+        self.actModeLuma = QtGui.QAction(self._main_window)
         self.actModeLuma.setObjectName("actModeLuma")
         self.actModeLuma.setCheckable(True)
-        self.actModeRgb = QtWidgets.QAction(self._main_window)
+        self.actModeRgb = QtGui.QAction(self._main_window)
         self.actModeRgb.setObjectName("actModeRgb")
         self.actModeRgb.setCheckable(True)
 
-        self.actChannelAll = QtWidgets.QAction(self._main_window)
+        self.actChannelAll = QtGui.QAction(self._main_window)
         self.actChannelAll.setObjectName("actChannelAll")
         self.actChannelAll.setCheckable(True)
-        self.actChannelRed = QtWidgets.QAction(self._main_window)
+        self.actChannelRed = QtGui.QAction(self._main_window)
         self.actChannelRed.setObjectName("actChannelRed")
         self.actChannelRed.setCheckable(True)
-        self.actChannelGreen = QtWidgets.QAction(self._main_window)
+        self.actChannelGreen = QtGui.QAction(self._main_window)
         self.actChannelGreen.setObjectName("actChannelGreen")
         self.actChannelGreen.setCheckable(True)
-        self.actChannelBlue = QtWidgets.QAction(self._main_window)
+        self.actChannelBlue = QtGui.QAction(self._main_window)
         self.actChannelBlue.setObjectName("actChannelBlue")
         self.actChannelBlue.setCheckable(True)
-        self.actToggleUnderexposed = QtWidgets.QAction(self._main_window)
+        self.actToggleUnderexposed = QtGui.QAction(self._main_window)
         self.actToggleUnderexposed.setObjectName("actToggleUnderexposed")
         self.actToggleUnderexposed.setCheckable(True)
-        self.actToggleOverexposed = QtWidgets.QAction(self._main_window)
+        self.actToggleOverexposed = QtGui.QAction(self._main_window)
         self.actToggleOverexposed.setObjectName("actToggleOverexposed")
         self.actToggleOverexposed.setCheckable(True)
-        self.actPeakHigh = QtWidgets.QAction(self._main_window)
+        self.actPeakHigh = QtGui.QAction(self._main_window)
         self.actPeakHigh.setObjectName("actPeakHigh")
         self.actPeakHigh.setCheckable(True)
-        self.actPeakMedium = QtWidgets.QAction(self._main_window)
+        self.actPeakMedium = QtGui.QAction(self._main_window)
         self.actPeakMedium.setObjectName("actPeakMedium")
         self.actPeakMedium.setCheckable(True)
-        self.actPeakLow = QtWidgets.QAction(self._main_window)
+        self.actPeakLow = QtGui.QAction(self._main_window)
         self.actPeakLow.setObjectName("actPeakLow")
         self.actPeakLow.setCheckable(True)
 
-        self.actionGroupMode = QtWidgets.QActionGroup(self._main_window)
+        self.actionGroupMode = QtGui.QActionGroup(self._main_window)
         self.actionGroupMode.setExclusive(True)
         self.actionGroupMode.addAction(self.actModeLuma)
         self.actionGroupMode.addAction(self.actModeRgb)
 
-        self.actionGroupChannel = QtWidgets.QActionGroup(self._main_window)
+        self.actionGroupChannel = QtGui.QActionGroup(self._main_window)
         self.actionGroupChannel.setExclusive(True)
         self.actionGroupChannel.addAction(self.actChannelAll)
         self.actionGroupChannel.addAction(self.actChannelRed)
@@ -283,8 +283,8 @@ class MainWindowUI:
         self.widgetAnalysisToolbar.setObjectName("widgetAnalysisToolbar")
         self.widgetAnalysisToolbar.setFixedHeight(self.ANALYSIS_TOOLBAR_HEIGHT)
         self.widgetAnalysisToolbar.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding,
-            QtWidgets.QSizePolicy.Fixed,
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Fixed,
         )
         toolbar_layout = QtWidgets.QHBoxLayout(self.widgetAnalysisToolbar)
         toolbar_layout.setObjectName("layoutAnalysisToolbar")
@@ -357,8 +357,8 @@ class MainWindowUI:
             QtWidgets.QSpacerItem(
                 balance_size.width(),
                 balance_size.height(),
-                QtWidgets.QSizePolicy.Fixed,
-                QtWidgets.QSizePolicy.Fixed,
+                QtWidgets.QSizePolicy.Policy.Fixed,
+                QtWidgets.QSizePolicy.Policy.Fixed,
             )
         )
         toolbar_layout.addStretch(1)
@@ -383,7 +383,7 @@ class MainWindowUI:
         toolbar_layout.addStretch(1)
         toolbar_layout.addWidget(self.buttonToolbarMetadataOverlay)
 
-        self.splitMain = QtWidgets.QSplitter(QtCore.Qt.Horizontal, self.central)
+        self.splitMain = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal, self.central)
         self.splitMain.setObjectName("splitMain")
 
         self.tabsImages = QtWidgets.QTabWidget(self.splitMain)
@@ -391,7 +391,7 @@ class MainWindowUI:
         self.tabsImages.setTabsClosable(True)
         self.tabsImages.setMovable(True)
         self.tabsImages.setMinimumWidth(self.image_panel_min_width)
-        self.tabsImages.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.tabsImages.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         tab_bar = self.tabsImages.tabBar()
         tab_bar.setExpanding(False)
 
@@ -406,8 +406,8 @@ class MainWindowUI:
         self.widgetAnalysisModeSummary = QtWidgets.QWidget(self.scrollInfo)
         self.widgetAnalysisModeSummary.setObjectName("widgetAnalysisModeSummary")
         self.widgetAnalysisModeSummary.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding,
-            QtWidgets.QSizePolicy.Fixed,
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Fixed,
         )
         summary_layout = QtWidgets.QGridLayout(self.widgetAnalysisModeSummary)
         summary_layout.setObjectName("layoutAnalysisModeSummary")
@@ -420,28 +420,28 @@ class MainWindowUI:
         self.labelAnalysisModeValue = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
         self.labelAnalysisModeValue.setObjectName("labelAnalysisModeValue")
         self.labelAnalysisModeValue.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding,
-            QtWidgets.QSizePolicy.Preferred,
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Preferred,
         )
-        self.labelAnalysisModeValue.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        self.labelAnalysisModeValue.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
         self.labelAnalysisChannelTitle = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
         self.labelAnalysisChannelTitle.setObjectName("labelAnalysisChannelTitle")
         self.labelAnalysisChannelValue = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
         self.labelAnalysisChannelValue.setObjectName("labelAnalysisChannelValue")
         self.labelAnalysisChannelValue.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding,
-            QtWidgets.QSizePolicy.Preferred,
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Preferred,
         )
-        self.labelAnalysisChannelValue.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        self.labelAnalysisChannelValue.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
         self.labelPseudoColorTitle = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
         self.labelPseudoColorTitle.setObjectName("labelPseudoColorTitle")
         self.labelPseudoColorValue = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
         self.labelPseudoColorValue.setObjectName("labelPseudoColorValue")
         self.labelPseudoColorValue.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding,
-            QtWidgets.QSizePolicy.Preferred,
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Preferred,
         )
-        self.labelPseudoColorValue.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        self.labelPseudoColorValue.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
 
         summary_layout.addWidget(self.labelAnalysisModeTitle, 0, 0)
         summary_layout.addWidget(self.labelAnalysisModeValue, 0, 1)
@@ -454,7 +454,7 @@ class MainWindowUI:
 
         self.tabsInfo = QtWidgets.QTabWidget(self.scrollInfo)
         self.tabsInfo.setObjectName("tabsInfo")
-        self.tabsInfo.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.tabsInfo.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.layoutInfo.addWidget(self.tabsInfo)
 
         self.tabAnalysis = QtWidgets.QWidget(self.tabsInfo)
@@ -465,40 +465,40 @@ class MainWindowUI:
 
         self.frameHistogramAnalysis = QtWidgets.QFrame(self.tabAnalysis)
         self.frameHistogramAnalysis.setObjectName("frameHistogramAnalysis")
-        self.frameHistogramAnalysis.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frameHistogramAnalysis.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.frameHistogramAnalysis.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
+        self.frameHistogramAnalysis.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         hist_frame_layout = QtWidgets.QVBoxLayout(self.frameHistogramAnalysis)
         hist_frame_layout.setContentsMargins(8, 8, 8, 8)
         hist_frame_layout.setSpacing(0)
         self.widgetHistogram = HistogramClippingLabel("", self.frameHistogramAnalysis)
         self.widgetHistogram.setObjectName("widgetHistogram")
-        self.widgetHistogram.setAlignment(QtCore.Qt.AlignCenter)
+        self.widgetHistogram.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.widgetHistogram.setFixedSize(self.info_panel_histogram_size)
-        self.widgetHistogram.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.widgetHistogram.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         hist_frame_layout.addWidget(self.widgetHistogram)
         analysis_layout.addWidget(
             self.frameHistogramAnalysis,
             0,
-            QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop,
+            QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignTop,
         )
 
         self.frameWaveformAnalysis = QtWidgets.QFrame(self.tabAnalysis)
         self.frameWaveformAnalysis.setObjectName("frameWaveformAnalysis")
-        self.frameWaveformAnalysis.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frameWaveformAnalysis.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.frameWaveformAnalysis.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
+        self.frameWaveformAnalysis.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         wave_frame_layout = QtWidgets.QVBoxLayout(self.frameWaveformAnalysis)
         wave_frame_layout.setContentsMargins(8, 8, 8, 8)
         wave_frame_layout.setSpacing(0)
         self.widgetWaveform = QtWidgets.QLabel("", self.frameWaveformAnalysis)
         self.widgetWaveform.setObjectName("widgetWaveform")
-        self.widgetWaveform.setAlignment(QtCore.Qt.AlignCenter)
+        self.widgetWaveform.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.widgetWaveform.setFixedSize(self.info_panel_waveform_size)
-        self.widgetWaveform.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.widgetWaveform.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         wave_frame_layout.addWidget(self.widgetWaveform)
         analysis_layout.addWidget(
             self.frameWaveformAnalysis,
             0,
-            QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop,
+            QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignTop,
         )
         analysis_layout.addStretch(1)
         self.tabsInfo.addTab(self.tabAnalysis, "")
@@ -508,7 +508,7 @@ class MainWindowUI:
         meta_layout = QtWidgets.QVBoxLayout(self.tabMetadata)
         self.tabsMetadata = QtWidgets.QTabWidget(self.tabMetadata)
         self.tabsMetadata.setObjectName("tabsMetadata")
-        self.tabsMetadata.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.tabsMetadata.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
 
         self.tabMetadataGeneral = QtWidgets.QWidget(self.tabsMetadata)
         self.tabMetadataGeneral.setObjectName("tabMetadataGeneral")
@@ -543,35 +543,35 @@ class MainWindowUI:
 
         self.frameFilmstrip = QtWidgets.QFrame(self.central)
         self.frameFilmstrip.setObjectName("frameFilmstrip")
-        self.frameFilmstrip.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frameFilmstrip.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
         self.frameFilmstrip.setFixedHeight(self.FILMSTRIP_HEIGHT)
-        self.frameFilmstrip.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.frameFilmstrip.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         film_layout = QtWidgets.QVBoxLayout(self.frameFilmstrip)
         film_layout.setContentsMargins(8, 6, 8, 6)
 
         self.listFilmstrip = QtWidgets.QListWidget(self.frameFilmstrip)
         self.listFilmstrip.setObjectName("listFilmstrip")
-        self.listFilmstrip.setFlow(QtWidgets.QListView.LeftToRight)
+        self.listFilmstrip.setFlow(QtWidgets.QListView.Flow.LeftToRight)
         self.listFilmstrip.setWrapping(False)
-        self.listFilmstrip.setResizeMode(QtWidgets.QListView.Adjust)
-        self.listFilmstrip.setViewMode(QtWidgets.QListView.IconMode)
+        self.listFilmstrip.setResizeMode(QtWidgets.QListView.ResizeMode.Adjust)
+        self.listFilmstrip.setViewMode(QtWidgets.QListView.ViewMode.IconMode)
         self.listFilmstrip.setIconSize(QtCore.QSize(self.FILMSTRIP_ICON_SIDE, self.FILMSTRIP_ICON_SIDE))
         self.listFilmstrip.setGridSize(self.filmstrip_item_size())
         self.listFilmstrip.setUniformItemSizes(True)
         self.listFilmstrip.setWordWrap(False)
-        self.listFilmstrip.setTextElideMode(QtCore.Qt.ElideRight)
-        self.listFilmstrip.setMovement(QtWidgets.QListView.Static)
+        self.listFilmstrip.setTextElideMode(QtCore.Qt.TextElideMode.ElideRight)
+        self.listFilmstrip.setMovement(QtWidgets.QListView.Movement.Static)
         self.listFilmstrip.setSpacing(4)
-        self.listFilmstrip.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.listFilmstrip.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.listFilmstrip.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.listFilmstrip.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         film_layout.addWidget(self.listFilmstrip)
 
         self.labelFilmstripSummary = QtWidgets.QLabel(self._main_window.statusBar())
         self.labelFilmstripSummary.setObjectName("labelFilmstripSummary")
-        self.labelFilmstripSummary.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        self.labelFilmstripSummary.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
         self.labelFilmstripSummary.setSizePolicy(
-            QtWidgets.QSizePolicy.Maximum,
-            QtWidgets.QSizePolicy.Fixed,
+            QtWidgets.QSizePolicy.Policy.Maximum,
+            QtWidgets.QSizePolicy.Policy.Fixed,
         )
         self.labelFilmstripSummary.setVisible(False)
         self._main_window.statusBar().addPermanentWidget(self.labelFilmstripSummary)
@@ -587,12 +587,12 @@ class MainWindowUI:
     def _create_analysis_toolbar_button(
         self,
         object_name: str,
-        action: QtWidgets.QAction,
+        action: QtGui.QAction,
     ) -> QtWidgets.QToolButton:
         button = QtWidgets.QToolButton(self.widgetAnalysisToolbar)
         button.setObjectName(object_name)
         button.setAutoRaise(True)
-        button.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
+        button.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly)
         button.setIconSize(self.ANALYSIS_TOOLBAR_ICON_SIZE)
         button.setDefaultAction(action)
         button.setFixedSize(
@@ -604,8 +604,8 @@ class MainWindowUI:
     def _add_analysis_toolbar_separator(self, layout: QtWidgets.QHBoxLayout) -> None:
         separator = QtWidgets.QFrame(self.widgetAnalysisToolbar)
         separator.setObjectName("separatorAnalysisToolbar")
-        separator.setFrameShape(QtWidgets.QFrame.VLine)
-        separator.setFrameShadow(QtWidgets.QFrame.Plain)
+        separator.setFrameShape(QtWidgets.QFrame.Shape.VLine)
+        separator.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
         layout.addWidget(separator)
 
     def create_layouts(self) -> None:
@@ -643,17 +643,17 @@ class MainWindowUI:
         table.setObjectName(object_name)
         table.setColumnCount(2)
         table.verticalHeader().setVisible(False)
-        table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        table.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         table.setWordWrap(False)
-        table.setTextElideMode(QtCore.Qt.ElideRight)
+        table.setTextElideMode(QtCore.Qt.TextElideMode.ElideRight)
         header = table.horizontalHeader()
         header.setStretchLastSection(False)
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Fixed)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Fixed)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
         table.setColumnWidth(0, self.METADATA_KEY_COLUMN_WIDTH)
-        table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        table.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         return table
 
     def retranslate_ui(self) -> None:

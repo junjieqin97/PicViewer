@@ -7,7 +7,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -36,7 +36,7 @@ class ImageDisplayLabelTests(unittest.TestCase):
         label.setPixmap(pixmap)
         label.set_reference_line_settings(ReferenceLineSettings(cross=True))
 
-        image = QtGui.QImage(label.size(), QtGui.QImage.Format_RGB32)
+        image = QtGui.QImage(label.size(), QtGui.QImage.Format.Format_RGB32)
         image.fill(QtGui.QColor(0, 0, 0))
         label.render(image)
 
@@ -51,7 +51,7 @@ class ImageDisplayLabelTests(unittest.TestCase):
         label.setPixmap(pixmap)
         label.set_reference_line_settings(ReferenceLineSettings(cross=True))
 
-        image = QtGui.QImage(label.size(), QtGui.QImage.Format_RGB32)
+        image = QtGui.QImage(label.size(), QtGui.QImage.Format.Format_RGB32)
         image.fill(QtGui.QColor(0, 0, 0))
         label.render(image)
 
@@ -90,7 +90,7 @@ class ImageDisplayLabelTests(unittest.TestCase):
         label.setPixmap(pixmap)
         label.set_metadata_overlay(("INFO", "f/2.8 1/125s ISO 400", "6000 x 4000"), True)
 
-        image = QtGui.QImage(label.size(), QtGui.QImage.Format_RGB32)
+        image = QtGui.QImage(label.size(), QtGui.QImage.Format.Format_RGB32)
         image.fill(QtGui.QColor(0, 0, 0))
         label.render(image)
 
@@ -112,7 +112,7 @@ class ImageDisplayLabelTests(unittest.TestCase):
         label.setAutoFillBackground(True)
 
     def tearDown(self) -> None:
-        self._app.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
+        self._app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
         self._app.processEvents()
 
 

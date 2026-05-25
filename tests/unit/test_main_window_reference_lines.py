@@ -7,7 +7,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -70,7 +70,7 @@ class MainWindowReferenceLineTests(unittest.TestCase):
         for button, action in action_by_button.items():
             with self.subTest(button=button.objectName()):
                 self.assertIs(action, button.defaultAction())
-                self.assertEqual(QtCore.Qt.ToolButtonIconOnly, button.toolButtonStyle())
+                self.assertEqual(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly, button.toolButtonStyle())
                 self.assertLessEqual(button.iconSize().height(), 18)
                 self.assertLessEqual(button.iconSize().width(), 18)
                 self.assertFalse(button.icon().isNull())
@@ -95,7 +95,7 @@ class MainWindowReferenceLineTests(unittest.TestCase):
         self.assertTrue(hasattr(lbl_image, "set_reference_line_settings"))
 
     def tearDown(self) -> None:
-        self._app.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
+        self._app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
         self._app.processEvents()
 
 

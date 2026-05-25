@@ -7,7 +7,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -37,7 +37,7 @@ class AnalysisToolbarTests(unittest.TestCase):
         self.assertIs(ui.widgetAnalysisToolbar, ui.layoutMain.itemAt(0).widget())
         self.assertIs(ui.splitMain, ui.layoutMain.itemAt(1).widget())
         self.assertIs(ui.frameFilmstrip, ui.layoutMain.itemAt(2).widget())
-        self.assertEqual(QtWidgets.QSizePolicy.Fixed, ui.widgetAnalysisToolbar.sizePolicy().verticalPolicy())
+        self.assertEqual(QtWidgets.QSizePolicy.Policy.Fixed, ui.widgetAnalysisToolbar.sizePolicy().verticalPolicy())
         self.assertLessEqual(ui.widgetAnalysisToolbar.maximumHeight(), 30)
         self.assertTrue(ui.widgetAnalysisToolbar.isVisibleTo(window) or not window.isVisible())
 
@@ -73,7 +73,7 @@ class AnalysisToolbarTests(unittest.TestCase):
         for button, action in action_by_button.items():
             with self.subTest(button=button.objectName()):
                 self.assertIs(action, button.defaultAction())
-                self.assertEqual(QtCore.Qt.ToolButtonIconOnly, button.toolButtonStyle())
+                self.assertEqual(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly, button.toolButtonStyle())
                 self.assertLessEqual(button.iconSize().height(), 18)
                 self.assertLessEqual(button.iconSize().width(), 18)
                 self.assertFalse(button.icon().isNull())

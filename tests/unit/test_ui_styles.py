@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide2 import QtWidgets
+from PySide6 import QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -30,6 +30,9 @@ class UiStylesTests(unittest.TestCase):
     def test_load_stylesheet_returns_main_qss_content(self) -> None:
         style_sheet = styles.load_stylesheet()
 
+        self.assertIn("QMenuBar", style_sheet)
+        self.assertIn("QMenuBar::item", style_sheet)
+        self.assertIn("color: #f0f3f6", style_sheet)
         self.assertIn("QTabWidget#tabsImages::tab-bar", style_sheet)
         self.assertIn("alignment: left", style_sheet)
         self.assertIn("QTabWidget#tabsImages QTabBar::tab:selected", style_sheet)
