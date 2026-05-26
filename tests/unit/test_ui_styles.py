@@ -65,6 +65,26 @@ class UiStylesTests(unittest.TestCase):
 
         self.assertIn("background: transparent;", rule)
 
+    def test_light_stylesheet_uses_light_image_canvas_background(self) -> None:
+        style_sheet = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
+
+        for selector in (
+            "QWidget#pageImagePreview",
+            "QScrollArea#scrollImage",
+            "QWidget#viewportImageCanvas",
+        ):
+            rule = self._style_block(style_sheet, selector)
+            self.assertIn("background: #ffffff", rule)
+            self.assertNotIn("background: #1d2228", rule)
+
+        for selector in (
+            "QScrollArea#scrollImage QScrollBar:horizontal",
+            "QScrollArea#scrollImage QScrollBar:vertical",
+        ):
+            rule = self._style_block(style_sheet, selector)
+            self.assertIn("background: #eef2f6", rule)
+            self.assertNotIn("background: #20262d", rule)
+
     def test_theme_from_color_scheme_maps_system_values(self) -> None:
         self.assertEqual(
             styles.AppearanceTheme.LIGHT,
