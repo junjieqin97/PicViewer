@@ -6,8 +6,8 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.analysis_view_service import AnalysisViewService
 from pic_viewer.app.services.image_service import ImageService
+from pic_viewer.ui.resources import styles
 from pic_viewer.ui.resources.icons import icon_path
-from pic_viewer.ui.resources.styles import apply_stylesheet
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel
 
 
@@ -38,7 +38,7 @@ class MainWindowUI:
         self.create_context_menus()
         self.create_widgets()
         self.create_layouts()
-        apply_stylesheet(main_window)
+        self.apply_appearance_theme()
         self.retranslate_ui()
 
         self.actToggleInfoPanel.setChecked(True)
@@ -64,6 +64,12 @@ class MainWindowUI:
         self.actZoomOut.setObjectName("actZoomOut")
         self.actFitToWindow = QtGui.QAction(self._main_window)
         self.actFitToWindow.setObjectName("actFitToWindow")
+        self.actAppearanceLight = QtGui.QAction(self._main_window)
+        self.actAppearanceLight.setObjectName("actAppearanceLight")
+        self.actAppearanceLight.setCheckable(True)
+        self.actAppearanceDark = QtGui.QAction(self._main_window)
+        self.actAppearanceDark.setObjectName("actAppearanceDark")
+        self.actAppearanceDark.setCheckable(True)
 
         self.actToggleInfoPanel = QtGui.QAction(self._main_window)
         self.actToggleInfoPanel.setObjectName("actToggleInfoPanel")
@@ -140,6 +146,17 @@ class MainWindowUI:
         self.actionGroupChannel.addAction(self.actChannelGreen)
         self.actionGroupChannel.addAction(self.actChannelBlue)
 
+        self.actionGroupAppearance = QtGui.QActionGroup(self._main_window)
+        self.actionGroupAppearance.setExclusive(True)
+        self.actionGroupAppearance.addAction(self.actAppearanceLight)
+        self.actionGroupAppearance.addAction(self.actAppearanceDark)
+        self.actAppearanceLight.triggered.connect(
+            lambda _checked=False: self.apply_appearance_theme(styles.AppearanceTheme.LIGHT)
+        )
+        self.actAppearanceDark.triggered.connect(
+            lambda _checked=False: self.apply_appearance_theme(styles.AppearanceTheme.DARK)
+        )
+
         self.actModeLuma.setChecked(True)
         self.actChannelAll.setChecked(True)
         self._apply_analysis_action_icons()
@@ -213,6 +230,10 @@ class MainWindowUI:
         self.menuView.addAction(self.actZoomIn)
         self.menuView.addAction(self.actZoomOut)
         self.menuView.addAction(self.actFitToWindow)
+        self.menuAppearance = self.menuView.addMenu("")
+        self.menuAppearance.setObjectName("menuAppearance")
+        self.menuAppearance.addAction(self.actAppearanceLight)
+        self.menuAppearance.addAction(self.actAppearanceDark)
         self.menuView.addSeparator()
         self.menuView.addAction(self.actToggleInfoPanel)
         self.menuView.addAction(self.actToggleAnalysisToolbar)
@@ -636,6 +657,27 @@ class MainWindowUI:
         image_width = max(base_width - info_width, self.image_panel_min_width)
         return [image_width, info_width]
 
+    def apply_appearance_theme(
+        self,
+        theme: styles.AppearanceTheme | None = None,
+    ) -> styles.AppearanceTheme:
+        """Apply an appearance theme and synchronize the menu state."""
+
+        applied_theme = styles.apply_stylesheet(self._main_window, theme)
+        self._appearance_theme = applied_theme
+        self._sync_appearance_actions(applied_theme)
+        return applied_theme
+
+    def _sync_appearance_actions(self, theme: styles.AppearanceTheme) -> None:
+        light_blocker = QtCore.QSignalBlocker(self.actAppearanceLight)
+        dark_blocker = QtCore.QSignalBlocker(self.actAppearanceDark)
+        try:
+            self.actAppearanceLight.setChecked(theme == styles.AppearanceTheme.LIGHT)
+            self.actAppearanceDark.setChecked(theme == styles.AppearanceTheme.DARK)
+        finally:
+            del light_blocker
+            del dark_blocker
+
     def _create_metadata_table(
         self, parent: QtWidgets.QWidget, object_name: str
     ) -> QtWidgets.QTableWidget:
@@ -666,6 +708,8 @@ class MainWindowUI:
         self.actZoomIn.setText(self._tr("Zoom In"))
         self.actZoomOut.setText(self._tr("Zoom Out"))
         self.actFitToWindow.setText(self._tr("Fit to Window"))
+        self.actAppearanceLight.setText(self._tr("Light"))
+        self.actAppearanceDark.setText(self._tr("Dark"))
         self.actToggleInfoPanel.setText(self._tr("Info Panel"))
         self.actToggleAnalysisToolbar.setText(self._tr("Analysis Toolbar"))
         self.actToggleFilmstrip.setText(self._tr("Filmstrip"))
@@ -690,6 +734,7 @@ class MainWindowUI:
 
         self.menuFile.setTitle(self._tr("File"))
         self.menuView.setTitle(self._tr("View"))
+        self.menuAppearance.setTitle(self._tr("Appearance"))
         self.menuReferenceLines.setTitle(self._tr("Reference Lines"))
         self.menuTools.setTitle(self._tr("Tools"))
         self.menuMode.setTitle(self._tr("Histogram/Waveform Mode"))

@@ -4,6 +4,7 @@ import os
 import sys
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -15,6 +16,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
+from pic_viewer.ui.resources import styles  # noqa: E402
 
 
 class MainWindowShortcutTests(unittest.TestCase):
@@ -99,6 +101,62 @@ class MainWindowShortcutTests(unittest.TestCase):
             [ui.actAbout, ui.actThirdPartyLicenses],
             [action for action in ui.menuHelp.actions() if not action.isSeparator()],
         )
+
+    def test_view_menu_contains_appearance_theme_actions(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        self.assertEqual("menuAppearance", ui.menuAppearance.objectName())
+        self.assertEqual("Appearance", ui.menuAppearance.title())
+        self.assertIn(ui.menuAppearance.menuAction(), ui.menuView.actions())
+
+        actions = (ui.actAppearanceLight, ui.actAppearanceDark)
+        self.assertEqual(["Light", "Dark"], [action.text() for action in actions])
+        self.assertTrue(all(action.isCheckable() for action in actions))
+        self.assertTrue(ui.actionGroupAppearance.isExclusive())
+        self.assertEqual(
+            [ui.actAppearanceLight, ui.actAppearanceDark],
+            ui.actionGroupAppearance.actions(),
+        )
+
+    def test_initial_appearance_action_follows_system_theme(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        self.addCleanup(window.deleteLater)
+
+        with patch(
+            "pic_viewer.ui.windows.main_window.styles.resolve_system_theme",
+            return_value=styles.AppearanceTheme.DARK,
+        ):
+            ui.setup_ui(window)
+
+        self.assertFalse(ui.actAppearanceLight.isChecked())
+        self.assertTrue(ui.actAppearanceDark.isChecked())
+        self.assertEqual(styles.load_stylesheet(styles.AppearanceTheme.DARK), window.styleSheet())
+
+    def test_appearance_actions_switch_stylesheet_at_runtime(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        self.addCleanup(window.deleteLater)
+
+        with patch(
+            "pic_viewer.ui.windows.main_window.styles.resolve_system_theme",
+            return_value=styles.AppearanceTheme.LIGHT,
+        ):
+            ui.setup_ui(window)
+
+        self.assertTrue(ui.actAppearanceLight.isChecked())
+        self.assertEqual(styles.load_stylesheet(styles.AppearanceTheme.LIGHT), window.styleSheet())
+
+        ui.actAppearanceDark.trigger()
+        self.assertTrue(ui.actAppearanceDark.isChecked())
+        self.assertEqual(styles.load_stylesheet(styles.AppearanceTheme.DARK), window.styleSheet())
+
+        ui.actAppearanceLight.trigger()
+        self.assertTrue(ui.actAppearanceLight.isChecked())
+        self.assertEqual(styles.load_stylesheet(styles.AppearanceTheme.LIGHT), window.styleSheet())
 
 
 if __name__ == "__main__":

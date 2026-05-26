@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6 import QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -27,8 +27,8 @@ class UiStylesTests(unittest.TestCase):
         if cls._app is None:
             cls._app = QtWidgets.QApplication([])
 
-    def test_load_stylesheet_returns_main_qss_content(self) -> None:
-        style_sheet = styles.load_stylesheet()
+    def test_load_stylesheet_returns_dark_qss_content(self) -> None:
+        style_sheet = styles.load_stylesheet(styles.AppearanceTheme.DARK)
 
         self.assertIn("QMenuBar", style_sheet)
         self.assertIn("QMenuBar::item", style_sheet)
@@ -46,8 +46,34 @@ class UiStylesTests(unittest.TestCase):
         self.assertIn("QStatusBar", style_sheet)
         self.assertIn("QLabel#labelFilmstripSummary", style_sheet)
 
+    def test_load_stylesheet_returns_light_qss_content(self) -> None:
+        style_sheet = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
+
+        self.assertIn("QMenuBar", style_sheet)
+        self.assertIn("QMenuBar::item", style_sheet)
+        self.assertIn("color: #1f252d", style_sheet)
+        self.assertIn("QTabWidget#tabsImages::tab-bar", style_sheet)
+        self.assertIn("alignment: left", style_sheet)
+        self.assertIn("QFrame#widgetAnalysisToolbar", style_sheet)
+        self.assertIn("QStatusBar", style_sheet)
+
+    def test_theme_from_color_scheme_maps_system_values(self) -> None:
+        self.assertEqual(
+            styles.AppearanceTheme.LIGHT,
+            styles.theme_from_color_scheme(QtCore.Qt.ColorScheme.Light),
+        )
+        self.assertEqual(
+            styles.AppearanceTheme.DARK,
+            styles.theme_from_color_scheme(QtCore.Qt.ColorScheme.Dark),
+        )
+        self.assertEqual(
+            styles.AppearanceTheme.LIGHT,
+            styles.theme_from_color_scheme(QtCore.Qt.ColorScheme.Unknown),
+        )
+        self.assertEqual(styles.AppearanceTheme.LIGHT, styles.theme_from_color_scheme(object()))
+
     def test_stylesheet_does_not_override_native_tab_close_button(self) -> None:
-        style_sheet = styles.load_stylesheet()
+        style_sheet = styles.load_stylesheet(styles.AppearanceTheme.DARK)
 
         self.assertNotIn("QTabBar::close-button", style_sheet)
         self.assertNotIn("QToolButton#buttonImageTabClose", style_sheet)
@@ -56,15 +82,19 @@ class UiStylesTests(unittest.TestCase):
         missing_path = PROJECT_ROOT / "missing-main.qss"
 
         with patch.object(styles, "stylesheet_path", return_value=missing_path):
-            self.assertEqual("", styles.load_stylesheet())
+            self.assertEqual("", styles.load_stylesheet(styles.AppearanceTheme.DARK))
 
     def test_apply_stylesheet_sets_loaded_qss_on_widget(self) -> None:
         window = QtWidgets.QMainWindow()
         self.addCleanup(window.deleteLater)
 
-        styles.apply_stylesheet(window)
+        applied_theme = styles.apply_stylesheet(window, styles.AppearanceTheme.LIGHT)
 
-        self.assertEqual(styles.load_stylesheet(), window.styleSheet())
+        self.assertEqual(styles.AppearanceTheme.LIGHT, applied_theme)
+        self.assertEqual(
+            styles.load_stylesheet(styles.AppearanceTheme.LIGHT),
+            window.styleSheet(),
+        )
 
 
 if __name__ == "__main__":

@@ -441,6 +441,16 @@
         <translation>Fit to Window</translation>
     </message>
     <message>
+        <location filename="main_window.py" line="711"/>
+        <source>Light</source>
+        <translation>Light</translation>
+    </message>
+    <message>
+        <location filename="main_window.py" line="712"/>
+        <source>Dark</source>
+        <translation>Dark</translation>
+    </message>
+    <message>
         <location filename="main_window.py" line="649"/>
         <source>Info Panel</source>
         <translation>Info Panel</translation>
@@ -509,6 +519,11 @@
         <location filename="main_window.py" line="671"/>
         <source>View</source>
         <translation>View</translation>
+    </message>
+    <message>
+        <location filename="main_window.py" line="737"/>
+        <source>Appearance</source>
+        <translation>Appearance</translation>
     </message>
     <message>
         <location filename="main_window.py" line="673"/>
