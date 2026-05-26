@@ -121,6 +121,21 @@ class MainWindowShortcutTests(unittest.TestCase):
             ui.actionGroupAppearance.actions(),
         )
 
+    def test_view_menu_places_metadata_overlay_before_appearance(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        view_actions = [action for action in ui.menuView.actions() if not action.isSeparator()]
+
+        self.assertLess(
+            view_actions.index(ui.actToggleMetadataOverlay),
+            view_actions.index(ui.menuAppearance.menuAction()),
+        )
+        self.assertEqual(ui.actToggleMetadataOverlay, view_actions[3])
+        self.assertEqual(ui.menuAppearance.menuAction(), view_actions[-1])
+
     def test_initial_appearance_action_follows_system_theme(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()

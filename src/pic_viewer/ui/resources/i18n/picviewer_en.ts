@@ -461,7 +461,7 @@
         <translation>Filmstrip</translation>
     </message>
     <message>
-        <location filename="main_window.py" line="652"/>
+        <location filename="main_window.py" line="738"/>
         <source>Show Metadata Overlay</source>
         <translation>Show Metadata Overlay</translation>
     </message>
@@ -521,7 +521,7 @@
         <translation>View</translation>
     </message>
     <message>
-        <location filename="main_window.py" line="737"/>
+        <location filename="main_window.py" line="759"/>
         <source>Appearance</source>
         <translation>Appearance</translation>
     </message>

@@ -461,7 +461,7 @@
         <translation>胶卷窗格</translation>
     </message>
     <message>
-        <location filename="main_window.py" line="652"/>
+        <location filename="main_window.py" line="738"/>
         <source>Show Metadata Overlay</source>
         <translation>显示元数据叠加</translation>
     </message>
@@ -521,7 +521,7 @@
         <translation>查看</translation>
     </message>
     <message>
-        <location filename="main_window.py" line="737"/>
+        <location filename="main_window.py" line="759"/>
         <source>Appearance</source>
         <translation>外观</translation>
     </message>

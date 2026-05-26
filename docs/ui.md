@@ -26,7 +26,7 @@ The main window uses a typical four-area structure:
 - The menu bar is the entry point for all features.
 - It must contain at least these top-level menus (names must be consistent):
   - File: Open Image, Open Folder, Close Current Tab, Exit
-  - View: Zoom, Fit to Window, Appearance (Light/Dark, mutually exclusive), Info Panel (checkable, checked = visible), Analysis Toolbar (checkable, checked = visible), Filmstrip Pane (checkable, checked = visible)
+  - View: Zoom, Fit to Window, Show Metadata Overlay (checkable, checked = visible), Info Panel (checkable, checked = visible), Analysis Toolbar (checkable, checked = visible), Filmstrip Pane (checkable, checked = visible), Appearance (Light/Dark, mutually exclusive)
   - Tools: Histogram/Waveform options + pseudo color options + reference line options
     - Pseudo Color: Show Underexposed (checkable), Show Overexposed (checkable), Show Peaking (High/Medium/Low, checkable, three levels are mutually exclusive and clicking the current level turns it off)
     - Reference Lines: Crosshair Reference Line, Diagonal Reference Line, Rule-of-Thirds Grid Reference Line (all checkable; can be toggled independently and displayed as overlays together)
