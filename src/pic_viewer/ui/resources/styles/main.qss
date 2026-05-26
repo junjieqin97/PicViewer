@@ -58,8 +58,10 @@ QTabBar::tab {
     color: #c7ccd2;
     border: 1px solid #3b4149;
     border-bottom-color: #24282d;
-    min-height: 24px;
-    padding: 5px 12px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    min-height: 0px;
+    padding: 2px 12px;
     margin-right: 2px;
 }
 
@@ -80,8 +82,10 @@ QTabWidget#tabsImages QTabBar::tab {
     border: 1px solid #454d57;
     border-top: 2px solid transparent;
     border-bottom-color: #24282d;
-    min-height: 26px;
-    padding: 6px 10px 6px 12px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    min-height: 0px;
+    padding: 2px 10px 2px 12px;
     margin-right: 2px;
 }
 
