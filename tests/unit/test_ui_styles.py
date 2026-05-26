@@ -60,6 +60,17 @@ class UiStylesTests(unittest.TestCase):
         self.assertIn("border-top-left-radius: 6px", style_sheet)
         self.assertIn("border-top-right-radius: 6px", style_sheet)
 
+    def test_tab_headers_keep_height_close_to_text_height(self) -> None:
+        style_sheet = styles.load_stylesheet()
+
+        tab_block = self._style_block(style_sheet, "QTabBar::tab")
+        image_tab_block = self._style_block(style_sheet, "QTabWidget#tabsImages QTabBar::tab")
+
+        self.assertIn("min-height: 0px", tab_block)
+        self.assertIn("padding: 2px 12px", tab_block)
+        self.assertIn("min-height: 0px", image_tab_block)
+        self.assertIn("padding: 2px 10px 2px 12px", image_tab_block)
+
     def test_load_stylesheet_returns_empty_string_when_file_missing(self) -> None:
         missing_path = PROJECT_ROOT / "missing-main.qss"
 
@@ -73,6 +84,12 @@ class UiStylesTests(unittest.TestCase):
         styles.apply_stylesheet(window)
 
         self.assertEqual(styles.load_stylesheet(), window.styleSheet())
+
+    @staticmethod
+    def _style_block(style_sheet: str, selector: str) -> str:
+        block_start = style_sheet.index(f"{selector} {{")
+        block_end = style_sheet.index("}", block_start)
+        return style_sheet[block_start:block_end]
 
 
 if __name__ == "__main__":
