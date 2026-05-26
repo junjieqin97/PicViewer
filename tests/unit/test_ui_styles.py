@@ -52,6 +52,14 @@ class UiStylesTests(unittest.TestCase):
         self.assertNotIn("QTabBar::close-button", style_sheet)
         self.assertNotIn("QToolButton#buttonImageTabClose", style_sheet)
 
+    def test_tab_headers_use_rounded_top_corners(self) -> None:
+        style_sheet = styles.load_stylesheet()
+
+        self.assertIn("border-top-left-radius: 5px", style_sheet)
+        self.assertIn("border-top-right-radius: 5px", style_sheet)
+        self.assertIn("border-top-left-radius: 6px", style_sheet)
+        self.assertIn("border-top-right-radius: 6px", style_sheet)
+
     def test_load_stylesheet_returns_empty_string_when_file_missing(self) -> None:
         missing_path = PROJECT_ROOT / "missing-main.qss"
 
