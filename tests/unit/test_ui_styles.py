@@ -57,6 +57,14 @@ class UiStylesTests(unittest.TestCase):
         self.assertIn("QFrame#widgetAnalysisToolbar", style_sheet)
         self.assertIn("QStatusBar", style_sheet)
 
+    def test_light_stylesheet_keeps_toolbar_button_background_transparent(self) -> None:
+        style_sheet = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
+
+        selector = "QFrame#widgetAnalysisToolbar QToolButton {"
+        rule = style_sheet.split(selector, maxsplit=1)[1].split("}", maxsplit=1)[0]
+
+        self.assertIn("background: transparent;", rule)
+
     def test_theme_from_color_scheme_maps_system_values(self) -> None:
         self.assertEqual(
             styles.AppearanceTheme.LIGHT,

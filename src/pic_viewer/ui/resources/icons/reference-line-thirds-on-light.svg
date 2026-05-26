@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" role="img" aria-label="Rule of thirds reference line">
+  <rect x="3" y="3" width="14" height="14" rx="1.5" fill="none" stroke="#8a97a8" stroke-width="1.2"/>
+  <path d="M7.7 3v14M12.3 3v14M3 7.7h14M3 12.3h14" fill="none" stroke="#263241" stroke-width="1.6" stroke-linecap="round"/>
+</svg>

@@ -158,6 +158,42 @@ class MainWindowShortcutTests(unittest.TestCase):
         self.assertTrue(ui.actAppearanceLight.isChecked())
         self.assertEqual(styles.load_stylesheet(styles.AppearanceTheme.LIGHT), window.styleSheet())
 
+    def test_light_appearance_uses_dark_neutral_icons_visible_in_menus(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        self.addCleanup(window.deleteLater)
+
+        with patch(
+            "pic_viewer.ui.windows.main_window.styles.resolve_system_theme",
+            return_value=styles.AppearanceTheme.LIGHT,
+        ):
+            ui.setup_ui(window)
+
+        for action in (
+            ui.actModeLuma,
+            ui.actToggleMetadataOverlay,
+            ui.actToggleCrossReferenceLine,
+            ui.actToggleDiagonalReferenceLine,
+            ui.actToggleThirdsReferenceLine,
+        ):
+            with self.subTest(action=action.objectName()):
+                self.assertTrue(action.isIconVisibleInMenu())
+                self.assertLess(_minimum_icon_luminance(action.icon()), 80)
+
+
+def _minimum_icon_luminance(icon: QtGui.QIcon) -> float:
+    image = icon.pixmap(20, 20).toImage()
+    luminance_values: list[float] = []
+    for y in range(image.height()):
+        for x in range(image.width()):
+            color = image.pixelColor(x, y)
+            if color.alpha() == 0:
+                continue
+            luminance_values.append(
+                (0.2126 * color.red()) + (0.7152 * color.green()) + (0.0722 * color.blue())
+            )
+    return min(luminance_values)
+
 
 if __name__ == "__main__":
     unittest.main()

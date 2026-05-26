@@ -228,20 +228,20 @@ QFrame#widgetAnalysisToolbar {
 }
 
 QFrame#widgetAnalysisToolbar QToolButton {
-    background: #5c6b7c;
-    border: 1px solid #4d5b6a;
+    background: transparent;
+    border: 1px solid transparent;
     border-radius: 3px;
     padding: 1px;
 }
 
 QFrame#widgetAnalysisToolbar QToolButton:hover {
-    background: #4f5f70;
-    border-color: #3d4b5a;
+    background: #e0e8f2;
+    border-color: #aebdce;
 }
 
 QFrame#widgetAnalysisToolbar QToolButton:checked {
-    background: #236fb2;
-    border-color: #0f4f89;
+    background: #cfe5fb;
+    border-color: #4d8fd3;
 }
 
 QFrame#separatorAnalysisToolbar {

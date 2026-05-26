@@ -162,11 +162,19 @@ class MainWindowUI:
         self._apply_analysis_action_icons()
         self._apply_shortcuts()
 
-    def _apply_analysis_action_icons(self) -> None:
+    def _apply_analysis_action_icons(
+        self,
+        theme: styles.AppearanceTheme = styles.AppearanceTheme.DARK,
+    ) -> None:
         """Assign compact analysis toolbar icons to shared actions."""
 
+        def themed_icon_name(default_name: str, on_light_name: str | None = None) -> str:
+            if theme == styles.AppearanceTheme.LIGHT and on_light_name is not None:
+                return on_light_name
+            return default_name
+
         icon_by_action = {
-            self.actModeLuma: "analysis-luma.svg",
+            self.actModeLuma: themed_icon_name("analysis-luma.svg", "analysis-luma-on-light.svg"),
             self.actModeRgb: "analysis-rgb.svg",
             self.actChannelAll: "analysis-channel-all.svg",
             self.actChannelRed: "analysis-channel-red.svg",
@@ -177,15 +185,28 @@ class MainWindowUI:
             self.actPeakHigh: "analysis-peak-high.svg",
             self.actPeakMedium: "analysis-peak-medium.svg",
             self.actPeakLow: "analysis-peak-low.svg",
-            self.actToggleCrossReferenceLine: "reference-line-cross.svg",
-            self.actToggleDiagonalReferenceLine: "reference-line-diagonal.svg",
-            self.actToggleThirdsReferenceLine: "reference-line-thirds.svg",
-            self.actToggleMetadataOverlay: "metadata-info.svg",
+            self.actToggleCrossReferenceLine: themed_icon_name(
+                "reference-line-cross.svg",
+                "reference-line-cross-on-light.svg",
+            ),
+            self.actToggleDiagonalReferenceLine: themed_icon_name(
+                "reference-line-diagonal.svg",
+                "reference-line-diagonal-on-light.svg",
+            ),
+            self.actToggleThirdsReferenceLine: themed_icon_name(
+                "reference-line-thirds.svg",
+                "reference-line-thirds-on-light.svg",
+            ),
+            self.actToggleMetadataOverlay: themed_icon_name(
+                "metadata-info.svg",
+                "metadata-info-on-light.svg",
+            ),
         }
         for action, file_name in icon_by_action.items():
             path = icon_path(file_name)
             if path.is_file():
                 action.setIcon(QtGui.QIcon(str(path)))
+                action.setIconVisibleInMenu(True)
 
     def _apply_shortcuts(self) -> None:
         """Assign platform-specific shortcuts for common menu actions."""
@@ -665,6 +686,7 @@ class MainWindowUI:
 
         applied_theme = styles.apply_stylesheet(self._main_window, theme)
         self._appearance_theme = applied_theme
+        self._apply_analysis_action_icons(applied_theme)
         self._sync_appearance_actions(applied_theme)
         return applied_theme
 
