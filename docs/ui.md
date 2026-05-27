@@ -26,7 +26,7 @@ The main window uses a typical four-area structure:
 - The menu bar is the entry point for all features.
 - It must contain at least these top-level menus (names must be consistent):
   - File: Open Image, Open Folder, Close Current Tab, Exit
-  - View: Zoom, Fit to Window, Info Panel (checkable, checked = visible), Analysis Toolbar (checkable, checked = visible), Filmstrip Pane (checkable, checked = visible)
+  - View: Zoom, Fit to Window, Show Metadata Overlay (checkable, checked = visible), Info Panel (checkable, checked = visible), Analysis Toolbar (checkable, checked = visible), Filmstrip Pane (checkable, checked = visible), Appearance (Light/Dark, mutually exclusive)
   - Tools: Histogram/Waveform options + pseudo color options + reference line options
     - Pseudo Color: Show Underexposed (checkable), Show Overexposed (checkable), Show Peaking (High/Medium/Low, checkable, three levels are mutually exclusive and clicking the current level turns it off)
     - Reference Lines: Crosshair Reference Line, Diagonal Reference Line, Rule-of-Thirds Grid Reference Line (all checkable; can be toggled independently and displayed as overlays together)
@@ -186,6 +186,7 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 ### 5.2 MenuBar Actions (skeleton first)
 
 Top-level menus: `menuFile` `menuView` `menuTools` `menuHelp`
+Submenus: `menuAppearance`
 Actions (names must be consistent; copy may mix Chinese and English, but consistency is recommended):
 
 - `actOpenFile`: Open Image...
@@ -195,6 +196,8 @@ Actions (names must be consistent; copy may mix Chinese and English, but consist
 - `actZoomIn`: Zoom In
 - `actZoomOut`: Zoom Out
 - `actFitToWindow`: Fit to Window
+- `actAppearanceLight`: Light (checkable, mutually exclusive with Dark)
+- `actAppearanceDark`: Dark (checkable, mutually exclusive with Light)
 - `actToggleInfoPanel`: Info Panel (checkable, checked = visible)
 - `actToggleAnalysisToolbar`: Analysis Toolbar (checkable, checked = visible)
 - `actToggleFilmstrip`: Filmstrip Pane (checkable, checked = visible)

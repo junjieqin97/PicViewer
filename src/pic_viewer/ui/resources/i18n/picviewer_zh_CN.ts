@@ -441,6 +441,16 @@
         <translation>适配窗口</translation>
     </message>
     <message>
+        <location filename="main_window.py" line="711"/>
+        <source>Light</source>
+        <translation>浅色</translation>
+    </message>
+    <message>
+        <location filename="main_window.py" line="712"/>
+        <source>Dark</source>
+        <translation>深色</translation>
+    </message>
+    <message>
         <location filename="main_window.py" line="649"/>
         <source>Info Panel</source>
         <translation>信息区</translation>
@@ -451,7 +461,7 @@
         <translation>胶卷窗格</translation>
     </message>
     <message>
-        <location filename="main_window.py" line="652"/>
+        <location filename="main_window.py" line="738"/>
         <source>Show Metadata Overlay</source>
         <translation>显示元数据叠加</translation>
     </message>
@@ -509,6 +519,11 @@
         <location filename="main_window.py" line="671"/>
         <source>View</source>
         <translation>查看</translation>
+    </message>
+    <message>
+        <location filename="main_window.py" line="759"/>
+        <source>Appearance</source>
+        <translation>外观</translation>
     </message>
     <message>
         <location filename="main_window.py" line="673"/>
