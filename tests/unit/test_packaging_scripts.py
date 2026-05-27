@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -127,6 +128,85 @@ class PackagingScriptsTests(unittest.TestCase):
                     env={"CONDA_PREFIX": str(conda_prefix)},
                 ),
             )
+
+    def test_generate_icons_reports_missing_rsvg_convert_clearly(self) -> None:
+        generate_icons = load_script("scripts/packaging/generate_icons.py")
+
+        with self.assertRaisesRegex(RuntimeError, "conda install -c conda-forge librsvg"):
+            generate_icons.find_rsvg_convert(path_lookup=lambda _: None)
+
+    def test_generate_icons_invokes_rsvg_convert_for_png_rendering(self) -> None:
+        generate_icons = load_script("scripts/packaging/generate_icons.py")
+        commands: list[list[str]] = []
+
+        def fake_runner(command: list[str], **_: object) -> None:
+            commands.append(command)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            icon_dir = root / "icons"
+            icon_dir.mkdir()
+            svg_path = icon_dir / "picviewer.svg"
+            svg_path.write_text("<svg xmlns=\"http://www.w3.org/2000/svg\"/>", encoding="utf-8")
+
+            with mock.patch.object(generate_icons, "RUNTIME_ICON_DIR", icon_dir), mock.patch.object(
+                generate_icons,
+                "SVG_PATH",
+                svg_path,
+            ):
+                output_path = generate_icons.render_png(
+                    64,
+                    converter="rsvg-convert-test",
+                    runner=fake_runner,
+                )
+
+        self.assertEqual(icon_dir / "picviewer-64.png", output_path)
+        self.assertEqual(
+            [
+                [
+                    "rsvg-convert-test",
+                    "--width",
+                    "64",
+                    "--height",
+                    "64",
+                    "--format",
+                    "png",
+                    "--output",
+                    str(icon_dir / "picviewer-64.png"),
+                    str(svg_path),
+                ],
+            ],
+            commands,
+        )
+
+    def test_generate_icons_reports_rsvg_convert_stderr_on_failure(self) -> None:
+        generate_icons = load_script("scripts/packaging/generate_icons.py")
+
+        def failing_runner(command: list[str], **_: object) -> None:
+            raise subprocess.CalledProcessError(
+                returncode=2,
+                cmd=command,
+                stderr="unsupported svg feature",
+            )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            icon_dir = root / "icons"
+            icon_dir.mkdir()
+            svg_path = icon_dir / "picviewer.svg"
+            svg_path.write_text("<svg xmlns=\"http://www.w3.org/2000/svg\"/>", encoding="utf-8")
+
+            with mock.patch.object(generate_icons, "RUNTIME_ICON_DIR", icon_dir), mock.patch.object(
+                generate_icons,
+                "SVG_PATH",
+                svg_path,
+            ):
+                with self.assertRaisesRegex(RuntimeError, "unsupported svg feature"):
+                    generate_icons.render_png(
+                        64,
+                        converter="rsvg-convert-test",
+                        runner=failing_runner,
+                    )
 
     def test_build_python_package_checks_conda_environment(self) -> None:
         build_package = load_script("scripts/packaging/build_python_package.py")
