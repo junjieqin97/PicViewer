@@ -5,9 +5,9 @@ from __future__ import annotations
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Callable
 
 from PIL import Image
-from PySide6 import QtCore, QtGui, QtSvg
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 RUNTIME_ICON_DIR = PROJECT_ROOT / "src" / "pic_viewer" / "ui" / "resources" / "icons"
@@ -15,26 +15,79 @@ PACKAGING_ICON_DIR = PROJECT_ROOT / "packaging" / "icons"
 BUILD_ICON_DIR = PROJECT_ROOT / "build" / "icons"
 SVG_PATH = RUNTIME_ICON_DIR / "picviewer.svg"
 PNG_SIZES = (16, 32, 48, 64, 128, 256, 512, 1024)
+RSVG_CONVERT = "rsvg-convert"
+LIBRSVG_INSTALL_HINT = "conda install -c conda-forge librsvg"
+Runner = Callable[..., subprocess.CompletedProcess[str] | None]
 
 
-def render_png(size: int) -> Path:
-    """Render the SVG master to a square PNG of the requested size."""
+def find_rsvg_convert(path_lookup: Callable[[str], str | None] = shutil.which) -> str:
+    """Return the rsvg-convert executable path.
 
-    renderer = QtSvg.QSvgRenderer(str(SVG_PATH))
-    if not renderer.isValid():
-        raise RuntimeError(f"Invalid SVG icon source: {SVG_PATH}")
+    Args:
+        path_lookup: Callable used to locate executables on PATH.
 
-    image = QtGui.QImage(size, size, QtGui.QImage.Format.Format_ARGB32)
-    image.fill(QtCore.Qt.GlobalColor.transparent)
-    painter = QtGui.QPainter(image)
-    painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
-    painter.setRenderHint(QtGui.QPainter.RenderHint.SmoothPixmapTransform, True)
-    renderer.render(painter)
-    painter.end()
+    Returns:
+        Absolute or PATH-resolvable rsvg-convert executable.
 
+    Raises:
+        RuntimeError: If librsvg's rsvg-convert executable is unavailable.
+    """
+
+    converter = path_lookup(RSVG_CONVERT)
+    if converter is None:
+        raise RuntimeError(
+            "Missing rsvg-convert. Install librsvg before generating PicViewer icons: "
+            f"{LIBRSVG_INSTALL_HINT}"
+        )
+    return converter
+
+
+def render_png(
+    size: int,
+    *,
+    converter: str | None = None,
+    runner: Runner = subprocess.run,
+) -> Path:
+    """Render the SVG master to a square PNG of the requested size.
+
+    Args:
+        size: Target icon size in pixels for width and height.
+        converter: Optional rsvg-convert executable path.
+        runner: Subprocess runner used to execute rsvg-convert.
+
+    Returns:
+        Path to the generated PNG icon.
+
+    Raises:
+        RuntimeError: If rsvg-convert is unavailable or rendering fails.
+    """
+
+    rsvg_convert = converter or find_rsvg_convert()
     output_path = RUNTIME_ICON_DIR / f"picviewer-{size}.png"
-    if not image.save(str(output_path), "PNG"):
-        raise RuntimeError(f"Failed to write PNG icon: {output_path}")
+    command = [
+        rsvg_convert,
+        "--width",
+        str(size),
+        "--height",
+        str(size),
+        "--format",
+        "png",
+        "--output",
+        str(output_path),
+        str(SVG_PATH),
+    ]
+    try:
+        runner(
+            command,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        stderr = (exc.stderr or "").strip()
+        detail = f": {stderr}" if stderr else ""
+        raise RuntimeError(f"Failed to render PNG icon with rsvg-convert{detail}") from exc
     return output_path
 
 

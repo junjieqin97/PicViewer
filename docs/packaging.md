@@ -69,7 +69,16 @@ Application icon resources are generated from `src/pic_viewer/ui/resources/icons
 python scripts/packaging/generate_icons.py
 ```
 
-The script generates the runtime PNG size family, Windows `.ico`, and macOS `.icns`. On macOS, it calls `iconutil` first and falls back to Pillow for generating `.icns` if `iconutil` is unavailable.
+Icon PNG generation requires librsvg's `rsvg-convert` command:
+
+```bash
+conda install -c conda-forge librsvg
+```
+
+The script generates the runtime PNG size family with `rsvg-convert`, then generates Windows `.ico`
+and macOS `.icns` from those PNGs. On macOS, it calls `iconutil` first and falls back to Pillow for
+generating `.icns` if `iconutil` is unavailable. The script does not fall back to QtSvg for PNG
+generation because QtSvg does not support the `<clipPath>` element used by the PicViewer SVG master.
 
 ## Python Package Mode
 
