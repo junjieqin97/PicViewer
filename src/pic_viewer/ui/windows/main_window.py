@@ -9,6 +9,7 @@ from pic_viewer.app.services.image_service import ImageService
 from pic_viewer.ui.resources import styles
 from pic_viewer.ui.resources.icons import icon_path
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel
+from pic_viewer.ui.widgets.detachable_tabs import DetachableTabWidget
 
 
 class MainWindowUI:
@@ -428,7 +429,7 @@ class MainWindowUI:
         self.splitMain = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal, self.central)
         self.splitMain.setObjectName("splitMain")
 
-        self.tabsImages = QtWidgets.QTabWidget(self.splitMain)
+        self.tabsImages = DetachableTabWidget("image", self.splitMain)
         self.tabsImages.setObjectName("tabsImages")
         self.tabsImages.setTabsClosable(True)
         self.tabsImages.setMovable(True)
@@ -494,7 +495,7 @@ class MainWindowUI:
         summary_layout.setColumnStretch(1, 1)
         self.layoutInfo.addWidget(self.widgetAnalysisModeSummary)
 
-        self.tabsInfo = QtWidgets.QTabWidget(self.scrollInfo)
+        self.tabsInfo = DetachableTabWidget("info", self.scrollInfo)
         self.tabsInfo.setObjectName("tabsInfo")
         self.tabsInfo.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.layoutInfo.addWidget(self.tabsInfo)
@@ -688,6 +689,9 @@ class MainWindowUI:
         self._appearance_theme = applied_theme
         self._apply_analysis_action_icons(applied_theme)
         self._sync_appearance_actions(applied_theme)
+        for tabs in (getattr(self, "tabsImages", None), getattr(self, "tabsInfo", None)):
+            if hasattr(tabs, "apply_floating_stylesheet"):
+                tabs.apply_floating_stylesheet(self._main_window.styleSheet())
         return applied_theme
 
     def _sync_appearance_actions(self, theme: styles.AppearanceTheme) -> None:

@@ -68,6 +68,9 @@ class MainController(
         self._thread_pool = QtCore.QThreadPool(self._main_window)
         self._thread_pool.setMaxThreadCount(MAX_IMAGE_LOAD_CONCURRENCY)
         self._syncing_selection = False
+        self._active_image_path: Optional[Path] = None
+        self._detached_image_windows: Dict[str, QtWidgets.QWidget] = {}
+        self._detached_info_windows: Dict[str, QtWidgets.QWidget] = {}
         self._view_settings = AnalysisViewSettings(mode=LumaRgbMode.LUMA, channel=RgbChannel.ALL)
         self._last_splitter_sizes: Optional[list[int]] = None
         self._last_metadata_path: Optional[str] = None
@@ -173,8 +176,15 @@ class MainController(
 
         self._ui.tabsImages.currentChanged.connect(self._on_tab_changed)
         self._ui.tabsImages.tabCloseRequested.connect(self.close_tab)
+        if hasattr(self._ui.tabsImages, "tab_detached"):
+            self._ui.tabsImages.tab_detached.connect(self._on_image_tab_detached)
+            self._ui.tabsImages.tab_reattached.connect(self._on_image_tab_reattached)
+            self._ui.tabsImages.floating_window_activated.connect(self._on_image_floating_window_activated)
         self._ui.listFilmstrip.currentRowChanged.connect(self._on_filmstrip_row_changed)
         self._ui.tabsInfo.currentChanged.connect(self._on_info_tab_changed)
+        if hasattr(self._ui.tabsInfo, "tab_detached"):
+            self._ui.tabsInfo.tab_detached.connect(self._on_info_tab_detached)
+            self._ui.tabsInfo.tab_reattached.connect(self._on_info_tab_reattached)
         self._ui.splitMain.splitterMoved.connect(self._on_main_splitter_moved)
         if hasattr(self._ui.widgetHistogram, "underexposed_toggled"):
             self._ui.widgetHistogram.underexposed_toggled.connect(self._on_underexposed_toggled)

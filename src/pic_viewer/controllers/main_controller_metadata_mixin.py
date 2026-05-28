@@ -64,8 +64,13 @@ class MainControllerMetadataMixin:
         return tab.findChild(ImageDisplayLabel, "lblImage")
 
     def _clear_metadata_overlay_for_all_images(self) -> None:
-        for label in self._ui.tabsImages.findChildren(ImageDisplayLabel, "lblImage"):
-            label.set_metadata_overlay(tuple(), False)
+        if hasattr(self, "_all_image_tab_widgets"):
+            tabs = self._all_image_tab_widgets()
+        else:
+            tabs = [self._ui.tabsImages]
+        for tab in tabs:
+            for label in tab.findChildren(ImageDisplayLabel, "lblImage"):
+                label.set_metadata_overlay(tuple(), False)
 
     def _clear_metadata_tables(self) -> None:
         self._populate_metadata_table(self._ui.tableMetadataGeneral, tuple(), self._tr("No general metadata"))

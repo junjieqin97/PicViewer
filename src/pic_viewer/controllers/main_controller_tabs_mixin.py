@@ -9,6 +9,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.image_file_policy import filter_supported_image_paths
 from pic_viewer.ui.utils.signal_blocker import block_signals
+from pic_viewer.ui.widgets.detachable_tabs import FloatingTabWindow
 from pic_viewer.ui.widgets.image_display_label import ImageDisplayLabel
 from pic_viewer.ui.widgets.image_load_state_widget import ImageLoadStateWidget
 
@@ -79,6 +80,23 @@ class MainControllerTabsMixin:
         """打开图片：新增Tab + 新增胶卷Item；可选激活该Tab。"""
 
         existing_tab = self._find_tab_index_by_path(path)
+        detached_window = self._detached_image_window_for_path(path)
+        if detached_window is not None:
+            if str(path) not in self._images_by_path:
+                self._load_error_by_path.pop(str(path), None)
+                self._show_tab_loading_state(
+                    path,
+                    self._tr("Loading preview"),
+                    self._tr("Loading preview: {name}").format(name=path.name),
+                )
+            self._update_filmstrip_text(path)
+            if activate:
+                self._activate_detached_image_window(path)
+            self._ensure_preview_load(path)
+            if activate:
+                self._ensure_full_load(path)
+            self._sync_filmstrip_summary()
+            return
         if existing_tab is not None:
             if str(path) not in self._images_by_path:
                 self._load_error_by_path.pop(str(path), None)
@@ -120,6 +138,10 @@ class MainControllerTabsMixin:
         self._sync_filmstrip_summary()
 
     def close_current_tab(self) -> None:
+        path = self._current_image_path()
+        if path is not None and self._detached_image_window_for_path(path) is not None:
+            self._close_detached_image_tab(path)
+            return
         index = self._ui.tabsImages.currentIndex()
         if index >= 0:
             self.close_tab(index)
@@ -137,16 +159,40 @@ class MainControllerTabsMixin:
         self._ui.tabsImages.removeTab(index)
 
         if path is not None:
-            self._remove_filmstrip_item(path)
-            self._images_by_path.pop(str(path), None)
-            self._preview_by_path.pop(str(path), None)
-            self._load_error_by_path.pop(str(path), None)
-            self._cancel_tasks_for_path(path)
-            self._zoom_by_path.pop(str(path), None)
-            self._fit_to_window_by_path.pop(str(path), None)
-            self._analysis_render_key_by_path.pop(str(path), None)
-            self._tab_preview_render_key_by_path.pop(str(path), None)
+            self._cleanup_closed_image_path(path)
 
+        self._refresh_actions_state()
+        self.update_info_for_image(self._current_image_path())
+        self._ensure_empty_image_placeholder()
+        self._sync_filmstrip_summary()
+
+    def _cleanup_closed_image_path(self, path: Path) -> None:
+        """Forget all UI and cached state associated with a closed image."""
+
+        key = str(path)
+        self._remove_filmstrip_item(path)
+        self._detached_image_windows.pop(key, None)
+        if getattr(self, "_active_image_path", None) == path:
+            self._active_image_path = None
+        self._images_by_path.pop(key, None)
+        self._preview_by_path.pop(key, None)
+        self._load_error_by_path.pop(key, None)
+        self._cancel_tasks_for_path(path)
+        self._zoom_by_path.pop(key, None)
+        self._fit_to_window_by_path.pop(key, None)
+        self._analysis_render_key_by_path.pop(key, None)
+        self._tab_preview_render_key_by_path.pop(key, None)
+
+    def _close_detached_image_tab(self, path: Path) -> None:
+        """Close a floating image tab and remove its related application state."""
+
+        floating = self._detached_image_window_for_path(path)
+        if floating is None:
+            return
+        widget = floating.take_content_for_close()
+        if widget is not None:
+            widget.deleteLater()
+        self._cleanup_closed_image_path(path)
         self._refresh_actions_state()
         self.update_info_for_image(self._current_image_path())
         self._ensure_empty_image_placeholder()
@@ -301,7 +347,9 @@ class MainControllerTabsMixin:
         return tab.findChild(QtWidgets.QWidget, "pageImagePreview")
 
     def _on_tab_changed(self, _: int) -> None:
-        path = self._current_image_path()
+        path = self._current_docked_image_path()
+        if path is not None:
+            self._active_image_path = path
         self.update_info_for_image(path)
         self._sync_filmstrip_selection_from_tab(path)
         self._refresh_actions_state()
@@ -320,9 +368,12 @@ class MainControllerTabsMixin:
         tab_index = self._find_tab_index_by_path(Path(str(path_str)))
         if tab_index is not None:
             self._ui.tabsImages.setCurrentIndex(tab_index)
+            return
+        if self._detached_image_window_for_path(Path(str(path_str))) is not None:
+            self._activate_detached_image_window(Path(str(path_str)))
 
     def _ensure_empty_image_placeholder(self) -> None:
-        if self._has_image_tabs():
+        if self._has_docked_image_tabs():
             self._ui.tabsImages.tabBar().setVisible(True)
             return
         if self._has_placeholder_tab():
@@ -332,6 +383,8 @@ class MainControllerTabsMixin:
         if hasattr(self, "_track_file_drop_widget"):
             self._track_file_drop_widget(placeholder)
         tab_index = self._ui.tabsImages.addTab(placeholder, "")
+        if hasattr(self._ui.tabsImages, "set_tab_detachable"):
+            self._ui.tabsImages.set_tab_detachable(tab_index, False)
         tab_bar = self._ui.tabsImages.tabBar()
         tab_bar.setTabButton(tab_index, QtWidgets.QTabBar.ButtonPosition.LeftSide, None)
         tab_bar.setTabButton(tab_index, QtWidgets.QTabBar.ButtonPosition.RightSide, None)
@@ -473,6 +526,9 @@ class MainControllerTabsMixin:
         return sequence.toString(QtGui.QKeySequence.NativeText)
 
     def _has_image_tabs(self) -> bool:
+        return self._has_docked_image_tabs() or bool(getattr(self, "_detached_image_windows", {}))
+
+    def _has_docked_image_tabs(self) -> bool:
         for i in range(self._ui.tabsImages.count()):
             tab = self._ui.tabsImages.widget(i)
             if tab is None:
@@ -520,6 +576,14 @@ class MainControllerTabsMixin:
         return self._main_window.style().standardIcon(QtWidgets.QStyle.SP_FileIcon)
 
     def _current_image_path(self) -> Optional[Path]:
+        active_path = getattr(self, "_active_image_path", None)
+        if active_path is not None and self._tab_widget_for_path(active_path) is not None:
+            return active_path
+        return self._current_docked_image_path()
+
+    def _current_docked_image_path(self) -> Optional[Path]:
+        """Return the current path selected in the docked image tab widget."""
+
         tab = self._ui.tabsImages.currentWidget()
         if tab is None:
             return None
@@ -543,9 +607,120 @@ class MainControllerTabsMixin:
 
     def _tab_widget_for_path(self, path: Path) -> Optional[QtWidgets.QWidget]:
         tab_index = self._find_tab_index_by_path(path)
-        if tab_index is None:
+        if tab_index is not None:
+            return self._ui.tabsImages.widget(tab_index)
+        floating = self._detached_image_window_for_path(path)
+        if floating is None:
             return None
-        return self._ui.tabsImages.widget(tab_index)
+        return floating.content_widget()
+
+    def _detached_image_window_for_path(self, path: Path) -> Optional[FloatingTabWindow]:
+        floating = getattr(self, "_detached_image_windows", {}).get(str(path))
+        if isinstance(floating, FloatingTabWindow):
+            return floating
+        return None
+
+    def _on_image_tab_detached(self, floating: FloatingTabWindow) -> None:
+        """Track a detached image tab as the active image surface."""
+
+        path = self._path_for_floating_window(floating)
+        if path is None:
+            return
+        self._detached_image_windows[str(path)] = floating
+        self._active_image_path = path
+        self._sync_filmstrip_selection_from_tab(path)
+        self._refresh_actions_state()
+        self.update_info_for_image(path)
+        self._ensure_full_load(path)
+        self._ensure_empty_image_placeholder()
+        self._sync_filmstrip_summary()
+
+    def _on_image_tab_reattached(self, floating: FloatingTabWindow) -> None:
+        """Forget detached state after an image tab returns to the main tab bar."""
+
+        path = self._path_for_floating_window(floating)
+        if path is None:
+            return
+        self._detached_image_windows.pop(str(path), None)
+        self._remove_empty_image_placeholder()
+        index = self._find_tab_index_by_path(path)
+        if index is not None:
+            self._ui.tabsImages.setCurrentIndex(index)
+        self._active_image_path = path
+        self._sync_filmstrip_selection_from_tab(path)
+        self._refresh_actions_state()
+        self._sync_filmstrip_summary()
+
+    def _on_image_floating_window_activated(self, floating: FloatingTabWindow) -> None:
+        """Make an activated floating image window the current image."""
+
+        path = self._path_for_floating_window(floating)
+        if path is None:
+            return
+        self._active_image_path = path
+        self._sync_filmstrip_selection_from_tab(path)
+        self.update_info_for_image(path)
+        self._ensure_full_load(path)
+        self._sync_filmstrip_summary()
+
+    def _activate_detached_image_window(self, path: Path) -> bool:
+        """Activate the floating window for an already-open detached image."""
+
+        floating = self._detached_image_window_for_path(path)
+        if floating is None:
+            return False
+        self._active_image_path = path
+        floating.show()
+        floating.raise_()
+        floating.activateWindow()
+        self._sync_filmstrip_selection_from_tab(path)
+        self.update_info_for_image(path)
+        self._ensure_full_load(path)
+        self._sync_filmstrip_summary()
+        return True
+
+    def _on_info_tab_detached(self, floating: FloatingTabWindow) -> None:
+        """Track detached info tabs so they can be restored predictably."""
+
+        key = self._info_key_for_floating_window(floating)
+        if key:
+            self._detached_info_windows[key] = floating
+
+    def _on_info_tab_reattached(self, floating: FloatingTabWindow) -> None:
+        """Ensure the right info panel is visible after an info tab is returned."""
+
+        key = self._info_key_for_floating_window(floating)
+        if key:
+            self._detached_info_windows.pop(key, None)
+        if hasattr(self._ui, "actToggleInfoPanel"):
+            self._ui.actToggleInfoPanel.setChecked(True)
+        if hasattr(self, "_last_splitter_sizes"):
+            self._toggle_info_panel(True)
+        else:
+            self._ui.scrollInfo.setVisible(True)
+
+    def _path_for_floating_window(self, floating: FloatingTabWindow) -> Optional[Path]:
+        widget = floating.content_widget() or floating.detached_widget()
+        return self._tab_path(widget)
+
+    def _info_key_for_floating_window(self, floating: FloatingTabWindow) -> str:
+        widget = floating.content_widget() or floating.detached_widget()
+        return widget.objectName() or floating.windowTitle()
+
+    def _all_image_tab_widgets(self) -> list[QtWidgets.QWidget]:
+        """Return docked and detached image tab containers."""
+
+        widgets: list[QtWidgets.QWidget] = []
+        for index in range(self._ui.tabsImages.count()):
+            tab = self._ui.tabsImages.widget(index)
+            if tab is not None and self._tab_path(tab) is not None:
+                widgets.append(tab)
+        for floating in getattr(self, "_detached_image_windows", {}).values():
+            if isinstance(floating, FloatingTabWindow):
+                widget = floating.content_widget()
+                if widget is not None:
+                    widgets.append(widget)
+        return widgets
 
     def _find_filmstrip_row_by_path(self, path: Path) -> Optional[int]:
         target = str(path)

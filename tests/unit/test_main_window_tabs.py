@@ -25,6 +25,7 @@ from pic_viewer.controllers.main_controller_filmstrip_mixin import (  # noqa: E4
     MainControllerFilmstripMixin,
 )
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
+from pic_viewer.ui.widgets.detachable_tabs import DetachableTabWidget  # noqa: E402
 
 
 class MainWindowTabsTests(unittest.TestCase):
@@ -43,6 +44,18 @@ class MainWindowTabsTests(unittest.TestCase):
         self.addCleanup(window.deleteLater)
 
         self.assertFalse(ui.tabsImages.tabBar().expanding())
+
+    def test_image_and_info_tabs_use_detachable_tab_widgets(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        self.assertIsInstance(ui.tabsImages, DetachableTabWidget)
+        self.assertEqual("image", ui.tabsImages.tab_group())
+        self.assertIsInstance(ui.tabsInfo, DetachableTabWidget)
+        self.assertEqual("info", ui.tabsInfo.tab_group())
+        self.assertNotIsInstance(ui.tabsMetadata, DetachableTabWidget)
 
     def tearDown(self) -> None:
         self._app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
@@ -68,6 +81,38 @@ class MainWindowTabsTests(unittest.TestCase):
         button = ui.tabsImages.tabBar().tabButton(0, QtWidgets.QTabBar.ButtonPosition.RightSide)
         self.assertIsNotNone(button)
         self.assertNotEqual("buttonImageTabClose", button.objectName())
+
+    def test_detached_image_tab_returns_to_main_tabs_when_floating_window_closes(self) -> None:
+        window, ui, controller = self._build_tabs_controller()
+        self.addCleanup(window.deleteLater)
+        self._stub_open_image_dependencies(controller)
+        controller.open_image(Path("/tmp/sample.jpg"))
+
+        floating = ui.tabsImages.detach_tab(0)
+        self.addCleanup(floating.deleteLater)
+        self.assertEqual(0, ui.tabsImages.count())
+
+        floating.close()
+        self._app.processEvents()
+
+        self.assertEqual(1, ui.tabsImages.count())
+        self.assertEqual("sample.jpg", ui.tabsImages.tabToolTip(0))
+
+    def test_detached_info_tab_returns_to_info_tabs_when_floating_window_closes(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        floating = ui.tabsInfo.detach_tab(0)
+        self.addCleanup(floating.deleteLater)
+        self.assertEqual(-1, ui.tabsInfo.indexOf(ui.tabAnalysis))
+
+        floating.close()
+        self._app.processEvents()
+
+        self.assertGreaterEqual(ui.tabsInfo.indexOf(ui.tabAnalysis), 0)
+        self.assertEqual("Analysis", ui.tabsInfo.tabText(ui.tabsInfo.indexOf(ui.tabAnalysis)))
 
     def test_info_tabs_combine_histogram_and_waveform_in_analysis_tab(self) -> None:
         window = QtWidgets.QMainWindow()
@@ -180,6 +225,47 @@ class MainWindowTabsTests(unittest.TestCase):
         MainController._on_tab_changed(controller, 1)
 
         self.assertEqual("Current: second.jpg (2/2)", ui.labelFilmstripSummary.text())
+
+    def test_controller_finds_detached_image_tab_by_path(self) -> None:
+        window, ui, controller = self._build_filmstrip_summary_controller()
+        self.addCleanup(window.deleteLater)
+        path = Path("/tmp/current.jpg")
+        self._add_summary_image(ui, controller, path)
+
+        floating = ui.tabsImages.detach_tab(0)
+        self.addCleanup(floating.deleteLater)
+        MainController._on_image_tab_detached(controller, floating)
+
+        self.assertIs(floating.content_widget(), controller._tab_widget_for_path(path))
+        self.assertEqual(path, controller._current_image_path())
+
+    def test_filmstrip_click_activates_detached_image_window(self) -> None:
+        window, ui, controller = self._build_filmstrip_summary_controller()
+        self.addCleanup(window.deleteLater)
+        path = Path("/tmp/current.jpg")
+        self._add_summary_image(ui, controller, path)
+        floating = ui.tabsImages.detach_tab(0)
+        self.addCleanup(floating.deleteLater)
+        MainController._on_image_tab_detached(controller, floating)
+        controller._activate_detached_image_window = MagicMock()  # type: ignore[method-assign]
+
+        MainController._on_filmstrip_row_changed(controller, 0)
+
+        controller._activate_detached_image_window.assert_called_once_with(path)
+
+    def test_reattaching_info_tab_restores_visible_info_panel(self) -> None:
+        window, ui, controller = self._build_filmstrip_summary_controller()
+        self.addCleanup(window.deleteLater)
+        ui.actToggleInfoPanel.setChecked(False)
+        ui.scrollInfo.setVisible(False)
+        floating = ui.tabsInfo.detach_tab(0)
+        self.addCleanup(floating.deleteLater)
+
+        floating.return_to_tabs()
+        MainController._on_info_tab_reattached(controller, floating)
+
+        self.assertTrue(ui.actToggleInfoPanel.isChecked())
+        self.assertFalse(ui.scrollInfo.isHidden())
 
     def test_showing_filmstrip_hides_current_file_summary(self) -> None:
         window, ui, controller = self._build_filmstrip_summary_controller()
@@ -570,6 +656,9 @@ class MainWindowTabsTests(unittest.TestCase):
         controller._main_window = window
         controller._tr = lambda text: text  # type: ignore[method-assign]
         controller._syncing_selection = False
+        controller._active_image_path = None
+        controller._detached_image_windows = {}
+        controller._detached_info_windows = {}
         controller._schedule_filmstrip_resize = MagicMock()  # type: ignore[method-assign]
         controller.update_info_for_image = MagicMock()  # type: ignore[method-assign]
         controller._refresh_actions_state = MagicMock()  # type: ignore[method-assign]

@@ -45,6 +45,8 @@ class UiStylesTests(unittest.TestCase):
         self.assertIn("QFrame#widgetAnalysisToolbar QToolButton:checked", style_sheet)
         self.assertIn("QStatusBar", style_sheet)
         self.assertIn("QLabel#labelFilmstripSummary", style_sheet)
+        self.assertIn("QWidget#floatingTabWindow", style_sheet)
+        self.assertIn("QTabBar#floatingTabBar::tab:selected", style_sheet)
 
     def test_load_stylesheet_returns_light_qss_content(self) -> None:
         style_sheet = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
@@ -56,6 +58,8 @@ class UiStylesTests(unittest.TestCase):
         self.assertIn("alignment: left", style_sheet)
         self.assertIn("QFrame#widgetAnalysisToolbar", style_sheet)
         self.assertIn("QStatusBar", style_sheet)
+        self.assertIn("QWidget#floatingTabWindow", style_sheet)
+        self.assertIn("QTabBar#floatingTabBar::tab:selected", style_sheet)
 
     def test_light_stylesheet_keeps_toolbar_button_background_transparent(self) -> None:
         style_sheet = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)

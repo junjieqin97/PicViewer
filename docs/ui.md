@@ -76,12 +76,16 @@ Constraint: the right info area width is adjustable by default; when the main wi
 
 ### 3.1 Image Display Area (Tabbed Image Viewer)
 
-- Widget: `tabsImages: QTabWidget`
+- Widget: `tabsImages: DetachableTabWidget` (`QTabWidget` subclass)
 - Behavior:
 - Add a new tab for each opened image.
 - Each tab corresponds to one image; the tab title must be the image file name (including extension).
 - The tab label group in the image display area's tab bar must be left-aligned (arranged by content width, not stretched evenly to fill the width; blank space remains on the right).
 - Tabs are closable: `tabsImages.setTabsClosable(True)`; the close button closes the current image tab.
+- Tabs are detachable: dragging an image tab out of the image tab bar opens it in a separate floating window.
+- A detached image tab remains an open image and stays synchronized with the filmstrip, zoom actions, pseudo-color overlays, metadata overlay, and right-side information refresh.
+- Closing a detached image floating window returns the tab to `tabsImages`; it must not close the image. `Close Current Tab` remains the only shortcut/menu action that closes the image and removes its filmstrip item.
+- Detached image tabs can only be dropped back into `tabsImages`; they must not be accepted by the info tab widget.
 - Switching tabs synchronizes: right info area content + selected item in the bottom filmstrip.
 - When no image is open, the center of the image area displays prompts for "Open Image..." and "Open Folder...", along with the corresponding platform shortcuts.
 - Tab content structure (inside each tab):
@@ -100,12 +104,17 @@ The right info area is a non-scrollable panel containing two top-level informati
 - Content layout: `layoutInfo: QVBoxLayout`
 - The top of the info area must display a lightweight summary: current analysis mode, RGB channel, pseudo color state (underexposed/overexposed toggles, peaking level).
 
-Inside the info area, use `QTabWidget`:
+Inside the info area, use `DetachableTabWidget` (`QTabWidget` subclass):
 
-- Widget: `tabsInfo: QTabWidget`
+- Widget: `tabsInfo: DetachableTabWidget`
 - Two tabs (titles must be consistent):
   - `tabAnalysis` title: Analysis
   - `tabMetadata` title: Metadata
+- `Analysis` and `Metadata` tabs are detachable: dragging either top-level info tab out of `tabsInfo` opens it in a separate floating window.
+- Closing a detached info floating window returns the tab to `tabsInfo`; it must not remove the analysis or metadata content.
+- Returning a detached info tab must make the right info panel visible if it was hidden.
+- Detached info tabs can only be dropped back into `tabsInfo`; they must not be accepted by the image tab widget.
+- Nested metadata tabs (`General`, `Exif`, `IPTC`, `TIFF`) remain regular tabs and are not detachable in this version.
 
 Each info tab is first implemented with placeholder controls (the metadata table may scroll internally):
 
@@ -157,7 +166,7 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `central: QWidget`
 - `layoutMain: QVBoxLayout`
 - `splitMain: QSplitter(Qt.Horizontal)`
-- `tabsImages: QTabWidget`
+- `tabsImages: DetachableTabWidget`
 - `scrollInfo: QWidget`
 - `layoutInfo: QVBoxLayout`
 - `widgetAnalysisToolbar: QWidget` or `QFrame`
@@ -176,7 +185,7 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `buttonToolbarDiagonalReferenceLine: QToolButton`
 - `buttonToolbarThirdsReferenceLine: QToolButton`
 - `buttonToolbarMetadataOverlay: QToolButton`
-- `tabsInfo: QTabWidget`
+- `tabsInfo: DetachableTabWidget`
 - `tabAnalysis: QWidget`
 - `tabMetadata: QWidget`
 - `frameFilmstrip: QFrame`
