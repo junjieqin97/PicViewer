@@ -218,6 +218,15 @@ class FloatingTabWindow(QtWidgets.QWidget):
         self.deleteLater()
         return widget
 
+    def close_for_owner_shutdown(self) -> None:
+        """Close this floating window because its owning main window is closing."""
+
+        self._return_on_close = False
+        self._content_widget = None
+        _floating_windows_by_token.pop(self._token, None)
+        self.close()
+        self.deleteLater()
+
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:  # type: ignore[override]
         if self._return_on_close and self._content_widget is not None:
             self.return_to_tabs()
@@ -258,6 +267,7 @@ class DetachableTabWidget(QtWidgets.QTabWidget):
     def __init__(self, tab_group: str, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
         self._tab_group = tab_group
+        self._close_event_window: Optional[QtWidgets.QWidget] = None
         self.setAcceptDrops(True)
         self.setTabBar(DetachableTabBar(self))
 
@@ -315,6 +325,7 @@ class DetachableTabWidget(QtWidgets.QTabWidget):
         floating.activated.connect(self.floating_window_activated.emit)
         floating.setStyleSheet(self.window().styleSheet())
         _floating_windows_by_token[token] = floating
+        self._ensure_close_event_filter()
         if global_pos is not None:
             floating.move(global_pos - QtCore.QPoint(48, 12))
         if show:
@@ -371,6 +382,18 @@ class DetachableTabWidget(QtWidgets.QTabWidget):
             if floating.parent_tab_widget() is self:
                 floating.setStyleSheet(style_sheet)
 
+    def close_floating_windows(self) -> None:
+        """Close all floating windows owned by this tab widget without reattaching them."""
+
+        for floating in list(_floating_windows_by_token.values()):
+            if floating.parent_tab_widget() is self:
+                floating.close_for_owner_shutdown()
+
+    def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:  # type: ignore[override]
+        if watched is self._close_event_window and event.type() == QtCore.QEvent.Type.Close:
+            self.close_floating_windows()
+        return super().eventFilter(watched, event)
+
     def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:  # type: ignore[override]
         if self.can_accept_detached_tab(event.mimeData()):
             event.acceptProposedAction()
@@ -393,3 +416,12 @@ class DetachableTabWidget(QtWidgets.QTabWidget):
         if index is None:
             index = fallback
         return max(0, min(index, self.count()))
+
+    def _ensure_close_event_filter(self) -> None:
+        owner_window = self.window()
+        if owner_window is self._close_event_window:
+            return
+        if self._close_event_window is not None:
+            self._close_event_window.removeEventFilter(self)
+        self._close_event_window = owner_window
+        owner_window.installEventFilter(self)

@@ -146,6 +146,39 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertTrue(floating.content_widget().isVisible())
         self.assertIsNone(floating.findChild(QtWidgets.QTabBar, "floatingTabBar"))
 
+    def test_closing_main_window_closes_detached_floating_windows(self) -> None:
+        window, ui, controller = self._build_tabs_controller()
+        self.addCleanup(window.deleteLater)
+        self._stub_open_image_dependencies(controller)
+        controller.open_image(Path("/tmp/sample.jpg"))
+        window.show()
+        self._app.processEvents()
+
+        image_floating = ui.tabsImages.detach_tab(0)
+        info_floating = ui.tabsInfo.detach_tab(ui.tabsInfo.indexOf(ui.tabAnalysis))
+        self.addCleanup(self._delete_widget_if_valid, image_floating)
+        self.addCleanup(self._delete_widget_if_valid, info_floating)
+        image_destroyed = MagicMock()
+        info_destroyed = MagicMock()
+        image_floating.destroyed.connect(image_destroyed)
+        info_floating.destroyed.connect(info_destroyed)
+        self._app.processEvents()
+        self.assertTrue(image_floating.isVisible())
+        self.assertTrue(info_floating.isVisible())
+
+        window.close()
+        self._app.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
+        self._app.processEvents()
+
+        image_destroyed.assert_called_once()
+        info_destroyed.assert_called_once()
+
+    def _delete_widget_if_valid(self, widget: QtWidgets.QWidget) -> None:
+        try:
+            widget.deleteLater()
+        except RuntimeError:
+            pass
+
     def test_info_tabs_combine_histogram_and_waveform_in_analysis_tab(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()

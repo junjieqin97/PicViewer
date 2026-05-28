@@ -86,6 +86,7 @@ Constraint: the right info area width is adjustable by default; when the main wi
 - A detached image tab remains an open image and stays synchronized with the filmstrip, zoom actions, pseudo-color overlays, metadata overlay, and right-side information refresh.
 - A detached image floating window uses the native window frame and title only; it must not add a second internal tab header.
 - Closing a detached image floating window returns the tab to `tabsImages`; it must not close the image. `Close Current Tab` remains the only shortcut/menu action that closes the image and removes its filmstrip item.
+- Closing the main window closes all detached image floating windows as part of application shutdown.
 - Detached image tabs can only be dropped back into `tabsImages`; they must not be accepted by the info tab widget.
 - Switching tabs synchronizes: right info area content + selected item in the bottom filmstrip.
 - When no image is open, the center of the image area displays prompts for "Open Image..." and "Open Folder...", along with the corresponding platform shortcuts.
@@ -114,6 +115,7 @@ Inside the info area, use `DetachableTabWidget` (`QTabWidget` subclass):
 - `Analysis` and `Metadata` tabs are detachable: dragging either top-level info tab out of `tabsInfo` opens it in a separate floating window.
 - A detached info floating window uses the native window frame and title only; it must not add a second internal tab header.
 - Closing a detached info floating window returns the tab to `tabsInfo`; it must not remove the analysis or metadata content.
+- Closing the main window closes all detached info floating windows as part of application shutdown.
 - Returning a detached info tab must make the right info panel visible if it was hidden.
 - Detached info tabs can only be dropped back into `tabsInfo`; they must not be accepted by the image tab widget.
 - Nested metadata tabs (`General`, `Exif`, `IPTC`, `TIFF`) remain regular tabs and are not detachable in this version.
