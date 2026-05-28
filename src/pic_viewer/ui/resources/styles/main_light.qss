@@ -119,28 +119,6 @@ QWidget#floatingTabWindow {
 QWidget#floatingTabContent {
     background: #ffffff;
     border: 1px solid #d4dce7;
-    border-top: none;
-}
-
-QTabBar#floatingTabBar::tab {
-    background: #e8eef5;
-    color: #334155;
-    border: 1px solid #cdd7e3;
-    border-top: 2px solid #4d8fd3;
-    border-bottom-color: #ffffff;
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
-    min-height: 0px;
-    padding: 2px 12px;
-    margin-right: 2px;
-}
-
-QTabBar#floatingTabBar::tab:selected {
-    background: #ffffff;
-    color: #0f172a;
-    border-color: #a9b9cc;
-    border-top-color: #2f7fca;
-    border-bottom-color: #ffffff;
 }
 
 QWidget#tabImagePlaceholder,

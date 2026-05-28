@@ -139,37 +139,6 @@ class DetachableTabBar(QtWidgets.QTabBar):
         return index
 
 
-class FloatingTabBar(QtWidgets.QTabBar):
-    """Single-tab header used by a floating tab window."""
-
-    def __init__(self, owner: "FloatingTabWindow") -> None:
-        super().__init__(owner)
-        self._owner = owner
-        self._drag_start_pos: Optional[QtCore.QPoint] = None
-        self.setAcceptDrops(False)
-        self.setExpanding(False)
-
-    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:  # type: ignore[override]
-        if event.button() == QtCore.Qt.MouseButton.LeftButton:
-            self._drag_start_pos = event.position().toPoint()
-        super().mousePressEvent(event)
-
-    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:  # type: ignore[override]
-        if not self._should_start_return_drag(event):
-            super().mouseMoveEvent(event)
-            return
-        self._drag_start_pos = None
-        self._owner.start_return_drag()
-
-    def _should_start_return_drag(self, event: QtGui.QMouseEvent) -> bool:
-        if self._drag_start_pos is None:
-            return False
-        if not event.buttons() & QtCore.Qt.MouseButton.LeftButton:
-            return False
-        delta = event.position().toPoint() - self._drag_start_pos
-        return delta.manhattanLength() >= QtWidgets.QApplication.startDragDistance()
-
-
 class FloatingTabWindow(QtWidgets.QWidget):
     """Top-level window that owns one detached tab until it is returned."""
 
@@ -194,11 +163,6 @@ class FloatingTabWindow(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(6, 6, 6, 6)
         layout.setSpacing(0)
-        self._tab_bar = FloatingTabBar(self)
-        self._tab_bar.setObjectName("floatingTabBar")
-        self._tab_bar.addTab(record.icon, record.title)
-        self._tab_bar.setTabToolTip(0, record.tooltip)
-        layout.addWidget(self._tab_bar)
 
         self._content_host = QtWidgets.QWidget(self)
         self._content_host.setObjectName("floatingTabContent")
@@ -243,15 +207,6 @@ class FloatingTabWindow(QtWidgets.QWidget):
         """Dock this floating tab back into its owning tab widget."""
 
         return self._owner.reattach_floating_window(self, index)
-
-    def start_return_drag(self) -> None:
-        """Start a drag that can drop this floating tab back on its owner."""
-
-        if self._content_widget is None:
-            return
-        drag = QtGui.QDrag(self)
-        drag.setMimeData(self.drag_payload().to_mime_data())
-        drag.exec(QtCore.Qt.DropAction.MoveAction)
 
     def take_content_for_close(self) -> Optional[QtWidgets.QWidget]:
         """Detach content for permanent close without returning to the tab bar."""

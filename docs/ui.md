@@ -84,6 +84,7 @@ Constraint: the right info area width is adjustable by default; when the main wi
 - Tabs are closable: `tabsImages.setTabsClosable(True)`; the close button closes the current image tab.
 - Tabs are detachable: dragging an image tab out of the image tab bar opens it in a separate floating window.
 - A detached image tab remains an open image and stays synchronized with the filmstrip, zoom actions, pseudo-color overlays, metadata overlay, and right-side information refresh.
+- A detached image floating window uses the native window frame and title only; it must not add a second internal tab header.
 - Closing a detached image floating window returns the tab to `tabsImages`; it must not close the image. `Close Current Tab` remains the only shortcut/menu action that closes the image and removes its filmstrip item.
 - Detached image tabs can only be dropped back into `tabsImages`; they must not be accepted by the info tab widget.
 - Switching tabs synchronizes: right info area content + selected item in the bottom filmstrip.
@@ -111,6 +112,7 @@ Inside the info area, use `DetachableTabWidget` (`QTabWidget` subclass):
   - `tabAnalysis` title: Analysis
   - `tabMetadata` title: Metadata
 - `Analysis` and `Metadata` tabs are detachable: dragging either top-level info tab out of `tabsInfo` opens it in a separate floating window.
+- A detached info floating window uses the native window frame and title only; it must not add a second internal tab header.
 - Closing a detached info floating window returns the tab to `tabsInfo`; it must not remove the analysis or metadata content.
 - Returning a detached info tab must make the right info panel visible if it was hidden.
 - Detached info tabs can only be dropped back into `tabsInfo`; they must not be accepted by the image tab widget.

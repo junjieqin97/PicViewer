@@ -112,6 +112,7 @@ class MainWindowTabsTests(unittest.TestCase):
 
         self.assertFalse(floating.content_widget().isHidden())
         self.assertTrue(floating.content_widget().isVisible())
+        self.assertIsNone(floating.findChild(QtWidgets.QTabBar, "floatingTabBar"))
 
     def test_detached_info_tab_returns_to_info_tabs_when_floating_window_closes(self) -> None:
         window = QtWidgets.QMainWindow()
@@ -143,6 +144,7 @@ class MainWindowTabsTests(unittest.TestCase):
 
         self.assertFalse(floating.content_widget().isHidden())
         self.assertTrue(floating.content_widget().isVisible())
+        self.assertIsNone(floating.findChild(QtWidgets.QTabBar, "floatingTabBar"))
 
     def test_info_tabs_combine_histogram_and_waveform_in_analysis_tab(self) -> None:
         window = QtWidgets.QMainWindow()
