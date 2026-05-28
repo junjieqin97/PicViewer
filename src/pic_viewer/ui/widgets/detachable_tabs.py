@@ -206,6 +206,7 @@ class FloatingTabWindow(QtWidgets.QWidget):
         self._content_layout.setContentsMargins(0, 0, 0, 0)
         self._content_layout.setSpacing(0)
         self._content_layout.addWidget(record.widget)
+        record.widget.show()
         layout.addWidget(self._content_host, 1)
 
     def tab_group(self) -> str:

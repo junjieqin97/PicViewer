@@ -98,6 +98,21 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertEqual(1, ui.tabsImages.count())
         self.assertEqual("sample.jpg", ui.tabsImages.tabToolTip(0))
 
+    def test_detached_image_tab_content_is_visible_in_floating_window(self) -> None:
+        window, ui, controller = self._build_tabs_controller()
+        self.addCleanup(window.deleteLater)
+        self._stub_open_image_dependencies(controller)
+        controller.open_image(Path("/tmp/sample.jpg"))
+        window.show()
+        self._app.processEvents()
+
+        floating = ui.tabsImages.detach_tab(0)
+        self.addCleanup(floating.deleteLater)
+        self._app.processEvents()
+
+        self.assertFalse(floating.content_widget().isHidden())
+        self.assertTrue(floating.content_widget().isVisible())
+
     def test_detached_info_tab_returns_to_info_tabs_when_floating_window_closes(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
@@ -113,6 +128,21 @@ class MainWindowTabsTests(unittest.TestCase):
 
         self.assertGreaterEqual(ui.tabsInfo.indexOf(ui.tabAnalysis), 0)
         self.assertEqual("Analysis", ui.tabsInfo.tabText(ui.tabsInfo.indexOf(ui.tabAnalysis)))
+
+    def test_detached_info_tab_content_is_visible_in_floating_window(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+        window.show()
+        self._app.processEvents()
+
+        floating = ui.tabsInfo.detach_tab(ui.tabsInfo.indexOf(ui.tabAnalysis))
+        self.addCleanup(floating.deleteLater)
+        self._app.processEvents()
+
+        self.assertFalse(floating.content_widget().isHidden())
+        self.assertTrue(floating.content_widget().isVisible())
 
     def test_info_tabs_combine_histogram_and_waveform_in_analysis_tab(self) -> None:
         window = QtWidgets.QMainWindow()
