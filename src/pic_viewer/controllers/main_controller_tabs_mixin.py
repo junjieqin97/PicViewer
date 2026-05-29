@@ -346,14 +346,25 @@ class MainControllerTabsMixin:
             return None
         return tab.findChild(QtWidgets.QWidget, "pageImagePreview")
 
-    def _on_tab_changed(self, _: int) -> None:
-        path = self._current_docked_image_path()
-        if path is not None:
-            self._active_image_path = path
+    def _activate_docked_image_path(self, path: Path) -> None:
+        """Make a docked image path the active image and refresh dependent UI."""
+
+        self._active_image_path = path
         self.update_info_for_image(path)
         self._sync_filmstrip_selection_from_tab(path)
         self._refresh_actions_state()
         self._ensure_full_load(path)
+        self._sync_filmstrip_summary()
+
+    def _on_tab_changed(self, _: int) -> None:
+        path = self._current_docked_image_path()
+        if path is not None:
+            self._activate_docked_image_path(path)
+            return
+        self.update_info_for_image(None)
+        self._sync_filmstrip_selection_from_tab(None)
+        self._refresh_actions_state()
+        self._ensure_full_load(None)
         self._sync_filmstrip_summary()
 
     def _on_filmstrip_row_changed(self, row: int) -> None:
@@ -365,12 +376,16 @@ class MainControllerTabsMixin:
         path_str = item.data(QtCore.Qt.ItemDataRole.UserRole)
         if not path_str:
             return
-        tab_index = self._find_tab_index_by_path(Path(str(path_str)))
+        path = Path(str(path_str))
+        tab_index = self._find_tab_index_by_path(path)
         if tab_index is not None:
+            if tab_index == self._ui.tabsImages.currentIndex():
+                self._activate_docked_image_path(path)
+                return
             self._ui.tabsImages.setCurrentIndex(tab_index)
             return
-        if self._detached_image_window_for_path(Path(str(path_str))) is not None:
-            self._activate_detached_image_window(Path(str(path_str)))
+        if self._detached_image_window_for_path(path) is not None:
+            self._activate_detached_image_window(path)
 
     def _ensure_empty_image_placeholder(self) -> None:
         if self._has_docked_image_tabs():

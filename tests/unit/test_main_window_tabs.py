@@ -318,6 +318,48 @@ class MainWindowTabsTests(unittest.TestCase):
 
         controller._activate_detached_image_window.assert_called_once_with(path)
 
+    def test_filmstrip_click_refreshes_current_docked_neighbor_after_detached_middle_image(self) -> None:
+        window, ui, controller = self._build_filmstrip_summary_controller()
+        self.addCleanup(window.deleteLater)
+        paths = [Path("/tmp/first.jpg"), Path("/tmp/second.jpg"), Path("/tmp/third.jpg")]
+        for path in paths:
+            self._add_summary_image(ui, controller, path)
+        ui.tabsImages.setCurrentIndex(1)
+        floating = ui.tabsImages.detach_tab(1, show=False)
+        self.addCleanup(floating.deleteLater)
+        MainController._on_image_tab_detached(controller, floating)
+        controller.update_info_for_image.reset_mock()
+        controller._ensure_full_load.reset_mock()
+
+        ui.listFilmstrip.setCurrentRow(2)
+        MainController._on_filmstrip_row_changed(controller, 2)
+
+        self.assertEqual(paths[2], controller._current_docked_image_path())
+        self.assertEqual(paths[2], controller._active_image_path)
+        controller.update_info_for_image.assert_called_once_with(paths[2])
+        controller._ensure_full_load.assert_called_once_with(paths[2])
+
+    def test_filmstrip_click_refreshes_current_docked_neighbor_after_detached_last_image(self) -> None:
+        window, ui, controller = self._build_filmstrip_summary_controller()
+        self.addCleanup(window.deleteLater)
+        paths = [Path("/tmp/first.jpg"), Path("/tmp/second.jpg"), Path("/tmp/third.jpg")]
+        for path in paths:
+            self._add_summary_image(ui, controller, path)
+        ui.tabsImages.setCurrentIndex(2)
+        floating = ui.tabsImages.detach_tab(2, show=False)
+        self.addCleanup(floating.deleteLater)
+        MainController._on_image_tab_detached(controller, floating)
+        controller.update_info_for_image.reset_mock()
+        controller._ensure_full_load.reset_mock()
+
+        ui.listFilmstrip.setCurrentRow(1)
+        MainController._on_filmstrip_row_changed(controller, 1)
+
+        self.assertEqual(paths[1], controller._current_docked_image_path())
+        self.assertEqual(paths[1], controller._active_image_path)
+        controller.update_info_for_image.assert_called_once_with(paths[1])
+        controller._ensure_full_load.assert_called_once_with(paths[1])
+
     def test_reattaching_info_tab_restores_visible_info_panel(self) -> None:
         window, ui, controller = self._build_filmstrip_summary_controller()
         self.addCleanup(window.deleteLater)
