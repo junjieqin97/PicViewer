@@ -437,6 +437,7 @@ class MainWindowUI:
         self.tabsImages.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         tab_bar = self.tabsImages.tabBar()
         tab_bar.setExpanding(False)
+        tab_bar.setElideMode(QtCore.Qt.TextElideMode.ElideNone)
 
         self.scrollInfo = QtWidgets.QWidget(self.splitMain)
         self.scrollInfo.setObjectName("scrollInfo")
@@ -599,10 +600,9 @@ class MainWindowUI:
         self.listFilmstrip.setResizeMode(QtWidgets.QListView.ResizeMode.Adjust)
         self.listFilmstrip.setViewMode(QtWidgets.QListView.ViewMode.IconMode)
         self.listFilmstrip.setIconSize(QtCore.QSize(self.FILMSTRIP_ICON_SIDE, self.FILMSTRIP_ICON_SIDE))
-        self.listFilmstrip.setGridSize(self.filmstrip_item_size())
-        self.listFilmstrip.setUniformItemSizes(True)
+        self.listFilmstrip.setUniformItemSizes(False)
         self.listFilmstrip.setWordWrap(False)
-        self.listFilmstrip.setTextElideMode(QtCore.Qt.TextElideMode.ElideRight)
+        self.listFilmstrip.setTextElideMode(QtCore.Qt.TextElideMode.ElideNone)
         self.listFilmstrip.setMovement(QtWidgets.QListView.Movement.Static)
         self.listFilmstrip.setSpacing(4)
         self.listFilmstrip.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -619,13 +619,16 @@ class MainWindowUI:
         self.labelFilmstripSummary.setVisible(False)
         self._main_window.statusBar().addPermanentWidget(self.labelFilmstripSummary)
 
-    def filmstrip_item_size(self, icon_side: int | None = None) -> QtCore.QSize:
-        """Return the fixed filmstrip item size for the current font metrics."""
+    def filmstrip_item_size(self, icon_side: int | None = None, text: str = "") -> QtCore.QSize:
+        """Return the filmstrip item size needed to display the full file name."""
 
         side = icon_side if icon_side is not None else self.FILMSTRIP_ICON_SIDE
-        font_height = self.listFilmstrip.fontMetrics().height()
+        font_metrics = self.listFilmstrip.fontMetrics()
+        font_height = font_metrics.height()
+        text_width = font_metrics.horizontalAdvance(text) + 16 if text else 0
+        width = max(self.FILMSTRIP_ITEM_WIDTH, side + 36, text_width)
         height = side + font_height + self.FILMSTRIP_ITEM_VERTICAL_PADDING
-        return QtCore.QSize(self.FILMSTRIP_ITEM_WIDTH, height)
+        return QtCore.QSize(width, height)
 
     def _create_analysis_toolbar_button(
         self,

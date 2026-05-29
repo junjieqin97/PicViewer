@@ -159,7 +159,7 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - If it does not exist (theoretically should not happen): ignore or TODO.
 - When switching tabs: synchronize the selected item in the filmstrip.
 - When the filmstrip pane is hidden, the right side of the status bar must display a current file summary in the format `Current: {name} ({index}/{total})`;
-  `name` follows the same long-file-name truncation rule used by tabs/filmstrip items, and the tooltip displays the full path. When the filmstrip pane is shown again or there is no current image, this summary must be hidden.
+  `name` is the full file name, and the tooltip displays the full path. When the filmstrip pane is shown again or there is no current image, this summary must be hidden.
 - Selected state requirement: clearly visible (system default selection style may be used first).
 
 ## 5. Component Checklist (Must Be Created One by One and Named Consistently)
@@ -296,6 +296,6 @@ Do not write business logic inside UI files; TODO/placeholder implementations ar
 - The tab titles in the `image display area` are left-aligned (the tab label group is left-aligned and not stretched evenly to fill the width).
 - No absolute positioning with `move()`/`resize()`.
 - The `right info area` and `bottom filmstrip pane` can be hidden.
-- If an image file name exceeds 15 characters, the file name displayed in the `tab title` and `bottom filmstrip` must follow this rule: show only the first 5 characters and last 5 characters, and replace the middle characters with 3 dots.
+- Image file names are displayed in full in the `tab title`, `bottom filmstrip`, and hidden-filmstrip status summary.
 - When the mouse pointer is at the boundary between the `image display area` and the `right info area`, the pointer `style` must automatically change to a `double arrow` (that is, a `move arrow`).
 - Hovering the mouse over the `image display area` should immediately change the pointer to a `hand`, and holding the mouse button should allow dragging to pan a zoomed image.

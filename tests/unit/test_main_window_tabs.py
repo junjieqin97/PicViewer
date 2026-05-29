@@ -219,21 +219,17 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertEqual(expected_alignment, analysis_layout.itemAt(0).alignment())
         self.assertEqual(expected_alignment, analysis_layout.itemAt(1).alignment())
 
-    def test_filmstrip_uses_compact_uniform_layout_defaults(self) -> None:
+    def test_filmstrip_allows_full_file_name_display(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
         ui.setup_ui(window)
         self.addCleanup(window.deleteLater)
 
         self.assertEqual(QtCore.QSize(72, 72), ui.listFilmstrip.iconSize())
-        self.assertEqual(
-            QtCore.QSize(ui.FILMSTRIP_ITEM_WIDTH, ui.filmstrip_item_size().height()),
-            ui.listFilmstrip.gridSize(),
-        )
         self.assertEqual(4, ui.listFilmstrip.spacing())
-        self.assertTrue(ui.listFilmstrip.uniformItemSizes())
+        self.assertFalse(ui.listFilmstrip.uniformItemSizes())
         self.assertFalse(ui.listFilmstrip.wordWrap())
-        self.assertEqual(QtCore.Qt.TextElideMode.ElideRight, ui.listFilmstrip.textElideMode())
+        self.assertEqual(QtCore.Qt.TextElideMode.ElideNone, ui.listFilmstrip.textElideMode())
 
     def test_filmstrip_has_fixed_height_without_vertical_splitter(self) -> None:
         window = QtWidgets.QMainWindow()
@@ -277,6 +273,19 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertEqual(
             f"Filmstrip hidden. Current file: {Path('/tmp/second.jpg')}",
             ui.labelFilmstripSummary.toolTip(),
+        )
+
+    def test_hidden_filmstrip_summary_uses_full_long_file_name(self) -> None:
+        window, ui, controller = self._build_filmstrip_summary_controller()
+        self.addCleanup(window.deleteLater)
+        path = Path("/tmp/very-long-camera-filename-00123.raw")
+        self._add_summary_image(ui, controller, path)
+
+        MainController._toggle_filmstrip(controller, False)
+
+        self.assertEqual(
+            f"Current: {path.name} (1/1)",
+            ui.labelFilmstripSummary.text(),
         )
 
     def test_hidden_filmstrip_summary_updates_when_tab_changes(self) -> None:
@@ -406,7 +415,19 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertTrue(ui.labelFilmstripSummary.isHidden())
         self.assertEqual("", ui.labelFilmstripSummary.text())
 
-    def test_filmstrip_item_uses_short_name_tooltip_and_fixed_size(self) -> None:
+    def test_image_tab_title_uses_full_long_file_name(self) -> None:
+        window, ui, controller = self._build_tabs_controller()
+        self.addCleanup(window.deleteLater)
+        path = Path("/tmp/very-long-camera-filename-00123.raw")
+        tab = QtWidgets.QWidget()
+
+        ui.tabsImages.addTab(tab, "")
+        controller._update_tab_title(0, path)
+
+        self.assertEqual(path.name, ui.tabsImages.tabText(0))
+        self.assertEqual(path.name, ui.tabsImages.tabToolTip(0))
+
+    def test_filmstrip_item_uses_full_name_tooltip_and_dynamic_size(self) -> None:
         window, ui, controller = self._build_tabs_controller()
         self.addCleanup(window.deleteLater)
         path = Path("/tmp/very-long-camera-filename-00123.raw")
@@ -415,10 +436,14 @@ class MainWindowTabsTests(unittest.TestCase):
 
         item = ui.listFilmstrip.item(0)
         self.assertIsNotNone(item)
-        self.assertEqual("very-...3.raw", item.text())
+        self.assertEqual(path.name, item.text())
         self.assertEqual(path.name, item.toolTip())
         self.assertEqual(QtCore.Qt.AlignmentFlag.AlignCenter, item.textAlignment())
-        self.assertEqual(ui.filmstrip_item_size(), item.sizeHint())
+        self.assertGreaterEqual(
+            item.sizeHint().width(),
+            ui.listFilmstrip.fontMetrics().horizontalAdvance(path.name),
+        )
+        self.assertEqual(ui.filmstrip_item_size().height(), item.sizeHint().height())
 
     def test_filmstrip_thumbnail_size_is_capped_for_default_height(self) -> None:
         controller = _FilmstripSizingController()

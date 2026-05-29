@@ -275,7 +275,8 @@ class MainControllerTabsMixin:
         self._apply_display_name_to_item(item, path)
         item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         if hasattr(self._ui, "filmstrip_item_size"):
-            item.setSizeHint(self._ui.filmstrip_item_size())
+            icon_side = getattr(self, "_filmstrip_icon_side", None)
+            item.setSizeHint(self._ui.filmstrip_item_size(icon_side, text=item.text()))
         item.setIcon(self._placeholder_icon())
         self._ui.listFilmstrip.addItem(item)
 
@@ -760,22 +761,14 @@ class MainControllerTabsMixin:
         self._ui.actZoomOut.setEnabled(has_image_tab)
         self._ui.actFitToWindow.setEnabled(has_image_tab)
 
-    def _format_display_name(self, filename: str) -> str:
-        """Shorten long filenames for tab and filmstrip display."""
-
-        if len(filename) <= 15:
-            return filename
-        return f"{filename[:5]}...{filename[-5:]}"
-
     def _update_tab_title(self, tab_index: int, path: Path) -> None:
         if tab_index < 0 or tab_index >= self._ui.tabsImages.count():
             return
-        display_name = self._format_display_name(path.name)
-        self._ui.tabsImages.setTabText(tab_index, display_name)
+        self._ui.tabsImages.setTabText(tab_index, path.name)
         self._ui.tabsImages.setTabToolTip(tab_index, path.name)
 
     def _apply_display_name_to_item(self, item: QtWidgets.QListWidgetItem, path: Path) -> None:
-        item.setText(self._format_display_name(path.name))
+        item.setText(path.name)
         item.setToolTip(path.name)
 
     def _update_filmstrip_text(self, path: Path) -> None:
@@ -783,6 +776,9 @@ class MainControllerTabsMixin:
         if item is None:
             return
         self._apply_display_name_to_item(item, path)
+        if hasattr(self._ui, "filmstrip_item_size"):
+            icon_side = getattr(self, "_filmstrip_icon_side", None)
+            item.setSizeHint(self._ui.filmstrip_item_size(icon_side, text=item.text()))
         self._sync_filmstrip_summary()
 
     def _sync_filmstrip_summary(self) -> None:
@@ -811,7 +807,7 @@ class MainControllerTabsMixin:
         """Return localized context text for a collapsed filmstrip pane."""
 
         return self._tr("Current: {name} ({index}/{total})").format(
-            name=self._format_display_name(path.name),
+            name=path.name,
             index=index,
             total=total,
         )
