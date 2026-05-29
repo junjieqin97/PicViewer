@@ -111,6 +111,16 @@ QTabWidget#tabsImages QTabBar::tab:selected:hover {
     border-top-color: #216eb3;
 }
 
+QWidget#floatingTabWindow {
+    background: #f5f7fa;
+    color: #1f252d;
+}
+
+QWidget#floatingTabContent {
+    background: #ffffff;
+    border: 1px solid #d4dce7;
+}
+
 QWidget#tabImagePlaceholder,
 QStackedWidget#stackImageContent,
 QWidget#widgetImageLoadState {

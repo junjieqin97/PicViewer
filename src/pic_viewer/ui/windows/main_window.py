@@ -9,6 +9,7 @@ from pic_viewer.app.services.image_service import ImageService
 from pic_viewer.ui.resources import styles
 from pic_viewer.ui.resources.icons import icon_path
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel
+from pic_viewer.ui.widgets.detachable_tabs import DetachableTabWidget
 
 
 class MainWindowUI:
@@ -428,7 +429,7 @@ class MainWindowUI:
         self.splitMain = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal, self.central)
         self.splitMain.setObjectName("splitMain")
 
-        self.tabsImages = QtWidgets.QTabWidget(self.splitMain)
+        self.tabsImages = DetachableTabWidget("image", self.splitMain)
         self.tabsImages.setObjectName("tabsImages")
         self.tabsImages.setTabsClosable(True)
         self.tabsImages.setMovable(True)
@@ -436,6 +437,7 @@ class MainWindowUI:
         self.tabsImages.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         tab_bar = self.tabsImages.tabBar()
         tab_bar.setExpanding(False)
+        tab_bar.setElideMode(QtCore.Qt.TextElideMode.ElideNone)
 
         self.scrollInfo = QtWidgets.QWidget(self.splitMain)
         self.scrollInfo.setObjectName("scrollInfo")
@@ -494,7 +496,7 @@ class MainWindowUI:
         summary_layout.setColumnStretch(1, 1)
         self.layoutInfo.addWidget(self.widgetAnalysisModeSummary)
 
-        self.tabsInfo = QtWidgets.QTabWidget(self.scrollInfo)
+        self.tabsInfo = DetachableTabWidget("info", self.scrollInfo)
         self.tabsInfo.setObjectName("tabsInfo")
         self.tabsInfo.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.layoutInfo.addWidget(self.tabsInfo)
@@ -598,10 +600,9 @@ class MainWindowUI:
         self.listFilmstrip.setResizeMode(QtWidgets.QListView.ResizeMode.Adjust)
         self.listFilmstrip.setViewMode(QtWidgets.QListView.ViewMode.IconMode)
         self.listFilmstrip.setIconSize(QtCore.QSize(self.FILMSTRIP_ICON_SIDE, self.FILMSTRIP_ICON_SIDE))
-        self.listFilmstrip.setGridSize(self.filmstrip_item_size())
-        self.listFilmstrip.setUniformItemSizes(True)
+        self.listFilmstrip.setUniformItemSizes(False)
         self.listFilmstrip.setWordWrap(False)
-        self.listFilmstrip.setTextElideMode(QtCore.Qt.TextElideMode.ElideRight)
+        self.listFilmstrip.setTextElideMode(QtCore.Qt.TextElideMode.ElideNone)
         self.listFilmstrip.setMovement(QtWidgets.QListView.Movement.Static)
         self.listFilmstrip.setSpacing(4)
         self.listFilmstrip.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -618,13 +619,16 @@ class MainWindowUI:
         self.labelFilmstripSummary.setVisible(False)
         self._main_window.statusBar().addPermanentWidget(self.labelFilmstripSummary)
 
-    def filmstrip_item_size(self, icon_side: int | None = None) -> QtCore.QSize:
-        """Return the fixed filmstrip item size for the current font metrics."""
+    def filmstrip_item_size(self, icon_side: int | None = None, text: str = "") -> QtCore.QSize:
+        """Return the filmstrip item size needed to display the full file name."""
 
         side = icon_side if icon_side is not None else self.FILMSTRIP_ICON_SIDE
-        font_height = self.listFilmstrip.fontMetrics().height()
+        font_metrics = self.listFilmstrip.fontMetrics()
+        font_height = font_metrics.height()
+        text_width = font_metrics.horizontalAdvance(text) + 16 if text else 0
+        width = max(self.FILMSTRIP_ITEM_WIDTH, side + 36, text_width)
         height = side + font_height + self.FILMSTRIP_ITEM_VERTICAL_PADDING
-        return QtCore.QSize(self.FILMSTRIP_ITEM_WIDTH, height)
+        return QtCore.QSize(width, height)
 
     def _create_analysis_toolbar_button(
         self,
@@ -688,6 +692,9 @@ class MainWindowUI:
         self._appearance_theme = applied_theme
         self._apply_analysis_action_icons(applied_theme)
         self._sync_appearance_actions(applied_theme)
+        for tabs in (getattr(self, "tabsImages", None), getattr(self, "tabsInfo", None)):
+            if hasattr(tabs, "apply_floating_stylesheet"):
+                tabs.apply_floating_stylesheet(self._main_window.styleSheet())
         return applied_theme
 
     def _sync_appearance_actions(self, theme: styles.AppearanceTheme) -> None:

@@ -48,9 +48,7 @@ class MainControllerFilmstripMixin:
         if icon_side <= 0:
             return
 
-        item_size = self._filmstrip_item_size(icon_side)
-        self._ui.listFilmstrip.setGridSize(item_size)
-        self._apply_filmstrip_item_size_hints(item_size)
+        self._apply_filmstrip_item_size_hints(icon_side)
         if icon_side == self._filmstrip_icon_side:
             return
 
@@ -75,23 +73,25 @@ class MainControllerFilmstripMixin:
         max_side = getattr(self._ui, "FILMSTRIP_ICON_SIDE", 72)
         return max(min_side, min(available, max_side))
 
-    def _filmstrip_item_size(self, icon_side: int) -> QtCore.QSize:
-        """Return the fixed item size for the current filmstrip thumbnail side."""
+    def _filmstrip_item_size(self, icon_side: int, text: str = "") -> QtCore.QSize:
+        """Return the item size needed for a thumbnail and full file name."""
 
         if hasattr(self._ui, "filmstrip_item_size"):
-            return self._ui.filmstrip_item_size(icon_side)
-        font_height = self._ui.listFilmstrip.fontMetrics().height()
-        width = icon_side + 36
+            return self._ui.filmstrip_item_size(icon_side, text=text)
+        font_metrics = self._ui.listFilmstrip.fontMetrics()
+        font_height = font_metrics.height()
+        text_width = font_metrics.horizontalAdvance(text) + 16 if hasattr(font_metrics, "horizontalAdvance") else 0
+        width = max(icon_side + 36, text_width)
         height = icon_side + font_height + 18
         return QtCore.QSize(width, height)
 
-    def _apply_filmstrip_item_size_hints(self, item_size: QtCore.QSize) -> None:
-        """Apply fixed filmstrip size hints to all existing items."""
+    def _apply_filmstrip_item_size_hints(self, icon_side: int) -> None:
+        """Apply per-item size hints so full file names stay visible."""
 
         for row in range(self._ui.listFilmstrip.count()):
             item = self._ui.listFilmstrip.item(row)
             if item is not None:
-                item.setSizeHint(item_size)
+                item.setSizeHint(self._filmstrip_item_size(icon_side, item.text()))
 
     def _refresh_filmstrip_icons(self) -> None:
         """Regenerate filmstrip icons using the current thumbnail size."""
