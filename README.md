@@ -77,10 +77,10 @@ PICVIEWER_LANG=en python -m pic_viewer
 
 ```bash
 # Update ts files from Python source code
-scripts/i18n/update_ts.sh
+python scripts/i18n/update_ts.py
 
 # Generate qm files from ts files (defaults to output under src/pic_viewer/ui/resources/i18n)
-scripts/i18n/build_qm.sh
+python scripts/i18n/build_qm.py
 ```
 
 For more conventions, see [docs/i18n.md](docs/i18n.md).

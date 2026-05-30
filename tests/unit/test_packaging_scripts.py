@@ -129,6 +129,114 @@ class PackagingScriptsTests(unittest.TestCase):
                 ),
             )
 
+    def test_update_ts_invokes_lupdate_with_shadow_sources(self) -> None:
+        update_ts = load_script("scripts/i18n/update_ts.py")
+        commands: list[list[str]] = []
+        captured_source_names: list[str] = []
+        captured_source_texts: dict[str, str] = {}
+
+        def fake_runner(command: list[str], **_: object) -> None:
+            commands.append(command)
+            ts_marker = command.index("-ts")
+            for source in command[2:ts_marker]:
+                source_path = Path(source)
+                captured_source_names.append(source_path.name)
+                captured_source_texts[source_path.name] = source_path.read_text(encoding="utf-8")
+            for ts_file in command[ts_marker + 1 :]:
+                ts_path = Path(ts_file)
+                ts_path.write_text(f"{ts_path.name}-updated", encoding="utf-8")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            src_dir = root / "src" / "pic_viewer"
+            ts_dir = src_dir / "ui" / "resources" / "i18n"
+            ts_dir.mkdir(parents=True)
+            (ts_dir / "picviewer_en.ts").write_text("<TS language=\"en\"/>", encoding="utf-8")
+            (ts_dir / "picviewer_zh_CN.ts").write_text("<TS language=\"zh_CN\"/>", encoding="utf-8")
+            (src_dir / "b_widget.py").write_text("value = _tr(\"B\")\n", encoding="utf-8")
+            (src_dir / "a_widget.py").write_text(
+                "class A:\n"
+                "    def label(self):\n"
+                "        return self._tr(\"A\") + _tr(\"Common\")\n",
+                encoding="utf-8",
+            )
+
+            updated = update_ts.update_ts(
+                project_root=root,
+                lupdate="pyside6-lupdate-test",
+                runner=fake_runner,
+            )
+
+            self.assertEqual(
+                [
+                    ts_dir / "picviewer_zh_CN.ts",
+                    ts_dir / "picviewer_en.ts",
+                ],
+                updated,
+            )
+            self.assertEqual("picviewer_zh_CN.ts-updated", (ts_dir / "picviewer_zh_CN.ts").read_text(encoding="utf-8"))
+            self.assertEqual("picviewer_en.ts-updated", (ts_dir / "picviewer_en.ts").read_text(encoding="utf-8"))
+
+        self.assertEqual(["a_widget.py", "b_widget.py"], captured_source_names)
+        self.assertIn("self.tr(\"A\") + tr(\"Common\")", captured_source_texts["a_widget.py"])
+        self.assertNotIn("_tr(", captured_source_texts["a_widget.py"])
+        self.assertEqual("value = tr(\"B\")\n", captured_source_texts["b_widget.py"])
+        self.assertEqual("pyside6-lupdate-test", commands[0][0])
+        self.assertEqual("-noobsolete", commands[0][1])
+        self.assertEqual("-ts", commands[0][-3])
+
+    def test_update_ts_reports_missing_python_sources(self) -> None:
+        update_ts = load_script("scripts/i18n/update_ts.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            ts_dir = root / "src" / "pic_viewer" / "ui" / "resources" / "i18n"
+            ts_dir.mkdir(parents=True)
+            (ts_dir / "picviewer_en.ts").write_text("<TS/>", encoding="utf-8")
+            (ts_dir / "picviewer_zh_CN.ts").write_text("<TS/>", encoding="utf-8")
+
+            with self.assertRaisesRegex(RuntimeError, "No Python source files found"):
+                update_ts.update_ts(
+                    project_root=root,
+                    lupdate="pyside6-lupdate-test",
+                    runner=lambda *_args, **_kwargs: None,
+                )
+
+    def test_update_ts_reports_missing_translation_sources(self) -> None:
+        update_ts = load_script("scripts/i18n/update_ts.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            src_dir = root / "src" / "pic_viewer"
+            ts_dir = src_dir / "ui" / "resources" / "i18n"
+            ts_dir.mkdir(parents=True)
+            (src_dir / "main.py").write_text("value = _tr(\"Main\")\n", encoding="utf-8")
+
+            with self.assertRaisesRegex(RuntimeError, "No translation files found"):
+                update_ts.update_ts(
+                    project_root=root,
+                    lupdate="pyside6-lupdate-test",
+                    runner=lambda *_args, **_kwargs: None,
+                )
+
+    def test_update_ts_reports_missing_required_language_file(self) -> None:
+        update_ts = load_script("scripts/i18n/update_ts.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            src_dir = root / "src" / "pic_viewer"
+            ts_dir = src_dir / "ui" / "resources" / "i18n"
+            ts_dir.mkdir(parents=True)
+            (src_dir / "main.py").write_text("value = _tr(\"Main\")\n", encoding="utf-8")
+            (ts_dir / "picviewer_en.ts").write_text("<TS/>", encoding="utf-8")
+
+            with self.assertRaisesRegex(RuntimeError, "picviewer_zh_CN.ts"):
+                update_ts.update_ts(
+                    project_root=root,
+                    lupdate="pyside6-lupdate-test",
+                    runner=lambda *_args, **_kwargs: None,
+                )
+
     def test_generate_icons_reports_missing_rsvg_convert_clearly(self) -> None:
         generate_icons = load_script("scripts/packaging/generate_icons.py")
 

@@ -55,7 +55,13 @@ python scripts/packaging/build_msi.py --accept-wix-eula
 
 `--accept-wix-eula` passes `-acceptEula wix7` to WiX and should only be used after the WiX OSMF EULA requirements have been confirmed.
 
-Generating translation source files requires the PySide6 `pyside6-lupdate` command to be available in `PATH`. Generating translation resources requires Qt's `lrelease` command to be available in `PATH`. If the local `lrelease` command has a different name, use:
+Generating translation source files requires the PySide6 `pyside6-lupdate` command to be available in `PATH`:
+
+```bash
+python scripts/i18n/update_ts.py
+```
+
+Generating translation resources requires Qt's `lrelease` command to be available in `PATH`. If the local `lrelease` command has a different name, use:
 
 ```bash
 python scripts/i18n/build_qm.py --lrelease /path/to/lrelease
