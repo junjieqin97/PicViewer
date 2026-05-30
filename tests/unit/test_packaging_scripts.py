@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest import mock
+import xml.etree.ElementTree as ET
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -185,6 +186,57 @@ class PackagingScriptsTests(unittest.TestCase):
         self.assertEqual("-noobsolete", commands[0][1])
         self.assertEqual("-ts", commands[0][-3])
 
+    def test_update_ts_updates_translation_files_without_external_lupdate(self) -> None:
+        update_ts = load_script("scripts/i18n/update_ts.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            src_dir = root / "src" / "pic_viewer"
+            ts_dir = src_dir / "ui" / "resources" / "i18n"
+            ts_dir.mkdir(parents=True)
+            (src_dir / "demo_widget.py").write_text(
+                "class DemoWidget:\n"
+                "    def title(self):\n"
+                "        return self._tr(\"Keep Old\")\n"
+                "    def subtitle(self):\n"
+                "        return self._tr(\"New Text\")\n"
+                "\n"
+                "def ready_text():\n"
+                "    return QtCore.QCoreApplication.translate(\"ManualContext\", \"Ready\")\n",
+                encoding="utf-8",
+            )
+            (ts_dir / "picviewer_en.ts").write_text(
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                "<!DOCTYPE TS><TS version=\"1.1\" language=\"en\">\n"
+                "<context><name>DemoWidget</name>\n"
+                "<message><source>Keep Old</source><translation>Keep Old</translation></message>\n"
+                "<message><source>Obsolete</source><translation>Obsolete</translation></message>\n"
+                "</context></TS>\n",
+                encoding="utf-8",
+            )
+            (ts_dir / "picviewer_zh_CN.ts").write_text(
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                "<!DOCTYPE TS><TS version=\"1.1\" language=\"zh_CN\">\n"
+                "<context><name>DemoWidget</name>\n"
+                "<message><source>Keep Old</source><translation>保留旧文案</translation></message>\n"
+                "<message><source>Obsolete</source><translation>过期文案</translation></message>\n"
+                "</context></TS>\n",
+                encoding="utf-8",
+            )
+
+            update_ts.update_ts(project_root=root)
+
+            en_messages = self._read_ts_messages(ts_dir / "picviewer_en.ts")
+            zh_messages = self._read_ts_messages(ts_dir / "picviewer_zh_CN.ts")
+
+        self.assertEqual("Keep Old", en_messages[("DemoWidget", "Keep Old")]["text"])
+        self.assertEqual("New Text", en_messages[("DemoWidget", "New Text")]["text"])
+        self.assertEqual("Ready", en_messages[("ManualContext", "Ready")]["text"])
+        self.assertEqual("保留旧文案", zh_messages[("DemoWidget", "Keep Old")]["text"])
+        self.assertEqual("unfinished", zh_messages[("DemoWidget", "New Text")]["type"])
+        self.assertEqual("unfinished", zh_messages[("ManualContext", "Ready")]["type"])
+        self.assertNotIn(("DemoWidget", "Obsolete"), zh_messages)
+
     def test_update_ts_reports_missing_python_sources(self) -> None:
         update_ts = load_script("scripts/i18n/update_ts.py")
 
@@ -236,6 +288,24 @@ class PackagingScriptsTests(unittest.TestCase):
                     lupdate="pyside6-lupdate-test",
                     runner=lambda *_args, **_kwargs: None,
                 )
+
+    def _read_ts_messages(self, ts_file: Path) -> dict[tuple[str, str], dict[str, str]]:
+        tree = ET.parse(ts_file)
+        messages: dict[tuple[str, str], dict[str, str]] = {}
+        for context in tree.getroot().findall("context"):
+            context_name = context.findtext("name")
+            if context_name is None:
+                continue
+            for message in context.findall("message"):
+                source = message.findtext("source")
+                translation = message.find("translation")
+                if source is None or translation is None:
+                    continue
+                messages[(context_name, source)] = {
+                    "text": translation.text or "",
+                    "type": translation.get("type", ""),
+                }
+        return messages
 
     def test_generate_icons_reports_missing_rsvg_convert_clearly(self) -> None:
         generate_icons = load_script("scripts/packaging/generate_icons.py")
