@@ -190,6 +190,42 @@ class InfoPanelLoadStateTests(unittest.TestCase):
 
         controller._image_service.render_analysis_view.assert_called_once()
 
+    def test_update_info_refreshes_analysis_widgets_after_analysis_tab_detaches(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        self._configure_analysis_rendering(controller)
+        path = Path("/tmp/detached-analysis.jpg")
+        controller._images_by_path[str(path)] = self._image_result((64, 96, 128))
+        floating = ui.tabsInfo.detach_tab(ui.tabsInfo.indexOf(ui.tabAnalysis))
+        self.addCleanup(floating.deleteLater)
+
+        MainController.update_info_for_image(controller, path)
+
+        self.assertEqual((64, 96, 128), self._center_pixmap_color(ui.widgetHistogram))
+        self.assertEqual((64, 96, 128), self._center_pixmap_color(ui.widgetWaveform))
+
+    def test_update_info_refreshes_metadata_tables_after_metadata_tab_detaches(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        self._configure_analysis_rendering(controller)
+        path = Path("/tmp/detached-metadata.jpg")
+        controller._images_by_path[str(path)] = self._image_result(
+            (10, 20, 30),
+            metadata=ImageMetadata(
+                general=(("File Name", "detached-metadata.jpg"),),
+                exif=tuple(),
+                iptc=tuple(),
+                tiff=tuple(),
+            ),
+        )
+        floating = ui.tabsInfo.detach_tab(ui.tabsInfo.indexOf(ui.tabMetadata))
+        self.addCleanup(floating.deleteLater)
+
+        MainController.update_info_for_image(controller, path)
+
+        self.assertEqual("File Name", ui.tableMetadataGeneral.item(0, 0).text())
+        self.assertEqual("detached-metadata.jpg", ui.tableMetadataGeneral.item(0, 1).text())
+
     def test_long_metadata_values_have_full_value_tooltips(self) -> None:
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)

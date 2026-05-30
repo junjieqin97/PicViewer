@@ -55,7 +55,15 @@ python scripts/packaging/build_msi.py --accept-wix-eula
 
 `--accept-wix-eula` passes `-acceptEula wix7` to WiX and should only be used after the WiX OSMF EULA requirements have been confirmed.
 
-Generating translation source files requires the PySide6 `pyside6-lupdate` command to be available in `PATH`. Generating translation resources requires Qt's `lrelease` command to be available in `PATH`. If the local `lrelease` command has a different name, use:
+Generating translation source files uses the built-in Python extractor by default:
+
+```bash
+python scripts/i18n/update_ts.py
+```
+
+If a local PySide6 `lupdate` wrapper is available and should be used explicitly, pass it with `--lupdate /path/to/pyside6-lupdate`.
+
+Generating translation resources requires Qt's `lrelease` command to be available in `PATH`. If the local `lrelease` command has a different name, use:
 
 ```bash
 python scripts/i18n/build_qm.py --lrelease /path/to/lrelease
@@ -69,7 +77,16 @@ Application icon resources are generated from `src/pic_viewer/ui/resources/icons
 python scripts/packaging/generate_icons.py
 ```
 
-The script generates the runtime PNG size family, Windows `.ico`, and macOS `.icns`. On macOS, it calls `iconutil` first and falls back to Pillow for generating `.icns` if `iconutil` is unavailable.
+Icon PNG generation requires librsvg's `rsvg-convert` command:
+
+```bash
+conda install -c conda-forge librsvg
+```
+
+The script generates the runtime PNG size family with `rsvg-convert`, then generates Windows `.ico`
+and macOS `.icns` from those PNGs. On macOS, it calls `iconutil` first and falls back to Pillow for
+generating `.icns` if `iconutil` is unavailable. The script does not fall back to QtSvg for PNG
+generation because QtSvg does not support the `<clipPath>` element used by the PicViewer SVG master.
 
 ## Python Package Mode
 

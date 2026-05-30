@@ -26,7 +26,7 @@ The main window uses a typical four-area structure:
 - The menu bar is the entry point for all features.
 - It must contain at least these top-level menus (names must be consistent):
   - File: Open Image, Open Folder, Close Current Tab, Exit
-  - View: Zoom, Fit to Window, Info Panel (checkable, checked = visible), Analysis Toolbar (checkable, checked = visible), Filmstrip Pane (checkable, checked = visible)
+  - View: Zoom, Fit to Window, Show Metadata Overlay (checkable, checked = visible), Info Panel (checkable, checked = visible), Analysis Toolbar (checkable, checked = visible), Filmstrip Pane (checkable, checked = visible), Appearance (Light/Dark, mutually exclusive)
   - Tools: Histogram/Waveform options + pseudo color options + reference line options
     - Pseudo Color: Show Underexposed (checkable), Show Overexposed (checkable), Show Peaking (High/Medium/Low, checkable, three levels are mutually exclusive and clicking the current level turns it off)
     - Reference Lines: Crosshair Reference Line, Diagonal Reference Line, Rule-of-Thirds Grid Reference Line (all checkable; can be toggled independently and displayed as overlays together)
@@ -76,12 +76,18 @@ Constraint: the right info area width is adjustable by default; when the main wi
 
 ### 3.1 Image Display Area (Tabbed Image Viewer)
 
-- Widget: `tabsImages: QTabWidget`
+- Widget: `tabsImages: DetachableTabWidget` (`QTabWidget` subclass)
 - Behavior:
 - Add a new tab for each opened image.
 - Each tab corresponds to one image; the tab title must be the image file name (including extension).
 - The tab label group in the image display area's tab bar must be left-aligned (arranged by content width, not stretched evenly to fill the width; blank space remains on the right).
 - Tabs are closable: `tabsImages.setTabsClosable(True)`; the close button closes the current image tab.
+- Tabs are detachable: dragging an image tab out of the image tab bar opens it in a separate floating window.
+- A detached image tab remains an open image and stays synchronized with the filmstrip, zoom actions, pseudo-color overlays, metadata overlay, and right-side information refresh.
+- A detached image floating window uses the native window frame and title only; it must not add a second internal tab header.
+- Closing a detached image floating window returns the tab to `tabsImages`; it must not close the image. `Close Current Tab` remains the only shortcut/menu action that closes the image and removes its filmstrip item.
+- Closing the main window closes all detached image floating windows as part of application shutdown.
+- Detached image tabs can only be dropped back into `tabsImages`; they must not be accepted by the info tab widget.
 - Switching tabs synchronizes: right info area content + selected item in the bottom filmstrip.
 - When no image is open, the center of the image area displays prompts for "Open Image..." and "Open Folder...", along with the corresponding platform shortcuts.
 - Tab content structure (inside each tab):
@@ -100,12 +106,19 @@ The right info area is a non-scrollable panel containing two top-level informati
 - Content layout: `layoutInfo: QVBoxLayout`
 - The top of the info area must display a lightweight summary: current analysis mode, RGB channel, pseudo color state (underexposed/overexposed toggles, peaking level).
 
-Inside the info area, use `QTabWidget`:
+Inside the info area, use `DetachableTabWidget` (`QTabWidget` subclass):
 
-- Widget: `tabsInfo: QTabWidget`
+- Widget: `tabsInfo: DetachableTabWidget`
 - Two tabs (titles must be consistent):
   - `tabAnalysis` title: Analysis
   - `tabMetadata` title: Metadata
+- `Analysis` and `Metadata` tabs are detachable: dragging either top-level info tab out of `tabsInfo` opens it in a separate floating window.
+- A detached info floating window uses the native window frame and title only; it must not add a second internal tab header.
+- Closing a detached info floating window returns the tab to `tabsInfo`; it must not remove the analysis or metadata content.
+- Closing the main window closes all detached info floating windows as part of application shutdown.
+- Returning a detached info tab must make the right info panel visible if it was hidden.
+- Detached info tabs can only be dropped back into `tabsInfo`; they must not be accepted by the image tab widget.
+- Nested metadata tabs (`General`, `Exif`, `IPTC`, `TIFF`) remain regular tabs and are not detachable in this version.
 
 Each info tab is first implemented with placeholder controls (the metadata table may scroll internally):
 
@@ -146,7 +159,7 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - If it does not exist (theoretically should not happen): ignore or TODO.
 - When switching tabs: synchronize the selected item in the filmstrip.
 - When the filmstrip pane is hidden, the right side of the status bar must display a current file summary in the format `Current: {name} ({index}/{total})`;
-  `name` follows the same long-file-name truncation rule used by tabs/filmstrip items, and the tooltip displays the full path. When the filmstrip pane is shown again or there is no current image, this summary must be hidden.
+  `name` is the full file name, and the tooltip displays the full path. When the filmstrip pane is shown again or there is no current image, this summary must be hidden.
 - Selected state requirement: clearly visible (system default selection style may be used first).
 
 ## 5. Component Checklist (Must Be Created One by One and Named Consistently)
@@ -157,7 +170,7 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `central: QWidget`
 - `layoutMain: QVBoxLayout`
 - `splitMain: QSplitter(Qt.Horizontal)`
-- `tabsImages: QTabWidget`
+- `tabsImages: DetachableTabWidget`
 - `scrollInfo: QWidget`
 - `layoutInfo: QVBoxLayout`
 - `widgetAnalysisToolbar: QWidget` or `QFrame`
@@ -176,7 +189,7 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `buttonToolbarDiagonalReferenceLine: QToolButton`
 - `buttonToolbarThirdsReferenceLine: QToolButton`
 - `buttonToolbarMetadataOverlay: QToolButton`
-- `tabsInfo: QTabWidget`
+- `tabsInfo: DetachableTabWidget`
 - `tabAnalysis: QWidget`
 - `tabMetadata: QWidget`
 - `frameFilmstrip: QFrame`
@@ -186,6 +199,7 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 ### 5.2 MenuBar Actions (skeleton first)
 
 Top-level menus: `menuFile` `menuView` `menuTools` `menuHelp`
+Submenus: `menuAppearance`
 Actions (names must be consistent; copy may mix Chinese and English, but consistency is recommended):
 
 - `actOpenFile`: Open Image...
@@ -195,6 +209,8 @@ Actions (names must be consistent; copy may mix Chinese and English, but consist
 - `actZoomIn`: Zoom In
 - `actZoomOut`: Zoom Out
 - `actFitToWindow`: Fit to Window
+- `actAppearanceLight`: Light (checkable, mutually exclusive with Dark)
+- `actAppearanceDark`: Dark (checkable, mutually exclusive with Light)
 - `actToggleInfoPanel`: Info Panel (checkable, checked = visible)
 - `actToggleAnalysisToolbar`: Analysis Toolbar (checkable, checked = visible)
 - `actToggleFilmstrip`: Filmstrip Pane (checkable, checked = visible)
@@ -280,6 +296,6 @@ Do not write business logic inside UI files; TODO/placeholder implementations ar
 - The tab titles in the `image display area` are left-aligned (the tab label group is left-aligned and not stretched evenly to fill the width).
 - No absolute positioning with `move()`/`resize()`.
 - The `right info area` and `bottom filmstrip pane` can be hidden.
-- If an image file name exceeds 15 characters, the file name displayed in the `tab title` and `bottom filmstrip` must follow this rule: show only the first 5 characters and last 5 characters, and replace the middle characters with 3 dots.
+- Image file names are displayed in full in the `tab title`, `bottom filmstrip`, and hidden-filmstrip status summary.
 - When the mouse pointer is at the boundary between the `image display area` and the `right info area`, the pointer `style` must automatically change to a `double arrow` (that is, a `move arrow`).
 - Hovering the mouse over the `image display area` should immediately change the pointer to a `hand`, and holding the mouse button should allow dragging to pan a zoomed image.

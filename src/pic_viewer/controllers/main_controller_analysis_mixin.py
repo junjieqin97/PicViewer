@@ -455,10 +455,7 @@ class MainControllerAnalysisMixin:
     def _set_tab_pixmap(self, path: Path, preview_rgb: np.ndarray) -> None:
         """Render an RGB preview inside the tab for the given path."""
 
-        tab_index = self._find_tab_index_by_path(path)
-        if tab_index is None:
-            return
-        tab = self._ui.tabsImages.widget(tab_index)
+        tab = self._tab_widget_for_path(path)
         if tab is None:
             return
         scroll_area = tab.findChild(QtWidgets.QScrollArea, "scrollImage")
