@@ -69,12 +69,15 @@ class MainControllerReferenceLineMixin:
         """Apply the current reference line settings to all open image labels."""
 
         settings = getattr(self, "_reference_line_settings", ReferenceLineSettings())
-        tabs = getattr(self._ui, "tabsImages", None)
-        if not isinstance(tabs, QtWidgets.QTabWidget):
+        tab_widget = getattr(self._ui, "tabsImages", None)
+        if not isinstance(tab_widget, QtWidgets.QTabWidget):
             return
+        tabs = [tab_widget.widget(index) for index in range(tab_widget.count())]
+        for floating in getattr(self, "_detached_image_windows", {}).values():
+            if hasattr(floating, "content_widget"):
+                tabs.append(floating.content_widget())
 
-        for index in range(tabs.count()):
-            tab = tabs.widget(index)
+        for tab in tabs:
             if tab is None:
                 continue
             for label in tab.findChildren(ImageDisplayLabel, "lblImage"):

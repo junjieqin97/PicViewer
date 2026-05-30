@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" role="img" aria-label="Luma mode">
+  <rect width="20" height="20" rx="3" fill="none"/>
+  <circle cx="10" cy="10" r="5" fill="#263241"/>
+  <path d="M10 3v2M10 15v2M3 10h2M15 10h2M5.05 5.05l1.42 1.42M13.53 13.53l1.42 1.42M14.95 5.05l-1.42 1.42M6.47 13.53l-1.42 1.42" stroke="#263241" stroke-width="1.4" stroke-linecap="round"/>
+</svg>

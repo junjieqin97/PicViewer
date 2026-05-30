@@ -6,9 +6,10 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.analysis_view_service import AnalysisViewService
 from pic_viewer.app.services.image_service import ImageService
+from pic_viewer.ui.resources import styles
 from pic_viewer.ui.resources.icons import icon_path
-from pic_viewer.ui.resources.styles import apply_stylesheet
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel
+from pic_viewer.ui.widgets.detachable_tabs import DetachableTabWidget
 
 
 class MainWindowUI:
@@ -38,7 +39,7 @@ class MainWindowUI:
         self.create_context_menus()
         self.create_widgets()
         self.create_layouts()
-        apply_stylesheet(main_window)
+        self.apply_appearance_theme()
         self.retranslate_ui()
 
         self.actToggleInfoPanel.setChecked(True)
@@ -64,6 +65,12 @@ class MainWindowUI:
         self.actZoomOut.setObjectName("actZoomOut")
         self.actFitToWindow = QtGui.QAction(self._main_window)
         self.actFitToWindow.setObjectName("actFitToWindow")
+        self.actAppearanceLight = QtGui.QAction(self._main_window)
+        self.actAppearanceLight.setObjectName("actAppearanceLight")
+        self.actAppearanceLight.setCheckable(True)
+        self.actAppearanceDark = QtGui.QAction(self._main_window)
+        self.actAppearanceDark.setObjectName("actAppearanceDark")
+        self.actAppearanceDark.setCheckable(True)
 
         self.actToggleInfoPanel = QtGui.QAction(self._main_window)
         self.actToggleInfoPanel.setObjectName("actToggleInfoPanel")
@@ -140,16 +147,35 @@ class MainWindowUI:
         self.actionGroupChannel.addAction(self.actChannelGreen)
         self.actionGroupChannel.addAction(self.actChannelBlue)
 
+        self.actionGroupAppearance = QtGui.QActionGroup(self._main_window)
+        self.actionGroupAppearance.setExclusive(True)
+        self.actionGroupAppearance.addAction(self.actAppearanceLight)
+        self.actionGroupAppearance.addAction(self.actAppearanceDark)
+        self.actAppearanceLight.triggered.connect(
+            lambda _checked=False: self.apply_appearance_theme(styles.AppearanceTheme.LIGHT)
+        )
+        self.actAppearanceDark.triggered.connect(
+            lambda _checked=False: self.apply_appearance_theme(styles.AppearanceTheme.DARK)
+        )
+
         self.actModeLuma.setChecked(True)
         self.actChannelAll.setChecked(True)
         self._apply_analysis_action_icons()
         self._apply_shortcuts()
 
-    def _apply_analysis_action_icons(self) -> None:
+    def _apply_analysis_action_icons(
+        self,
+        theme: styles.AppearanceTheme = styles.AppearanceTheme.DARK,
+    ) -> None:
         """Assign compact analysis toolbar icons to shared actions."""
 
+        def themed_icon_name(default_name: str, on_light_name: str | None = None) -> str:
+            if theme == styles.AppearanceTheme.LIGHT and on_light_name is not None:
+                return on_light_name
+            return default_name
+
         icon_by_action = {
-            self.actModeLuma: "analysis-luma.svg",
+            self.actModeLuma: themed_icon_name("analysis-luma.svg", "analysis-luma-on-light.svg"),
             self.actModeRgb: "analysis-rgb.svg",
             self.actChannelAll: "analysis-channel-all.svg",
             self.actChannelRed: "analysis-channel-red.svg",
@@ -160,15 +186,28 @@ class MainWindowUI:
             self.actPeakHigh: "analysis-peak-high.svg",
             self.actPeakMedium: "analysis-peak-medium.svg",
             self.actPeakLow: "analysis-peak-low.svg",
-            self.actToggleCrossReferenceLine: "reference-line-cross.svg",
-            self.actToggleDiagonalReferenceLine: "reference-line-diagonal.svg",
-            self.actToggleThirdsReferenceLine: "reference-line-thirds.svg",
-            self.actToggleMetadataOverlay: "metadata-info.svg",
+            self.actToggleCrossReferenceLine: themed_icon_name(
+                "reference-line-cross.svg",
+                "reference-line-cross-on-light.svg",
+            ),
+            self.actToggleDiagonalReferenceLine: themed_icon_name(
+                "reference-line-diagonal.svg",
+                "reference-line-diagonal-on-light.svg",
+            ),
+            self.actToggleThirdsReferenceLine: themed_icon_name(
+                "reference-line-thirds.svg",
+                "reference-line-thirds-on-light.svg",
+            ),
+            self.actToggleMetadataOverlay: themed_icon_name(
+                "metadata-info.svg",
+                "metadata-info-on-light.svg",
+            ),
         }
         for action, file_name in icon_by_action.items():
             path = icon_path(file_name)
             if path.is_file():
                 action.setIcon(QtGui.QIcon(str(path)))
+                action.setIconVisibleInMenu(True)
 
     def _apply_shortcuts(self) -> None:
         """Assign platform-specific shortcuts for common menu actions."""
@@ -213,11 +252,15 @@ class MainWindowUI:
         self.menuView.addAction(self.actZoomIn)
         self.menuView.addAction(self.actZoomOut)
         self.menuView.addAction(self.actFitToWindow)
+        self.menuView.addAction(self.actToggleMetadataOverlay)
         self.menuView.addSeparator()
         self.menuView.addAction(self.actToggleInfoPanel)
         self.menuView.addAction(self.actToggleAnalysisToolbar)
         self.menuView.addAction(self.actToggleFilmstrip)
-        self.menuView.addAction(self.actToggleMetadataOverlay)
+        self.menuAppearance = self.menuView.addMenu("")
+        self.menuAppearance.setObjectName("menuAppearance")
+        self.menuAppearance.addAction(self.actAppearanceLight)
+        self.menuAppearance.addAction(self.actAppearanceDark)
 
         self.menuTools = menu_bar.addMenu("")
         self.menuTools.setObjectName("menuTools")
@@ -386,7 +429,7 @@ class MainWindowUI:
         self.splitMain = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal, self.central)
         self.splitMain.setObjectName("splitMain")
 
-        self.tabsImages = QtWidgets.QTabWidget(self.splitMain)
+        self.tabsImages = DetachableTabWidget("image", self.splitMain)
         self.tabsImages.setObjectName("tabsImages")
         self.tabsImages.setTabsClosable(True)
         self.tabsImages.setMovable(True)
@@ -394,6 +437,7 @@ class MainWindowUI:
         self.tabsImages.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         tab_bar = self.tabsImages.tabBar()
         tab_bar.setExpanding(False)
+        tab_bar.setElideMode(QtCore.Qt.TextElideMode.ElideNone)
 
         self.scrollInfo = QtWidgets.QWidget(self.splitMain)
         self.scrollInfo.setObjectName("scrollInfo")
@@ -452,7 +496,7 @@ class MainWindowUI:
         summary_layout.setColumnStretch(1, 1)
         self.layoutInfo.addWidget(self.widgetAnalysisModeSummary)
 
-        self.tabsInfo = QtWidgets.QTabWidget(self.scrollInfo)
+        self.tabsInfo = DetachableTabWidget("info", self.scrollInfo)
         self.tabsInfo.setObjectName("tabsInfo")
         self.tabsInfo.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.layoutInfo.addWidget(self.tabsInfo)
@@ -556,10 +600,9 @@ class MainWindowUI:
         self.listFilmstrip.setResizeMode(QtWidgets.QListView.ResizeMode.Adjust)
         self.listFilmstrip.setViewMode(QtWidgets.QListView.ViewMode.IconMode)
         self.listFilmstrip.setIconSize(QtCore.QSize(self.FILMSTRIP_ICON_SIDE, self.FILMSTRIP_ICON_SIDE))
-        self.listFilmstrip.setGridSize(self.filmstrip_item_size())
-        self.listFilmstrip.setUniformItemSizes(True)
+        self.listFilmstrip.setUniformItemSizes(False)
         self.listFilmstrip.setWordWrap(False)
-        self.listFilmstrip.setTextElideMode(QtCore.Qt.TextElideMode.ElideRight)
+        self.listFilmstrip.setTextElideMode(QtCore.Qt.TextElideMode.ElideNone)
         self.listFilmstrip.setMovement(QtWidgets.QListView.Movement.Static)
         self.listFilmstrip.setSpacing(4)
         self.listFilmstrip.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -576,13 +619,16 @@ class MainWindowUI:
         self.labelFilmstripSummary.setVisible(False)
         self._main_window.statusBar().addPermanentWidget(self.labelFilmstripSummary)
 
-    def filmstrip_item_size(self, icon_side: int | None = None) -> QtCore.QSize:
-        """Return the fixed filmstrip item size for the current font metrics."""
+    def filmstrip_item_size(self, icon_side: int | None = None, text: str = "") -> QtCore.QSize:
+        """Return the filmstrip item size needed to display the full file name."""
 
         side = icon_side if icon_side is not None else self.FILMSTRIP_ICON_SIDE
-        font_height = self.listFilmstrip.fontMetrics().height()
+        font_metrics = self.listFilmstrip.fontMetrics()
+        font_height = font_metrics.height()
+        text_width = font_metrics.horizontalAdvance(text) + 16 if text else 0
+        width = max(self.FILMSTRIP_ITEM_WIDTH, side + 36, text_width)
         height = side + font_height + self.FILMSTRIP_ITEM_VERTICAL_PADDING
-        return QtCore.QSize(self.FILMSTRIP_ITEM_WIDTH, height)
+        return QtCore.QSize(width, height)
 
     def _create_analysis_toolbar_button(
         self,
@@ -636,6 +682,31 @@ class MainWindowUI:
         image_width = max(base_width - info_width, self.image_panel_min_width)
         return [image_width, info_width]
 
+    def apply_appearance_theme(
+        self,
+        theme: styles.AppearanceTheme | None = None,
+    ) -> styles.AppearanceTheme:
+        """Apply an appearance theme and synchronize the menu state."""
+
+        applied_theme = styles.apply_stylesheet(self._main_window, theme)
+        self._appearance_theme = applied_theme
+        self._apply_analysis_action_icons(applied_theme)
+        self._sync_appearance_actions(applied_theme)
+        for tabs in (getattr(self, "tabsImages", None), getattr(self, "tabsInfo", None)):
+            if hasattr(tabs, "apply_floating_stylesheet"):
+                tabs.apply_floating_stylesheet(self._main_window.styleSheet())
+        return applied_theme
+
+    def _sync_appearance_actions(self, theme: styles.AppearanceTheme) -> None:
+        light_blocker = QtCore.QSignalBlocker(self.actAppearanceLight)
+        dark_blocker = QtCore.QSignalBlocker(self.actAppearanceDark)
+        try:
+            self.actAppearanceLight.setChecked(theme == styles.AppearanceTheme.LIGHT)
+            self.actAppearanceDark.setChecked(theme == styles.AppearanceTheme.DARK)
+        finally:
+            del light_blocker
+            del dark_blocker
+
     def _create_metadata_table(
         self, parent: QtWidgets.QWidget, object_name: str
     ) -> QtWidgets.QTableWidget:
@@ -666,6 +737,8 @@ class MainWindowUI:
         self.actZoomIn.setText(self._tr("Zoom In"))
         self.actZoomOut.setText(self._tr("Zoom Out"))
         self.actFitToWindow.setText(self._tr("Fit to Window"))
+        self.actAppearanceLight.setText(self._tr("Light"))
+        self.actAppearanceDark.setText(self._tr("Dark"))
         self.actToggleInfoPanel.setText(self._tr("Info Panel"))
         self.actToggleAnalysisToolbar.setText(self._tr("Analysis Toolbar"))
         self.actToggleFilmstrip.setText(self._tr("Filmstrip"))
@@ -690,6 +763,7 @@ class MainWindowUI:
 
         self.menuFile.setTitle(self._tr("File"))
         self.menuView.setTitle(self._tr("View"))
+        self.menuAppearance.setTitle(self._tr("Appearance"))
         self.menuReferenceLines.setTitle(self._tr("Reference Lines"))
         self.menuTools.setTitle(self._tr("Tools"))
         self.menuMode.setTitle(self._tr("Histogram/Waveform Mode"))

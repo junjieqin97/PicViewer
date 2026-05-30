@@ -1,5 +1,11 @@
 ## Git Commit Guidelines
 
+### Branch Requirements
+
+- For every feature addition or optimization, create a feature branch from `develop` before making changes.
+- Commit all related code changes on the feature branch.
+- Feature branch names must use the format `feature-<brief-feature-description>`.
+
 ### When to Commit
 
 - Commit after each logically complete change

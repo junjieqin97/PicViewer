@@ -33,6 +33,8 @@ class MainControllerLoadingMixin:
         tab_index = self._find_tab_index_by_path(path)
         if tab_index is not None:
             self._ui.tabsImages.setCurrentIndex(tab_index)
+        elif hasattr(self, "_activate_detached_image_window"):
+            self._activate_detached_image_window(path)
         row = self._find_filmstrip_row_by_path(path)
         if row is not None:
             self._ui.listFilmstrip.setCurrentRow(row)
