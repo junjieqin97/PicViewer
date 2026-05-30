@@ -18,6 +18,7 @@ if str(SRC_ROOT) not in sys.path:
 
 from pic_viewer.app.dto.image_analysis import ImageLoadResult, PreviewLoadResult  # noqa: E402
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
+from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 from pic_viewer.ui.workers.image_worker import ImageLoadTask, PreviewLoadTask  # noqa: E402
@@ -93,11 +94,18 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         result = PreviewLoadResult(
             preview_rgb=np.zeros((1, 1, 3), dtype=np.uint8),
             working_color_space=WorkingColorSpace.SRGB,
+            source_color_profile=ImageColorProfileInfo(
+                display_name="sRGB",
+                status=ImageColorProfileStatus.MISSING,
+                uses_srgb_fallback=True,
+            ),
         )
+        controller._ui.labelImageColorSpaceValue.setText("Display P3 (embedded ICC)")
 
         MainController._on_preview_loaded(controller, path, 1, result)
 
         self.assertNotIn(key, controller._preview_by_path)
+        self.assertEqual("Display P3 (embedded ICC)", controller._ui.labelImageColorSpaceValue.text())
 
     def test_stale_full_load_result_from_old_working_space_is_ignored(self) -> None:
         window, _, controller = self._build_controller()
@@ -109,11 +117,18 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         controller._working_color_space = WorkingColorSpace.DISPLAY_P3
         analysis = MagicMock()
         analysis.working_color_space = WorkingColorSpace.SRGB
+        analysis.source_color_profile = ImageColorProfileInfo(
+            display_name="sRGB",
+            status=ImageColorProfileStatus.MISSING,
+            uses_srgb_fallback=True,
+        )
         result = ImageLoadResult(analysis=analysis, metadata=MagicMock())
+        controller._ui.labelImageColorSpaceValue.setText("Display P3 (embedded ICC)")
 
         MainController._on_loaded(controller, path, 1, result)
 
         self.assertNotIn(key, controller._images_by_path)
+        self.assertEqual("Display P3 (embedded ICC)", controller._ui.labelImageColorSpaceValue.text())
 
     def _build_controller(self) -> tuple[QtWidgets.QMainWindow, MainWindowUI, MainController]:
         window = QtWidgets.QMainWindow()

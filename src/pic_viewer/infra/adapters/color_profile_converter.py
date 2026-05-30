@@ -5,11 +5,13 @@ from __future__ import annotations
 import io
 import logging
 from pathlib import Path
+import re
 
 import numpy as np
 from PIL import Image, ImageCms, UnidentifiedImageError
 from PySide6 import QtGui
 
+from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus
 from pic_viewer.domain.models.color_space import WorkingColorSpace
 
 logger = logging.getLogger(__name__)
@@ -74,12 +76,27 @@ class ColorProfileConverter:
             extraction or conversion fails, the source is treated as sRGB.
         """
 
-        if self._is_empty_image(bgr):
-            return bgr
+        converted_bgr, _profile_info = self.convert_file_bgr_to_working_space_with_info(
+            path,
+            bgr,
+            working_color_space,
+        )
+        return converted_bgr
 
-        source_profile, source_is_srgb_fallback = self._source_profile_for_path(path)
-        if source_is_srgb_fallback and working_color_space == WorkingColorSpace.SRGB:
-            return bgr.copy()
+    def convert_file_bgr_to_working_space_with_info(
+        self,
+        path: Path,
+        bgr: np.ndarray,
+        working_color_space: WorkingColorSpace,
+    ) -> tuple[np.ndarray, ImageColorProfileInfo]:
+        """Convert decoded BGR pixels and return source ICC status."""
+
+        source_profile, source_info = self._source_profile_for_path(path)
+        if self._is_empty_image(bgr):
+            return bgr, source_info
+
+        if source_info.uses_srgb_fallback and working_color_space == WorkingColorSpace.SRGB:
+            return bgr.copy(), source_info
 
         target_profile = self.profile_for(working_color_space)
         rgb = self._bgr_to_rgb(bgr)
@@ -90,7 +107,12 @@ class ColorProfileConverter:
             source_path=path,
             target_label=working_color_space.value,
         )
-        if converted_rgb is None and not source_is_srgb_fallback:
+        if converted_rgb is None and not source_info.uses_srgb_fallback:
+            source_info = ImageColorProfileInfo(
+                display_name="sRGB",
+                status=ImageColorProfileStatus.CONVERSION_FAILED,
+                uses_srgb_fallback=True,
+            )
             converted_rgb = self._convert_rgb_with_profiles(
                 rgb,
                 self.profile_for(WorkingColorSpace.SRGB),
@@ -100,7 +122,7 @@ class ColorProfileConverter:
             )
         if converted_rgb is None:
             converted_rgb = rgb.copy()
-        return self._rgb_to_bgr(converted_rgb)
+        return self._rgb_to_bgr(converted_rgb), source_info
 
     def convert_working_rgb_to_srgb(
         self,
@@ -123,17 +145,51 @@ class ColorProfileConverter:
             return rgb.copy()
         return converted
 
-    def _source_profile_for_path(self, path: Path) -> tuple[ImageCms.ImageCmsProfile, bool]:
+    def _source_profile_for_path(self, path: Path) -> tuple[ImageCms.ImageCmsProfile, ImageColorProfileInfo]:
         profile_bytes = self._read_embedded_icc_profile(path)
         if profile_bytes:
             try:
-                return self._profile_from_bytes(profile_bytes), False
+                profile = self._profile_from_bytes(profile_bytes)
+                return profile, ImageColorProfileInfo(
+                    display_name=self._profile_display_name(profile),
+                    status=ImageColorProfileStatus.EMBEDDED,
+                    uses_srgb_fallback=False,
+                )
             except (ImageCms.PyCMSError, OSError, ValueError):
                 logger.warning("Invalid embedded ICC profile, falling back to sRGB: %s", path)
-        return self.profile_for(WorkingColorSpace.SRGB), True
+                return self.profile_for(WorkingColorSpace.SRGB), ImageColorProfileInfo(
+                    display_name="sRGB",
+                    status=ImageColorProfileStatus.INVALID,
+                    uses_srgb_fallback=True,
+                )
+        return self.profile_for(WorkingColorSpace.SRGB), ImageColorProfileInfo(
+            display_name="sRGB",
+            status=ImageColorProfileStatus.MISSING,
+            uses_srgb_fallback=True,
+        )
 
     def _profile_from_bytes(self, profile_bytes: bytes) -> ImageCms.ImageCmsProfile:
         return ImageCms.getOpenProfile(io.BytesIO(profile_bytes))
+
+    def _profile_display_name(self, profile: ImageCms.ImageCmsProfile) -> str:
+        for reader in (ImageCms.getProfileName, ImageCms.getProfileDescription):
+            try:
+                cleaned = self._clean_profile_name(reader(profile))
+            except (ImageCms.PyCMSError, OSError, ValueError, TypeError):
+                continue
+            if cleaned:
+                return cleaned
+        return "Embedded ICC"
+
+    def _clean_profile_name(self, profile_name: str | bytes | None) -> str:
+        if profile_name is None:
+            return ""
+        if isinstance(profile_name, bytes):
+            text = profile_name.decode("utf-8", errors="ignore")
+        else:
+            text = profile_name
+        text = text.replace("\x00", " ")
+        return re.sub(r"\s+", " ", text).strip()
 
     def _read_embedded_icc_profile(self, path: Path) -> bytes | None:
         try:

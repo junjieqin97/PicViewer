@@ -22,9 +22,10 @@ from pic_viewer.app.dto.analysis_view import (  # noqa: E402
     LumaRgbMode,
     RgbChannel,
 )
-from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult  # noqa: E402
+from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult, PreviewLoadResult  # noqa: E402
 from pic_viewer.app.dto.metadata import ImageMetadata  # noqa: E402
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
+from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 
 
@@ -146,6 +147,7 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         self.assertEqual("Generating histogram...", ui.widgetHistogram.text())
         self.assertEqual("Generating waveform...", ui.widgetWaveform.text())
         self.assertEqual("Reading metadata...", ui.tableMetadataGeneral.item(0, 0).text())
+        self.assertEqual("Loading", ui.labelImageColorSpaceValue.text())
 
     def test_failed_image_shows_analysis_failure_and_reason(self) -> None:
         window, ui, controller = self._build_controller()
@@ -159,6 +161,74 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         self.assertEqual("Image failed to load. Analysis is unavailable.", ui.widgetWaveform.text())
         self.assertEqual("Failure Reason", ui.tableMetadataGeneral.item(1, 0).text())
         self.assertEqual("Unable to read this image file", ui.tableMetadataGeneral.item(1, 1).text())
+        self.assertEqual("Unavailable", ui.labelImageColorSpaceValue.text())
+
+    def test_no_current_image_shows_not_loaded_color_space_info(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+
+        MainController.update_info_for_image(controller, None)
+
+        self.assertEqual("Not Loaded", ui.labelImageColorSpaceValue.text())
+
+    def test_preview_payload_updates_color_space_info_before_full_load(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        path = Path("/tmp/preview.jpg")
+        controller._preview_by_path[str(path)] = PreviewLoadResult(
+            preview_rgb=np.zeros((8, 8, 3), dtype=np.uint8),
+            source_color_profile=ImageColorProfileInfo(
+                display_name="sRGB",
+                status=ImageColorProfileStatus.MISSING,
+                uses_srgb_fallback=True,
+            ),
+        )
+
+        MainController.update_info_for_image(controller, path)
+
+        self.assertEqual("sRGB (default, no embedded ICC)", ui.labelImageColorSpaceValue.text())
+
+    def test_full_load_updates_color_space_info_from_analysis_payload(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        self._configure_analysis_rendering(controller)
+        path = Path("/tmp/profiled.jpg")
+        controller._images_by_path[str(path)] = self._image_result(
+            (255, 0, 0),
+            source_color_profile=ImageColorProfileInfo(
+                display_name="Example Profile",
+                status=ImageColorProfileStatus.EMBEDDED,
+                uses_srgb_fallback=False,
+            ),
+        )
+
+        MainController.update_info_for_image(controller, path)
+
+        self.assertEqual("Example Profile (embedded ICC)", ui.labelImageColorSpaceValue.text())
+
+    def test_color_space_info_formats_invalid_and_conversion_fallback_states(self) -> None:
+        window, _ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+
+        invalid = MainController._format_source_color_profile_info(
+            controller,
+            ImageColorProfileInfo(
+                display_name="sRGB",
+                status=ImageColorProfileStatus.INVALID,
+                uses_srgb_fallback=True,
+            ),
+        )
+        failed = MainController._format_source_color_profile_info(
+            controller,
+            ImageColorProfileInfo(
+                display_name="sRGB",
+                status=ImageColorProfileStatus.CONVERSION_FAILED,
+                uses_srgb_fallback=True,
+            ),
+        )
+
+        self.assertEqual("sRGB (default, unreadable ICC)", invalid)
+        self.assertEqual("sRGB (fallback, ICC conversion failed)", failed)
 
     def test_switching_back_to_cached_image_refreshes_analysis_pixmaps(self) -> None:
         window, ui, controller = self._build_controller()
@@ -386,6 +456,7 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         self,
         color_rgb: tuple[int, int, int],
         metadata: ImageMetadata | None = None,
+        source_color_profile: ImageColorProfileInfo | None = None,
     ) -> ImageLoadResult:
         rgb = np.zeros((8, 8, 3), dtype=np.uint8)
         rgb[:] = color_rgb
@@ -403,6 +474,12 @@ class InfoPanelLoadStateTests(unittest.TestCase):
             waveform_r=rgb,
             waveform_g=rgb,
             waveform_b=rgb,
+            source_color_profile=source_color_profile
+            or ImageColorProfileInfo(
+                display_name="sRGB",
+                status=ImageColorProfileStatus.MISSING,
+                uses_srgb_fallback=True,
+            ),
         )
         return ImageLoadResult(
             analysis=analysis,

@@ -5,7 +5,7 @@
 ## Basic Features
 
 * After a photo is opened with this photo preview tool, the tool supports displaying the photo's corresponding `histogram`, `waveform`, and `metadata`.
-* When opening a photo, the app reads the embedded ICC profile when available. If no ICC profile is present or the profile cannot be read, the source image is treated as sRGB. The Analysis panel provides a working color space selector with `sRGB`, `Display P3`, `Adobe RGB (1998)`, and `ProPhoto RGB`; histogram and waveform data are generated in the selected working color space, while the displayed preview is converted back to sRGB for the current Qt display pipeline.
+* When opening a photo, the app reads the embedded ICC profile when available. If no ICC profile is present or the profile cannot be read, the source image is treated as sRGB. The Analysis panel shows the current image source color space or sRGB fallback reason, and provides a working color space selector with `sRGB`, `Display P3`, `Adobe RGB (1998)`, and `ProPhoto RGB`; histogram and waveform data are generated in the selected working color space, while the displayed preview is converted back to sRGB for the current Qt display pipeline.
 * The `histogram` and `waveform` support switching between `luma mode` and `RGB mode`. The default display mode is `luma mode`.
 * In `RGB mode`, the `histogram` and `waveform` support switching between displaying all three RGB channels at the same time and displaying only one of the channels.
 * `Metadata` can display four types of `metadata`, `General`, `Exif`, `IPTC`, and `TIFF`. The default display type is `General`.

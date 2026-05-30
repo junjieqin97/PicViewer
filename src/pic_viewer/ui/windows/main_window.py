@@ -508,6 +508,27 @@ class MainWindowUI:
         analysis_layout.setContentsMargins(6, 6, 6, 6)
         analysis_layout.setSpacing(8)
 
+        self.widgetImageColorSpace = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetImageColorSpace.setObjectName("widgetImageColorSpace")
+        image_space_layout = QtWidgets.QHBoxLayout(self.widgetImageColorSpace)
+        image_space_layout.setObjectName("layoutImageColorSpace")
+        image_space_layout.setContentsMargins(0, 0, 0, 0)
+        image_space_layout.setSpacing(8)
+        self.labelImageColorSpaceTitle = QtWidgets.QLabel(self.widgetImageColorSpace)
+        self.labelImageColorSpaceTitle.setObjectName("labelImageColorSpaceTitle")
+        self.labelImageColorSpaceValue = QtWidgets.QLabel(self.widgetImageColorSpace)
+        self.labelImageColorSpaceValue.setObjectName("labelImageColorSpaceValue")
+        self.labelImageColorSpaceValue.setTextInteractionFlags(
+            QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self.labelImageColorSpaceValue.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Fixed,
+        )
+        image_space_layout.addWidget(self.labelImageColorSpaceTitle)
+        image_space_layout.addWidget(self.labelImageColorSpaceValue, 1)
+        analysis_layout.addWidget(self.widgetImageColorSpace)
+
         self.widgetWorkingColorSpace = QtWidgets.QWidget(self.tabAnalysis)
         self.widgetWorkingColorSpace.setObjectName("widgetWorkingColorSpace")
         working_space_layout = QtWidgets.QHBoxLayout(self.widgetWorkingColorSpace)
@@ -814,6 +835,8 @@ class MainWindowUI:
             )
         )
 
+        self.labelImageColorSpaceTitle.setText(self._tr("Image Color Space"))
+        self.labelImageColorSpaceValue.setText(self._tr("Not Loaded"))
         self.labelWorkingColorSpaceTitle.setText(self._tr("Working Color Space"))
         for index, color_space in enumerate(WORKING_COLOR_SPACE_ORDER):
             self.comboWorkingColorSpace.setItemText(index, self._tr(color_space.display_name))

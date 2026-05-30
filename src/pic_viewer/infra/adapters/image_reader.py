@@ -10,6 +10,7 @@ import cv2
 import numpy as np
 
 from pic_viewer.common.errors import ImageLoadError
+from pic_viewer.domain.models.color_profile import ImageColorProfileInfo
 from pic_viewer.domain.models.color_space import WorkingColorSpace
 from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConverter
 
@@ -55,6 +56,27 @@ class ImageReader:
             raise ImageLoadError("Unable to read this image file")
         return self._convert_to_working_space(path, raw_image, working_color_space)
 
+    def read_with_color_profile_info(
+        self,
+        path: Path,
+        working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB,
+    ) -> tuple[np.ndarray, ImageColorProfileInfo]:
+        """Read image file into BGR array and return source ICC status."""
+
+        self._validate_path(path)
+
+        image = cv2.imread(str(path), cv2.IMREAD_COLOR)
+        if image is not None:
+            return self._convert_to_working_space_with_info(path, image, working_color_space)
+
+        if not self._allow_raw:
+            raise ImageLoadError("Unsupported image format")
+
+        raw_image = self._read_raw(path, preview=False)
+        if raw_image is None:
+            raise ImageLoadError("Unable to read this image file")
+        return self._convert_to_working_space_with_info(path, raw_image, working_color_space)
+
     def read_preview(
         self,
         path: Path,
@@ -91,6 +113,42 @@ class ImageReader:
         preview = self._resize_if_needed(raw_image, max_edge)
         return self._convert_to_working_space(path, preview, working_color_space)
 
+    def read_preview_with_color_profile_info(
+        self,
+        path: Path,
+        max_edge: int = 1920,
+        working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB,
+    ) -> tuple[np.ndarray, ImageColorProfileInfo]:
+        """Read a faster preview and return source ICC status."""
+
+        self._validate_path(path)
+        max_edge = max(1, int(max_edge))
+        reduced_flags = (
+            cv2.IMREAD_REDUCED_COLOR_8,
+            cv2.IMREAD_REDUCED_COLOR_4,
+            cv2.IMREAD_REDUCED_COLOR_2,
+        )
+
+        for flag in reduced_flags:
+            image = cv2.imread(str(path), flag)
+            if image is not None:
+                preview = self._resize_if_needed(image, max_edge)
+                return self._convert_to_working_space_with_info(path, preview, working_color_space)
+
+        image = cv2.imread(str(path), cv2.IMREAD_COLOR)
+        if image is not None:
+            preview = self._resize_if_needed(image, max_edge)
+            return self._convert_to_working_space_with_info(path, preview, working_color_space)
+
+        if not self._allow_raw:
+            raise ImageLoadError("Unsupported image format")
+
+        raw_image = self._read_raw(path, preview=True)
+        if raw_image is None:
+            raise ImageLoadError("Unable to read this image file")
+        preview = self._resize_if_needed(raw_image, max_edge)
+        return self._convert_to_working_space_with_info(path, preview, working_color_space)
+
     def _validate_path(self, path: Path) -> None:
         if not path.exists() or not path.is_file():
             raise ImageLoadError("Image file does not exist")
@@ -114,6 +172,18 @@ class ImageReader:
         working_color_space: WorkingColorSpace,
     ) -> np.ndarray:
         return self._color_converter.convert_file_bgr_to_working_space(
+            path,
+            bgr,
+            working_color_space,
+        )
+
+    def _convert_to_working_space_with_info(
+        self,
+        path: Path,
+        bgr: np.ndarray,
+        working_color_space: WorkingColorSpace,
+    ) -> tuple[np.ndarray, ImageColorProfileInfo]:
+        return self._color_converter.convert_file_bgr_to_working_space_with_info(
             path,
             bgr,
             working_color_space,

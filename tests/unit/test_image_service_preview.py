@@ -14,6 +14,7 @@ if str(SRC_ROOT) not in sys.path:
 
 from pic_viewer.app.services.image_service import ImageService  # noqa: E402
 from pic_viewer.common.errors import ImageLoadError  # noqa: E402
+from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel  # noqa: E402
 
@@ -38,13 +39,18 @@ class ImageServicePreviewTests(unittest.TestCase):
         preview_bgr = np.zeros((8, 8, 3), dtype=np.uint8)
         preview_rgb = np.ones((8, 8, 3), dtype=np.uint8)
         display_rgb = np.full((8, 8, 3), 2, dtype=np.uint8)
-        self.reader.read_preview.return_value = preview_bgr
+        source_profile = ImageColorProfileInfo(
+            display_name="sRGB",
+            status=ImageColorProfileStatus.MISSING,
+            uses_srgb_fallback=True,
+        )
+        self.reader.read_preview_with_color_profile_info.return_value = (preview_bgr, source_profile)
         self.analyzer.build_preview_rgb.return_value = preview_rgb
         self.color_converter.convert_working_rgb_to_srgb.return_value = display_rgb
 
         result = self.service.load_preview(self.path, WorkingColorSpace.DISPLAY_P3)
 
-        self.reader.read_preview.assert_called_once_with(
+        self.reader.read_preview_with_color_profile_info.assert_called_once_with(
             self.path,
             working_color_space=WorkingColorSpace.DISPLAY_P3,
         )
@@ -54,16 +60,17 @@ class ImageServicePreviewTests(unittest.TestCase):
             WorkingColorSpace.DISPLAY_P3,
         )
         self.assertEqual(WorkingColorSpace.DISPLAY_P3, result.working_color_space)
+        self.assertEqual(source_profile, result.source_color_profile)
         np.testing.assert_array_equal(result.preview_rgb, display_rgb)
 
     def test_load_preview_propagates_image_load_error(self) -> None:
-        self.reader.read_preview.side_effect = ImageLoadError("bad image")
+        self.reader.read_preview_with_color_profile_info.side_effect = ImageLoadError("bad image")
 
         with self.assertRaises(ImageLoadError):
             self.service.load_preview(self.path)
 
     def test_load_preview_wraps_unexpected_exception(self) -> None:
-        self.reader.read_preview.side_effect = RuntimeError("boom")
+        self.reader.read_preview_with_color_profile_info.side_effect = RuntimeError("boom")
 
         with self.assertRaises(ImageLoadError) as ctx:
             self.service.load_preview(self.path)

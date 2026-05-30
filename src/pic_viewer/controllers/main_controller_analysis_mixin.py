@@ -10,6 +10,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.dto.analysis_view import AnalysisViewSettings, LumaRgbMode, RgbChannel
 from pic_viewer.app.dto.image_analysis import ImageAnalysis
+from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus
 from pic_viewer.domain.models.color_space import WorkingColorSpace
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
 from pic_viewer.ui.utils.image_qt import to_qpixmap
@@ -400,9 +401,15 @@ class MainControllerAnalysisMixin:
             self._last_metadata_path = None
             preview = self._preview_by_path.get(str(image_path))
             if preview is not None:
+                self._set_image_color_space_value(
+                    self._format_source_color_profile_info(preview.source_color_profile)
+                )
                 self._refresh_tab_preview_pixmap(image_path, preview.preview_rgb)
             return
 
+        self._set_image_color_space_value(
+            self._format_source_color_profile_info(data.analysis.source_color_profile)
+        )
         if str(image_path) != self._last_metadata_path:
             self._ui.tabsMetadata.setCurrentIndex(0)
         self._last_metadata_path = str(image_path)
@@ -459,6 +466,7 @@ class MainControllerAnalysisMixin:
 
     def _set_info_placeholders(self) -> None:
         self._current_analysis_render_key = None
+        self._set_image_color_space_value(self._tr("Not Loaded"))
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
         self._ui.widgetHistogram.setText(self._tr("Histogram Placeholder"))
@@ -466,6 +474,7 @@ class MainControllerAnalysisMixin:
 
     def _set_info_loading_placeholders(self) -> None:
         self._current_analysis_render_key = None
+        self._set_image_color_space_value(self._tr("Loading"))
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
         self._ui.widgetHistogram.setText(self._tr("Generating histogram..."))
@@ -473,11 +482,27 @@ class MainControllerAnalysisMixin:
 
     def _set_info_error_placeholders(self) -> None:
         self._current_analysis_render_key = None
+        self._set_image_color_space_value(self._tr("Unavailable"))
         message = self._tr("Image failed to load. Analysis is unavailable.")
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
         self._ui.widgetHistogram.setText(message)
         self._ui.widgetWaveform.setText(message)
+
+    def _set_image_color_space_value(self, text: str) -> None:
+        if not hasattr(self._ui, "labelImageColorSpaceValue"):
+            return
+        self._ui.labelImageColorSpaceValue.setText(text)
+        self._ui.labelImageColorSpaceValue.setToolTip(text)
+
+    def _format_source_color_profile_info(self, info: ImageColorProfileInfo) -> str:
+        if info.status == ImageColorProfileStatus.EMBEDDED:
+            return self._tr("{name} (embedded ICC)").format(name=info.display_name)
+        if info.status == ImageColorProfileStatus.INVALID:
+            return self._tr("sRGB (default, unreadable ICC)")
+        if info.status == ImageColorProfileStatus.CONVERSION_FAILED:
+            return self._tr("sRGB (fallback, ICC conversion failed)")
+        return self._tr("sRGB (default, no embedded ICC)")
 
     def _refresh_current_image_pixmap(self) -> None:
         """Refresh the current image pixmap using the stored zoom settings."""

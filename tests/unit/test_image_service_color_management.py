@@ -15,6 +15,7 @@ if str(SRC_ROOT) not in sys.path:
 
 from pic_viewer.app.dto.metadata import ImageMetadata  # noqa: E402
 from pic_viewer.app.services.image_service import ImageService  # noqa: E402
+from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
 from pic_viewer.domain.rules.analysis import AnalysisResult  # noqa: E402
 
@@ -36,8 +37,13 @@ class ImageServiceColorManagementTests(unittest.TestCase):
         working_bgr = np.full((4, 4, 3), 8, dtype=np.uint8)
         working_preview_rgb = np.full((4, 4, 3), 16, dtype=np.uint8)
         display_preview_rgb = np.full((4, 4, 3), 32, dtype=np.uint8)
+        source_profile = ImageColorProfileInfo(
+            display_name="ProPhoto RGB",
+            status=ImageColorProfileStatus.EMBEDDED,
+            uses_srgb_fallback=False,
+        )
         analysis_result = self._analysis_result(working_bgr, working_preview_rgb)
-        reader.read.return_value = working_bgr
+        reader.read_with_color_profile_info.return_value = (working_bgr, source_profile)
         analyzer.analyze.return_value = analysis_result
         color_converter.convert_working_rgb_to_srgb.return_value = display_preview_rgb
         metadata_reader.read.return_value = ImageMetadata(general=tuple(), exif=tuple(), iptc=tuple(), tiff=tuple())
@@ -47,13 +53,17 @@ class ImageServiceColorManagementTests(unittest.TestCase):
             path.write_bytes(b"stub")
             result = service.load_and_analyze(path, WorkingColorSpace.PROPHOTO_RGB)
 
-        reader.read.assert_called_once_with(path, working_color_space=WorkingColorSpace.PROPHOTO_RGB)
+        reader.read_with_color_profile_info.assert_called_once_with(
+            path,
+            working_color_space=WorkingColorSpace.PROPHOTO_RGB,
+        )
         analyzer.analyze.assert_called_once_with(working_bgr)
         color_converter.convert_working_rgb_to_srgb.assert_called_once_with(
             working_preview_rgb,
             WorkingColorSpace.PROPHOTO_RGB,
         )
         self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, result.analysis.working_color_space)
+        self.assertEqual(source_profile, result.analysis.source_color_profile)
         np.testing.assert_array_equal(result.analysis.analysis_bgr, working_bgr)
         np.testing.assert_array_equal(result.analysis.preview_rgb, display_preview_rgb)
 

@@ -213,12 +213,13 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertLessEqual(waveform_frame.height(), max_waveform_height)
 
         analysis_layout = ui.tabAnalysis.layout()
-        self.assertIs(ui.widgetWorkingColorSpace, analysis_layout.itemAt(0).widget())
-        self.assertIs(histogram_frame, analysis_layout.itemAt(1).widget())
-        self.assertIs(waveform_frame, analysis_layout.itemAt(2).widget())
+        self.assertIs(ui.widgetImageColorSpace, analysis_layout.itemAt(0).widget())
+        self.assertIs(ui.widgetWorkingColorSpace, analysis_layout.itemAt(1).widget())
+        self.assertIs(histogram_frame, analysis_layout.itemAt(2).widget())
+        self.assertIs(waveform_frame, analysis_layout.itemAt(3).widget())
         expected_alignment = QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignTop
-        self.assertEqual(expected_alignment, analysis_layout.itemAt(1).alignment())
         self.assertEqual(expected_alignment, analysis_layout.itemAt(2).alignment())
+        self.assertEqual(expected_alignment, analysis_layout.itemAt(3).alignment())
 
     def test_filmstrip_allows_full_file_name_display(self) -> None:
         window = QtWidgets.QMainWindow()
@@ -496,6 +497,21 @@ class MainWindowTabsTests(unittest.TestCase):
             [ui.comboWorkingColorSpace.itemText(index) for index in range(ui.comboWorkingColorSpace.count())],
         )
         self.assertEqual("sRGB", ui.comboWorkingColorSpace.currentText())
+
+    def test_analysis_tab_has_image_color_space_info_above_working_selector(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        self.assertEqual("widgetImageColorSpace", ui.widgetImageColorSpace.objectName())
+        self.assertEqual("labelImageColorSpaceTitle", ui.labelImageColorSpaceTitle.objectName())
+        self.assertEqual("labelImageColorSpaceValue", ui.labelImageColorSpaceValue.objectName())
+        self.assertEqual("Image Color Space", ui.labelImageColorSpaceTitle.text())
+        self.assertEqual("Not Loaded", ui.labelImageColorSpaceValue.text())
+        analysis_layout = ui.tabAnalysis.layout()
+        self.assertIs(ui.widgetImageColorSpace, analysis_layout.itemAt(0).widget())
+        self.assertIs(ui.widgetWorkingColorSpace, analysis_layout.itemAt(1).widget())
 
     def test_metadata_tables_keep_fixed_key_column_and_stretched_value_column(self) -> None:
         window = QtWidgets.QMainWindow()

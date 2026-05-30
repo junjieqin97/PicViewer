@@ -272,6 +272,7 @@ QWidget#widgetAnalysisModeSummary {
     border-radius: 4px;
 }
 
+QWidget#widgetImageColorSpace,
 QWidget#widgetWorkingColorSpace {
     background: transparent;
 }
@@ -279,6 +280,7 @@ QWidget#widgetWorkingColorSpace {
 QLabel#labelAnalysisModeTitle,
 QLabel#labelAnalysisChannelTitle,
 QLabel#labelPseudoColorTitle,
+QLabel#labelImageColorSpaceTitle,
 QLabel#labelWorkingColorSpaceTitle {
     color: #9aa4af;
 }
@@ -293,7 +295,8 @@ QComboBox#comboWorkingColorSpace {
 
 QLabel#labelAnalysisModeValue,
 QLabel#labelAnalysisChannelValue,
-QLabel#labelPseudoColorValue {
+QLabel#labelPseudoColorValue,
+QLabel#labelImageColorSpaceValue {
     color: #edf1f5;
 }
 

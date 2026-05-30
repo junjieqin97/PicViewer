@@ -14,6 +14,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
+from pic_viewer.domain.models.color_profile import ImageColorProfileStatus  # noqa: E402
 from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConverter  # noqa: E402
 
 
@@ -62,6 +63,47 @@ class ColorProfileConverterTests(unittest.TestCase):
 
         np.testing.assert_array_equal(result, bgr)
 
+    def test_missing_embedded_profile_reports_srgb_default_source_info(self) -> None:
+        converter = ColorProfileConverter()
+        bgr = np.arange(12, dtype=np.uint8).reshape((2, 2, 3))
+
+        with patch.object(converter, "_read_embedded_icc_profile", return_value=None):
+            _pixels, info = converter.convert_file_bgr_to_working_space_with_info(
+                Path("/tmp/no-profile.jpg"),
+                bgr,
+                WorkingColorSpace.SRGB,
+            )
+
+        self.assertEqual(ImageColorProfileStatus.MISSING, info.status)
+        self.assertEqual("sRGB", info.display_name)
+        self.assertTrue(info.uses_srgb_fallback)
+
+    def test_embedded_profile_reports_normalized_profile_name(self) -> None:
+        converter = ColorProfileConverter()
+        bgr = np.zeros((1, 1, 3), dtype=np.uint8)
+        converted_rgb = Image.new("RGB", (1, 1), (1, 2, 3))
+
+        with (
+            patch.object(
+                converter,
+                "_read_embedded_icc_profile",
+                return_value=converter.profile_bytes_for(WorkingColorSpace.SRGB),
+            ),
+            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.getProfileName") as name_reader,
+            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
+        ):
+            name_reader.return_value = "  Example\nProfile\tName  "
+            transform.return_value = converted_rgb
+            _pixels, info = converter.convert_file_bgr_to_working_space_with_info(
+                Path("/tmp/profiled.jpg"),
+                bgr,
+                WorkingColorSpace.DISPLAY_P3,
+            )
+
+        self.assertEqual(ImageColorProfileStatus.EMBEDDED, info.status)
+        self.assertEqual("Example Profile Name", info.display_name)
+        self.assertFalse(info.uses_srgb_fallback)
+
     def test_embedded_profile_conversion_returns_bgr_with_original_shape_and_dtype(self) -> None:
         converter = ColorProfileConverter()
         bgr = np.zeros((2, 3, 3), dtype=np.uint8)
@@ -107,6 +149,26 @@ class ColorProfileConverterTests(unittest.TestCase):
         transform.assert_called_once()
         np.testing.assert_array_equal(result[0, 0], np.array([33, 22, 11], dtype=np.uint8))
 
+    def test_invalid_embedded_profile_reports_unreadable_icc_default_source_info(self) -> None:
+        converter = ColorProfileConverter()
+        bgr = np.zeros((1, 1, 3), dtype=np.uint8)
+        converted_rgb = Image.new("RGB", (1, 1), (11, 22, 33))
+
+        with (
+            patch.object(converter, "_read_embedded_icc_profile", return_value=b"not-an-icc-profile"),
+            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
+        ):
+            transform.return_value = converted_rgb
+            _pixels, info = converter.convert_file_bgr_to_working_space_with_info(
+                Path("/tmp/bad-profile.jpg"),
+                bgr,
+                WorkingColorSpace.PROPHOTO_RGB,
+            )
+
+        self.assertEqual(ImageColorProfileStatus.INVALID, info.status)
+        self.assertEqual("sRGB", info.display_name)
+        self.assertTrue(info.uses_srgb_fallback)
+
     def test_embedded_profile_transform_failure_retries_with_srgb_source_profile(self) -> None:
         converter = ColorProfileConverter()
         bgr = np.zeros((1, 1, 3), dtype=np.uint8)
@@ -129,6 +191,32 @@ class ColorProfileConverterTests(unittest.TestCase):
 
         self.assertEqual(2, transform.call_count)
         np.testing.assert_array_equal(result[0, 0], np.array([99, 88, 77], dtype=np.uint8))
+
+    def test_embedded_profile_transform_failure_reports_conversion_fallback_info(self) -> None:
+        converter = ColorProfileConverter()
+        bgr = np.zeros((1, 1, 3), dtype=np.uint8)
+        converted_rgb = Image.new("RGB", (1, 1), (77, 88, 99))
+
+        with (
+            patch.object(
+                converter,
+                "_read_embedded_icc_profile",
+                return_value=converter.profile_bytes_for(WorkingColorSpace.DISPLAY_P3),
+            ),
+            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.getProfileName") as name_reader,
+            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
+        ):
+            name_reader.return_value = "Display P3"
+            transform.side_effect = [ImageCms.PyCMSError("bad transform"), converted_rgb]
+            _pixels, info = converter.convert_file_bgr_to_working_space_with_info(
+                Path("/tmp/profiled.jpg"),
+                bgr,
+                WorkingColorSpace.PROPHOTO_RGB,
+            )
+
+        self.assertEqual(ImageColorProfileStatus.CONVERSION_FAILED, info.status)
+        self.assertEqual("sRGB", info.display_name)
+        self.assertTrue(info.uses_srgb_fallback)
 
     def test_working_space_preview_converts_back_to_srgb_for_display(self) -> None:
         converter = ColorProfileConverter()

@@ -61,7 +61,10 @@ class ImageService:
         """
 
         try:
-            bgr = self._reader.read(path, working_color_space=working_color_space)
+            bgr, source_color_profile = self._reader.read_with_color_profile_info(
+                path,
+                working_color_space=working_color_space,
+            )
         except ImageLoadError:
             raise
         except Exception as exc:  # pragma: no cover - defensive safety net
@@ -88,6 +91,7 @@ class ImageService:
             waveform_g=result.waveform_g,
             waveform_b=result.waveform_b,
             working_color_space=working_color_space,
+            source_color_profile=source_color_profile,
         )
 
         raw_metadata = self._metadata_reader.read(path)
@@ -109,7 +113,10 @@ class ImageService:
         """Load a lightweight preview without metadata or analysis plots."""
 
         try:
-            preview_bgr = self._reader.read_preview(path, working_color_space=working_color_space)
+            preview_bgr, source_color_profile = self._reader.read_preview_with_color_profile_info(
+                path,
+                working_color_space=working_color_space,
+            )
         except ImageLoadError:
             raise
         except Exception as exc:  # pragma: no cover - defensive safety net
@@ -121,7 +128,11 @@ class ImageService:
             preview_rgb,
             working_color_space,
         )
-        return PreviewLoadResult(preview_rgb=display_rgb, working_color_space=working_color_space)
+        return PreviewLoadResult(
+            preview_rgb=display_rgb,
+            working_color_space=working_color_space,
+            source_color_profile=source_color_profile,
+        )
 
     def render_analysis_view(
         self,

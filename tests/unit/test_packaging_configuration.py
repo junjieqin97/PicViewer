@@ -62,6 +62,11 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("<source>Working Color Space</source>", en_ts)
         self.assertIn("<source>Working Color Space</source>", zh_ts)
         self.assertIn("<translation>工作色彩空间</translation>", zh_ts)
+        self.assertIn("<source>Image Color Space</source>", en_ts)
+        self.assertIn("<source>Image Color Space</source>", zh_ts)
+        self.assertIn("<translation>图片色彩空间</translation>", zh_ts)
+        self.assertIn("<source>sRGB (default, no embedded ICC)</source>", en_ts)
+        self.assertIn("<source>sRGB (fallback, ICC conversion failed)</source>", en_ts)
 
     def test_pyproject_includes_icon_package_data(self) -> None:
         pyproject = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
