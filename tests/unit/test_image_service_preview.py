@@ -14,6 +14,7 @@ if str(SRC_ROOT) not in sys.path:
 
 from pic_viewer.app.services.image_service import ImageService  # noqa: E402
 from pic_viewer.common.errors import ImageLoadError  # noqa: E402
+from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel  # noqa: E402
 
 
@@ -24,24 +25,36 @@ class ImageServicePreviewTests(unittest.TestCase):
         self.reader = MagicMock()
         self.analyzer = MagicMock()
         self.metadata_reader = MagicMock()
+        self.color_converter = MagicMock()
         self.service = ImageService(
             reader=self.reader,
             analyzer=self.analyzer,
             metadata_reader=self.metadata_reader,
+            color_converter=self.color_converter,
         )
         self.path = Path("/tmp/sample.jpg")
 
     def test_load_preview_returns_preview_payload(self) -> None:
         preview_bgr = np.zeros((8, 8, 3), dtype=np.uint8)
         preview_rgb = np.ones((8, 8, 3), dtype=np.uint8)
+        display_rgb = np.full((8, 8, 3), 2, dtype=np.uint8)
         self.reader.read_preview.return_value = preview_bgr
         self.analyzer.build_preview_rgb.return_value = preview_rgb
+        self.color_converter.convert_working_rgb_to_srgb.return_value = display_rgb
 
-        result = self.service.load_preview(self.path)
+        result = self.service.load_preview(self.path, WorkingColorSpace.DISPLAY_P3)
 
-        self.reader.read_preview.assert_called_once_with(self.path)
+        self.reader.read_preview.assert_called_once_with(
+            self.path,
+            working_color_space=WorkingColorSpace.DISPLAY_P3,
+        )
         self.analyzer.build_preview_rgb.assert_called_once_with(preview_bgr)
-        np.testing.assert_array_equal(result.preview_rgb, preview_rgb)
+        self.color_converter.convert_working_rgb_to_srgb.assert_called_once_with(
+            preview_rgb,
+            WorkingColorSpace.DISPLAY_P3,
+        )
+        self.assertEqual(WorkingColorSpace.DISPLAY_P3, result.working_color_space)
+        np.testing.assert_array_equal(result.preview_rgb, display_rgb)
 
     def test_load_preview_propagates_image_load_error(self) -> None:
         self.reader.read_preview.side_effect = ImageLoadError("bad image")

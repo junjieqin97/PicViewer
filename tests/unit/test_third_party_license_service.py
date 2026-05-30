@@ -150,6 +150,19 @@ class ThirdPartyLicenseServiceTests(unittest.TestCase):
         self.assertEqual("GPL-3.0-only", pyexiv2.license_text)
         self.assertEqual("Runtime metadata backend based on Exiv2.", pyexiv2.notes)
 
+    def test_load_third_party_licenses_reports_pillow_imagecms_backend(self) -> None:
+        metadata_by_package = {
+            "Pillow": self._message({"License-Expression": "MIT-CMU"}),
+        }
+
+        licenses = self._load_with_metadata(metadata_by_package)
+
+        pillow = self._find_license(licenses, "Pillow")
+        self.assertEqual("Pillow", pillow.display_name)
+        self.assertEqual("1.2.3", pillow.version)
+        self.assertEqual("MIT-CMU", pillow.license_text)
+        self.assertEqual("Runtime color management backend based on ImageCms.", pillow.notes)
+
     def test_optional_rawpy_missing_is_reported_without_failing(self) -> None:
         def fake_version(package_name: str) -> str:
             if package_name == "rawpy":

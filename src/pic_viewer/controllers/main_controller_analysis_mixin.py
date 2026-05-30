@@ -10,6 +10,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.dto.analysis_view import AnalysisViewSettings, LumaRgbMode, RgbChannel
 from pic_viewer.app.dto.image_analysis import ImageAnalysis
+from pic_viewer.domain.models.color_space import WorkingColorSpace
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
 from pic_viewer.ui.utils.image_qt import to_qpixmap
 from pic_viewer.ui.utils.signal_blocker import block_signals
@@ -126,6 +127,57 @@ class MainControllerAnalysisMixin:
         self._view_settings = AnalysisViewSettings(mode=LumaRgbMode.RGB, channel=channel)
         self._sync_view_actions()
         self._refresh_view_for_current_image()
+
+    def _on_working_color_space_changed(self, index: int) -> None:
+        """Reload open images when the global working color space changes."""
+
+        combo = self._ui.comboWorkingColorSpace
+        selected = combo.itemData(index)
+        if isinstance(selected, str):
+            try:
+                selected = WorkingColorSpace(selected)
+            except ValueError:
+                return
+        if not isinstance(selected, WorkingColorSpace):
+            return
+        if selected == self._working_color_space:
+            return
+
+        self._working_color_space = selected
+        self._current_analysis_render_key = None
+        self._reload_open_images_for_working_color_space()
+
+    def _reload_open_images_for_working_color_space(self) -> None:
+        """Clear image caches and restart loads for the selected working space."""
+
+        paths: list[Path] = []
+        seen: set[str] = set()
+        for tab in self._all_image_tab_widgets():
+            path = self._tab_path(tab)
+            if path is None:
+                continue
+            key = str(path)
+            if key in seen:
+                continue
+            seen.add(key)
+            paths.append(path)
+
+        active_path = self._current_image_path()
+        for path in paths:
+            key = str(path)
+            self._images_by_path.pop(key, None)
+            self._preview_by_path.pop(key, None)
+            self._load_error_by_path.pop(key, None)
+            self._preview_tasks_by_path.pop(key, None)
+            self._load_tasks_by_path.pop(key, None)
+            self._analysis_render_key_by_path.pop(key, None)
+            self._tab_preview_render_key_by_path.pop(key, None)
+            session = self._start_path_session(path)
+            self._ensure_preview_load(path, session)
+            self._ensure_full_load(path, session)
+
+        if active_path is not None:
+            self.update_info_for_image(active_path)
 
     def _sync_view_actions(self) -> None:
         """Keep menu actions aligned with the current view settings."""
@@ -366,6 +418,7 @@ class MainControllerAnalysisMixin:
             round(dpr, 2),
             self._view_settings.mode.value,
             self._view_settings.channel.value,
+            data.analysis.working_color_space.value,
         )
         path_key = str(image_path)
         current_render_key = (path_key, render_key)
@@ -478,6 +531,7 @@ class MainControllerAnalysisMixin:
             self._show_underexposed,
             self._show_overexposed,
             self._focus_peak_level.value if self._focus_peak_level is not None else None,
+            getattr(self, "_working_color_space", WorkingColorSpace.SRGB).value,
             id(preview_rgb),
         )
         if (

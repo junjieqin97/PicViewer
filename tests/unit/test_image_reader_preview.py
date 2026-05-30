@@ -15,6 +15,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.common.errors import ImageLoadError  # noqa: E402
+from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
 from pic_viewer.infra.adapters.image_reader import ImageReader  # noqa: E402
 
 
@@ -38,6 +39,25 @@ class ImageReaderPreviewTests(unittest.TestCase):
 
         np.testing.assert_array_equal(image, reduced)
         self.assertGreaterEqual(imread.call_count, 1)
+
+    def test_read_preview_applies_working_color_space_conversion(self) -> None:
+        converted = np.full((12, 12, 3), 128, dtype=np.uint8)
+        converter = unittest.mock.MagicMock()
+        converter.convert_file_bgr_to_working_space.return_value = converted
+        reader = ImageReader(allow_raw=False, color_converter=converter)
+        reduced = np.zeros((12, 12, 3), dtype=np.uint8)
+
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
+            path = Path(tmp.name)
+            with patch("pic_viewer.infra.adapters.image_reader.cv2.imread", return_value=reduced):
+                image = reader.read_preview(path, max_edge=2000, working_color_space=WorkingColorSpace.DISPLAY_P3)
+
+        np.testing.assert_array_equal(image, converted)
+        converter.convert_file_bgr_to_working_space.assert_called_once_with(
+            path,
+            reduced,
+            WorkingColorSpace.DISPLAY_P3,
+        )
 
     def test_read_preview_raises_for_unsupported_format_when_raw_disabled(self) -> None:
         reader = ImageReader(allow_raw=False)

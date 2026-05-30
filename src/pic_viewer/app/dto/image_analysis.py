@@ -8,6 +8,7 @@ from typing import Tuple
 import numpy as np
 
 from pic_viewer.app.dto.metadata import ImageMetadata
+from pic_viewer.domain.models.color_space import WorkingColorSpace
 
 
 @dataclass(frozen=True)
@@ -28,6 +29,7 @@ class ImageAnalysis:
         waveform_r: Red channel waveform plot.
         waveform_g: Green channel waveform plot.
         waveform_b: Blue channel waveform plot.
+        working_color_space: Color space used for analysis data.
     """
 
     analysis_bgr: np.ndarray
@@ -43,6 +45,7 @@ class ImageAnalysis:
     waveform_r: np.ndarray
     waveform_g: np.ndarray
     waveform_b: np.ndarray
+    working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB
 
 
 @dataclass(frozen=True)
@@ -58,3 +61,4 @@ class PreviewLoadResult:
     """Fast preview payload used for incremental loading."""
 
     preview_rgb: np.ndarray
+    working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB

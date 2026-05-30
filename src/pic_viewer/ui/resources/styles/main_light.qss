@@ -273,10 +273,23 @@ QWidget#widgetAnalysisModeSummary {
     border-radius: 4px;
 }
 
+QWidget#widgetWorkingColorSpace {
+    background: transparent;
+}
+
 QLabel#labelAnalysisModeTitle,
 QLabel#labelAnalysisChannelTitle,
-QLabel#labelPseudoColorTitle {
+QLabel#labelPseudoColorTitle,
+QLabel#labelWorkingColorSpaceTitle {
     color: #657386;
+}
+
+QComboBox#comboWorkingColorSpace {
+    color: #1f252d;
+    background: #ffffff;
+    border: 1px solid #cbd6e3;
+    border-radius: 4px;
+    padding: 3px 6px;
 }
 
 QLabel#labelAnalysisModeValue,

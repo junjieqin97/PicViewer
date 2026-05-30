@@ -11,6 +11,7 @@ from pic_viewer.app.dto.analysis_view import AnalysisView, AnalysisViewSettings,
 from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult, PreviewLoadResult
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
 from pic_viewer.common.errors import ImageLoadError
+from pic_viewer.domain.models.color_space import WorkingColorSpace
 from pic_viewer.domain.rules.analysis import ImageAnalyzer
 from pic_viewer.domain.rules.exposure_overlay import ExposureOverlayOptions, apply_exposure_overlay
 from pic_viewer.domain.rules.focus_peaking import (
@@ -18,6 +19,7 @@ from pic_viewer.domain.rules.focus_peaking import (
     FocusPeakingOptions,
     apply_focus_peaking_overlay,
 )
+from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConverter
 from pic_viewer.infra.adapters.image_reader import ImageReader
 from pic_viewer.infra.adapters.metadata_reader import MetadataReader
 
@@ -27,16 +29,28 @@ logger = logging.getLogger(__name__)
 class ImageService:
     """Coordinate image I/O and analysis use cases."""
 
-    def __init__(self, reader: ImageReader, analyzer: ImageAnalyzer, metadata_reader: MetadataReader) -> None:
+    def __init__(
+        self,
+        reader: ImageReader,
+        analyzer: ImageAnalyzer,
+        metadata_reader: MetadataReader,
+        color_converter: ColorProfileConverter,
+    ) -> None:
         self._reader = reader
         self._analyzer = analyzer
         self._metadata_reader = metadata_reader
+        self._color_converter = color_converter
 
-    def load_and_analyze(self, path: Path) -> ImageLoadResult:
+    def load_and_analyze(
+        self,
+        path: Path,
+        working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB,
+    ) -> ImageLoadResult:
         """Load an image, compute analysis artifacts, and read metadata.
 
         Args:
             path: Path to image file.
+            working_color_space: Target RGB working color space.
 
         Returns:
             ImageLoadResult: Analysis payload and metadata for the UI layer.
@@ -47,7 +61,7 @@ class ImageService:
         """
 
         try:
-            bgr = self._reader.read(path)
+            bgr = self._reader.read(path, working_color_space=working_color_space)
         except ImageLoadError:
             raise
         except Exception as exc:  # pragma: no cover - defensive safety net
@@ -55,9 +69,13 @@ class ImageService:
             raise ImageLoadError("Unable to read this image file") from exc
 
         result = self._analyzer.analyze(bgr)
+        preview_rgb = self._color_converter.convert_working_rgb_to_srgb(
+            result.preview_rgb,
+            working_color_space,
+        )
         analysis = ImageAnalysis(
             analysis_bgr=result.analysis_bgr,
-            preview_rgb=result.preview_rgb,
+            preview_rgb=preview_rgb,
             source_size=result.source_size,
             histogram_rgb=result.histogram_rgb,
             histogram_luma=result.histogram_luma,
@@ -69,6 +87,7 @@ class ImageService:
             waveform_r=result.waveform_r,
             waveform_g=result.waveform_g,
             waveform_b=result.waveform_b,
+            working_color_space=working_color_space,
         )
 
         raw_metadata = self._metadata_reader.read(path)
@@ -82,11 +101,15 @@ class ImageService:
 
         return ImageLoadResult(analysis=analysis, metadata=metadata)
 
-    def load_preview(self, path: Path) -> PreviewLoadResult:
+    def load_preview(
+        self,
+        path: Path,
+        working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB,
+    ) -> PreviewLoadResult:
         """Load a lightweight preview without metadata or analysis plots."""
 
         try:
-            preview_bgr = self._reader.read_preview(path)
+            preview_bgr = self._reader.read_preview(path, working_color_space=working_color_space)
         except ImageLoadError:
             raise
         except Exception as exc:  # pragma: no cover - defensive safety net
@@ -94,7 +117,11 @@ class ImageService:
             raise ImageLoadError("Unable to read this image file") from exc
 
         preview_rgb = self._analyzer.build_preview_rgb(preview_bgr)
-        return PreviewLoadResult(preview_rgb=preview_rgb)
+        display_rgb = self._color_converter.convert_working_rgb_to_srgb(
+            preview_rgb,
+            working_color_space,
+        )
+        return PreviewLoadResult(preview_rgb=display_rgb, working_color_space=working_color_space)
 
     def render_analysis_view(
         self,

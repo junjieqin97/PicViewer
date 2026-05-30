@@ -6,6 +6,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.analysis_view_service import AnalysisViewService
 from pic_viewer.app.services.image_service import ImageService
+from pic_viewer.domain.models.color_space import WORKING_COLOR_SPACE_ORDER
 from pic_viewer.ui.resources import styles
 from pic_viewer.ui.resources.icons import icon_path
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel
@@ -507,6 +508,26 @@ class MainWindowUI:
         analysis_layout.setContentsMargins(6, 6, 6, 6)
         analysis_layout.setSpacing(8)
 
+        self.widgetWorkingColorSpace = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetWorkingColorSpace.setObjectName("widgetWorkingColorSpace")
+        working_space_layout = QtWidgets.QHBoxLayout(self.widgetWorkingColorSpace)
+        working_space_layout.setObjectName("layoutWorkingColorSpace")
+        working_space_layout.setContentsMargins(0, 0, 0, 0)
+        working_space_layout.setSpacing(8)
+        self.labelWorkingColorSpaceTitle = QtWidgets.QLabel(self.widgetWorkingColorSpace)
+        self.labelWorkingColorSpaceTitle.setObjectName("labelWorkingColorSpaceTitle")
+        self.comboWorkingColorSpace = QtWidgets.QComboBox(self.widgetWorkingColorSpace)
+        self.comboWorkingColorSpace.setObjectName("comboWorkingColorSpace")
+        self.comboWorkingColorSpace.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Fixed,
+        )
+        for color_space in WORKING_COLOR_SPACE_ORDER:
+            self.comboWorkingColorSpace.addItem(color_space.display_name, color_space)
+        working_space_layout.addWidget(self.labelWorkingColorSpaceTitle)
+        working_space_layout.addWidget(self.comboWorkingColorSpace, 1)
+        analysis_layout.addWidget(self.widgetWorkingColorSpace)
+
         self.frameHistogramAnalysis = QtWidgets.QFrame(self.tabAnalysis)
         self.frameHistogramAnalysis.setObjectName("frameHistogramAnalysis")
         self.frameHistogramAnalysis.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
@@ -792,6 +813,10 @@ class MainWindowUI:
                 peaks=self._tr("Off"),
             )
         )
+
+        self.labelWorkingColorSpaceTitle.setText(self._tr("Working Color Space"))
+        for index, color_space in enumerate(WORKING_COLOR_SPACE_ORDER):
+            self.comboWorkingColorSpace.setItemText(index, self._tr(color_space.display_name))
 
         self.widgetHistogram.setText(self._tr("Histogram Placeholder"))
         self.widgetHistogram.set_triangle_tooltips(

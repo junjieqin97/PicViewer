@@ -78,6 +78,12 @@ _RUNTIME_DEPENDENCIES: tuple[_DependencyLicenseSpec, ...] = (
         notes="Runtime metadata backend based on Exiv2.",
     ),
     _DependencyLicenseSpec(
+        display_name="Pillow",
+        package_name="Pillow",
+        fallback_license="MIT-CMU",
+        notes="Runtime color management backend based on ImageCms.",
+    ),
+    _DependencyLicenseSpec(
         display_name="rawpy",
         package_name="rawpy",
         fallback_license="MIT",

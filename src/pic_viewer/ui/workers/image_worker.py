@@ -9,6 +9,7 @@ from PySide6 import QtCore
 
 from pic_viewer.app.services.image_service import ImageService
 from pic_viewer.common.errors import ImageLoadError, ImageProcessError
+from pic_viewer.domain.models.color_space import WorkingColorSpace
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +24,16 @@ class ImageTaskSignals(QtCore.QObject):
 class PreviewLoadTask(QtCore.QRunnable):
     """Load preview payload in a thread-pool worker."""
 
-    def __init__(self, service: ImageService, path: Path) -> None:
+    def __init__(
+        self,
+        service: ImageService,
+        path: Path,
+        working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB,
+    ) -> None:
         super().__init__()
         self._service = service
         self._path = path
+        self._working_color_space = working_color_space
         self.signals = ImageTaskSignals()
         self.setAutoDelete(True)
 
@@ -35,7 +42,7 @@ class PreviewLoadTask(QtCore.QRunnable):
         """Execute lightweight preview loading."""
 
         try:
-            result = self._service.load_preview(self._path)
+            result = self._service.load_preview(self._path, self._working_color_space)
         except (ImageLoadError, ImageProcessError) as exc:
             self.signals.error.emit(str(exc))
             return
@@ -50,10 +57,16 @@ class PreviewLoadTask(QtCore.QRunnable):
 class ImageLoadTask(QtCore.QRunnable):
     """Load full analysis payload in a thread-pool worker."""
 
-    def __init__(self, service: ImageService, path: Path) -> None:
+    def __init__(
+        self,
+        service: ImageService,
+        path: Path,
+        working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB,
+    ) -> None:
         super().__init__()
         self._service = service
         self._path = path
+        self._working_color_space = working_color_space
         self.signals = ImageTaskSignals()
         self.setAutoDelete(True)
 
@@ -62,7 +75,7 @@ class ImageLoadTask(QtCore.QRunnable):
         """Execute full load + analysis task."""
 
         try:
-            result = self._service.load_and_analyze(self._path)
+            result = self._service.load_and_analyze(self._path, self._working_color_space)
         except (ImageLoadError, ImageProcessError) as exc:
             self.signals.error.emit(str(exc))
             return
