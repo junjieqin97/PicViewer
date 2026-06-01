@@ -429,12 +429,14 @@ class MainControllerAnalysisMixin:
             self._last_metadata_path = None
             preview = self._preview_by_path.get(str(image_path))
             if preview is not None:
+                self._sync_specified_image_color_space_enabled(preview.source_color_profile)
                 self._set_image_color_space_value(
                     self._format_source_color_profile_info(preview.source_color_profile)
                 )
                 self._refresh_tab_preview_pixmap(image_path, preview.preview_rgb)
             return
 
+        self._sync_specified_image_color_space_enabled(data.analysis.source_color_profile)
         self._set_image_color_space_value(
             self._format_source_color_profile_info(data.analysis.source_color_profile)
         )
@@ -495,6 +497,7 @@ class MainControllerAnalysisMixin:
 
     def _set_info_placeholders(self) -> None:
         self._current_analysis_render_key = None
+        self._set_specified_image_color_space_enabled(True)
         self._set_image_color_space_value(self._tr("Not Loaded"))
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
@@ -503,6 +506,7 @@ class MainControllerAnalysisMixin:
 
     def _set_info_loading_placeholders(self) -> None:
         self._current_analysis_render_key = None
+        self._set_specified_image_color_space_enabled(True)
         self._set_image_color_space_value(self._tr("Loading"))
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
@@ -511,6 +515,7 @@ class MainControllerAnalysisMixin:
 
     def _set_info_error_placeholders(self) -> None:
         self._current_analysis_render_key = None
+        self._set_specified_image_color_space_enabled(True)
         self._set_image_color_space_value(self._tr("Unavailable"))
         message = self._tr("Image failed to load. Analysis is unavailable.")
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
@@ -523,6 +528,15 @@ class MainControllerAnalysisMixin:
             return
         self._ui.labelImageColorSpaceValue.setText(text)
         self._ui.labelImageColorSpaceValue.setToolTip(text)
+
+    def _sync_specified_image_color_space_enabled(self, info: ImageColorProfileInfo) -> None:
+        enabled = info.status != ImageColorProfileStatus.EMBEDDED
+        self._set_specified_image_color_space_enabled(enabled)
+
+    def _set_specified_image_color_space_enabled(self, enabled: bool) -> None:
+        if not hasattr(self._ui, "comboSpecifiedImageColorSpace"):
+            return
+        self._ui.comboSpecifiedImageColorSpace.setEnabled(enabled)
 
     def _format_source_color_profile_info(self, info: ImageColorProfileInfo) -> str:
         if info.status == ImageColorProfileStatus.EMBEDDED:

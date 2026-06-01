@@ -167,10 +167,12 @@ class InfoPanelLoadStateTests(unittest.TestCase):
     def test_no_current_image_shows_not_loaded_color_space_info(self) -> None:
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
+        ui.comboSpecifiedImageColorSpace.setEnabled(False)
 
         MainController.update_info_for_image(controller, None)
 
         self.assertEqual("Not Loaded", ui.labelImageColorSpaceValue.text())
+        self.assertTrue(ui.comboSpecifiedImageColorSpace.isEnabled())
 
     def test_preview_payload_updates_color_space_info_before_full_load(self) -> None:
         window, ui, controller = self._build_controller()
@@ -188,6 +190,25 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         MainController.update_info_for_image(controller, path)
 
         self.assertEqual("sRGB (default, no embedded ICC)", ui.labelImageColorSpaceValue.text())
+        self.assertTrue(ui.comboSpecifiedImageColorSpace.isEnabled())
+
+    def test_preview_payload_with_embedded_icc_disables_specified_image_color_space_selector(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        path = Path("/tmp/profiled-preview.jpg")
+        controller._preview_by_path[str(path)] = PreviewLoadResult(
+            preview_rgb=np.zeros((8, 8, 3), dtype=np.uint8),
+            source_color_profile=ImageColorProfileInfo(
+                display_name="Example Profile",
+                status=ImageColorProfileStatus.EMBEDDED,
+                uses_srgb_fallback=False,
+            ),
+        )
+
+        MainController.update_info_for_image(controller, path)
+
+        self.assertEqual("Example Profile (embedded ICC)", ui.labelImageColorSpaceValue.text())
+        self.assertFalse(ui.comboSpecifiedImageColorSpace.isEnabled())
 
     def test_full_load_updates_color_space_info_from_analysis_payload(self) -> None:
         window, ui, controller = self._build_controller()
@@ -206,6 +227,28 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         MainController.update_info_for_image(controller, path)
 
         self.assertEqual("Example Profile (embedded ICC)", ui.labelImageColorSpaceValue.text())
+        self.assertFalse(ui.comboSpecifiedImageColorSpace.isEnabled())
+
+    def test_full_load_with_fallback_profile_enables_specified_image_color_space_selector(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        self._configure_analysis_rendering(controller)
+        ui.comboSpecifiedImageColorSpace.setEnabled(False)
+        path = Path("/tmp/no-profile.jpg")
+        controller._images_by_path[str(path)] = self._image_result(
+            (255, 0, 0),
+            source_color_profile=ImageColorProfileInfo(
+                display_name="Display P3",
+                status=ImageColorProfileStatus.MISSING,
+                uses_srgb_fallback=True,
+                assumed_color_space=WorkingColorSpace.DISPLAY_P3,
+            ),
+        )
+
+        MainController.update_info_for_image(controller, path)
+
+        self.assertEqual("Display P3 (specified, no embedded ICC)", ui.labelImageColorSpaceValue.text())
+        self.assertTrue(ui.comboSpecifiedImageColorSpace.isEnabled())
 
     def test_color_space_info_formats_invalid_and_conversion_fallback_states(self) -> None:
         window, _ui, controller = self._build_controller()
