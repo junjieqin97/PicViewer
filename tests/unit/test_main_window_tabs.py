@@ -214,12 +214,13 @@ class MainWindowTabsTests(unittest.TestCase):
 
         analysis_layout = ui.tabAnalysis.layout()
         self.assertIs(ui.widgetImageColorSpace, analysis_layout.itemAt(0).widget())
-        self.assertIs(ui.widgetWorkingColorSpace, analysis_layout.itemAt(1).widget())
-        self.assertIs(histogram_frame, analysis_layout.itemAt(2).widget())
-        self.assertIs(waveform_frame, analysis_layout.itemAt(3).widget())
+        self.assertIs(ui.widgetSpecifiedImageColorSpace, analysis_layout.itemAt(1).widget())
+        self.assertIs(ui.widgetWorkingColorSpace, analysis_layout.itemAt(2).widget())
+        self.assertIs(histogram_frame, analysis_layout.itemAt(3).widget())
+        self.assertIs(waveform_frame, analysis_layout.itemAt(4).widget())
         expected_alignment = QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignTop
-        self.assertEqual(expected_alignment, analysis_layout.itemAt(2).alignment())
         self.assertEqual(expected_alignment, analysis_layout.itemAt(3).alignment())
+        self.assertEqual(expected_alignment, analysis_layout.itemAt(4).alignment())
 
     def test_filmstrip_allows_full_file_name_display(self) -> None:
         window = QtWidgets.QMainWindow()
@@ -498,6 +499,27 @@ class MainWindowTabsTests(unittest.TestCase):
         )
         self.assertEqual("ProPhoto RGB", ui.comboWorkingColorSpace.currentText())
 
+    def test_analysis_tab_has_specified_image_color_space_selector_between_image_and_working(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        self.assertEqual("widgetSpecifiedImageColorSpace", ui.widgetSpecifiedImageColorSpace.objectName())
+        self.assertEqual("labelSpecifiedImageColorSpaceTitle", ui.labelSpecifiedImageColorSpaceTitle.objectName())
+        self.assertEqual("comboSpecifiedImageColorSpace", ui.comboSpecifiedImageColorSpace.objectName())
+        self.assertEqual("Specify Image Color Space", ui.labelSpecifiedImageColorSpaceTitle.text())
+        self.assertEqual(
+            ["sRGB", "Display P3", "Adobe RGB (1998)", "ProPhoto RGB"],
+            [ui.comboSpecifiedImageColorSpace.itemText(index) for index in range(ui.comboSpecifiedImageColorSpace.count())],
+        )
+        self.assertEqual("sRGB", ui.comboSpecifiedImageColorSpace.currentText())
+
+        analysis_layout = ui.tabAnalysis.layout()
+        self.assertIs(ui.widgetImageColorSpace, analysis_layout.itemAt(0).widget())
+        self.assertIs(ui.widgetSpecifiedImageColorSpace, analysis_layout.itemAt(1).widget())
+        self.assertIs(ui.widgetWorkingColorSpace, analysis_layout.itemAt(2).widget())
+
     def test_analysis_tab_has_image_color_space_info_above_working_selector(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
@@ -511,7 +533,8 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertEqual("Not Loaded", ui.labelImageColorSpaceValue.text())
         analysis_layout = ui.tabAnalysis.layout()
         self.assertIs(ui.widgetImageColorSpace, analysis_layout.itemAt(0).widget())
-        self.assertIs(ui.widgetWorkingColorSpace, analysis_layout.itemAt(1).widget())
+        self.assertIs(ui.widgetSpecifiedImageColorSpace, analysis_layout.itemAt(1).widget())
+        self.assertIs(ui.widgetWorkingColorSpace, analysis_layout.itemAt(2).widget())
 
     def test_metadata_tables_keep_fixed_key_column_and_stretched_value_column(self) -> None:
         window = QtWidgets.QMainWindow()

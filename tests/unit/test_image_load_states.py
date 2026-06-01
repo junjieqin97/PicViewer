@@ -26,6 +26,7 @@ from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult, Pr
 from pic_viewer.app.dto.metadata import ImageMetadata  # noqa: E402
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
+from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 
 
@@ -229,6 +230,42 @@ class InfoPanelLoadStateTests(unittest.TestCase):
 
         self.assertEqual("sRGB (default, unreadable ICC)", invalid)
         self.assertEqual("sRGB (fallback, ICC conversion failed)", failed)
+
+    def test_color_space_info_formats_specified_fallback_states(self) -> None:
+        window, _ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+
+        missing = MainController._format_source_color_profile_info(
+            controller,
+            ImageColorProfileInfo(
+                display_name="Display P3",
+                status=ImageColorProfileStatus.MISSING,
+                uses_srgb_fallback=True,
+                assumed_color_space=WorkingColorSpace.DISPLAY_P3,
+            ),
+        )
+        invalid = MainController._format_source_color_profile_info(
+            controller,
+            ImageColorProfileInfo(
+                display_name="Adobe RGB (1998)",
+                status=ImageColorProfileStatus.INVALID,
+                uses_srgb_fallback=True,
+                assumed_color_space=WorkingColorSpace.ADOBE_RGB_1998,
+            ),
+        )
+        failed = MainController._format_source_color_profile_info(
+            controller,
+            ImageColorProfileInfo(
+                display_name="Display P3",
+                status=ImageColorProfileStatus.CONVERSION_FAILED,
+                uses_srgb_fallback=True,
+                assumed_color_space=WorkingColorSpace.DISPLAY_P3,
+            ),
+        )
+
+        self.assertEqual("Display P3 (specified, no embedded ICC)", missing)
+        self.assertEqual("Adobe RGB (1998) (specified, unreadable ICC)", invalid)
+        self.assertEqual("Display P3 (specified fallback, ICC conversion failed)", failed)
 
     def test_switching_back_to_cached_image_refreshes_analysis_pixmaps(self) -> None:
         window, ui, controller = self._build_controller()

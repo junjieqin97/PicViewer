@@ -122,7 +122,9 @@ Inside the info area, use `DetachableTabWidget` (`QTabWidget` subclass):
 
 Each info tab is first implemented with placeholder controls (the metadata table may scroll internally):
 
-- Analysis: `tabAnalysis` uses a vertical layout and displays the histogram and waveform from top to bottom; both analysis charts should be centered horizontally and aligned near the top.
+- Analysis: `tabAnalysis` uses a vertical layout. From top to bottom it displays the current source image color space status, a `Specify Image Color Space` selector, the `Working Color Space` selector, the histogram, and the waveform. Both analysis charts should be centered horizontally and aligned near the top.
+  - `Specify Image Color Space` uses `sRGB`, `Display P3`, `Adobe RGB (1998)`, and `ProPhoto RGB`; `sRGB` is selected by default. It is a global fallback source color space selector used only when no embedded ICC profile is present, the embedded ICC profile cannot be read, or embedded ICC conversion fails.
+  - `Working Color Space` uses `sRGB`, `Display P3`, `Adobe RGB (1998)`, and `ProPhoto RGB`; `ProPhoto RGB` is selected by default.
 - Histogram: `widgetHistogram` (may initially be a `QLabel` with "Histogram Placeholder")
   - Fixed display size: height 100 x width 256 (logical pixels)
   - Clickable small triangles must be displayed in the upper-left and upper-right corners of the histogram:
@@ -192,6 +194,15 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `tabsInfo: DetachableTabWidget`
 - `tabAnalysis: QWidget`
 - `tabMetadata: QWidget`
+- `widgetImageColorSpace: QWidget`
+- `labelImageColorSpaceTitle: QLabel`
+- `labelImageColorSpaceValue: QLabel`
+- `widgetSpecifiedImageColorSpace: QWidget`
+- `labelSpecifiedImageColorSpaceTitle: QLabel`
+- `comboSpecifiedImageColorSpace: QComboBox`
+- `widgetWorkingColorSpace: QWidget`
+- `labelWorkingColorSpaceTitle: QLabel`
+- `comboWorkingColorSpace: QComboBox`
 - `frameFilmstrip: QFrame`
 - `listFilmstrip: QListWidget`
 - `labelFilmstripSummary: QLabel` (right side of the status bar; displays the current file summary when the filmstrip pane is hidden)

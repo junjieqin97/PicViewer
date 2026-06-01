@@ -9,12 +9,17 @@ import numpy as np
 
 from pic_viewer.app.dto.metadata import ImageMetadata
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus
-from pic_viewer.domain.models.color_space import DEFAULT_WORKING_COLOR_SPACE, WorkingColorSpace
+from pic_viewer.domain.models.color_space import (
+    DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+    DEFAULT_WORKING_COLOR_SPACE,
+    WorkingColorSpace,
+)
 
 DEFAULT_SOURCE_COLOR_PROFILE = ImageColorProfileInfo(
     display_name="sRGB",
     status=ImageColorProfileStatus.MISSING,
     uses_srgb_fallback=True,
+    assumed_color_space=DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
 )
 
 
@@ -37,6 +42,7 @@ class ImageAnalysis:
         waveform_g: Green channel waveform plot.
         waveform_b: Blue channel waveform plot.
         working_color_space: Color space used for analysis data.
+        assumed_source_color_space: Fallback source color space used when ICC is unavailable.
         source_color_profile: Source ICC profile status used for decoding.
     """
 
@@ -54,6 +60,7 @@ class ImageAnalysis:
     waveform_g: np.ndarray
     waveform_b: np.ndarray
     working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE
+    assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
     source_color_profile: ImageColorProfileInfo = DEFAULT_SOURCE_COLOR_PROFILE
 
 
@@ -71,4 +78,5 @@ class PreviewLoadResult:
 
     preview_rgb: np.ndarray
     working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE
+    assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
     source_color_profile: ImageColorProfileInfo = DEFAULT_SOURCE_COLOR_PROFILE

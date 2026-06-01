@@ -56,7 +56,12 @@ class MainControllerLoadingMixin:
             self._tr("Loading preview"),
             self._tr("Loading preview: {name}").format(name=path.name),
         )
-        task = PreviewLoadTask(self._image_service, path, self._working_color_space)
+        task = PreviewLoadTask(
+            self._image_service,
+            path,
+            self._working_color_space,
+            self._assumed_source_color_space,
+        )
         task.signals.finished.connect(lambda result, p=path, s=session: self._on_preview_loaded(p, s, result))
         task.signals.error.connect(lambda message, p=path, s=session: self._on_preview_error(p, s, message))
         self._preview_tasks_by_path[key] = task
@@ -82,7 +87,12 @@ class MainControllerLoadingMixin:
                 self._tr("Loading image"),
                 self._tr("Loading image and generating analysis: {name}").format(name=path.name),
             )
-        task = ImageLoadTask(self._image_service, path, self._working_color_space)
+        task = ImageLoadTask(
+            self._image_service,
+            path,
+            self._working_color_space,
+            self._assumed_source_color_space,
+        )
         task.signals.finished.connect(lambda result, p=path, s=session: self._on_loaded(p, s, result))
         task.signals.error.connect(lambda message, p=path, s=session: self._on_error(p, s, message))
         self._load_tasks_by_path[key] = task
@@ -104,6 +114,8 @@ class MainControllerLoadingMixin:
         if not self._is_session_active(path, session):
             return
         if result.working_color_space != self._working_color_space:
+            return
+        if result.assumed_source_color_space != self._assumed_source_color_space:
             return
 
         self._load_error_by_path.pop(key, None)
@@ -134,6 +146,8 @@ class MainControllerLoadingMixin:
         if not self._is_session_active(path, session):
             return
         if result.analysis.working_color_space != self._working_color_space:
+            return
+        if result.analysis.assumed_source_color_space != self._assumed_source_color_space:
             return
 
         self._load_error_by_path.pop(key, None)

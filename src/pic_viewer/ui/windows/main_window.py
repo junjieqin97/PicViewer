@@ -6,7 +6,11 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.analysis_view_service import AnalysisViewService
 from pic_viewer.app.services.image_service import ImageService
-from pic_viewer.domain.models.color_space import DEFAULT_WORKING_COLOR_SPACE, WORKING_COLOR_SPACE_ORDER
+from pic_viewer.domain.models.color_space import (
+    DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+    DEFAULT_WORKING_COLOR_SPACE,
+    WORKING_COLOR_SPACE_ORDER,
+)
 from pic_viewer.ui.resources import styles
 from pic_viewer.ui.resources.icons import icon_path
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel
@@ -529,6 +533,29 @@ class MainWindowUI:
         image_space_layout.addWidget(self.labelImageColorSpaceValue, 1)
         analysis_layout.addWidget(self.widgetImageColorSpace)
 
+        self.widgetSpecifiedImageColorSpace = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetSpecifiedImageColorSpace.setObjectName("widgetSpecifiedImageColorSpace")
+        specified_space_layout = QtWidgets.QHBoxLayout(self.widgetSpecifiedImageColorSpace)
+        specified_space_layout.setObjectName("layoutSpecifiedImageColorSpace")
+        specified_space_layout.setContentsMargins(0, 0, 0, 0)
+        specified_space_layout.setSpacing(8)
+        self.labelSpecifiedImageColorSpaceTitle = QtWidgets.QLabel(self.widgetSpecifiedImageColorSpace)
+        self.labelSpecifiedImageColorSpaceTitle.setObjectName("labelSpecifiedImageColorSpaceTitle")
+        self.comboSpecifiedImageColorSpace = QtWidgets.QComboBox(self.widgetSpecifiedImageColorSpace)
+        self.comboSpecifiedImageColorSpace.setObjectName("comboSpecifiedImageColorSpace")
+        self.comboSpecifiedImageColorSpace.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Fixed,
+        )
+        for color_space in WORKING_COLOR_SPACE_ORDER:
+            self.comboSpecifiedImageColorSpace.addItem(color_space.display_name, color_space)
+        specified_index = self.comboSpecifiedImageColorSpace.findData(DEFAULT_ASSUMED_IMAGE_COLOR_SPACE)
+        if specified_index >= 0:
+            self.comboSpecifiedImageColorSpace.setCurrentIndex(specified_index)
+        specified_space_layout.addWidget(self.labelSpecifiedImageColorSpaceTitle)
+        specified_space_layout.addWidget(self.comboSpecifiedImageColorSpace, 1)
+        analysis_layout.addWidget(self.widgetSpecifiedImageColorSpace)
+
         self.widgetWorkingColorSpace = QtWidgets.QWidget(self.tabAnalysis)
         self.widgetWorkingColorSpace.setObjectName("widgetWorkingColorSpace")
         working_space_layout = QtWidgets.QHBoxLayout(self.widgetWorkingColorSpace)
@@ -840,8 +867,10 @@ class MainWindowUI:
 
         self.labelImageColorSpaceTitle.setText(self._tr("Image Color Space"))
         self.labelImageColorSpaceValue.setText(self._tr("Not Loaded"))
+        self.labelSpecifiedImageColorSpaceTitle.setText(self._tr("Specify Image Color Space"))
         self.labelWorkingColorSpaceTitle.setText(self._tr("Working Color Space"))
         for index, color_space in enumerate(WORKING_COLOR_SPACE_ORDER):
+            self.comboSpecifiedImageColorSpace.setItemText(index, self._tr(color_space.display_name))
             self.comboWorkingColorSpace.setItemText(index, self._tr(color_space.display_name))
 
         self.widgetHistogram.setText(self._tr("Histogram Placeholder"))

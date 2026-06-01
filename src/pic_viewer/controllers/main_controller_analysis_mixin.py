@@ -11,7 +11,11 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from pic_viewer.app.dto.analysis_view import AnalysisViewSettings, LumaRgbMode, RgbChannel
 from pic_viewer.app.dto.image_analysis import ImageAnalysis
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus
-from pic_viewer.domain.models.color_space import DEFAULT_WORKING_COLOR_SPACE, WorkingColorSpace
+from pic_viewer.domain.models.color_space import (
+    DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+    DEFAULT_WORKING_COLOR_SPACE,
+    WorkingColorSpace,
+)
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
 from pic_viewer.ui.utils.image_qt import to_qpixmap
 from pic_viewer.ui.utils.signal_blocker import block_signals
@@ -146,10 +150,34 @@ class MainControllerAnalysisMixin:
 
         self._working_color_space = selected
         self._current_analysis_render_key = None
-        self._reload_open_images_for_working_color_space()
+        self._reload_open_images_for_color_settings()
+
+    def _on_assumed_source_color_space_changed(self, index: int) -> None:
+        """Reload open images when the fallback source color space changes."""
+
+        combo = self._ui.comboSpecifiedImageColorSpace
+        selected = combo.itemData(index)
+        if isinstance(selected, str):
+            try:
+                selected = WorkingColorSpace(selected)
+            except ValueError:
+                return
+        if not isinstance(selected, WorkingColorSpace):
+            return
+        if selected == self._assumed_source_color_space:
+            return
+
+        self._assumed_source_color_space = selected
+        self._current_analysis_render_key = None
+        self._reload_open_images_for_color_settings()
 
     def _reload_open_images_for_working_color_space(self) -> None:
         """Clear image caches and restart loads for the selected working space."""
+
+        self._reload_open_images_for_color_settings()
+
+    def _reload_open_images_for_color_settings(self) -> None:
+        """Clear image caches and restart loads for the selected color settings."""
 
         paths: list[Path] = []
         seen: set[str] = set()
@@ -426,6 +454,7 @@ class MainControllerAnalysisMixin:
             self._view_settings.mode.value,
             self._view_settings.channel.value,
             data.analysis.working_color_space.value,
+            data.analysis.assumed_source_color_space.value,
         )
         path_key = str(image_path)
         current_render_key = (path_key, render_key)
@@ -498,10 +527,20 @@ class MainControllerAnalysisMixin:
     def _format_source_color_profile_info(self, info: ImageColorProfileInfo) -> str:
         if info.status == ImageColorProfileStatus.EMBEDDED:
             return self._tr("{name} (embedded ICC)").format(name=info.display_name)
+        assumed = getattr(info, "assumed_color_space", None)
+        has_specified_fallback = assumed is not None and assumed != DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
         if info.status == ImageColorProfileStatus.INVALID:
+            if has_specified_fallback:
+                return self._tr("{name} (specified, unreadable ICC)").format(name=info.display_name)
             return self._tr("sRGB (default, unreadable ICC)")
         if info.status == ImageColorProfileStatus.CONVERSION_FAILED:
+            if has_specified_fallback:
+                return self._tr("{name} (specified fallback, ICC conversion failed)").format(
+                    name=info.display_name
+                )
             return self._tr("sRGB (fallback, ICC conversion failed)")
+        if has_specified_fallback:
+            return self._tr("{name} (specified, no embedded ICC)").format(name=info.display_name)
         return self._tr("sRGB (default, no embedded ICC)")
 
     def _refresh_current_image_pixmap(self) -> None:
@@ -557,6 +596,7 @@ class MainControllerAnalysisMixin:
             self._show_overexposed,
             self._focus_peak_level.value if self._focus_peak_level is not None else None,
             getattr(self, "_working_color_space", DEFAULT_WORKING_COLOR_SPACE).value,
+            getattr(self, "_assumed_source_color_space", DEFAULT_ASSUMED_IMAGE_COLOR_SPACE).value,
             id(preview_rgb),
         )
         if (

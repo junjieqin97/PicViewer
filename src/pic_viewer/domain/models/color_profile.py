@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
+from pic_viewer.domain.models.color_space import WorkingColorSpace
+
 
 class ImageColorProfileStatus(Enum):
     """ICC profile status detected while loading an image."""
@@ -22,3 +24,4 @@ class ImageColorProfileInfo:
     display_name: str
     status: ImageColorProfileStatus
     uses_srgb_fallback: bool
+    assumed_color_space: WorkingColorSpace | None = None

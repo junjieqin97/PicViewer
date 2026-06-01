@@ -11,7 +11,11 @@ from pic_viewer.app.dto.analysis_view import AnalysisView, AnalysisViewSettings,
 from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult, PreviewLoadResult
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
 from pic_viewer.common.errors import ImageLoadError
-from pic_viewer.domain.models.color_space import DEFAULT_WORKING_COLOR_SPACE, WorkingColorSpace
+from pic_viewer.domain.models.color_space import (
+    DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+    DEFAULT_WORKING_COLOR_SPACE,
+    WorkingColorSpace,
+)
 from pic_viewer.domain.rules.analysis import ImageAnalyzer
 from pic_viewer.domain.rules.exposure_overlay import ExposureOverlayOptions, apply_exposure_overlay
 from pic_viewer.domain.rules.focus_peaking import (
@@ -45,12 +49,14 @@ class ImageService:
         self,
         path: Path,
         working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
+        assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     ) -> ImageLoadResult:
         """Load an image, compute analysis artifacts, and read metadata.
 
         Args:
             path: Path to image file.
             working_color_space: Target RGB working color space.
+            assumed_source_color_space: Source color space to use when ICC is unavailable.
 
         Returns:
             ImageLoadResult: Analysis payload and metadata for the UI layer.
@@ -64,6 +70,7 @@ class ImageService:
             bgr, source_color_profile = self._reader.read_with_color_profile_info(
                 path,
                 working_color_space=working_color_space,
+                assumed_source_color_space=assumed_source_color_space,
             )
         except ImageLoadError:
             raise
@@ -91,6 +98,7 @@ class ImageService:
             waveform_g=result.waveform_g,
             waveform_b=result.waveform_b,
             working_color_space=working_color_space,
+            assumed_source_color_space=assumed_source_color_space,
             source_color_profile=source_color_profile,
         )
 
@@ -109,6 +117,7 @@ class ImageService:
         self,
         path: Path,
         working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
+        assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     ) -> PreviewLoadResult:
         """Load a lightweight preview without metadata or analysis plots."""
 
@@ -116,6 +125,7 @@ class ImageService:
             preview_bgr, source_color_profile = self._reader.read_preview_with_color_profile_info(
                 path,
                 working_color_space=working_color_space,
+                assumed_source_color_space=assumed_source_color_space,
             )
         except ImageLoadError:
             raise
@@ -131,6 +141,7 @@ class ImageService:
         return PreviewLoadResult(
             preview_rgb=display_rgb,
             working_color_space=working_color_space,
+            assumed_source_color_space=assumed_source_color_space,
             source_color_profile=source_color_profile,
         )
 

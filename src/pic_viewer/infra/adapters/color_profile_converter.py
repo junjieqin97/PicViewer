@@ -12,7 +12,7 @@ from PIL import Image, ImageCms, UnidentifiedImageError
 from PySide6 import QtGui
 
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus
-from pic_viewer.domain.models.color_space import WorkingColorSpace
+from pic_viewer.domain.models.color_space import DEFAULT_ASSUMED_IMAGE_COLOR_SPACE, WorkingColorSpace
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +63,7 @@ class ColorProfileConverter:
         path: Path,
         bgr: np.ndarray,
         working_color_space: WorkingColorSpace,
+        assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     ) -> np.ndarray:
         """Convert decoded BGR pixels from embedded ICC profile to working space.
 
@@ -70,6 +71,7 @@ class ColorProfileConverter:
             path: Source file path used only for ICC profile extraction.
             bgr: Decoded BGR image pixels.
             working_color_space: Target RGB working color space.
+            assumed_source_color_space: Source color space to use when ICC is unavailable.
 
         Returns:
             A BGR uint8 array in the selected working color space. If profile
@@ -80,6 +82,7 @@ class ColorProfileConverter:
             path,
             bgr,
             working_color_space,
+            assumed_source_color_space,
         )
         return converted_bgr
 
@@ -88,14 +91,15 @@ class ColorProfileConverter:
         path: Path,
         bgr: np.ndarray,
         working_color_space: WorkingColorSpace,
+        assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     ) -> tuple[np.ndarray, ImageColorProfileInfo]:
         """Convert decoded BGR pixels and return source ICC status."""
 
-        source_profile, source_info = self._source_profile_for_path(path)
+        source_profile, source_info = self._source_profile_for_path(path, assumed_source_color_space)
         if self._is_empty_image(bgr):
             return bgr, source_info
 
-        if source_info.uses_srgb_fallback and working_color_space == WorkingColorSpace.SRGB:
+        if source_info.uses_srgb_fallback and self._fallback_source_space(source_info) == working_color_space:
             return bgr.copy(), source_info
 
         target_profile = self.profile_for(working_color_space)
@@ -108,18 +112,20 @@ class ColorProfileConverter:
             target_label=working_color_space.value,
         )
         if converted_rgb is None and not source_info.uses_srgb_fallback:
-            source_info = ImageColorProfileInfo(
-                display_name="sRGB",
-                status=ImageColorProfileStatus.CONVERSION_FAILED,
-                uses_srgb_fallback=True,
+            source_info = self._fallback_profile_info(
+                ImageColorProfileStatus.CONVERSION_FAILED,
+                assumed_source_color_space,
             )
-            converted_rgb = self._convert_rgb_with_profiles(
-                rgb,
-                self.profile_for(WorkingColorSpace.SRGB),
-                target_profile,
-                source_path=path,
-                target_label=working_color_space.value,
-            )
+            if assumed_source_color_space == working_color_space:
+                converted_rgb = rgb.copy()
+            else:
+                converted_rgb = self._convert_rgb_with_profiles(
+                    rgb,
+                    self.profile_for(assumed_source_color_space),
+                    target_profile,
+                    source_path=path,
+                    target_label=working_color_space.value,
+                )
         if converted_rgb is None:
             converted_rgb = rgb.copy()
         return self._rgb_to_bgr(converted_rgb), source_info
@@ -145,7 +151,11 @@ class ColorProfileConverter:
             return rgb.copy()
         return converted
 
-    def _source_profile_for_path(self, path: Path) -> tuple[ImageCms.ImageCmsProfile, ImageColorProfileInfo]:
+    def _source_profile_for_path(
+        self,
+        path: Path,
+        assumed_source_color_space: WorkingColorSpace,
+    ) -> tuple[ImageCms.ImageCmsProfile, ImageColorProfileInfo]:
         profile_bytes = self._read_embedded_icc_profile(path)
         if profile_bytes:
             try:
@@ -156,17 +166,34 @@ class ColorProfileConverter:
                     uses_srgb_fallback=False,
                 )
             except (ImageCms.PyCMSError, OSError, ValueError):
-                logger.warning("Invalid embedded ICC profile, falling back to sRGB: %s", path)
-                return self.profile_for(WorkingColorSpace.SRGB), ImageColorProfileInfo(
-                    display_name="sRGB",
-                    status=ImageColorProfileStatus.INVALID,
-                    uses_srgb_fallback=True,
+                logger.warning(
+                    "Invalid embedded ICC profile, using assumed source color space: path=%s color_space=%s",
+                    path,
+                    assumed_source_color_space.value,
                 )
-        return self.profile_for(WorkingColorSpace.SRGB), ImageColorProfileInfo(
-            display_name="sRGB",
-            status=ImageColorProfileStatus.MISSING,
-            uses_srgb_fallback=True,
+                return self.profile_for(assumed_source_color_space), self._fallback_profile_info(
+                    ImageColorProfileStatus.INVALID,
+                    assumed_source_color_space,
+                )
+        return self.profile_for(assumed_source_color_space), self._fallback_profile_info(
+            ImageColorProfileStatus.MISSING,
+            assumed_source_color_space,
         )
+
+    def _fallback_profile_info(
+        self,
+        status: ImageColorProfileStatus,
+        assumed_source_color_space: WorkingColorSpace,
+    ) -> ImageColorProfileInfo:
+        return ImageColorProfileInfo(
+            display_name=assumed_source_color_space.display_name,
+            status=status,
+            uses_srgb_fallback=True,
+            assumed_color_space=assumed_source_color_space,
+        )
+
+    def _fallback_source_space(self, info: ImageColorProfileInfo) -> WorkingColorSpace:
+        return info.assumed_color_space or WorkingColorSpace.SRGB
 
     def _profile_from_bytes(self, profile_bytes: bytes) -> ImageCms.ImageCmsProfile:
         return ImageCms.getOpenProfile(io.BytesIO(profile_bytes))
