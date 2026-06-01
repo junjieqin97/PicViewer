@@ -536,7 +536,22 @@ class MainControllerAnalysisMixin:
     def _set_specified_image_color_space_enabled(self, enabled: bool) -> None:
         if not hasattr(self._ui, "comboSpecifiedImageColorSpace"):
             return
-        self._ui.comboSpecifiedImageColorSpace.setEnabled(enabled)
+        combo = self._ui.comboSpecifiedImageColorSpace
+        with block_signals(combo):
+            if enabled:
+                combo.setEnabled(True)
+                if combo.currentIndex() < 0:
+                    selected = getattr(
+                        self,
+                        "_assumed_source_color_space",
+                        DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+                    )
+                    index = combo.findData(selected)
+                    if index >= 0:
+                        combo.setCurrentIndex(index)
+                return
+            combo.setCurrentIndex(-1)
+            combo.setEnabled(False)
 
     def _format_source_color_profile_info(self, info: ImageColorProfileInfo) -> str:
         if info.status == ImageColorProfileStatus.EMBEDDED:

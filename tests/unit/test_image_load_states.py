@@ -209,6 +209,7 @@ class InfoPanelLoadStateTests(unittest.TestCase):
 
         self.assertEqual("Example Profile (embedded ICC)", ui.labelImageColorSpaceValue.text())
         self.assertFalse(ui.comboSpecifiedImageColorSpace.isEnabled())
+        self.assertEqual("", ui.comboSpecifiedImageColorSpace.currentText())
 
     def test_full_load_updates_color_space_info_from_analysis_payload(self) -> None:
         window, ui, controller = self._build_controller()
@@ -234,6 +235,9 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         self.addCleanup(window.deleteLater)
         self._configure_analysis_rendering(controller)
         ui.comboSpecifiedImageColorSpace.setEnabled(False)
+        display_p3_index = ui.comboSpecifiedImageColorSpace.findData(WorkingColorSpace.DISPLAY_P3)
+        ui.comboSpecifiedImageColorSpace.setCurrentIndex(display_p3_index)
+        controller._assumed_source_color_space = WorkingColorSpace.DISPLAY_P3
         path = Path("/tmp/no-profile.jpg")
         controller._images_by_path[str(path)] = self._image_result(
             (255, 0, 0),
@@ -249,6 +253,43 @@ class InfoPanelLoadStateTests(unittest.TestCase):
 
         self.assertEqual("Display P3 (specified, no embedded ICC)", ui.labelImageColorSpaceValue.text())
         self.assertTrue(ui.comboSpecifiedImageColorSpace.isEnabled())
+        self.assertEqual("Display P3", ui.comboSpecifiedImageColorSpace.currentText())
+
+    def test_specified_image_color_space_selector_restores_selection_after_embedded_icc(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        self._configure_analysis_rendering(controller)
+        display_p3_index = ui.comboSpecifiedImageColorSpace.findData(WorkingColorSpace.DISPLAY_P3)
+        ui.comboSpecifiedImageColorSpace.setCurrentIndex(display_p3_index)
+        controller._assumed_source_color_space = WorkingColorSpace.DISPLAY_P3
+        profiled_path = Path("/tmp/profiled.jpg")
+        fallback_path = Path("/tmp/no-profile.jpg")
+        controller._images_by_path[str(profiled_path)] = self._image_result(
+            (255, 0, 0),
+            source_color_profile=ImageColorProfileInfo(
+                display_name="Example Profile",
+                status=ImageColorProfileStatus.EMBEDDED,
+                uses_srgb_fallback=False,
+            ),
+        )
+        controller._images_by_path[str(fallback_path)] = self._image_result(
+            (0, 255, 0),
+            source_color_profile=ImageColorProfileInfo(
+                display_name="Display P3",
+                status=ImageColorProfileStatus.MISSING,
+                uses_srgb_fallback=True,
+                assumed_color_space=WorkingColorSpace.DISPLAY_P3,
+            ),
+        )
+
+        MainController.update_info_for_image(controller, profiled_path)
+        self.assertFalse(ui.comboSpecifiedImageColorSpace.isEnabled())
+        self.assertEqual("", ui.comboSpecifiedImageColorSpace.currentText())
+
+        MainController.update_info_for_image(controller, fallback_path)
+
+        self.assertTrue(ui.comboSpecifiedImageColorSpace.isEnabled())
+        self.assertEqual("Display P3", ui.comboSpecifiedImageColorSpace.currentText())
 
     def test_color_space_info_formats_invalid_and_conversion_fallback_states(self) -> None:
         window, _ui, controller = self._build_controller()

@@ -91,6 +91,20 @@ class UiStylesTests(unittest.TestCase):
             self.assertIn("background: #eef2f6", rule)
             self.assertNotIn("background: #20262d", rule)
 
+    def test_specified_image_color_space_selector_has_disabled_gray_styles(self) -> None:
+        dark_style = styles.load_stylesheet(styles.AppearanceTheme.DARK)
+        light_style = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
+
+        dark_rule = self._style_block(dark_style, "QComboBox#comboSpecifiedImageColorSpace:disabled")
+        light_rule = self._style_block(light_style, "QComboBox#comboSpecifiedImageColorSpace:disabled")
+
+        self.assertIn("color: #6f7782", dark_rule)
+        self.assertIn("background: #24282e", dark_rule)
+        self.assertIn("border: 1px solid #343b44", dark_rule)
+        self.assertIn("color: #9aa4af", light_rule)
+        self.assertIn("background: #eef2f6", light_rule)
+        self.assertIn("border: 1px solid #d8e0ea", light_rule)
+
     def test_theme_from_color_scheme_maps_system_values(self) -> None:
         self.assertEqual(
             styles.AppearanceTheme.LIGHT,

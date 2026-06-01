@@ -296,6 +296,12 @@ QComboBox#comboWorkingColorSpace {
     padding: 3px 6px;
 }
 
+QComboBox#comboSpecifiedImageColorSpace:disabled {
+    color: #6f7782;
+    background: #24282e;
+    border: 1px solid #343b44;
+}
+
 QLabel#labelAnalysisModeValue,
 QLabel#labelAnalysisChannelValue,
 QLabel#labelPseudoColorValue,
