@@ -496,7 +496,7 @@ class MainWindowTabsTests(unittest.TestCase):
             ["sRGB", "Display P3", "Adobe RGB (1998)", "ProPhoto RGB"],
             [ui.comboWorkingColorSpace.itemText(index) for index in range(ui.comboWorkingColorSpace.count())],
         )
-        self.assertEqual("sRGB", ui.comboWorkingColorSpace.currentText())
+        self.assertEqual("ProPhoto RGB", ui.comboWorkingColorSpace.currentText())
 
     def test_analysis_tab_has_image_color_space_info_above_working_selector(self) -> None:
         window = QtWidgets.QMainWindow()

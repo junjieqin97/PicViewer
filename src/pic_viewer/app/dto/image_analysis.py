@@ -9,7 +9,7 @@ import numpy as np
 
 from pic_viewer.app.dto.metadata import ImageMetadata
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus
-from pic_viewer.domain.models.color_space import WorkingColorSpace
+from pic_viewer.domain.models.color_space import DEFAULT_WORKING_COLOR_SPACE, WorkingColorSpace
 
 DEFAULT_SOURCE_COLOR_PROFILE = ImageColorProfileInfo(
     display_name="sRGB",
@@ -53,7 +53,7 @@ class ImageAnalysis:
     waveform_r: np.ndarray
     waveform_g: np.ndarray
     waveform_b: np.ndarray
-    working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB
+    working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE
     source_color_profile: ImageColorProfileInfo = DEFAULT_SOURCE_COLOR_PROFILE
 
 
@@ -70,5 +70,5 @@ class PreviewLoadResult:
     """Fast preview payload used for incremental loading."""
 
     preview_rgb: np.ndarray
-    working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB
+    working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE
     source_color_profile: ImageColorProfileInfo = DEFAULT_SOURCE_COLOR_PROFILE

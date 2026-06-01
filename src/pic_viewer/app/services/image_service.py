@@ -11,7 +11,7 @@ from pic_viewer.app.dto.analysis_view import AnalysisView, AnalysisViewSettings,
 from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult, PreviewLoadResult
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
 from pic_viewer.common.errors import ImageLoadError
-from pic_viewer.domain.models.color_space import WorkingColorSpace
+from pic_viewer.domain.models.color_space import DEFAULT_WORKING_COLOR_SPACE, WorkingColorSpace
 from pic_viewer.domain.rules.analysis import ImageAnalyzer
 from pic_viewer.domain.rules.exposure_overlay import ExposureOverlayOptions, apply_exposure_overlay
 from pic_viewer.domain.rules.focus_peaking import (
@@ -44,7 +44,7 @@ class ImageService:
     def load_and_analyze(
         self,
         path: Path,
-        working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB,
+        working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
     ) -> ImageLoadResult:
         """Load an image, compute analysis artifacts, and read metadata.
 
@@ -108,7 +108,7 @@ class ImageService:
     def load_preview(
         self,
         path: Path,
-        working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB,
+        working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
     ) -> PreviewLoadResult:
         """Load a lightweight preview without metadata or analysis plots."""
 

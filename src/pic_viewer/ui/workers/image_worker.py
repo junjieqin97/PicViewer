@@ -9,7 +9,7 @@ from PySide6 import QtCore
 
 from pic_viewer.app.services.image_service import ImageService
 from pic_viewer.common.errors import ImageLoadError, ImageProcessError
-from pic_viewer.domain.models.color_space import WorkingColorSpace
+from pic_viewer.domain.models.color_space import DEFAULT_WORKING_COLOR_SPACE, WorkingColorSpace
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class PreviewLoadTask(QtCore.QRunnable):
         self,
         service: ImageService,
         path: Path,
-        working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB,
+        working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
     ) -> None:
         super().__init__()
         self._service = service
@@ -61,7 +61,7 @@ class ImageLoadTask(QtCore.QRunnable):
         self,
         service: ImageService,
         path: Path,
-        working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB,
+        working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
     ) -> None:
         super().__init__()
         self._service = service

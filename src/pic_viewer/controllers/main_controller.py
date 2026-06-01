@@ -18,7 +18,7 @@ from pic_viewer.controllers.main_controller_loading_mixin import MainControllerL
 from pic_viewer.controllers.main_controller_metadata_mixin import MainControllerMetadataMixin
 from pic_viewer.controllers.main_controller_reference_line_mixin import MainControllerReferenceLineMixin
 from pic_viewer.controllers.main_controller_tabs_mixin import MainControllerTabsMixin
-from pic_viewer.domain.models.color_space import WorkingColorSpace
+from pic_viewer.domain.models.color_space import DEFAULT_WORKING_COLOR_SPACE, WorkingColorSpace
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
 from pic_viewer.domain.rules.reference_lines import ReferenceLineSettings
 from pic_viewer.ui.workers.image_worker import ImageLoadTask, PreviewLoadTask
@@ -73,7 +73,7 @@ class MainController(
         self._detached_image_windows: Dict[str, QtWidgets.QWidget] = {}
         self._detached_info_windows: Dict[str, QtWidgets.QWidget] = {}
         self._view_settings = AnalysisViewSettings(mode=LumaRgbMode.LUMA, channel=RgbChannel.ALL)
-        self._working_color_space = WorkingColorSpace.SRGB
+        self._working_color_space = DEFAULT_WORKING_COLOR_SPACE
         self._last_splitter_sizes: Optional[list[int]] = None
         self._last_metadata_path: Optional[str] = None
         self._cursor_boundary_margin = 4

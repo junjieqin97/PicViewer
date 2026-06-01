@@ -49,6 +49,20 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         service.load_preview.assert_called_once_with(path, WorkingColorSpace.DISPLAY_P3)
         service.load_and_analyze.assert_called_once_with(path, WorkingColorSpace.PROPHOTO_RGB)
 
+    def test_worker_tasks_default_to_app_working_color_space(self) -> None:
+        service = MagicMock()
+        path = Path("/tmp/profiled.jpg")
+        service.load_preview.return_value = PreviewLoadResult(
+            preview_rgb=np.zeros((1, 1, 3), dtype=np.uint8),
+        )
+        service.load_and_analyze.return_value = MagicMock()
+
+        PreviewLoadTask(service, path).run()
+        ImageLoadTask(service, path).run()
+
+        service.load_preview.assert_called_once_with(path, WorkingColorSpace.PROPHOTO_RGB)
+        service.load_and_analyze.assert_called_once_with(path, WorkingColorSpace.PROPHOTO_RGB)
+
     def test_switching_working_color_space_clears_image_caches_and_reloads_open_tabs(self) -> None:
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
@@ -139,7 +153,7 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         controller._main_window = window
         controller._ui = ui
         controller._tr = lambda text: text  # type: ignore[method-assign]
-        controller._working_color_space = WorkingColorSpace.SRGB
+        controller._working_color_space = WorkingColorSpace.PROPHOTO_RGB
         controller._images_by_path = {}
         controller._preview_by_path = {}
         controller._preview_tasks_by_path = {}

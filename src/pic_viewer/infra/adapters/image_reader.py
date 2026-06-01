@@ -11,7 +11,7 @@ import numpy as np
 
 from pic_viewer.common.errors import ImageLoadError
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo
-from pic_viewer.domain.models.color_space import WorkingColorSpace
+from pic_viewer.domain.models.color_space import DEFAULT_WORKING_COLOR_SPACE, WorkingColorSpace
 from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConverter
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class ImageReader:
     def read(
         self,
         path: Path,
-        working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB,
+        working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
     ) -> np.ndarray:
         """Read image file into BGR array in the selected working space.
 
@@ -59,7 +59,7 @@ class ImageReader:
     def read_with_color_profile_info(
         self,
         path: Path,
-        working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB,
+        working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
     ) -> tuple[np.ndarray, ImageColorProfileInfo]:
         """Read image file into BGR array and return source ICC status."""
 
@@ -81,7 +81,7 @@ class ImageReader:
         self,
         path: Path,
         max_edge: int = 1920,
-        working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB,
+        working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
     ) -> np.ndarray:
         """Read a faster low-cost preview for incremental UI updates."""
 
@@ -117,7 +117,7 @@ class ImageReader:
         self,
         path: Path,
         max_edge: int = 1920,
-        working_color_space: WorkingColorSpace = WorkingColorSpace.SRGB,
+        working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
     ) -> tuple[np.ndarray, ImageColorProfileInfo]:
         """Read a faster preview and return source ICC status."""
 

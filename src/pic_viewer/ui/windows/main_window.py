@@ -6,7 +6,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.analysis_view_service import AnalysisViewService
 from pic_viewer.app.services.image_service import ImageService
-from pic_viewer.domain.models.color_space import WORKING_COLOR_SPACE_ORDER
+from pic_viewer.domain.models.color_space import DEFAULT_WORKING_COLOR_SPACE, WORKING_COLOR_SPACE_ORDER
 from pic_viewer.ui.resources import styles
 from pic_viewer.ui.resources.icons import icon_path
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel
@@ -545,6 +545,9 @@ class MainWindowUI:
         )
         for color_space in WORKING_COLOR_SPACE_ORDER:
             self.comboWorkingColorSpace.addItem(color_space.display_name, color_space)
+        default_index = self.comboWorkingColorSpace.findData(DEFAULT_WORKING_COLOR_SPACE)
+        if default_index >= 0:
+            self.comboWorkingColorSpace.setCurrentIndex(default_index)
         working_space_layout.addWidget(self.labelWorkingColorSpaceTitle)
         working_space_layout.addWidget(self.comboWorkingColorSpace, 1)
         analysis_layout.addWidget(self.widgetWorkingColorSpace)

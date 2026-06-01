@@ -11,7 +11,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from pic_viewer.app.dto.analysis_view import AnalysisViewSettings, LumaRgbMode, RgbChannel
 from pic_viewer.app.dto.image_analysis import ImageAnalysis
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus
-from pic_viewer.domain.models.color_space import WorkingColorSpace
+from pic_viewer.domain.models.color_space import DEFAULT_WORKING_COLOR_SPACE, WorkingColorSpace
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
 from pic_viewer.ui.utils.image_qt import to_qpixmap
 from pic_viewer.ui.utils.signal_blocker import block_signals
@@ -556,7 +556,7 @@ class MainControllerAnalysisMixin:
             self._show_underexposed,
             self._show_overexposed,
             self._focus_peak_level.value if self._focus_peak_level is not None else None,
-            getattr(self, "_working_color_space", WorkingColorSpace.SRGB).value,
+            getattr(self, "_working_color_space", DEFAULT_WORKING_COLOR_SPACE).value,
             id(preview_rgb),
         )
         if (

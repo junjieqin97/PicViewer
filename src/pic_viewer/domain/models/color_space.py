@@ -32,3 +32,5 @@ WORKING_COLOR_SPACE_ORDER: tuple[WorkingColorSpace, ...] = (
     WorkingColorSpace.ADOBE_RGB_1998,
     WorkingColorSpace.PROPHOTO_RGB,
 )
+
+DEFAULT_WORKING_COLOR_SPACE = WorkingColorSpace.PROPHOTO_RGB

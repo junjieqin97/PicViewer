@@ -60,6 +60,50 @@ class ImageReaderPreviewTests(unittest.TestCase):
             WorkingColorSpace.DISPLAY_P3,
         )
 
+    def test_read_preview_defaults_to_app_working_color_space(self) -> None:
+        converted = np.full((12, 12, 3), 128, dtype=np.uint8)
+        converter = unittest.mock.MagicMock()
+        converter.convert_file_bgr_to_working_space.return_value = converted
+        reader = ImageReader(allow_raw=False, color_converter=converter)
+        reduced = np.zeros((12, 12, 3), dtype=np.uint8)
+
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
+            path = Path(tmp.name)
+            with patch("pic_viewer.infra.adapters.image_reader.cv2.imread", return_value=reduced):
+                image = reader.read_preview(path, max_edge=2000)
+
+        np.testing.assert_array_equal(image, converted)
+        converter.convert_file_bgr_to_working_space.assert_called_once_with(
+            path,
+            reduced,
+            WorkingColorSpace.PROPHOTO_RGB,
+        )
+
+    def test_read_with_color_profile_info_defaults_to_app_working_color_space(self) -> None:
+        converted = np.full((12, 12, 3), 128, dtype=np.uint8)
+        profile_info = ImageColorProfileInfo(
+            display_name="sRGB",
+            status=ImageColorProfileStatus.MISSING,
+            uses_srgb_fallback=True,
+        )
+        converter = unittest.mock.MagicMock()
+        converter.convert_file_bgr_to_working_space_with_info.return_value = (converted, profile_info)
+        reader = ImageReader(allow_raw=False, color_converter=converter)
+        source = np.zeros((12, 12, 3), dtype=np.uint8)
+
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
+            path = Path(tmp.name)
+            with patch("pic_viewer.infra.adapters.image_reader.cv2.imread", return_value=source):
+                image, info = reader.read_with_color_profile_info(path)
+
+        np.testing.assert_array_equal(image, converted)
+        self.assertEqual(profile_info, info)
+        converter.convert_file_bgr_to_working_space_with_info.assert_called_once_with(
+            path,
+            source,
+            WorkingColorSpace.PROPHOTO_RGB,
+        )
+
     def test_read_preview_with_color_profile_info_returns_pixels_and_source_info(self) -> None:
         converted = np.full((12, 12, 3), 128, dtype=np.uint8)
         profile_info = ImageColorProfileInfo(
