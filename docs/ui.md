@@ -122,8 +122,9 @@ Inside the info area, use `DetachableTabWidget` (`QTabWidget` subclass):
 
 Each info tab is first implemented with placeholder controls (the metadata table may scroll internally):
 
-- Analysis: `tabAnalysis` uses a vertical layout. From top to bottom it displays the current source image color space status, a `Specify Image Color Space` selector, the `Working Color Space` selector, the histogram, and the waveform. Both analysis charts should be centered horizontally and aligned near the top.
+- Analysis: `tabAnalysis` uses a vertical layout. From top to bottom it displays the current source image color space status, a `Specify Image Color Space` selector, the `Rendering Intent` selector, the `Working Color Space` selector, the histogram, and the waveform. Both analysis charts should be centered horizontally and aligned near the top.
   - `Specify Image Color Space` uses `sRGB`, `Display P3`, `Adobe RGB (1998)`, and `ProPhoto RGB`; `sRGB` is selected by default. It is a global fallback source color space selector used only when no embedded ICC profile is present, the embedded ICC profile cannot be read, or embedded ICC conversion fails. It is disabled with a gray style and blank visible text when the current image has a valid embedded ICC profile, then restored to the selected fallback value when fallback, loading, failed, or empty states enable it again.
+  - `Rendering Intent` uses `Perceptual`, `Relative Colorimetric`, `Saturation`, and `Absolute Colorimetric`; `Perceptual` is selected by default. It is a global ICC gamut mapping selector used for both image-to-working-space and working-space-to-sRGB conversions.
   - `Working Color Space` uses `sRGB`, `Display P3`, `Adobe RGB (1998)`, and `ProPhoto RGB`; `ProPhoto RGB` is selected by default.
 - Histogram: `widgetHistogram` (may initially be a `QLabel` with "Histogram Placeholder")
   - Fixed display size: height 100 x width 256 (logical pixels)
@@ -200,6 +201,9 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `widgetSpecifiedImageColorSpace: QWidget`
 - `labelSpecifiedImageColorSpaceTitle: QLabel`
 - `comboSpecifiedImageColorSpace: QComboBox`
+- `widgetRenderingIntent: QWidget`
+- `labelRenderingIntentTitle: QLabel`
+- `comboRenderingIntent: QComboBox`
 - `widgetWorkingColorSpace: QWidget`
 - `labelWorkingColorSpaceTitle: QLabel`
 - `comboWorkingColorSpace: QComboBox`

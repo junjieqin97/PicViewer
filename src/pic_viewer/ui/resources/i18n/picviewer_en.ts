@@ -721,6 +721,31 @@
             <translation>Specify Image Color Space</translation>
         </message>
         <message>
+            <location filename="main_window.py" line="898" />
+            <source>Rendering Intent</source>
+            <translation>Rendering Intent</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="904" />
+            <source>Perceptual</source>
+            <translation>Perceptual</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="904" />
+            <source>Relative Colorimetric</source>
+            <translation>Relative Colorimetric</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="904" />
+            <source>Saturation</source>
+            <translation>Saturation</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="904" />
+            <source>Absolute Colorimetric</source>
+            <translation>Absolute Colorimetric</translation>
+        </message>
+        <message>
             <location filename="main_window.py" line="871" />
             <source>Working Color Space</source>
             <translation>Working Color Space</translation>

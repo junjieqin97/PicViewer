@@ -14,6 +14,7 @@ from pic_viewer.domain.models.color_space import (
     DEFAULT_WORKING_COLOR_SPACE,
     WorkingColorSpace,
 )
+from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
 
 DEFAULT_SOURCE_COLOR_PROFILE = ImageColorProfileInfo(
     display_name="sRGB",
@@ -43,6 +44,7 @@ class ImageAnalysis:
         waveform_b: Blue channel waveform plot.
         working_color_space: Color space used for analysis data.
         assumed_source_color_space: Fallback source color space used when ICC is unavailable.
+        rendering_intent: ICC rendering intent used for gamut mapping.
         source_color_profile: Source ICC profile status used for decoding.
     """
 
@@ -61,6 +63,7 @@ class ImageAnalysis:
     waveform_b: np.ndarray
     working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE
     assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
+    rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT
     source_color_profile: ImageColorProfileInfo = DEFAULT_SOURCE_COLOR_PROFILE
 
 
@@ -79,4 +82,5 @@ class PreviewLoadResult:
     preview_rgb: np.ndarray
     working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE
     assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
+    rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT
     source_color_profile: ImageColorProfileInfo = DEFAULT_SOURCE_COLOR_PROFILE

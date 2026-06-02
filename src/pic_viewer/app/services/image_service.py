@@ -16,6 +16,7 @@ from pic_viewer.domain.models.color_space import (
     DEFAULT_WORKING_COLOR_SPACE,
     WorkingColorSpace,
 )
+from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
 from pic_viewer.domain.rules.analysis import ImageAnalyzer
 from pic_viewer.domain.rules.exposure_overlay import ExposureOverlayOptions, apply_exposure_overlay
 from pic_viewer.domain.rules.focus_peaking import (
@@ -50,6 +51,7 @@ class ImageService:
         path: Path,
         working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
         assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> ImageLoadResult:
         """Load an image, compute analysis artifacts, and read metadata.
 
@@ -57,6 +59,7 @@ class ImageService:
             path: Path to image file.
             working_color_space: Target RGB working color space.
             assumed_source_color_space: Source color space to use when ICC is unavailable.
+            rendering_intent: ICC rendering intent used for gamut mapping.
 
         Returns:
             ImageLoadResult: Analysis payload and metadata for the UI layer.
@@ -71,6 +74,7 @@ class ImageService:
                 path,
                 working_color_space=working_color_space,
                 assumed_source_color_space=assumed_source_color_space,
+                rendering_intent=rendering_intent,
             )
         except ImageLoadError:
             raise
@@ -82,6 +86,7 @@ class ImageService:
         preview_rgb = self._color_converter.convert_working_rgb_to_srgb(
             result.preview_rgb,
             working_color_space,
+            rendering_intent,
         )
         analysis = ImageAnalysis(
             analysis_bgr=result.analysis_bgr,
@@ -99,6 +104,7 @@ class ImageService:
             waveform_b=result.waveform_b,
             working_color_space=working_color_space,
             assumed_source_color_space=assumed_source_color_space,
+            rendering_intent=rendering_intent,
             source_color_profile=source_color_profile,
         )
 
@@ -118,6 +124,7 @@ class ImageService:
         path: Path,
         working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
         assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> PreviewLoadResult:
         """Load a lightweight preview without metadata or analysis plots."""
 
@@ -126,6 +133,7 @@ class ImageService:
                 path,
                 working_color_space=working_color_space,
                 assumed_source_color_space=assumed_source_color_space,
+                rendering_intent=rendering_intent,
             )
         except ImageLoadError:
             raise
@@ -137,11 +145,13 @@ class ImageService:
         display_rgb = self._color_converter.convert_working_rgb_to_srgb(
             preview_rgb,
             working_color_space,
+            rendering_intent,
         )
         return PreviewLoadResult(
             preview_rgb=display_rgb,
             working_color_space=working_color_space,
             assumed_source_color_space=assumed_source_color_space,
+            rendering_intent=rendering_intent,
             source_color_profile=source_color_profile,
         )
 

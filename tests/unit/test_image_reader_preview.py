@@ -17,6 +17,7 @@ if str(SRC_ROOT) not in sys.path:
 from pic_viewer.common.errors import ImageLoadError  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
+from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.infra.adapters.image_reader import ImageReader  # noqa: E402
 
 
@@ -59,6 +60,7 @@ class ImageReaderPreviewTests(unittest.TestCase):
             reduced,
             WorkingColorSpace.DISPLAY_P3,
             WorkingColorSpace.SRGB,
+            RenderingIntent.PERCEPTUAL,
         )
 
     def test_read_preview_defaults_to_app_working_color_space(self) -> None:
@@ -79,6 +81,7 @@ class ImageReaderPreviewTests(unittest.TestCase):
             reduced,
             WorkingColorSpace.PROPHOTO_RGB,
             WorkingColorSpace.SRGB,
+            RenderingIntent.PERCEPTUAL,
         )
 
     def test_read_with_color_profile_info_defaults_to_app_working_color_space(self) -> None:
@@ -105,6 +108,7 @@ class ImageReaderPreviewTests(unittest.TestCase):
             source,
             WorkingColorSpace.PROPHOTO_RGB,
             WorkingColorSpace.SRGB,
+            RenderingIntent.PERCEPTUAL,
         )
 
     def test_read_preview_with_color_profile_info_returns_pixels_and_source_info(self) -> None:
@@ -126,6 +130,7 @@ class ImageReaderPreviewTests(unittest.TestCase):
                     path,
                     max_edge=2000,
                     working_color_space=WorkingColorSpace.DISPLAY_P3,
+                    rendering_intent=RenderingIntent.RELATIVE_COLORIMETRIC,
                 )
 
         np.testing.assert_array_equal(image, converted)
@@ -135,6 +140,7 @@ class ImageReaderPreviewTests(unittest.TestCase):
             reduced,
             WorkingColorSpace.DISPLAY_P3,
             WorkingColorSpace.SRGB,
+            RenderingIntent.RELATIVE_COLORIMETRIC,
         )
 
     def test_read_preview_with_color_profile_info_passes_specified_source_color_space(self) -> None:
@@ -157,6 +163,7 @@ class ImageReaderPreviewTests(unittest.TestCase):
                     max_edge=2000,
                     working_color_space=WorkingColorSpace.PROPHOTO_RGB,
                     assumed_source_color_space=WorkingColorSpace.DISPLAY_P3,
+                    rendering_intent=RenderingIntent.ABSOLUTE_COLORIMETRIC,
                 )
 
         np.testing.assert_array_equal(image, converted)
@@ -166,6 +173,7 @@ class ImageReaderPreviewTests(unittest.TestCase):
             reduced,
             WorkingColorSpace.PROPHOTO_RGB,
             WorkingColorSpace.DISPLAY_P3,
+            RenderingIntent.ABSOLUTE_COLORIMETRIC,
         )
 
     def test_read_preview_raises_for_unsupported_format_when_raw_disabled(self) -> None:

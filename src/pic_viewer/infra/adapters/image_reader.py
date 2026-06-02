@@ -16,6 +16,7 @@ from pic_viewer.domain.models.color_space import (
     DEFAULT_WORKING_COLOR_SPACE,
     WorkingColorSpace,
 )
+from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
 from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConverter
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ class ImageReader:
         path: Path,
         working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
         assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> np.ndarray:
         """Read image file into BGR array in the selected working space.
 
@@ -40,6 +42,7 @@ class ImageReader:
             path: File path to load.
             working_color_space: Target RGB working color space.
             assumed_source_color_space: Source color space to use when ICC is unavailable.
+            rendering_intent: ICC rendering intent used for gamut mapping.
 
         Returns:
             numpy.ndarray: BGR image array in the working color space.
@@ -52,7 +55,13 @@ class ImageReader:
 
         image = cv2.imread(str(path), cv2.IMREAD_COLOR)
         if image is not None:
-            return self._convert_to_working_space(path, image, working_color_space, assumed_source_color_space)
+            return self._convert_to_working_space(
+                path,
+                image,
+                working_color_space,
+                assumed_source_color_space,
+                rendering_intent,
+            )
 
         if not self._allow_raw:
             raise ImageLoadError("Unsupported image format")
@@ -65,6 +74,7 @@ class ImageReader:
             raw_image,
             working_color_space,
             DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+            rendering_intent,
         )
 
     def read_with_color_profile_info(
@@ -72,6 +82,7 @@ class ImageReader:
         path: Path,
         working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
         assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> tuple[np.ndarray, ImageColorProfileInfo]:
         """Read image file into BGR array and return source ICC status."""
 
@@ -84,6 +95,7 @@ class ImageReader:
                 image,
                 working_color_space,
                 assumed_source_color_space,
+                rendering_intent,
             )
 
         if not self._allow_raw:
@@ -97,6 +109,7 @@ class ImageReader:
             raw_image,
             working_color_space,
             DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+            rendering_intent,
         )
 
     def read_preview(
@@ -105,6 +118,7 @@ class ImageReader:
         max_edge: int = 1920,
         working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
         assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> np.ndarray:
         """Read a faster low-cost preview for incremental UI updates."""
 
@@ -125,12 +139,19 @@ class ImageReader:
                     preview,
                     working_color_space,
                     assumed_source_color_space,
+                    rendering_intent,
                 )
 
         image = cv2.imread(str(path), cv2.IMREAD_COLOR)
         if image is not None:
             preview = self._resize_if_needed(image, max_edge)
-            return self._convert_to_working_space(path, preview, working_color_space, assumed_source_color_space)
+            return self._convert_to_working_space(
+                path,
+                preview,
+                working_color_space,
+                assumed_source_color_space,
+                rendering_intent,
+            )
 
         if not self._allow_raw:
             raise ImageLoadError("Unsupported image format")
@@ -144,6 +165,7 @@ class ImageReader:
             preview,
             working_color_space,
             DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+            rendering_intent,
         )
 
     def read_preview_with_color_profile_info(
@@ -152,6 +174,7 @@ class ImageReader:
         max_edge: int = 1920,
         working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
         assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> tuple[np.ndarray, ImageColorProfileInfo]:
         """Read a faster preview and return source ICC status."""
 
@@ -172,6 +195,7 @@ class ImageReader:
                     preview,
                     working_color_space,
                     assumed_source_color_space,
+                    rendering_intent,
                 )
 
         image = cv2.imread(str(path), cv2.IMREAD_COLOR)
@@ -182,6 +206,7 @@ class ImageReader:
                 preview,
                 working_color_space,
                 assumed_source_color_space,
+                rendering_intent,
             )
 
         if not self._allow_raw:
@@ -196,6 +221,7 @@ class ImageReader:
             preview,
             working_color_space,
             DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+            rendering_intent,
         )
 
     def _validate_path(self, path: Path) -> None:
@@ -220,12 +246,14 @@ class ImageReader:
         bgr: np.ndarray,
         working_color_space: WorkingColorSpace,
         assumed_source_color_space: WorkingColorSpace,
+        rendering_intent: RenderingIntent,
     ) -> np.ndarray:
         return self._color_converter.convert_file_bgr_to_working_space(
             path,
             bgr,
             working_color_space,
             assumed_source_color_space,
+            rendering_intent,
         )
 
     def _convert_to_working_space_with_info(
@@ -234,12 +262,14 @@ class ImageReader:
         bgr: np.ndarray,
         working_color_space: WorkingColorSpace,
         assumed_source_color_space: WorkingColorSpace,
+        rendering_intent: RenderingIntent,
     ) -> tuple[np.ndarray, ImageColorProfileInfo]:
         return self._color_converter.convert_file_bgr_to_working_space_with_info(
             path,
             bgr,
             working_color_space,
             assumed_source_color_space,
+            rendering_intent,
         )
 
     def _read_raw(self, path: Path, preview: bool) -> Optional[np.ndarray]:

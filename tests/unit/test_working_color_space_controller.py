@@ -20,6 +20,7 @@ from pic_viewer.app.dto.image_analysis import ImageLoadResult, PreviewLoadResult
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
+from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 from pic_viewer.ui.workers.image_worker import ImageLoadTask, PreviewLoadTask  # noqa: E402
 
@@ -40,6 +41,7 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
             preview_rgb=np.zeros((1, 1, 3), dtype=np.uint8),
             working_color_space=WorkingColorSpace.DISPLAY_P3,
             assumed_source_color_space=WorkingColorSpace.ADOBE_RGB_1998,
+            rendering_intent=RenderingIntent.RELATIVE_COLORIMETRIC,
         )
         service.load_preview.return_value = preview_result
         service.load_and_analyze.return_value = MagicMock()
@@ -49,23 +51,27 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
             path,
             WorkingColorSpace.DISPLAY_P3,
             WorkingColorSpace.ADOBE_RGB_1998,
+            RenderingIntent.RELATIVE_COLORIMETRIC,
         ).run()
         ImageLoadTask(
             service,
             path,
             WorkingColorSpace.PROPHOTO_RGB,
             WorkingColorSpace.DISPLAY_P3,
+            RenderingIntent.ABSOLUTE_COLORIMETRIC,
         ).run()
 
         service.load_preview.assert_called_once_with(
             path,
             WorkingColorSpace.DISPLAY_P3,
             WorkingColorSpace.ADOBE_RGB_1998,
+            RenderingIntent.RELATIVE_COLORIMETRIC,
         )
         service.load_and_analyze.assert_called_once_with(
             path,
             WorkingColorSpace.PROPHOTO_RGB,
             WorkingColorSpace.DISPLAY_P3,
+            RenderingIntent.ABSOLUTE_COLORIMETRIC,
         )
 
     def test_worker_tasks_default_to_app_working_color_space(self) -> None:
@@ -83,11 +89,13 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
             path,
             WorkingColorSpace.PROPHOTO_RGB,
             WorkingColorSpace.SRGB,
+            RenderingIntent.PERCEPTUAL,
         )
         service.load_and_analyze.assert_called_once_with(
             path,
             WorkingColorSpace.PROPHOTO_RGB,
             WorkingColorSpace.SRGB,
+            RenderingIntent.PERCEPTUAL,
         )
 
     def test_switching_working_color_space_clears_image_caches_and_reloads_open_tabs(self) -> None:
@@ -158,6 +166,40 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         controller._ensure_full_load.assert_called_once_with(path, 1)
         controller.update_info_for_image.assert_called_once_with(path)
 
+    def test_switching_rendering_intent_clears_image_caches_and_reloads_open_tabs(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        path = Path("/tmp/sample.jpg")
+        tab = QtWidgets.QWidget()
+        tab.setProperty("image_path", str(path))
+        ui.tabsImages.addTab(tab, path.name)
+        ui.tabsImages.setCurrentIndex(0)
+        key = str(path)
+        controller._images_by_path[key] = object()
+        controller._preview_by_path[key] = object()
+        controller._load_error_by_path[key] = "old error"
+        controller._preview_tasks_by_path[key] = object()
+        controller._load_tasks_by_path[key] = object()
+        controller._analysis_render_key_by_path[key] = object()
+        controller._tab_preview_render_key_by_path[key] = object()
+        controller._zoom_by_path[key] = 2.0
+
+        index = ui.comboRenderingIntent.findData(RenderingIntent.RELATIVE_COLORIMETRIC)
+        MainController._on_rendering_intent_changed(controller, index)
+
+        self.assertEqual(RenderingIntent.RELATIVE_COLORIMETRIC, controller._rendering_intent)
+        self.assertNotIn(key, controller._images_by_path)
+        self.assertNotIn(key, controller._preview_by_path)
+        self.assertNotIn(key, controller._load_error_by_path)
+        self.assertNotIn(key, controller._preview_tasks_by_path)
+        self.assertNotIn(key, controller._load_tasks_by_path)
+        self.assertNotIn(key, controller._analysis_render_key_by_path)
+        self.assertNotIn(key, controller._tab_preview_render_key_by_path)
+        self.assertEqual(2.0, controller._zoom_by_path[key])
+        controller._ensure_preview_load.assert_called_once_with(path, 1)
+        controller._ensure_full_load.assert_called_once_with(path, 1)
+        controller.update_info_for_image.assert_called_once_with(path)
+
     def test_stale_preview_result_from_old_working_space_is_ignored(self) -> None:
         window, _, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
@@ -170,6 +212,7 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
             preview_rgb=np.zeros((1, 1, 3), dtype=np.uint8),
             working_color_space=WorkingColorSpace.SRGB,
             assumed_source_color_space=WorkingColorSpace.SRGB,
+            rendering_intent=RenderingIntent.PERCEPTUAL,
             source_color_profile=ImageColorProfileInfo(
                 display_name="sRGB",
                 status=ImageColorProfileStatus.MISSING,
@@ -196,6 +239,35 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
             preview_rgb=np.zeros((1, 1, 3), dtype=np.uint8),
             working_color_space=WorkingColorSpace.DISPLAY_P3,
             assumed_source_color_space=WorkingColorSpace.SRGB,
+            rendering_intent=RenderingIntent.PERCEPTUAL,
+            source_color_profile=ImageColorProfileInfo(
+                display_name="sRGB",
+                status=ImageColorProfileStatus.MISSING,
+                uses_srgb_fallback=True,
+            ),
+        )
+        controller._ui.labelImageColorSpaceValue.setText("Display P3 (embedded ICC)")
+
+        MainController._on_preview_loaded(controller, path, 1, result)
+
+        self.assertNotIn(key, controller._preview_by_path)
+        self.assertEqual("Display P3 (embedded ICC)", controller._ui.labelImageColorSpaceValue.text())
+
+    def test_stale_preview_result_from_old_rendering_intent_is_ignored(self) -> None:
+        window, _, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        path = Path("/tmp/sample.jpg")
+        key = str(path)
+        controller._active_session_by_path[key] = 1
+        controller._preview_tasks_by_path[key] = object()
+        controller._working_color_space = WorkingColorSpace.DISPLAY_P3
+        controller._assumed_source_color_space = WorkingColorSpace.ADOBE_RGB_1998
+        controller._rendering_intent = RenderingIntent.RELATIVE_COLORIMETRIC
+        result = PreviewLoadResult(
+            preview_rgb=np.zeros((1, 1, 3), dtype=np.uint8),
+            working_color_space=WorkingColorSpace.DISPLAY_P3,
+            assumed_source_color_space=WorkingColorSpace.ADOBE_RGB_1998,
+            rendering_intent=RenderingIntent.PERCEPTUAL,
             source_color_profile=ImageColorProfileInfo(
                 display_name="sRGB",
                 status=ImageColorProfileStatus.MISSING,
@@ -220,6 +292,7 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         analysis = MagicMock()
         analysis.working_color_space = WorkingColorSpace.SRGB
         analysis.assumed_source_color_space = WorkingColorSpace.SRGB
+        analysis.rendering_intent = RenderingIntent.PERCEPTUAL
         analysis.source_color_profile = ImageColorProfileInfo(
             display_name="sRGB",
             status=ImageColorProfileStatus.MISSING,
@@ -245,6 +318,34 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         analysis = MagicMock()
         analysis.working_color_space = WorkingColorSpace.DISPLAY_P3
         analysis.assumed_source_color_space = WorkingColorSpace.SRGB
+        analysis.rendering_intent = RenderingIntent.PERCEPTUAL
+        analysis.source_color_profile = ImageColorProfileInfo(
+            display_name="sRGB",
+            status=ImageColorProfileStatus.MISSING,
+            uses_srgb_fallback=True,
+        )
+        result = ImageLoadResult(analysis=analysis, metadata=MagicMock())
+        controller._ui.labelImageColorSpaceValue.setText("Display P3 (embedded ICC)")
+
+        MainController._on_loaded(controller, path, 1, result)
+
+        self.assertNotIn(key, controller._images_by_path)
+        self.assertEqual("Display P3 (embedded ICC)", controller._ui.labelImageColorSpaceValue.text())
+
+    def test_stale_full_load_result_from_old_rendering_intent_is_ignored(self) -> None:
+        window, _, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        path = Path("/tmp/sample.jpg")
+        key = str(path)
+        controller._active_session_by_path[key] = 1
+        controller._load_tasks_by_path[key] = object()
+        controller._working_color_space = WorkingColorSpace.DISPLAY_P3
+        controller._assumed_source_color_space = WorkingColorSpace.ADOBE_RGB_1998
+        controller._rendering_intent = RenderingIntent.RELATIVE_COLORIMETRIC
+        analysis = MagicMock()
+        analysis.working_color_space = WorkingColorSpace.DISPLAY_P3
+        analysis.assumed_source_color_space = WorkingColorSpace.ADOBE_RGB_1998
+        analysis.rendering_intent = RenderingIntent.PERCEPTUAL
         analysis.source_color_profile = ImageColorProfileInfo(
             display_name="sRGB",
             status=ImageColorProfileStatus.MISSING,
@@ -269,6 +370,7 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         controller._tr = lambda text: text  # type: ignore[method-assign]
         controller._working_color_space = WorkingColorSpace.PROPHOTO_RGB
         controller._assumed_source_color_space = WorkingColorSpace.SRGB
+        controller._rendering_intent = RenderingIntent.PERCEPTUAL
         controller._images_by_path = {}
         controller._preview_by_path = {}
         controller._preview_tasks_by_path = {}

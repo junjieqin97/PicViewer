@@ -14,6 +14,7 @@ from pic_viewer.domain.models.color_space import (
     DEFAULT_WORKING_COLOR_SPACE,
     WorkingColorSpace,
 )
+from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +35,14 @@ class PreviewLoadTask(QtCore.QRunnable):
         path: Path,
         working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
         assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> None:
         super().__init__()
         self._service = service
         self._path = path
         self._working_color_space = working_color_space
         self._assumed_source_color_space = assumed_source_color_space
+        self._rendering_intent = rendering_intent
         self.signals = ImageTaskSignals()
         self.setAutoDelete(True)
 
@@ -52,6 +55,7 @@ class PreviewLoadTask(QtCore.QRunnable):
                 self._path,
                 self._working_color_space,
                 self._assumed_source_color_space,
+                self._rendering_intent,
             )
         except (ImageLoadError, ImageProcessError) as exc:
             self.signals.error.emit(str(exc))
@@ -73,12 +77,14 @@ class ImageLoadTask(QtCore.QRunnable):
         path: Path,
         working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
         assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> None:
         super().__init__()
         self._service = service
         self._path = path
         self._working_color_space = working_color_space
         self._assumed_source_color_space = assumed_source_color_space
+        self._rendering_intent = rendering_intent
         self.signals = ImageTaskSignals()
         self.setAutoDelete(True)
 
@@ -91,6 +97,7 @@ class ImageLoadTask(QtCore.QRunnable):
                 self._path,
                 self._working_color_space,
                 self._assumed_source_color_space,
+                self._rendering_intent,
             )
         except (ImageLoadError, ImageProcessError) as exc:
             self.signals.error.emit(str(exc))

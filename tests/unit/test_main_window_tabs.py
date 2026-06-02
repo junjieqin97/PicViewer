@@ -24,6 +24,7 @@ from pic_viewer.controllers.main_controller_interaction_mixin import (  # noqa: 
 from pic_viewer.controllers.main_controller_filmstrip_mixin import (  # noqa: E402
     MainControllerFilmstripMixin,
 )
+from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 from pic_viewer.ui.widgets.detachable_tabs import DetachableTabWidget  # noqa: E402
 
@@ -215,12 +216,13 @@ class MainWindowTabsTests(unittest.TestCase):
         analysis_layout = ui.tabAnalysis.layout()
         self.assertIs(ui.widgetImageColorSpace, analysis_layout.itemAt(0).widget())
         self.assertIs(ui.widgetSpecifiedImageColorSpace, analysis_layout.itemAt(1).widget())
-        self.assertIs(ui.widgetWorkingColorSpace, analysis_layout.itemAt(2).widget())
-        self.assertIs(histogram_frame, analysis_layout.itemAt(3).widget())
-        self.assertIs(waveform_frame, analysis_layout.itemAt(4).widget())
+        self.assertIs(ui.widgetRenderingIntent, analysis_layout.itemAt(2).widget())
+        self.assertIs(ui.widgetWorkingColorSpace, analysis_layout.itemAt(3).widget())
+        self.assertIs(histogram_frame, analysis_layout.itemAt(4).widget())
+        self.assertIs(waveform_frame, analysis_layout.itemAt(5).widget())
         expected_alignment = QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignTop
-        self.assertEqual(expected_alignment, analysis_layout.itemAt(3).alignment())
         self.assertEqual(expected_alignment, analysis_layout.itemAt(4).alignment())
+        self.assertEqual(expected_alignment, analysis_layout.itemAt(5).alignment())
 
     def test_filmstrip_allows_full_file_name_display(self) -> None:
         window = QtWidgets.QMainWindow()
@@ -499,6 +501,29 @@ class MainWindowTabsTests(unittest.TestCase):
         )
         self.assertEqual("ProPhoto RGB", ui.comboWorkingColorSpace.currentText())
 
+    def test_analysis_tab_has_rendering_intent_selector_between_source_and_working_spaces(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        self.assertEqual("widgetRenderingIntent", ui.widgetRenderingIntent.objectName())
+        self.assertEqual("labelRenderingIntentTitle", ui.labelRenderingIntentTitle.objectName())
+        self.assertEqual("comboRenderingIntent", ui.comboRenderingIntent.objectName())
+        self.assertEqual("Rendering Intent", ui.labelRenderingIntentTitle.text())
+        self.assertEqual(
+            ["Perceptual", "Relative Colorimetric", "Saturation", "Absolute Colorimetric"],
+            [ui.comboRenderingIntent.itemText(index) for index in range(ui.comboRenderingIntent.count())],
+        )
+        self.assertEqual("Perceptual", ui.comboRenderingIntent.currentText())
+        self.assertEqual(RenderingIntent.PERCEPTUAL, ui.comboRenderingIntent.currentData())
+
+        analysis_layout = ui.tabAnalysis.layout()
+        self.assertIs(ui.widgetImageColorSpace, analysis_layout.itemAt(0).widget())
+        self.assertIs(ui.widgetSpecifiedImageColorSpace, analysis_layout.itemAt(1).widget())
+        self.assertIs(ui.widgetRenderingIntent, analysis_layout.itemAt(2).widget())
+        self.assertIs(ui.widgetWorkingColorSpace, analysis_layout.itemAt(3).widget())
+
     def test_analysis_tab_has_specified_image_color_space_selector_between_image_and_working(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
@@ -518,7 +543,8 @@ class MainWindowTabsTests(unittest.TestCase):
         analysis_layout = ui.tabAnalysis.layout()
         self.assertIs(ui.widgetImageColorSpace, analysis_layout.itemAt(0).widget())
         self.assertIs(ui.widgetSpecifiedImageColorSpace, analysis_layout.itemAt(1).widget())
-        self.assertIs(ui.widgetWorkingColorSpace, analysis_layout.itemAt(2).widget())
+        self.assertIs(ui.widgetRenderingIntent, analysis_layout.itemAt(2).widget())
+        self.assertIs(ui.widgetWorkingColorSpace, analysis_layout.itemAt(3).widget())
 
     def test_analysis_tab_has_image_color_space_info_above_working_selector(self) -> None:
         window = QtWidgets.QMainWindow()
@@ -534,7 +560,8 @@ class MainWindowTabsTests(unittest.TestCase):
         analysis_layout = ui.tabAnalysis.layout()
         self.assertIs(ui.widgetImageColorSpace, analysis_layout.itemAt(0).widget())
         self.assertIs(ui.widgetSpecifiedImageColorSpace, analysis_layout.itemAt(1).widget())
-        self.assertIs(ui.widgetWorkingColorSpace, analysis_layout.itemAt(2).widget())
+        self.assertIs(ui.widgetRenderingIntent, analysis_layout.itemAt(2).widget())
+        self.assertIs(ui.widgetWorkingColorSpace, analysis_layout.itemAt(3).widget())
 
     def test_metadata_tables_keep_fixed_key_column_and_stretched_value_column(self) -> None:
         window = QtWidgets.QMainWindow()

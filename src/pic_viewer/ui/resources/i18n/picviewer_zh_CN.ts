@@ -721,6 +721,31 @@
             <translation>指定图片色彩空间</translation>
         </message>
         <message>
+            <location filename="main_window.py" line="898" />
+            <source>Rendering Intent</source>
+            <translation>渲染意图</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="904" />
+            <source>Perceptual</source>
+            <translation>感知</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="904" />
+            <source>Relative Colorimetric</source>
+            <translation>相对比色</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="904" />
+            <source>Saturation</source>
+            <translation>饱和度</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="904" />
+            <source>Absolute Colorimetric</source>
+            <translation>绝对比色</translation>
+        </message>
+        <message>
             <location filename="main_window.py" line="871" />
             <source>Working Color Space</source>
             <translation>工作色彩空间</translation>

@@ -13,6 +13,7 @@ from PySide6 import QtGui
 
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus
 from pic_viewer.domain.models.color_space import DEFAULT_ASSUMED_IMAGE_COLOR_SPACE, WorkingColorSpace
+from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,12 @@ class ColorProfileConverter:
         WorkingColorSpace.DISPLAY_P3: QtGui.QColorSpace.NamedColorSpace.DisplayP3,
         WorkingColorSpace.ADOBE_RGB_1998: QtGui.QColorSpace.NamedColorSpace.AdobeRgb,
         WorkingColorSpace.PROPHOTO_RGB: QtGui.QColorSpace.NamedColorSpace.ProPhotoRgb,
+    }
+    _PILLOW_RENDERING_INTENTS: dict[RenderingIntent, ImageCms.Intent] = {
+        RenderingIntent.PERCEPTUAL: ImageCms.Intent.PERCEPTUAL,
+        RenderingIntent.RELATIVE_COLORIMETRIC: ImageCms.Intent.RELATIVE_COLORIMETRIC,
+        RenderingIntent.SATURATION: ImageCms.Intent.SATURATION,
+        RenderingIntent.ABSOLUTE_COLORIMETRIC: ImageCms.Intent.ABSOLUTE_COLORIMETRIC,
     }
 
     def __init__(self) -> None:
@@ -64,6 +71,7 @@ class ColorProfileConverter:
         bgr: np.ndarray,
         working_color_space: WorkingColorSpace,
         assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> np.ndarray:
         """Convert decoded BGR pixels from embedded ICC profile to working space.
 
@@ -72,6 +80,7 @@ class ColorProfileConverter:
             bgr: Decoded BGR image pixels.
             working_color_space: Target RGB working color space.
             assumed_source_color_space: Source color space to use when ICC is unavailable.
+            rendering_intent: ICC rendering intent used for gamut mapping.
 
         Returns:
             A BGR uint8 array in the selected working color space. If profile
@@ -83,6 +92,7 @@ class ColorProfileConverter:
             bgr,
             working_color_space,
             assumed_source_color_space,
+            rendering_intent,
         )
         return converted_bgr
 
@@ -92,6 +102,7 @@ class ColorProfileConverter:
         bgr: np.ndarray,
         working_color_space: WorkingColorSpace,
         assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> tuple[np.ndarray, ImageColorProfileInfo]:
         """Convert decoded BGR pixels and return source ICC status."""
 
@@ -110,6 +121,7 @@ class ColorProfileConverter:
             target_profile,
             source_path=path,
             target_label=working_color_space.value,
+            rendering_intent=rendering_intent,
         )
         if converted_rgb is None and not source_info.uses_srgb_fallback:
             source_info = self._fallback_profile_info(
@@ -125,6 +137,7 @@ class ColorProfileConverter:
                     target_profile,
                     source_path=path,
                     target_label=working_color_space.value,
+                    rendering_intent=rendering_intent,
                 )
         if converted_rgb is None:
             converted_rgb = rgb.copy()
@@ -134,6 +147,7 @@ class ColorProfileConverter:
         self,
         rgb: np.ndarray,
         working_color_space: WorkingColorSpace,
+        rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> np.ndarray:
         """Convert preview RGB pixels from the working color space to sRGB."""
 
@@ -146,6 +160,7 @@ class ColorProfileConverter:
             self.profile_for(WorkingColorSpace.SRGB),
             source_path=None,
             target_label=WorkingColorSpace.SRGB.value,
+            rendering_intent=rendering_intent,
         )
         if converted is None:
             return rgb.copy()
@@ -237,6 +252,7 @@ class ColorProfileConverter:
         target_profile: ImageCms.ImageCmsProfile,
         source_path: Path | None,
         target_label: str,
+        rendering_intent: RenderingIntent,
     ) -> np.ndarray | None:
         image = Image.fromarray(np.ascontiguousarray(rgb))
         try:
@@ -244,6 +260,7 @@ class ColorProfileConverter:
                 image,
                 source_profile,
                 target_profile,
+                renderingIntent=self._PILLOW_RENDERING_INTENTS[rendering_intent],
                 outputMode="RGB",
             )
         except (ImageCms.PyCMSError, OSError, ValueError):

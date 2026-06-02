@@ -23,6 +23,7 @@ from pic_viewer.domain.models.color_space import (
     DEFAULT_WORKING_COLOR_SPACE,
     WorkingColorSpace,
 )
+from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
 from pic_viewer.domain.rules.reference_lines import ReferenceLineSettings
 from pic_viewer.ui.workers.image_worker import ImageLoadTask, PreviewLoadTask
@@ -79,6 +80,7 @@ class MainController(
         self._view_settings = AnalysisViewSettings(mode=LumaRgbMode.LUMA, channel=RgbChannel.ALL)
         self._working_color_space = DEFAULT_WORKING_COLOR_SPACE
         self._assumed_source_color_space = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
+        self._rendering_intent = DEFAULT_RENDERING_INTENT
         self._last_splitter_sizes: Optional[list[int]] = None
         self._last_metadata_path: Optional[str] = None
         self._cursor_boundary_margin = 4
@@ -159,6 +161,7 @@ class MainController(
         self._ui.comboSpecifiedImageColorSpace.currentIndexChanged.connect(
             self._on_assumed_source_color_space_changed
         )
+        self._ui.comboRenderingIntent.currentIndexChanged.connect(self._on_rendering_intent_changed)
         self._ui.comboWorkingColorSpace.currentIndexChanged.connect(self._on_working_color_space_changed)
         if hasattr(self._ui, "actToggleUnderexposed"):
             self._ui.actToggleUnderexposed.toggled.connect(self._on_underexposed_toggled)

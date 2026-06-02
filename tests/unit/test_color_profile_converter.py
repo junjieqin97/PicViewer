@@ -15,6 +15,7 @@ if str(SRC_ROOT) not in sys.path:
 
 from pic_viewer.domain.models.color_profile import ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
+from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConverter  # noqa: E402
 
 
@@ -154,6 +155,30 @@ class ColorProfileConverterTests(unittest.TestCase):
         self.assertEqual(bgr.shape, result.shape)
         self.assertEqual(np.uint8, result.dtype)
         np.testing.assert_array_equal(result[0, 0], np.array([30, 20, 10], dtype=np.uint8))
+
+    def test_embedded_profile_conversion_uses_selected_rendering_intent(self) -> None:
+        converter = ColorProfileConverter()
+        bgr = np.zeros((1, 1, 3), dtype=np.uint8)
+        converted_rgb = Image.new("RGB", (1, 1), (10, 20, 30))
+
+        with (
+            patch.object(
+                converter,
+                "_read_embedded_icc_profile",
+                return_value=converter.profile_bytes_for(WorkingColorSpace.SRGB),
+            ),
+            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
+        ):
+            transform.return_value = converted_rgb
+            converter.convert_file_bgr_to_working_space(
+                Path("/tmp/profiled.jpg"),
+                bgr,
+                WorkingColorSpace.DISPLAY_P3,
+                rendering_intent=RenderingIntent.RELATIVE_COLORIMETRIC,
+            )
+
+        transform.assert_called_once()
+        self.assertEqual(ImageCms.Intent.RELATIVE_COLORIMETRIC, transform.call_args.kwargs["renderingIntent"])
 
     def test_invalid_embedded_profile_falls_back_to_srgb_source_profile(self) -> None:
         converter = ColorProfileConverter()
@@ -339,6 +364,22 @@ class ColorProfileConverterTests(unittest.TestCase):
 
         transform.assert_called_once()
         np.testing.assert_array_equal(result[0, 0], np.array([44, 55, 66], dtype=np.uint8))
+
+    def test_working_space_preview_uses_selected_rendering_intent(self) -> None:
+        converter = ColorProfileConverter()
+        working_rgb = np.zeros((1, 1, 3), dtype=np.uint8)
+        converted_rgb = Image.new("RGB", (1, 1), (44, 55, 66))
+
+        with patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform:
+            transform.return_value = converted_rgb
+            converter.convert_working_rgb_to_srgb(
+                working_rgb,
+                WorkingColorSpace.ADOBE_RGB_1998,
+                RenderingIntent.ABSOLUTE_COLORIMETRIC,
+            )
+
+        transform.assert_called_once()
+        self.assertEqual(ImageCms.Intent.ABSOLUTE_COLORIMETRIC, transform.call_args.kwargs["renderingIntent"])
 
 
 if __name__ == "__main__":

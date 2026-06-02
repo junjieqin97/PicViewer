@@ -16,6 +16,7 @@ from pic_viewer.app.services.image_service import ImageService  # noqa: E402
 from pic_viewer.common.errors import ImageLoadError  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
+from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel  # noqa: E402
 
 
@@ -54,14 +55,17 @@ class ImageServicePreviewTests(unittest.TestCase):
             self.path,
             working_color_space=WorkingColorSpace.DISPLAY_P3,
             assumed_source_color_space=WorkingColorSpace.SRGB,
+            rendering_intent=RenderingIntent.PERCEPTUAL,
         )
         self.analyzer.build_preview_rgb.assert_called_once_with(preview_bgr)
         self.color_converter.convert_working_rgb_to_srgb.assert_called_once_with(
             preview_rgb,
             WorkingColorSpace.DISPLAY_P3,
+            RenderingIntent.PERCEPTUAL,
         )
         self.assertEqual(WorkingColorSpace.DISPLAY_P3, result.working_color_space)
         self.assertEqual(WorkingColorSpace.SRGB, result.assumed_source_color_space)
+        self.assertEqual(RenderingIntent.PERCEPTUAL, result.rendering_intent)
         self.assertEqual(source_profile, result.source_color_profile)
         np.testing.assert_array_equal(result.preview_rgb, display_rgb)
 
@@ -84,10 +88,12 @@ class ImageServicePreviewTests(unittest.TestCase):
             self.path,
             working_color_space=WorkingColorSpace.PROPHOTO_RGB,
             assumed_source_color_space=WorkingColorSpace.SRGB,
+            rendering_intent=RenderingIntent.PERCEPTUAL,
         )
         self.color_converter.convert_working_rgb_to_srgb.assert_called_once_with(
             preview_rgb,
             WorkingColorSpace.PROPHOTO_RGB,
+            RenderingIntent.PERCEPTUAL,
         )
         self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, result.working_color_space)
 
@@ -108,15 +114,23 @@ class ImageServicePreviewTests(unittest.TestCase):
             self.path,
             WorkingColorSpace.PROPHOTO_RGB,
             WorkingColorSpace.DISPLAY_P3,
+            RenderingIntent.ABSOLUTE_COLORIMETRIC,
         )
 
         self.reader.read_preview_with_color_profile_info.assert_called_once_with(
             self.path,
             working_color_space=WorkingColorSpace.PROPHOTO_RGB,
             assumed_source_color_space=WorkingColorSpace.DISPLAY_P3,
+            rendering_intent=RenderingIntent.ABSOLUTE_COLORIMETRIC,
+        )
+        self.color_converter.convert_working_rgb_to_srgb.assert_called_once_with(
+            preview_rgb,
+            WorkingColorSpace.PROPHOTO_RGB,
+            RenderingIntent.ABSOLUTE_COLORIMETRIC,
         )
         self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, result.working_color_space)
         self.assertEqual(WorkingColorSpace.DISPLAY_P3, result.assumed_source_color_space)
+        self.assertEqual(RenderingIntent.ABSOLUTE_COLORIMETRIC, result.rendering_intent)
 
     def test_load_preview_propagates_image_load_error(self) -> None:
         self.reader.read_preview_with_color_profile_info.side_effect = ImageLoadError("bad image")

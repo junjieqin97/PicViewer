@@ -11,6 +11,10 @@ from pic_viewer.domain.models.color_space import (
     DEFAULT_WORKING_COLOR_SPACE,
     WORKING_COLOR_SPACE_ORDER,
 )
+from pic_viewer.domain.models.rendering_intent import (
+    DEFAULT_RENDERING_INTENT,
+    RENDERING_INTENT_ORDER,
+)
 from pic_viewer.ui.resources import styles
 from pic_viewer.ui.resources.icons import icon_path
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel
@@ -556,6 +560,29 @@ class MainWindowUI:
         specified_space_layout.addWidget(self.comboSpecifiedImageColorSpace, 1)
         analysis_layout.addWidget(self.widgetSpecifiedImageColorSpace)
 
+        self.widgetRenderingIntent = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetRenderingIntent.setObjectName("widgetRenderingIntent")
+        rendering_intent_layout = QtWidgets.QHBoxLayout(self.widgetRenderingIntent)
+        rendering_intent_layout.setObjectName("layoutRenderingIntent")
+        rendering_intent_layout.setContentsMargins(0, 0, 0, 0)
+        rendering_intent_layout.setSpacing(8)
+        self.labelRenderingIntentTitle = QtWidgets.QLabel(self.widgetRenderingIntent)
+        self.labelRenderingIntentTitle.setObjectName("labelRenderingIntentTitle")
+        self.comboRenderingIntent = QtWidgets.QComboBox(self.widgetRenderingIntent)
+        self.comboRenderingIntent.setObjectName("comboRenderingIntent")
+        self.comboRenderingIntent.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Fixed,
+        )
+        for rendering_intent in RENDERING_INTENT_ORDER:
+            self.comboRenderingIntent.addItem(rendering_intent.display_name, rendering_intent)
+        rendering_index = self.comboRenderingIntent.findData(DEFAULT_RENDERING_INTENT)
+        if rendering_index >= 0:
+            self.comboRenderingIntent.setCurrentIndex(rendering_index)
+        rendering_intent_layout.addWidget(self.labelRenderingIntentTitle)
+        rendering_intent_layout.addWidget(self.comboRenderingIntent, 1)
+        analysis_layout.addWidget(self.widgetRenderingIntent)
+
         self.widgetWorkingColorSpace = QtWidgets.QWidget(self.tabAnalysis)
         self.widgetWorkingColorSpace.setObjectName("widgetWorkingColorSpace")
         working_space_layout = QtWidgets.QHBoxLayout(self.widgetWorkingColorSpace)
@@ -868,10 +895,13 @@ class MainWindowUI:
         self.labelImageColorSpaceTitle.setText(self._tr("Image Color Space"))
         self.labelImageColorSpaceValue.setText(self._tr("Not Loaded"))
         self.labelSpecifiedImageColorSpaceTitle.setText(self._tr("Specify Image Color Space"))
+        self.labelRenderingIntentTitle.setText(self._tr("Rendering Intent"))
         self.labelWorkingColorSpaceTitle.setText(self._tr("Working Color Space"))
         for index, color_space in enumerate(WORKING_COLOR_SPACE_ORDER):
             self.comboSpecifiedImageColorSpace.setItemText(index, self._tr(color_space.display_name))
             self.comboWorkingColorSpace.setItemText(index, self._tr(color_space.display_name))
+        for index, rendering_intent in enumerate(RENDERING_INTENT_ORDER):
+            self.comboRenderingIntent.setItemText(index, self._tr(rendering_intent.display_name))
 
         self.widgetHistogram.setText(self._tr("Histogram Placeholder"))
         self.widgetHistogram.set_triangle_tooltips(

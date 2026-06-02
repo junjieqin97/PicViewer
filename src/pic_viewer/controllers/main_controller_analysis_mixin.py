@@ -16,6 +16,10 @@ from pic_viewer.domain.models.color_space import (
     DEFAULT_WORKING_COLOR_SPACE,
     WorkingColorSpace,
 )
+from pic_viewer.domain.models.rendering_intent import (
+    DEFAULT_RENDERING_INTENT,
+    RenderingIntent,
+)
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
 from pic_viewer.ui.utils.image_qt import to_qpixmap
 from pic_viewer.ui.utils.signal_blocker import block_signals
@@ -168,6 +172,25 @@ class MainControllerAnalysisMixin:
             return
 
         self._assumed_source_color_space = selected
+        self._current_analysis_render_key = None
+        self._reload_open_images_for_color_settings()
+
+    def _on_rendering_intent_changed(self, index: int) -> None:
+        """Reload open images when the global ICC rendering intent changes."""
+
+        combo = self._ui.comboRenderingIntent
+        selected = combo.itemData(index)
+        if isinstance(selected, str):
+            try:
+                selected = RenderingIntent(selected)
+            except ValueError:
+                return
+        if not isinstance(selected, RenderingIntent):
+            return
+        if selected == self._rendering_intent:
+            return
+
+        self._rendering_intent = selected
         self._current_analysis_render_key = None
         self._reload_open_images_for_color_settings()
 
@@ -457,6 +480,7 @@ class MainControllerAnalysisMixin:
             self._view_settings.channel.value,
             data.analysis.working_color_space.value,
             data.analysis.assumed_source_color_space.value,
+            data.analysis.rendering_intent.value,
         )
         path_key = str(image_path)
         current_render_key = (path_key, render_key)
@@ -626,6 +650,7 @@ class MainControllerAnalysisMixin:
             self._focus_peak_level.value if self._focus_peak_level is not None else None,
             getattr(self, "_working_color_space", DEFAULT_WORKING_COLOR_SPACE).value,
             getattr(self, "_assumed_source_color_space", DEFAULT_ASSUMED_IMAGE_COLOR_SPACE).value,
+            getattr(self, "_rendering_intent", DEFAULT_RENDERING_INTENT).value,
             id(preview_rgb),
         )
         if (

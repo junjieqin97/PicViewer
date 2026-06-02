@@ -105,6 +105,15 @@ class UiStylesTests(unittest.TestCase):
         self.assertIn("background: #eef2f6", light_rule)
         self.assertIn("border: 1px solid #d8e0ea", light_rule)
 
+    def test_rendering_intent_selector_uses_color_setting_styles(self) -> None:
+        dark_style = styles.load_stylesheet(styles.AppearanceTheme.DARK)
+        light_style = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
+
+        self.assertIn("QLabel#labelRenderingIntentTitle", dark_style)
+        self.assertIn("QComboBox#comboRenderingIntent", dark_style)
+        self.assertIn("QLabel#labelRenderingIntentTitle", light_style)
+        self.assertIn("QComboBox#comboRenderingIntent", light_style)
+
     def test_theme_from_color_scheme_maps_system_values(self) -> None:
         self.assertEqual(
             styles.AppearanceTheme.LIGHT,

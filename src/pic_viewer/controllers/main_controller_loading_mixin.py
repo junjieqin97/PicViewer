@@ -61,6 +61,7 @@ class MainControllerLoadingMixin:
             path,
             self._working_color_space,
             self._assumed_source_color_space,
+            self._rendering_intent,
         )
         task.signals.finished.connect(lambda result, p=path, s=session: self._on_preview_loaded(p, s, result))
         task.signals.error.connect(lambda message, p=path, s=session: self._on_preview_error(p, s, message))
@@ -92,6 +93,7 @@ class MainControllerLoadingMixin:
             path,
             self._working_color_space,
             self._assumed_source_color_space,
+            self._rendering_intent,
         )
         task.signals.finished.connect(lambda result, p=path, s=session: self._on_loaded(p, s, result))
         task.signals.error.connect(lambda message, p=path, s=session: self._on_error(p, s, message))
@@ -116,6 +118,8 @@ class MainControllerLoadingMixin:
         if result.working_color_space != self._working_color_space:
             return
         if result.assumed_source_color_space != self._assumed_source_color_space:
+            return
+        if result.rendering_intent != self._rendering_intent:
             return
 
         self._load_error_by_path.pop(key, None)
@@ -148,6 +152,8 @@ class MainControllerLoadingMixin:
         if result.analysis.working_color_space != self._working_color_space:
             return
         if result.analysis.assumed_source_color_space != self._assumed_source_color_space:
+            return
+        if result.analysis.rendering_intent != self._rendering_intent:
             return
 
         self._load_error_by_path.pop(key, None)

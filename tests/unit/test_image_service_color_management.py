@@ -17,6 +17,7 @@ from pic_viewer.app.dto.metadata import ImageMetadata  # noqa: E402
 from pic_viewer.app.services.image_service import ImageService  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
+from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.domain.rules.analysis import AnalysisResult  # noqa: E402
 
 
@@ -51,20 +52,23 @@ class ImageServiceColorManagementTests(unittest.TestCase):
         with TemporaryDirectory() as tmp_dir:
             path = Path(tmp_dir) / "profiled.jpg"
             path.write_bytes(b"stub")
-            result = service.load_and_analyze(path, WorkingColorSpace.PROPHOTO_RGB)
+        result = service.load_and_analyze(path, WorkingColorSpace.PROPHOTO_RGB)
 
         reader.read_with_color_profile_info.assert_called_once_with(
             path,
             working_color_space=WorkingColorSpace.PROPHOTO_RGB,
             assumed_source_color_space=WorkingColorSpace.SRGB,
+            rendering_intent=RenderingIntent.PERCEPTUAL,
         )
         analyzer.analyze.assert_called_once_with(working_bgr)
         color_converter.convert_working_rgb_to_srgb.assert_called_once_with(
             working_preview_rgb,
             WorkingColorSpace.PROPHOTO_RGB,
+            RenderingIntent.PERCEPTUAL,
         )
         self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, result.analysis.working_color_space)
         self.assertEqual(WorkingColorSpace.SRGB, result.analysis.assumed_source_color_space)
+        self.assertEqual(RenderingIntent.PERCEPTUAL, result.analysis.rendering_intent)
         self.assertEqual(source_profile, result.analysis.source_color_profile)
         np.testing.assert_array_equal(result.analysis.analysis_bgr, working_bgr)
         np.testing.assert_array_equal(result.analysis.preview_rgb, display_preview_rgb)
@@ -102,10 +106,12 @@ class ImageServiceColorManagementTests(unittest.TestCase):
             path,
             working_color_space=WorkingColorSpace.PROPHOTO_RGB,
             assumed_source_color_space=WorkingColorSpace.SRGB,
+            rendering_intent=RenderingIntent.PERCEPTUAL,
         )
         color_converter.convert_working_rgb_to_srgb.assert_called_once_with(
             working_preview_rgb,
             WorkingColorSpace.PROPHOTO_RGB,
+            RenderingIntent.PERCEPTUAL,
         )
         self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, result.analysis.working_color_space)
 
@@ -136,19 +142,27 @@ class ImageServiceColorManagementTests(unittest.TestCase):
         with TemporaryDirectory() as tmp_dir:
             path = Path(tmp_dir) / "profiled.jpg"
             path.write_bytes(b"stub")
-            result = service.load_and_analyze(
-                path,
-                WorkingColorSpace.PROPHOTO_RGB,
-                WorkingColorSpace.DISPLAY_P3,
-            )
+        result = service.load_and_analyze(
+            path,
+            WorkingColorSpace.PROPHOTO_RGB,
+            WorkingColorSpace.DISPLAY_P3,
+            RenderingIntent.RELATIVE_COLORIMETRIC,
+        )
 
         reader.read_with_color_profile_info.assert_called_once_with(
             path,
             working_color_space=WorkingColorSpace.PROPHOTO_RGB,
             assumed_source_color_space=WorkingColorSpace.DISPLAY_P3,
+            rendering_intent=RenderingIntent.RELATIVE_COLORIMETRIC,
+        )
+        color_converter.convert_working_rgb_to_srgb.assert_called_once_with(
+            working_preview_rgb,
+            WorkingColorSpace.PROPHOTO_RGB,
+            RenderingIntent.RELATIVE_COLORIMETRIC,
         )
         self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, result.analysis.working_color_space)
         self.assertEqual(WorkingColorSpace.DISPLAY_P3, result.analysis.assumed_source_color_space)
+        self.assertEqual(RenderingIntent.RELATIVE_COLORIMETRIC, result.analysis.rendering_intent)
 
     def _analysis_result(self, bgr: np.ndarray, preview_rgb: np.ndarray) -> AnalysisResult:
         plot = np.zeros((2, 2, 3), dtype=np.uint8)

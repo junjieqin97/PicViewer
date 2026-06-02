@@ -68,6 +68,17 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("<source>Specify Image Color Space</source>", en_ts)
         self.assertIn("<source>Specify Image Color Space</source>", zh_ts)
         self.assertIn("<translation>指定图片色彩空间</translation>", zh_ts)
+        self.assertIn("<source>Rendering Intent</source>", en_ts)
+        self.assertIn("<source>Rendering Intent</source>", zh_ts)
+        self.assertIn("<translation>渲染意图</translation>", zh_ts)
+        for label in (
+            "Perceptual",
+            "Relative Colorimetric",
+            "Saturation",
+            "Absolute Colorimetric",
+        ):
+            self.assertIn(f"<source>{label}</source>", en_ts)
+            self.assertIn(f"<source>{label}</source>", zh_ts)
         self.assertIn("<source>sRGB (default, no embedded ICC)</source>", en_ts)
         self.assertIn("<source>sRGB (fallback, ICC conversion failed)</source>", en_ts)
         self.assertIn("<source>{name} (specified, no embedded ICC)</source>", en_ts)
