@@ -44,6 +44,22 @@ class ImageServiceColorManagementTests(unittest.TestCase):
         color_converter.load_local_profile.assert_called_once_with(path)
         self.assertEqual(local_profile, result)
 
+    def test_warm_up_optional_backends_delegates_to_metadata_reader(self) -> None:
+        reader = MagicMock()
+        analyzer = MagicMock()
+        metadata_reader = MagicMock()
+        color_converter = MagicMock()
+        service = ImageService(
+            reader=reader,
+            analyzer=analyzer,
+            metadata_reader=metadata_reader,
+            color_converter=color_converter,
+        )
+
+        service.warm_up_optional_backends()
+
+        metadata_reader.warm_up.assert_called_once_with()
+
     def test_full_load_analyzes_working_space_pixels_and_displays_srgb_preview(self) -> None:
         reader = MagicMock()
         analyzer = MagicMock()

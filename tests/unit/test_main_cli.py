@@ -4,13 +4,16 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+from pic_viewer import main as main_module
 from pic_viewer.main import parse_command_line
 
 
@@ -51,6 +54,46 @@ class MainCliTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertIn("--developer-mode", result.stdout)
         self.assertNotIn("QApplication", result.stderr)
+
+    def test_main_warms_optional_backends_before_showing_window(self) -> None:
+        events: list[str] = []
+
+        class FakeApp:
+            def setWindowIcon(self, _icon: object) -> None:
+                pass
+
+            def exec(self) -> int:
+                return 0
+
+        class FakeWindow:
+            def setWindowIcon(self, _icon: object) -> None:
+                pass
+
+            def show(self) -> None:
+                events.append("show")
+
+        service = SimpleNamespace(warm_up_optional_backends=lambda: events.append("warm"))
+
+        def build_window(*_args: object, **_kwargs: object) -> FakeWindow:
+            events.append("window")
+            return FakeWindow()
+
+        with (
+            patch.object(main_module, "load_settings", return_value=SimpleNamespace(language_override=None)),
+            patch.object(main_module, "configure_logging"),
+            patch.object(main_module.QtWidgets, "QApplication", return_value=FakeApp()),
+            patch.object(main_module, "load_app_icon", return_value=object()),
+            patch.object(main_module, "resolve_language", return_value="en"),
+            patch.object(main_module, "install_translator", return_value=("en", None)),
+            patch.object(main_module, "build_services", return_value=service),
+            patch.object(main_module, "AnalysisViewService", return_value=object()),
+            patch.object(main_module, "MainWindow", side_effect=build_window),
+        ):
+            with self.assertRaises(SystemExit) as exit_context:
+                main_module.main(["picviewer"])
+
+        self.assertEqual(0, exit_context.exception.code)
+        self.assertEqual(["warm", "window", "show"], events)
 
 
 if __name__ == "__main__":

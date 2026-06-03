@@ -125,6 +125,11 @@ class ImageService:
 
         return self._color_converter.load_local_profile(path)
 
+    def warm_up_optional_backends(self) -> None:
+        """Prepare optional native backends before background image loads start."""
+
+        self._metadata_reader.warm_up()
+
     def load_preview(
         self,
         path: Path,

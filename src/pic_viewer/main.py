@@ -86,6 +86,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     logging.getLogger(__name__).info("UI language: requested=%s, active=%s", requested_language, active_language)
 
     service = build_services(settings)
+    service.warm_up_optional_backends()
     view_service = AnalysisViewService()
     window = MainWindow(service, view_service)
     window.setWindowIcon(app_icon)
