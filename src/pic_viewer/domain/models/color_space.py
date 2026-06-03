@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
+import hashlib
+from pathlib import Path
 
 
 class WorkingColorSpace(Enum):
@@ -24,6 +27,26 @@ class WorkingColorSpace(Enum):
             WorkingColorSpace.PROPHOTO_RGB: "ProPhoto RGB",
         }
         return labels[self]
+
+
+@dataclass(frozen=True)
+class LocalColorProfile:
+    """A user-selected local ICC profile for the current session."""
+
+    display_name: str
+    path: Path
+    profile_bytes: bytes
+
+    @property
+    def stable_key(self) -> str:
+        """Return a stable key for cache and async result comparisons."""
+
+        digest = hashlib.sha1(self.profile_bytes).hexdigest()
+        return f"local:{digest}:{self.path.expanduser()}"
+
+
+ColorProfileSpec = WorkingColorSpace | LocalColorProfile
+LOCAL_COLOR_PROFILE_CHOICE_DATA = "__picviewer_choose_local_icc__"
 
 
 WORKING_COLOR_SPACE_ORDER: tuple[WorkingColorSpace, ...] = (

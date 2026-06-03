@@ -12,7 +12,7 @@ from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageC
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     DEFAULT_WORKING_COLOR_SPACE,
-    WorkingColorSpace,
+    ColorProfileSpec,
 )
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
 
@@ -61,8 +61,8 @@ class ImageAnalysis:
     waveform_r: np.ndarray
     waveform_g: np.ndarray
     waveform_b: np.ndarray
-    working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE
-    assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
+    working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE
+    assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
     rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT
     source_color_profile: ImageColorProfileInfo = DEFAULT_SOURCE_COLOR_PROFILE
 
@@ -80,7 +80,7 @@ class PreviewLoadResult:
     """Fast preview payload used for incremental loading."""
 
     preview_rgb: np.ndarray
-    working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE
-    assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
+    working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE
+    assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
     rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT
     source_color_profile: ImageColorProfileInfo = DEFAULT_SOURCE_COLOR_PROFILE

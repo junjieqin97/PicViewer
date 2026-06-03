@@ -9,11 +9,13 @@ from pic_viewer.app.services.image_service import ImageService
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     DEFAULT_WORKING_COLOR_SPACE,
+    LOCAL_COLOR_PROFILE_CHOICE_DATA,
     WORKING_COLOR_SPACE_ORDER,
 )
 from pic_viewer.domain.models.rendering_intent import (
     DEFAULT_RENDERING_INTENT,
     RENDERING_INTENT_ORDER,
+    RenderingIntent,
 )
 from pic_viewer.ui.resources import styles
 from pic_viewer.ui.resources.icons import icon_path
@@ -553,6 +555,10 @@ class MainWindowUI:
         )
         for color_space in WORKING_COLOR_SPACE_ORDER:
             self.comboSpecifiedImageColorSpace.addItem(color_space.display_name, color_space)
+        self.comboSpecifiedImageColorSpace.addItem(
+            self._tr("Choose a local ICC..."),
+            LOCAL_COLOR_PROFILE_CHOICE_DATA,
+        )
         specified_index = self.comboSpecifiedImageColorSpace.findData(DEFAULT_ASSUMED_IMAGE_COLOR_SPACE)
         if specified_index >= 0:
             self.comboSpecifiedImageColorSpace.setCurrentIndex(specified_index)
@@ -599,6 +605,10 @@ class MainWindowUI:
         )
         for color_space in WORKING_COLOR_SPACE_ORDER:
             self.comboWorkingColorSpace.addItem(color_space.display_name, color_space)
+        self.comboWorkingColorSpace.addItem(
+            self._tr("Choose a local ICC..."),
+            LOCAL_COLOR_PROFILE_CHOICE_DATA,
+        )
         default_index = self.comboWorkingColorSpace.findData(DEFAULT_WORKING_COLOR_SPACE)
         if default_index >= 0:
             self.comboWorkingColorSpace.setCurrentIndex(default_index)
@@ -609,7 +619,10 @@ class MainWindowUI:
         self.frameHistogramAnalysis = QtWidgets.QFrame(self.tabAnalysis)
         self.frameHistogramAnalysis.setObjectName("frameHistogramAnalysis")
         self.frameHistogramAnalysis.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
-        self.frameHistogramAnalysis.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.frameHistogramAnalysis.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Fixed,
+            QtWidgets.QSizePolicy.Policy.Fixed,
+        )
         hist_frame_layout = QtWidgets.QVBoxLayout(self.frameHistogramAnalysis)
         hist_frame_layout.setContentsMargins(8, 8, 8, 8)
         hist_frame_layout.setSpacing(0)
@@ -900,8 +913,15 @@ class MainWindowUI:
         for index, color_space in enumerate(WORKING_COLOR_SPACE_ORDER):
             self.comboSpecifiedImageColorSpace.setItemText(index, self._tr(color_space.display_name))
             self.comboWorkingColorSpace.setItemText(index, self._tr(color_space.display_name))
+        for combo in (self.comboSpecifiedImageColorSpace, self.comboWorkingColorSpace):
+            choose_index = combo.findData(LOCAL_COLOR_PROFILE_CHOICE_DATA)
+            if choose_index >= 0:
+                combo.setItemText(choose_index, self._tr("Choose a local ICC..."))
         for index, rendering_intent in enumerate(RENDERING_INTENT_ORDER):
-            self.comboRenderingIntent.setItemText(index, self._tr(rendering_intent.display_name))
+            self.comboRenderingIntent.setItemText(
+                index,
+                self._translated_rendering_intent_label(rendering_intent),
+            )
 
         self.widgetHistogram.setText(self._tr("Histogram Placeholder"))
         self.widgetHistogram.set_triangle_tooltips(
@@ -930,6 +950,15 @@ class MainWindowUI:
         )
         for action in actions:
             action.setToolTip(action.text())
+
+    def _translated_rendering_intent_label(self, rendering_intent: RenderingIntent) -> str:
+        labels = {
+            RenderingIntent.PERCEPTUAL: self._tr("Perceptual"),
+            RenderingIntent.RELATIVE_COLORIMETRIC: self._tr("Relative Colorimetric"),
+            RenderingIntent.SATURATION: self._tr("Saturation"),
+            RenderingIntent.ABSOLUTE_COLORIMETRIC: self._tr("Absolute Colorimetric"),
+        }
+        return labels[rendering_intent]
 
     def _set_metadata_headers(self) -> None:
         headers = [self._tr("Key"), self._tr("Value")]

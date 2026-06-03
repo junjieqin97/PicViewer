@@ -496,7 +496,7 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertEqual("comboWorkingColorSpace", ui.comboWorkingColorSpace.objectName())
         self.assertEqual("Working Color Space", ui.labelWorkingColorSpaceTitle.text())
         self.assertEqual(
-            ["sRGB", "Display P3", "Adobe RGB (1998)", "ProPhoto RGB"],
+            ["sRGB", "Display P3", "Adobe RGB (1998)", "ProPhoto RGB", "Choose a local ICC..."],
             [ui.comboWorkingColorSpace.itemText(index) for index in range(ui.comboWorkingColorSpace.count())],
         )
         self.assertEqual("ProPhoto RGB", ui.comboWorkingColorSpace.currentText())
@@ -535,8 +535,11 @@ class MainWindowTabsTests(unittest.TestCase):
         self.assertEqual("comboSpecifiedImageColorSpace", ui.comboSpecifiedImageColorSpace.objectName())
         self.assertEqual("Specify Image Color Space", ui.labelSpecifiedImageColorSpaceTitle.text())
         self.assertEqual(
-            ["sRGB", "Display P3", "Adobe RGB (1998)", "ProPhoto RGB"],
-            [ui.comboSpecifiedImageColorSpace.itemText(index) for index in range(ui.comboSpecifiedImageColorSpace.count())],
+            ["sRGB", "Display P3", "Adobe RGB (1998)", "ProPhoto RGB", "Choose a local ICC..."],
+            [
+                ui.comboSpecifiedImageColorSpace.itemText(index)
+                for index in range(ui.comboSpecifiedImageColorSpace.count())
+            ],
         )
         self.assertEqual("sRGB", ui.comboSpecifiedImageColorSpace.currentText())
 

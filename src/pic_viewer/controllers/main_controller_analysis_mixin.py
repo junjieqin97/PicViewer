@@ -10,10 +10,14 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.dto.analysis_view import AnalysisViewSettings, LumaRgbMode, RgbChannel
 from pic_viewer.app.dto.image_analysis import ImageAnalysis
+from pic_viewer.common.errors import ColorProfileLoadError
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     DEFAULT_WORKING_COLOR_SPACE,
+    LOCAL_COLOR_PROFILE_CHOICE_DATA,
+    ColorProfileSpec,
+    LocalColorProfile,
     WorkingColorSpace,
 )
 from pic_viewer.domain.models.rendering_intent import (
@@ -142,12 +146,18 @@ class MainControllerAnalysisMixin:
 
         combo = self._ui.comboWorkingColorSpace
         selected = combo.itemData(index)
+        if selected == LOCAL_COLOR_PROFILE_CHOICE_DATA:
+            self._choose_and_apply_local_color_profile(
+                combo,
+                "_working_color_space",
+            )
+            return
         if isinstance(selected, str):
             try:
                 selected = WorkingColorSpace(selected)
             except ValueError:
                 return
-        if not isinstance(selected, WorkingColorSpace):
+        if not isinstance(selected, (WorkingColorSpace, LocalColorProfile)):
             return
         if selected == self._working_color_space:
             return
@@ -161,12 +171,18 @@ class MainControllerAnalysisMixin:
 
         combo = self._ui.comboSpecifiedImageColorSpace
         selected = combo.itemData(index)
+        if selected == LOCAL_COLOR_PROFILE_CHOICE_DATA:
+            self._choose_and_apply_local_color_profile(
+                combo,
+                "_assumed_source_color_space",
+            )
+            return
         if isinstance(selected, str):
             try:
                 selected = WorkingColorSpace(selected)
             except ValueError:
                 return
-        if not isinstance(selected, WorkingColorSpace):
+        if not isinstance(selected, (WorkingColorSpace, LocalColorProfile)):
             return
         if selected == self._assumed_source_color_space:
             return
@@ -174,6 +190,98 @@ class MainControllerAnalysisMixin:
         self._assumed_source_color_space = selected
         self._current_analysis_render_key = None
         self._reload_open_images_for_color_settings()
+
+    def _choose_and_apply_local_color_profile(
+        self,
+        combo: QtWidgets.QComboBox,
+        state_attr: str,
+    ) -> None:
+        """Load a local ICC profile and apply it to a color-space selector."""
+
+        previous = getattr(self, state_attr)
+        path, _filter = QtWidgets.QFileDialog.getOpenFileName(
+            self._main_window,
+            self._tr("Choose ICC Profile"),
+            "",
+            self._tr("ICC Profiles (*.icc *.icm)"),
+        )
+        if not path:
+            self._restore_combo_color_profile(combo, previous)
+            return
+
+        try:
+            profile = self._image_service.load_local_color_profile(Path(path))
+        except ColorProfileLoadError as exc:
+            self._restore_combo_color_profile(combo, previous)
+            QtWidgets.QMessageBox.warning(
+                self._main_window,
+                self._tr("Unable to Load ICC Profile"),
+                self._localize_color_profile_error(str(exc)),
+            )
+            return
+
+        self._set_combo_local_color_profile(combo, profile)
+        if profile == previous:
+            return
+        setattr(self, state_attr, profile)
+        self._current_analysis_render_key = None
+        self._reload_open_images_for_color_settings()
+
+    def _set_combo_local_color_profile(
+        self,
+        combo: QtWidgets.QComboBox,
+        profile: LocalColorProfile,
+    ) -> None:
+        """Insert or replace the session-local ICC item before the chooser."""
+
+        with block_signals(combo):
+            for item_index in range(combo.count() - 1, -1, -1):
+                if isinstance(combo.itemData(item_index), LocalColorProfile):
+                    combo.removeItem(item_index)
+            choose_index = combo.findData(LOCAL_COLOR_PROFILE_CHOICE_DATA)
+            insert_index = choose_index if choose_index >= 0 else combo.count()
+            combo.insertItem(insert_index, profile.display_name, profile)
+            combo.setItemData(
+                insert_index,
+                str(profile.path),
+                QtCore.Qt.ItemDataRole.ToolTipRole,
+            )
+            combo.setCurrentIndex(insert_index)
+
+    def _restore_combo_color_profile(
+        self,
+        combo: QtWidgets.QComboBox,
+        color_profile: ColorProfileSpec,
+    ) -> None:
+        """Restore a selector to its previous profile after cancel or failure."""
+
+        index = combo.findData(color_profile)
+        with block_signals(combo):
+            if index >= 0:
+                combo.setCurrentIndex(index)
+            else:
+                combo.setCurrentIndex(-1)
+
+    def _color_profile_key(self, color_profile: ColorProfileSpec) -> str:
+        """Return a stable key for built-in or local ICC profile settings."""
+
+        if isinstance(color_profile, WorkingColorSpace):
+            return color_profile.value
+        return color_profile.stable_key
+
+    def _localize_color_profile_error(self, message: str) -> str:
+        """Return localized user-facing text for local ICC load errors."""
+
+        mapping = {
+            "ICC profile files must use .icc or .icm extension": self._tr(
+                "ICC profile files must use .icc or .icm extension"
+            ),
+            "ICC profile file does not exist": self._tr("ICC profile file does not exist"),
+            "Unable to read ICC profile file": self._tr("Unable to read ICC profile file"),
+            "ICC profile file is empty": self._tr("ICC profile file is empty"),
+            "Unable to load ICC profile": self._tr("Unable to load ICC profile"),
+        }
+        return mapping.get(message, self._tr("Unable to load ICC profile"))
 
     def _on_rendering_intent_changed(self, index: int) -> None:
         """Reload open images when the global ICC rendering intent changes."""
@@ -478,8 +586,8 @@ class MainControllerAnalysisMixin:
             round(dpr, 2),
             self._view_settings.mode.value,
             self._view_settings.channel.value,
-            data.analysis.working_color_space.value,
-            data.analysis.assumed_source_color_space.value,
+            self._color_profile_key(data.analysis.working_color_space),
+            self._color_profile_key(data.analysis.assumed_source_color_space),
             data.analysis.rendering_intent.value,
         )
         path_key = str(image_path)
@@ -648,8 +756,10 @@ class MainControllerAnalysisMixin:
             self._show_underexposed,
             self._show_overexposed,
             self._focus_peak_level.value if self._focus_peak_level is not None else None,
-            getattr(self, "_working_color_space", DEFAULT_WORKING_COLOR_SPACE).value,
-            getattr(self, "_assumed_source_color_space", DEFAULT_ASSUMED_IMAGE_COLOR_SPACE).value,
+            self._color_profile_key(getattr(self, "_working_color_space", DEFAULT_WORKING_COLOR_SPACE)),
+            self._color_profile_key(
+                getattr(self, "_assumed_source_color_space", DEFAULT_ASSUMED_IMAGE_COLOR_SPACE)
+            ),
             getattr(self, "_rendering_intent", DEFAULT_RENDERING_INTENT).value,
             id(preview_rgb),
         )

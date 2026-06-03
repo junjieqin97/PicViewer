@@ -115,9 +115,13 @@ class MainControllerLoadingMixin:
         self._preview_tasks_by_path.pop(key, None)
         if not self._is_session_active(path, session):
             return
-        if result.working_color_space != self._working_color_space:
+        if self._color_profile_key(result.working_color_space) != self._color_profile_key(
+            self._working_color_space
+        ):
             return
-        if result.assumed_source_color_space != self._assumed_source_color_space:
+        if self._color_profile_key(result.assumed_source_color_space) != self._color_profile_key(
+            self._assumed_source_color_space
+        ):
             return
         if result.rendering_intent != self._rendering_intent:
             return
@@ -149,9 +153,13 @@ class MainControllerLoadingMixin:
         self._load_tasks_by_path.pop(key, None)
         if not self._is_session_active(path, session):
             return
-        if result.analysis.working_color_space != self._working_color_space:
+        if self._color_profile_key(result.analysis.working_color_space) != self._color_profile_key(
+            self._working_color_space
+        ):
             return
-        if result.analysis.assumed_source_color_space != self._assumed_source_color_space:
+        if self._color_profile_key(result.analysis.assumed_source_color_space) != self._color_profile_key(
+            self._assumed_source_color_space
+        ):
             return
         if result.analysis.rendering_intent != self._rendering_intent:
             return

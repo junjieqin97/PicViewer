@@ -17,9 +17,10 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.app.dto.image_analysis import ImageLoadResult, PreviewLoadResult  # noqa: E402
+from pic_viewer.common.errors import ColorProfileLoadError  # noqa: E402
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
-from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
+from pic_viewer.domain.models.color_space import LocalColorProfile, WorkingColorSpace  # noqa: E402
 from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 from pic_viewer.ui.workers.image_worker import ImageLoadTask, PreviewLoadTask  # noqa: E402
@@ -72,6 +73,47 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
             WorkingColorSpace.PROPHOTO_RGB,
             WorkingColorSpace.DISPLAY_P3,
             RenderingIntent.ABSOLUTE_COLORIMETRIC,
+        )
+
+    def test_worker_tasks_pass_local_color_profiles_to_service(self) -> None:
+        service = MagicMock()
+        path = Path("/tmp/profiled.jpg")
+        working_profile = self._local_profile(name="Local Working", file_name="working.icc")
+        source_profile = self._local_profile(name="Local Source", file_name="source.icc")
+        service.load_preview.return_value = PreviewLoadResult(
+            preview_rgb=np.zeros((1, 1, 3), dtype=np.uint8),
+            working_color_space=working_profile,
+            assumed_source_color_space=source_profile,
+            rendering_intent=RenderingIntent.RELATIVE_COLORIMETRIC,
+        )
+        service.load_and_analyze.return_value = MagicMock()
+
+        PreviewLoadTask(
+            service,
+            path,
+            working_profile,
+            source_profile,
+            RenderingIntent.RELATIVE_COLORIMETRIC,
+        ).run()
+        ImageLoadTask(
+            service,
+            path,
+            working_profile,
+            source_profile,
+            RenderingIntent.RELATIVE_COLORIMETRIC,
+        ).run()
+
+        service.load_preview.assert_called_once_with(
+            path,
+            working_profile,
+            source_profile,
+            RenderingIntent.RELATIVE_COLORIMETRIC,
+        )
+        service.load_and_analyze.assert_called_once_with(
+            path,
+            working_profile,
+            source_profile,
+            RenderingIntent.RELATIVE_COLORIMETRIC,
         )
 
     def test_worker_tasks_default_to_app_working_color_space(self) -> None:
@@ -199,6 +241,129 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         controller._ensure_preview_load.assert_called_once_with(path, 1)
         controller._ensure_full_load.assert_called_once_with(path, 1)
         controller.update_info_for_image.assert_called_once_with(path)
+
+    def test_choose_local_working_icc_loads_profile_and_reloads_open_images(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        local_profile = self._local_profile(name="Local Working", file_name="working.icc")
+        controller._image_service = MagicMock()
+        controller._image_service.load_local_color_profile.return_value = local_profile
+        controller._reload_open_images_for_color_settings = MagicMock()  # type: ignore[method-assign]
+        choose_index = ui.comboWorkingColorSpace.findText("Choose a local ICC...")
+
+        with unittest.mock.patch(
+            "pic_viewer.controllers.main_controller_analysis_mixin.QtWidgets.QFileDialog.getOpenFileName",
+            return_value=("/tmp/working.icc", "ICC Profiles (*.icc *.icm)"),
+        ):
+            MainController._on_working_color_space_changed(controller, choose_index)
+
+        controller._image_service.load_local_color_profile.assert_called_once_with(Path("/tmp/working.icc"))
+        self.assertEqual(local_profile, controller._working_color_space)
+        self.assertEqual(local_profile, ui.comboWorkingColorSpace.currentData())
+        self.assertEqual("Local Working", ui.comboWorkingColorSpace.currentText())
+        self.assertEqual(
+            "Choose a local ICC...",
+            ui.comboWorkingColorSpace.itemText(ui.comboWorkingColorSpace.count() - 1),
+        )
+        controller._reload_open_images_for_color_settings.assert_called_once()
+
+    def test_choose_local_source_icc_loads_profile_and_reloads_open_images(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        local_profile = self._local_profile(name="Local Source", file_name="source.icc")
+        controller._image_service = MagicMock()
+        controller._image_service.load_local_color_profile.return_value = local_profile
+        controller._reload_open_images_for_color_settings = MagicMock()  # type: ignore[method-assign]
+        choose_index = ui.comboSpecifiedImageColorSpace.findText("Choose a local ICC...")
+
+        with unittest.mock.patch(
+            "pic_viewer.controllers.main_controller_analysis_mixin.QtWidgets.QFileDialog.getOpenFileName",
+            return_value=("/tmp/source.icc", "ICC Profiles (*.icc *.icm)"),
+        ):
+            MainController._on_assumed_source_color_space_changed(controller, choose_index)
+
+        controller._image_service.load_local_color_profile.assert_called_once_with(Path("/tmp/source.icc"))
+        self.assertEqual(local_profile, controller._assumed_source_color_space)
+        self.assertEqual(local_profile, ui.comboSpecifiedImageColorSpace.currentData())
+        self.assertEqual("Local Source", ui.comboSpecifiedImageColorSpace.currentText())
+        controller._reload_open_images_for_color_settings.assert_called_once()
+
+    def test_canceling_local_icc_choice_restores_previous_working_color_space(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        controller._image_service = MagicMock()
+        controller._reload_open_images_for_color_settings = MagicMock()  # type: ignore[method-assign]
+        choose_index = ui.comboWorkingColorSpace.findText("Choose a local ICC...")
+
+        with unittest.mock.patch(
+            "pic_viewer.controllers.main_controller_analysis_mixin.QtWidgets.QFileDialog.getOpenFileName",
+            return_value=("", ""),
+        ):
+            MainController._on_working_color_space_changed(controller, choose_index)
+
+        controller._image_service.load_local_color_profile.assert_not_called()
+        self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, controller._working_color_space)
+        self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, ui.comboWorkingColorSpace.currentData())
+        controller._reload_open_images_for_color_settings.assert_not_called()
+
+    def test_invalid_local_icc_choice_warns_and_restores_previous_working_color_space(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        controller._image_service = MagicMock()
+        controller._image_service.load_local_color_profile.side_effect = ColorProfileLoadError(
+            "Unable to load ICC profile"
+        )
+        controller._reload_open_images_for_color_settings = MagicMock()  # type: ignore[method-assign]
+        choose_index = ui.comboWorkingColorSpace.findText("Choose a local ICC...")
+
+        with (
+            unittest.mock.patch(
+                "pic_viewer.controllers.main_controller_analysis_mixin.QtWidgets.QFileDialog.getOpenFileName",
+                return_value=("/tmp/bad.icc", "ICC Profiles (*.icc *.icm)"),
+            ),
+            unittest.mock.patch(
+                "pic_viewer.controllers.main_controller_analysis_mixin.QtWidgets.QMessageBox.warning"
+            ) as warning,
+        ):
+            MainController._on_working_color_space_changed(controller, choose_index)
+
+        controller._image_service.load_local_color_profile.assert_called_once_with(Path("/tmp/bad.icc"))
+        warning.assert_called_once()
+        self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, controller._working_color_space)
+        self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, ui.comboWorkingColorSpace.currentData())
+        controller._reload_open_images_for_color_settings.assert_not_called()
+
+    def test_specified_source_selector_restores_local_profile_after_embedded_icc(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        local_profile = self._local_profile(name="Local Source", file_name="source.icc")
+        controller._assumed_source_color_space = local_profile
+        MainController._set_combo_local_color_profile(controller, ui.comboSpecifiedImageColorSpace, local_profile)
+
+        MainController._sync_specified_image_color_space_enabled(
+            controller,
+            ImageColorProfileInfo(
+                display_name="Embedded",
+                status=ImageColorProfileStatus.EMBEDDED,
+                uses_srgb_fallback=False,
+            ),
+        )
+        self.assertFalse(ui.comboSpecifiedImageColorSpace.isEnabled())
+        self.assertEqual("", ui.comboSpecifiedImageColorSpace.currentText())
+
+        MainController._sync_specified_image_color_space_enabled(
+            controller,
+            ImageColorProfileInfo(
+                display_name="Local Source",
+                status=ImageColorProfileStatus.MISSING,
+                uses_srgb_fallback=True,
+                assumed_color_space=local_profile,
+            ),
+        )
+
+        self.assertTrue(ui.comboSpecifiedImageColorSpace.isEnabled())
+        self.assertEqual(local_profile, ui.comboSpecifiedImageColorSpace.currentData())
+        self.assertEqual("Local Source", ui.comboSpecifiedImageColorSpace.currentText())
 
     def test_stale_preview_result_from_old_working_space_is_ignored(self) -> None:
         window, _, controller = self._build_controller()
@@ -388,6 +553,13 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         controller._update_filmstrip_icon = MagicMock()  # type: ignore[method-assign]
         controller._refresh_tab_preview_pixmap = MagicMock()  # type: ignore[method-assign]
         return window, ui, controller
+
+    def _local_profile(self, name: str = "Local Profile", file_name: str = "local.icc") -> LocalColorProfile:
+        return LocalColorProfile(
+            display_name=name,
+            path=Path("/tmp") / file_name,
+            profile_bytes=b"fake-profile-bytes",
+        )
 
 
 if __name__ == "__main__":

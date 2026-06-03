@@ -14,7 +14,8 @@ from pic_viewer.common.errors import ImageLoadError
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     DEFAULT_WORKING_COLOR_SPACE,
-    WorkingColorSpace,
+    ColorProfileSpec,
+    LocalColorProfile,
 )
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
 from pic_viewer.domain.rules.analysis import ImageAnalyzer
@@ -49,8 +50,8 @@ class ImageService:
     def load_and_analyze(
         self,
         path: Path,
-        working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
-        assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE,
+        assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> ImageLoadResult:
         """Load an image, compute analysis artifacts, and read metadata.
@@ -119,11 +120,16 @@ class ImageService:
 
         return ImageLoadResult(analysis=analysis, metadata=metadata)
 
+    def load_local_color_profile(self, path: Path) -> LocalColorProfile:
+        """Load and validate a user-selected local ICC profile."""
+
+        return self._color_converter.load_local_profile(path)
+
     def load_preview(
         self,
         path: Path,
-        working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
-        assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE,
+        assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> PreviewLoadResult:
         """Load a lightweight preview without metadata or analysis plots."""

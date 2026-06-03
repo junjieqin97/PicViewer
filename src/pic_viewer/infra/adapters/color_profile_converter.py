@@ -11,8 +11,14 @@ import numpy as np
 from PIL import Image, ImageCms, UnidentifiedImageError
 from PySide6 import QtGui
 
+from pic_viewer.common.errors import ColorProfileLoadError
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus
-from pic_viewer.domain.models.color_space import DEFAULT_ASSUMED_IMAGE_COLOR_SPACE, WorkingColorSpace
+from pic_viewer.domain.models.color_space import (
+    DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+    ColorProfileSpec,
+    LocalColorProfile,
+    WorkingColorSpace,
+)
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
 
 logger = logging.getLogger(__name__)
@@ -37,9 +43,18 @@ class ColorProfileConverter:
     def __init__(self) -> None:
         self._profile_bytes_by_space: dict[WorkingColorSpace, bytes] = {}
         self._profiles_by_space: dict[WorkingColorSpace, ImageCms.ImageCmsProfile] = {}
+        self._profiles_by_local_key: dict[str, ImageCms.ImageCmsProfile] = {}
 
-    def profile_for(self, color_space: WorkingColorSpace) -> ImageCms.ImageCmsProfile:
-        """Return a Pillow-open ICC profile for a supported working color space."""
+    def profile_for(self, color_space: ColorProfileSpec) -> ImageCms.ImageCmsProfile:
+        """Return a Pillow-open ICC profile for a supported color profile."""
+
+        if isinstance(color_space, LocalColorProfile):
+            cached_local = self._profiles_by_local_key.get(color_space.stable_key)
+            if cached_local is not None:
+                return cached_local
+            local_profile = self._profile_from_bytes(color_space.profile_bytes)
+            self._profiles_by_local_key[color_space.stable_key] = local_profile
+            return local_profile
 
         cached = self._profiles_by_space.get(color_space)
         if cached is not None:
@@ -65,12 +80,48 @@ class ColorProfileConverter:
         self._profile_bytes_by_space[color_space] = profile_bytes
         return profile_bytes
 
+    def load_local_profile(self, path: Path) -> LocalColorProfile:
+        """Load and validate a user-selected local ICC or ICM profile.
+
+        Args:
+            path: Path to the local ICC profile file.
+
+        Returns:
+            LocalColorProfile: Session-scoped local profile model.
+
+        Raises:
+            ColorProfileLoadError: If the path is not a readable ICC/ICM profile.
+        """
+
+        profile_path = Path(path).expanduser()
+        if profile_path.suffix.lower() not in {".icc", ".icm"}:
+            raise ColorProfileLoadError("ICC profile files must use .icc or .icm extension")
+        if not profile_path.exists() or not profile_path.is_file():
+            raise ColorProfileLoadError("ICC profile file does not exist")
+        try:
+            profile_bytes = profile_path.read_bytes()
+        except OSError as exc:
+            logger.exception("Unable to read local ICC profile: path=%s", profile_path)
+            raise ColorProfileLoadError("Unable to read ICC profile file") from exc
+        if not profile_bytes:
+            raise ColorProfileLoadError("ICC profile file is empty")
+        try:
+            profile = self._profile_from_bytes(profile_bytes)
+        except (ImageCms.PyCMSError, OSError, ValueError) as exc:
+            logger.warning("Invalid local ICC profile: path=%s", profile_path)
+            raise ColorProfileLoadError("Unable to load ICC profile") from exc
+        return LocalColorProfile(
+            display_name=self._local_profile_display_name(profile, profile_path),
+            path=profile_path,
+            profile_bytes=profile_bytes,
+        )
+
     def convert_file_bgr_to_working_space(
         self,
         path: Path,
         bgr: np.ndarray,
-        working_color_space: WorkingColorSpace,
-        assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        working_color_space: ColorProfileSpec,
+        assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> np.ndarray:
         """Convert decoded BGR pixels from embedded ICC profile to working space.
@@ -100,8 +151,8 @@ class ColorProfileConverter:
         self,
         path: Path,
         bgr: np.ndarray,
-        working_color_space: WorkingColorSpace,
-        assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        working_color_space: ColorProfileSpec,
+        assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> tuple[np.ndarray, ImageColorProfileInfo]:
         """Convert decoded BGR pixels and return source ICC status."""
@@ -120,7 +171,7 @@ class ColorProfileConverter:
             source_profile,
             target_profile,
             source_path=path,
-            target_label=working_color_space.value,
+            target_label=self._profile_label(working_color_space),
             rendering_intent=rendering_intent,
         )
         if converted_rgb is None and not source_info.uses_srgb_fallback:
@@ -136,7 +187,7 @@ class ColorProfileConverter:
                     self.profile_for(assumed_source_color_space),
                     target_profile,
                     source_path=path,
-                    target_label=working_color_space.value,
+                    target_label=self._profile_label(working_color_space),
                     rendering_intent=rendering_intent,
                 )
         if converted_rgb is None:
@@ -146,7 +197,7 @@ class ColorProfileConverter:
     def convert_working_rgb_to_srgb(
         self,
         rgb: np.ndarray,
-        working_color_space: WorkingColorSpace,
+        working_color_space: ColorProfileSpec,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> np.ndarray:
         """Convert preview RGB pixels from the working color space to sRGB."""
@@ -169,7 +220,7 @@ class ColorProfileConverter:
     def _source_profile_for_path(
         self,
         path: Path,
-        assumed_source_color_space: WorkingColorSpace,
+        assumed_source_color_space: ColorProfileSpec,
     ) -> tuple[ImageCms.ImageCmsProfile, ImageColorProfileInfo]:
         profile_bytes = self._read_embedded_icc_profile(path)
         if profile_bytes:
@@ -184,7 +235,7 @@ class ColorProfileConverter:
                 logger.warning(
                     "Invalid embedded ICC profile, using assumed source color space: path=%s color_space=%s",
                     path,
-                    assumed_source_color_space.value,
+                    self._profile_label(assumed_source_color_space),
                 )
                 return self.profile_for(assumed_source_color_space), self._fallback_profile_info(
                     ImageColorProfileStatus.INVALID,
@@ -198,16 +249,16 @@ class ColorProfileConverter:
     def _fallback_profile_info(
         self,
         status: ImageColorProfileStatus,
-        assumed_source_color_space: WorkingColorSpace,
+        assumed_source_color_space: ColorProfileSpec,
     ) -> ImageColorProfileInfo:
         return ImageColorProfileInfo(
-            display_name=assumed_source_color_space.display_name,
+            display_name=self._profile_display_label(assumed_source_color_space),
             status=status,
             uses_srgb_fallback=True,
             assumed_color_space=assumed_source_color_space,
         )
 
-    def _fallback_source_space(self, info: ImageColorProfileInfo) -> WorkingColorSpace:
+    def _fallback_source_space(self, info: ImageColorProfileInfo) -> ColorProfileSpec:
         return info.assumed_color_space or WorkingColorSpace.SRGB
 
     def _profile_from_bytes(self, profile_bytes: bytes) -> ImageCms.ImageCmsProfile:
@@ -222,6 +273,20 @@ class ColorProfileConverter:
             if cleaned:
                 return cleaned
         return "Embedded ICC"
+
+    def _local_profile_display_name(self, profile: ImageCms.ImageCmsProfile, path: Path) -> str:
+        display_name = self._profile_display_name(profile)
+        if display_name == "Embedded ICC":
+            return path.name
+        return display_name
+
+    def _profile_display_label(self, color_space: ColorProfileSpec) -> str:
+        return color_space.display_name
+
+    def _profile_label(self, color_space: ColorProfileSpec) -> str:
+        if isinstance(color_space, WorkingColorSpace):
+            return color_space.value
+        return color_space.stable_key
 
     def _clean_profile_name(self, profile_name: str | bytes | None) -> str:
         if profile_name is None:

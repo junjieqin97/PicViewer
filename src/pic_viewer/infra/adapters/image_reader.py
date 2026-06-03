@@ -14,7 +14,7 @@ from pic_viewer.domain.models.color_profile import ImageColorProfileInfo
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     DEFAULT_WORKING_COLOR_SPACE,
-    WorkingColorSpace,
+    ColorProfileSpec,
 )
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
 from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConverter
@@ -32,8 +32,8 @@ class ImageReader:
     def read(
         self,
         path: Path,
-        working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
-        assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE,
+        assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> np.ndarray:
         """Read image file into BGR array in the selected working space.
@@ -80,8 +80,8 @@ class ImageReader:
     def read_with_color_profile_info(
         self,
         path: Path,
-        working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
-        assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE,
+        assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> tuple[np.ndarray, ImageColorProfileInfo]:
         """Read image file into BGR array and return source ICC status."""
@@ -116,8 +116,8 @@ class ImageReader:
         self,
         path: Path,
         max_edge: int = 1920,
-        working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
-        assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE,
+        assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> np.ndarray:
         """Read a faster low-cost preview for incremental UI updates."""
@@ -172,8 +172,8 @@ class ImageReader:
         self,
         path: Path,
         max_edge: int = 1920,
-        working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
-        assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE,
+        assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> tuple[np.ndarray, ImageColorProfileInfo]:
         """Read a faster preview and return source ICC status."""
@@ -244,8 +244,8 @@ class ImageReader:
         self,
         path: Path,
         bgr: np.ndarray,
-        working_color_space: WorkingColorSpace,
-        assumed_source_color_space: WorkingColorSpace,
+        working_color_space: ColorProfileSpec,
+        assumed_source_color_space: ColorProfileSpec,
         rendering_intent: RenderingIntent,
     ) -> np.ndarray:
         return self._color_converter.convert_file_bgr_to_working_space(
@@ -260,8 +260,8 @@ class ImageReader:
         self,
         path: Path,
         bgr: np.ndarray,
-        working_color_space: WorkingColorSpace,
-        assumed_source_color_space: WorkingColorSpace,
+        working_color_space: ColorProfileSpec,
+        assumed_source_color_space: ColorProfileSpec,
         rendering_intent: RenderingIntent,
     ) -> tuple[np.ndarray, ImageColorProfileInfo]:
         return self._color_converter.convert_file_bgr_to_working_space_with_info(

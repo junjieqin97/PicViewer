@@ -12,7 +12,7 @@ from pic_viewer.common.errors import ImageLoadError, ImageProcessError
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     DEFAULT_WORKING_COLOR_SPACE,
-    WorkingColorSpace,
+    ColorProfileSpec,
 )
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
 
@@ -33,8 +33,8 @@ class PreviewLoadTask(QtCore.QRunnable):
         self,
         service: ImageService,
         path: Path,
-        working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
-        assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE,
+        assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> None:
         super().__init__()
@@ -75,8 +75,8 @@ class ImageLoadTask(QtCore.QRunnable):
         self,
         service: ImageService,
         path: Path,
-        working_color_space: WorkingColorSpace = DEFAULT_WORKING_COLOR_SPACE,
-        assumed_source_color_space: WorkingColorSpace = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE,
+        assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> None:
         super().__init__()

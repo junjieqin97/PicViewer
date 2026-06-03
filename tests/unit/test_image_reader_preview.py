@@ -16,7 +16,7 @@ if str(SRC_ROOT) not in sys.path:
 
 from pic_viewer.common.errors import ImageLoadError  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
-from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
+from pic_viewer.domain.models.color_space import LocalColorProfile, WorkingColorSpace  # noqa: E402
 from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.infra.adapters.image_reader import ImageReader  # noqa: E402
 
@@ -174,6 +174,50 @@ class ImageReaderPreviewTests(unittest.TestCase):
             WorkingColorSpace.PROPHOTO_RGB,
             WorkingColorSpace.DISPLAY_P3,
             RenderingIntent.ABSOLUTE_COLORIMETRIC,
+        )
+
+    def test_read_preview_with_color_profile_info_passes_local_color_profiles(self) -> None:
+        converted = np.full((12, 12, 3), 128, dtype=np.uint8)
+        working_profile = LocalColorProfile(
+            display_name="Local Working",
+            path=Path("/tmp/working.icc"),
+            profile_bytes=b"working-profile",
+        )
+        source_profile_spec = LocalColorProfile(
+            display_name="Local Source",
+            path=Path("/tmp/source.icc"),
+            profile_bytes=b"source-profile",
+        )
+        profile_info = ImageColorProfileInfo(
+            display_name="Local Source",
+            status=ImageColorProfileStatus.MISSING,
+            uses_srgb_fallback=True,
+            assumed_color_space=source_profile_spec,
+        )
+        converter = unittest.mock.MagicMock()
+        converter.convert_file_bgr_to_working_space_with_info.return_value = (converted, profile_info)
+        reader = ImageReader(allow_raw=False, color_converter=converter)
+        reduced = np.zeros((12, 12, 3), dtype=np.uint8)
+
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
+            path = Path(tmp.name)
+            with patch("pic_viewer.infra.adapters.image_reader.cv2.imread", return_value=reduced):
+                image, info = reader.read_preview_with_color_profile_info(
+                    path,
+                    max_edge=2000,
+                    working_color_space=working_profile,
+                    assumed_source_color_space=source_profile_spec,
+                    rendering_intent=RenderingIntent.RELATIVE_COLORIMETRIC,
+                )
+
+        np.testing.assert_array_equal(image, converted)
+        self.assertEqual(profile_info, info)
+        converter.convert_file_bgr_to_working_space_with_info.assert_called_once_with(
+            path,
+            reduced,
+            working_profile,
+            source_profile_spec,
+            RenderingIntent.RELATIVE_COLORIMETRIC,
         )
 
     def test_read_preview_raises_for_unsupported_format_when_raw_disabled(self) -> None:

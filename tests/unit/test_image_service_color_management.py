@@ -16,13 +16,33 @@ if str(SRC_ROOT) not in sys.path:
 from pic_viewer.app.dto.metadata import ImageMetadata  # noqa: E402
 from pic_viewer.app.services.image_service import ImageService  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
-from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
+from pic_viewer.domain.models.color_space import LocalColorProfile, WorkingColorSpace  # noqa: E402
 from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.domain.rules.analysis import AnalysisResult  # noqa: E402
 
 
 class ImageServiceColorManagementTests(unittest.TestCase):
     """Validate color-managed full image loading."""
+
+    def test_load_local_color_profile_delegates_to_color_converter(self) -> None:
+        reader = MagicMock()
+        analyzer = MagicMock()
+        metadata_reader = MagicMock()
+        color_converter = MagicMock()
+        service = ImageService(
+            reader=reader,
+            analyzer=analyzer,
+            metadata_reader=metadata_reader,
+            color_converter=color_converter,
+        )
+        local_profile = self._local_profile()
+        color_converter.load_local_profile.return_value = local_profile
+        path = Path("/tmp/local.icc")
+
+        result = service.load_local_color_profile(path)
+
+        color_converter.load_local_profile.assert_called_once_with(path)
+        self.assertEqual(local_profile, result)
 
     def test_full_load_analyzes_working_space_pixels_and_displays_srgb_preview(self) -> None:
         reader = MagicMock()
@@ -163,6 +183,64 @@ class ImageServiceColorManagementTests(unittest.TestCase):
         self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, result.analysis.working_color_space)
         self.assertEqual(WorkingColorSpace.DISPLAY_P3, result.analysis.assumed_source_color_space)
         self.assertEqual(RenderingIntent.RELATIVE_COLORIMETRIC, result.analysis.rendering_intent)
+
+    def test_full_load_passes_local_color_profiles(self) -> None:
+        reader = MagicMock()
+        analyzer = MagicMock()
+        metadata_reader = MagicMock()
+        color_converter = MagicMock()
+        service = ImageService(
+            reader=reader,
+            analyzer=analyzer,
+            metadata_reader=metadata_reader,
+            color_converter=color_converter,
+        )
+        working_profile = self._local_profile(name="Local Working", file_name="working.icc")
+        source_profile_spec = self._local_profile(name="Local Source", file_name="source.icc")
+        working_bgr = np.full((4, 4, 3), 8, dtype=np.uint8)
+        working_preview_rgb = np.full((4, 4, 3), 16, dtype=np.uint8)
+        display_preview_rgb = np.full((4, 4, 3), 32, dtype=np.uint8)
+        source_profile = ImageColorProfileInfo(
+            display_name="Local Source",
+            status=ImageColorProfileStatus.MISSING,
+            uses_srgb_fallback=True,
+            assumed_color_space=source_profile_spec,
+        )
+        reader.read_with_color_profile_info.return_value = (working_bgr, source_profile)
+        analyzer.analyze.return_value = self._analysis_result(working_bgr, working_preview_rgb)
+        color_converter.convert_working_rgb_to_srgb.return_value = display_preview_rgb
+        metadata_reader.read.return_value = ImageMetadata(general=tuple(), exif=tuple(), iptc=tuple(), tiff=tuple())
+
+        with TemporaryDirectory() as tmp_dir:
+            path = Path(tmp_dir) / "profiled.jpg"
+            path.write_bytes(b"stub")
+            result = service.load_and_analyze(
+                path,
+                working_profile,
+                source_profile_spec,
+                RenderingIntent.RELATIVE_COLORIMETRIC,
+            )
+
+        reader.read_with_color_profile_info.assert_called_once_with(
+            path,
+            working_color_space=working_profile,
+            assumed_source_color_space=source_profile_spec,
+            rendering_intent=RenderingIntent.RELATIVE_COLORIMETRIC,
+        )
+        color_converter.convert_working_rgb_to_srgb.assert_called_once_with(
+            working_preview_rgb,
+            working_profile,
+            RenderingIntent.RELATIVE_COLORIMETRIC,
+        )
+        self.assertEqual(working_profile, result.analysis.working_color_space)
+        self.assertEqual(source_profile_spec, result.analysis.assumed_source_color_space)
+
+    def _local_profile(self, name: str = "Local Profile", file_name: str = "local.icc") -> LocalColorProfile:
+        return LocalColorProfile(
+            display_name=name,
+            path=Path("/tmp") / file_name,
+            profile_bytes=b"fake-profile-bytes",
+        )
 
     def _analysis_result(self, bgr: np.ndarray, preview_rgb: np.ndarray) -> AnalysisResult:
         plot = np.zeros((2, 2, 3), dtype=np.uint8)

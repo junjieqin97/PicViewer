@@ -71,6 +71,13 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("<source>Rendering Intent</source>", en_ts)
         self.assertIn("<source>Rendering Intent</source>", zh_ts)
         self.assertIn("<translation>渲染意图</translation>", zh_ts)
+        self.assertIn("<source>Choose a local ICC...</source>", en_ts)
+        self.assertIn("<source>Choose a local ICC...</source>", zh_ts)
+        self.assertIn("<translation>选择本地 ICC...</translation>", zh_ts)
+        self.assertIn("<source>Choose ICC Profile</source>", en_ts)
+        self.assertIn("<source>ICC Profiles (*.icc *.icm)</source>", en_ts)
+        self.assertIn("<source>Unable to Load ICC Profile</source>", en_ts)
+        self.assertIn("<source>Unable to load ICC profile</source>", en_ts)
         for label in (
             "Perceptual",
             "Relative Colorimetric",

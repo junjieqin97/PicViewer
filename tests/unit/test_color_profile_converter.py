@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
@@ -13,8 +14,9 @@ SRC_ROOT = PROJECT_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+from pic_viewer.common.errors import ColorProfileLoadError  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileStatus  # noqa: E402
-from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
+from pic_viewer.domain.models.color_space import LocalColorProfile, WorkingColorSpace  # noqa: E402
 from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConverter  # noqa: E402
 
@@ -30,6 +32,34 @@ class ColorProfileConverterTests(unittest.TestCase):
                 profile = converter.profile_for(color_space)
 
                 self.assertIsInstance(profile, ImageCms.ImageCmsProfile)
+
+    def test_local_icc_file_loads_profile_spec_with_bytes_and_stable_key(self) -> None:
+        converter = ColorProfileConverter()
+        profile_bytes = converter.profile_bytes_for(WorkingColorSpace.SRGB)
+
+        with TemporaryDirectory() as tmp_dir:
+            profile_path = Path(tmp_dir) / "camera-profile.icc"
+            profile_path.write_bytes(profile_bytes)
+
+            profile = converter.load_local_profile(profile_path)
+
+        self.assertIsInstance(profile, LocalColorProfile)
+        self.assertEqual("camera-profile.icc", profile.path.name)
+        self.assertEqual(profile_bytes, profile.profile_bytes)
+        self.assertTrue(profile.display_name)
+        self.assertTrue(profile.stable_key.startswith("local:"))
+
+    def test_local_icc_file_rejects_non_icc_extension(self) -> None:
+        converter = ColorProfileConverter()
+
+        with TemporaryDirectory() as tmp_dir:
+            profile_path = Path(tmp_dir) / "profile.txt"
+            profile_path.write_bytes(converter.profile_bytes_for(WorkingColorSpace.SRGB))
+
+            with self.assertRaises(ColorProfileLoadError) as ctx:
+                converter.load_local_profile(profile_path)
+
+        self.assertEqual("ICC profile files must use .icc or .icm extension", str(ctx.exception))
 
     def test_actual_cms_conversion_supports_all_builtin_working_color_spaces(self) -> None:
         converter = ColorProfileConverter()
@@ -101,6 +131,35 @@ class ColorProfileConverterTests(unittest.TestCase):
         self.assertEqual(ImageColorProfileStatus.MISSING, info.status)
         self.assertEqual("Display P3", info.display_name)
         self.assertEqual(WorkingColorSpace.DISPLAY_P3, info.assumed_color_space)
+        self.assertTrue(info.uses_srgb_fallback)
+        np.testing.assert_array_equal(result[0, 0], np.array([56, 34, 12], dtype=np.uint8))
+
+    def test_missing_embedded_profile_uses_local_source_color_profile(self) -> None:
+        converter = ColorProfileConverter()
+        bgr = np.zeros((1, 1, 3), dtype=np.uint8)
+        converted_rgb = Image.new("RGB", (1, 1), (12, 34, 56))
+        local_profile = LocalColorProfile(
+            display_name="Local sRGB",
+            path=Path("/tmp/local-source.icc"),
+            profile_bytes=converter.profile_bytes_for(WorkingColorSpace.SRGB),
+        )
+
+        with (
+            patch.object(converter, "_read_embedded_icc_profile", return_value=None),
+            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
+        ):
+            transform.return_value = converted_rgb
+            result, info = converter.convert_file_bgr_to_working_space_with_info(
+                Path("/tmp/no-profile.jpg"),
+                bgr,
+                WorkingColorSpace.PROPHOTO_RGB,
+                assumed_source_color_space=local_profile,
+            )
+
+        transform.assert_called_once()
+        self.assertEqual(ImageColorProfileStatus.MISSING, info.status)
+        self.assertEqual("Local sRGB", info.display_name)
+        self.assertEqual(local_profile, info.assumed_color_space)
         self.assertTrue(info.uses_srgb_fallback)
         np.testing.assert_array_equal(result[0, 0], np.array([56, 34, 12], dtype=np.uint8))
 
@@ -380,6 +439,23 @@ class ColorProfileConverterTests(unittest.TestCase):
 
         transform.assert_called_once()
         self.assertEqual(ImageCms.Intent.ABSOLUTE_COLORIMETRIC, transform.call_args.kwargs["renderingIntent"])
+
+    def test_working_space_preview_converts_local_profile_back_to_srgb_for_display(self) -> None:
+        converter = ColorProfileConverter()
+        working_rgb = np.zeros((1, 1, 3), dtype=np.uint8)
+        converted_rgb = Image.new("RGB", (1, 1), (44, 55, 66))
+        local_profile = LocalColorProfile(
+            display_name="Local Working",
+            path=Path("/tmp/local-working.icc"),
+            profile_bytes=converter.profile_bytes_for(WorkingColorSpace.SRGB),
+        )
+
+        with patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform:
+            transform.return_value = converted_rgb
+            result = converter.convert_working_rgb_to_srgb(working_rgb, local_profile)
+
+        transform.assert_called_once()
+        np.testing.assert_array_equal(result[0, 0], np.array([44, 55, 66], dtype=np.uint8))
 
 
 if __name__ == "__main__":
