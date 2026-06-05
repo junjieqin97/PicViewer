@@ -14,11 +14,11 @@ from pic_viewer.common.errors import ColorProfileLoadError
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
-    DEFAULT_WORKING_COLOR_SPACE,
+    DEFAULT_DISPLAY_COLOR_SPACE,
     LOCAL_COLOR_PROFILE_CHOICE_DATA,
     ColorProfileSpec,
     LocalColorProfile,
-    WorkingColorSpace,
+    ColorSpacePreset,
 )
 from pic_viewer.domain.models.rendering_intent import (
     DEFAULT_RENDERING_INTENT,
@@ -141,28 +141,28 @@ class MainControllerAnalysisMixin:
         self._sync_view_actions()
         self._refresh_view_for_current_image()
 
-    def _on_working_color_space_changed(self, index: int) -> None:
-        """Reload open images when the global working color space changes."""
+    def _on_display_color_space_changed(self, index: int) -> None:
+        """Reload open images when the global display color space changes."""
 
-        combo = self._ui.comboWorkingColorSpace
+        combo = self._ui.comboDisplayColorSpace
         selected = combo.itemData(index)
         if selected == LOCAL_COLOR_PROFILE_CHOICE_DATA:
             self._choose_and_apply_local_color_profile(
                 combo,
-                "_working_color_space",
+                "_display_color_space",
             )
             return
         if isinstance(selected, str):
             try:
-                selected = WorkingColorSpace(selected)
+                selected = ColorSpacePreset(selected)
             except ValueError:
                 return
-        if not isinstance(selected, (WorkingColorSpace, LocalColorProfile)):
+        if not isinstance(selected, (ColorSpacePreset, LocalColorProfile)):
             return
-        if selected == self._working_color_space:
+        if selected == self._display_color_space:
             return
 
-        self._working_color_space = selected
+        self._display_color_space = selected
         self._current_analysis_render_key = None
         self._reload_open_images_for_color_settings()
 
@@ -179,10 +179,10 @@ class MainControllerAnalysisMixin:
             return
         if isinstance(selected, str):
             try:
-                selected = WorkingColorSpace(selected)
+                selected = ColorSpacePreset(selected)
             except ValueError:
                 return
-        if not isinstance(selected, (WorkingColorSpace, LocalColorProfile)):
+        if not isinstance(selected, (ColorSpacePreset, LocalColorProfile)):
             return
         if selected == self._assumed_source_color_space:
             return
@@ -265,7 +265,7 @@ class MainControllerAnalysisMixin:
     def _color_profile_key(self, color_profile: ColorProfileSpec) -> str:
         """Return a stable key for built-in or local ICC profile settings."""
 
-        if isinstance(color_profile, WorkingColorSpace):
+        if isinstance(color_profile, ColorSpacePreset):
             return color_profile.value
         return color_profile.stable_key
 
@@ -302,8 +302,8 @@ class MainControllerAnalysisMixin:
         self._current_analysis_render_key = None
         self._reload_open_images_for_color_settings()
 
-    def _reload_open_images_for_working_color_space(self) -> None:
-        """Clear image caches and restart loads for the selected working space."""
+    def _reload_open_images_for_display_color_space(self) -> None:
+        """Clear image caches and restart loads for the selected display space."""
 
         self._reload_open_images_for_color_settings()
 
@@ -564,7 +564,11 @@ class MainControllerAnalysisMixin:
                 self._set_image_color_space_value(
                     self._format_source_color_profile_info(preview.source_color_profile)
                 )
-                self._refresh_tab_preview_pixmap(image_path, preview.preview_rgb)
+                self._refresh_tab_preview_pixmap(
+                    image_path,
+                    preview.preview_rgb,
+                    preview.display_color_space,
+                )
             return
 
         self._sync_specified_image_color_space_enabled(data.analysis.source_color_profile)
@@ -586,7 +590,7 @@ class MainControllerAnalysisMixin:
             round(dpr, 2),
             self._view_settings.mode.value,
             self._view_settings.channel.value,
-            self._color_profile_key(data.analysis.working_color_space),
+            self._color_profile_key(data.analysis.display_color_space),
             self._color_profile_key(data.analysis.assumed_source_color_space),
             data.analysis.rendering_intent.value,
         )
@@ -716,21 +720,31 @@ class MainControllerAnalysisMixin:
         if data is None:
             preview = self._preview_by_path.get(str(path))
             if preview is not None:
-                self._refresh_tab_preview_pixmap(path, preview.preview_rgb)
+                self._refresh_tab_preview_pixmap(path, preview.preview_rgb, preview.display_color_space)
             return
         self._refresh_tab_pixmap(path, data.analysis)
 
     def _refresh_tab_pixmap(self, path: Path, analysis: ImageAnalysis) -> None:
         """Render the image preview inside the tab for the given path."""
 
-        self._set_tab_pixmap(path, analysis.preview_rgb)
+        self._set_tab_pixmap(path, analysis.preview_rgb, analysis.display_color_space)
 
-    def _refresh_tab_preview_pixmap(self, path: Path, preview_rgb: np.ndarray) -> None:
+    def _refresh_tab_preview_pixmap(
+        self,
+        path: Path,
+        preview_rgb: np.ndarray,
+        display_color_space: ColorProfileSpec,
+    ) -> None:
         """Render a lightweight preview before full analysis completes."""
 
-        self._set_tab_pixmap(path, preview_rgb)
+        self._set_tab_pixmap(path, preview_rgb, display_color_space)
 
-    def _set_tab_pixmap(self, path: Path, preview_rgb: np.ndarray) -> None:
+    def _set_tab_pixmap(
+        self,
+        path: Path,
+        preview_rgb: np.ndarray,
+        display_color_space: ColorProfileSpec,
+    ) -> None:
         """Render an RGB preview inside the tab for the given path."""
 
         tab = self._tab_widget_for_path(path)
@@ -756,7 +770,7 @@ class MainControllerAnalysisMixin:
             self._show_underexposed,
             self._show_overexposed,
             self._focus_peak_level.value if self._focus_peak_level is not None else None,
-            self._color_profile_key(getattr(self, "_working_color_space", DEFAULT_WORKING_COLOR_SPACE)),
+            self._color_profile_key(display_color_space),
             self._color_profile_key(
                 getattr(self, "_assumed_source_color_space", DEFAULT_ASSUMED_IMAGE_COLOR_SPACE)
             ),
@@ -775,7 +789,12 @@ class MainControllerAnalysisMixin:
             show_overexposed=self._show_overexposed,
             focus_peak_level=self._focus_peak_level,
         )
-        pixmap = to_qpixmap(display_rgb, target_size, device_pixel_ratio=dpr)
+        pixmap = to_qpixmap(
+            display_rgb,
+            target_size,
+            device_pixel_ratio=dpr,
+            color_space=display_color_space,
+        )
         lbl.setPixmap(pixmap)
         lbl.setText("")
         if not pixmap.isNull():

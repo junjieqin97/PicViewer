@@ -8,8 +8,8 @@ import hashlib
 from pathlib import Path
 
 
-class WorkingColorSpace(Enum):
-    """Supported internal RGB working color spaces."""
+class ColorSpacePreset(Enum):
+    """Supported RGB color-space presets."""
 
     SRGB = "srgb"
     DISPLAY_P3 = "display_p3"
@@ -21,10 +21,10 @@ class WorkingColorSpace(Enum):
         """Return the stable user-facing English label."""
 
         labels = {
-            WorkingColorSpace.SRGB: "sRGB",
-            WorkingColorSpace.DISPLAY_P3: "Display P3",
-            WorkingColorSpace.ADOBE_RGB_1998: "Adobe RGB (1998)",
-            WorkingColorSpace.PROPHOTO_RGB: "ProPhoto RGB",
+            ColorSpacePreset.SRGB: "sRGB",
+            ColorSpacePreset.DISPLAY_P3: "Display P3",
+            ColorSpacePreset.ADOBE_RGB_1998: "Adobe RGB (1998)",
+            ColorSpacePreset.PROPHOTO_RGB: "ProPhoto RGB",
         }
         return labels[self]
 
@@ -45,16 +45,16 @@ class LocalColorProfile:
         return f"local:{digest}:{self.path.expanduser()}"
 
 
-ColorProfileSpec = WorkingColorSpace | LocalColorProfile
+ColorProfileSpec = ColorSpacePreset | LocalColorProfile
 LOCAL_COLOR_PROFILE_CHOICE_DATA = "__picviewer_choose_local_icc__"
 
 
-WORKING_COLOR_SPACE_ORDER: tuple[WorkingColorSpace, ...] = (
-    WorkingColorSpace.SRGB,
-    WorkingColorSpace.DISPLAY_P3,
-    WorkingColorSpace.ADOBE_RGB_1998,
-    WorkingColorSpace.PROPHOTO_RGB,
+COLOR_SPACE_PRESET_ORDER: tuple[ColorSpacePreset, ...] = (
+    ColorSpacePreset.SRGB,
+    ColorSpacePreset.DISPLAY_P3,
+    ColorSpacePreset.ADOBE_RGB_1998,
+    ColorSpacePreset.PROPHOTO_RGB,
 )
 
-DEFAULT_WORKING_COLOR_SPACE = WorkingColorSpace.PROPHOTO_RGB
-DEFAULT_ASSUMED_IMAGE_COLOR_SPACE = WorkingColorSpace.SRGB
+DEFAULT_DISPLAY_COLOR_SPACE = ColorSpacePreset.SRGB
+DEFAULT_ASSUMED_IMAGE_COLOR_SPACE = ColorSpacePreset.SRGB

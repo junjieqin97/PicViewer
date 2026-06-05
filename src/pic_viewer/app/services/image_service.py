@@ -13,7 +13,7 @@ from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
 from pic_viewer.common.errors import ImageLoadError
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
-    DEFAULT_WORKING_COLOR_SPACE,
+    DEFAULT_DISPLAY_COLOR_SPACE,
     ColorProfileSpec,
     LocalColorProfile,
 )
@@ -50,7 +50,7 @@ class ImageService:
     def load_and_analyze(
         self,
         path: Path,
-        working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE,
+        display_color_space: ColorProfileSpec = DEFAULT_DISPLAY_COLOR_SPACE,
         assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> ImageLoadResult:
@@ -58,7 +58,7 @@ class ImageService:
 
         Args:
             path: Path to image file.
-            working_color_space: Target RGB working color space.
+            display_color_space: Target RGB display color space.
             assumed_source_color_space: Source color space to use when ICC is unavailable.
             rendering_intent: ICC rendering intent used for gamut mapping.
 
@@ -73,7 +73,7 @@ class ImageService:
         try:
             bgr, source_color_profile = self._reader.read_with_color_profile_info(
                 path,
-                working_color_space=working_color_space,
+                display_color_space=display_color_space,
                 assumed_source_color_space=assumed_source_color_space,
                 rendering_intent=rendering_intent,
             )
@@ -84,14 +84,9 @@ class ImageService:
             raise ImageLoadError("Unable to read this image file") from exc
 
         result = self._analyzer.analyze(bgr)
-        preview_rgb = self._color_converter.convert_working_rgb_to_srgb(
-            result.preview_rgb,
-            working_color_space,
-            rendering_intent,
-        )
         analysis = ImageAnalysis(
             analysis_bgr=result.analysis_bgr,
-            preview_rgb=preview_rgb,
+            preview_rgb=result.preview_rgb,
             source_size=result.source_size,
             histogram_rgb=result.histogram_rgb,
             histogram_luma=result.histogram_luma,
@@ -103,7 +98,7 @@ class ImageService:
             waveform_r=result.waveform_r,
             waveform_g=result.waveform_g,
             waveform_b=result.waveform_b,
-            working_color_space=working_color_space,
+            display_color_space=display_color_space,
             assumed_source_color_space=assumed_source_color_space,
             rendering_intent=rendering_intent,
             source_color_profile=source_color_profile,
@@ -133,7 +128,7 @@ class ImageService:
     def load_preview(
         self,
         path: Path,
-        working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE,
+        display_color_space: ColorProfileSpec = DEFAULT_DISPLAY_COLOR_SPACE,
         assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> PreviewLoadResult:
@@ -142,7 +137,7 @@ class ImageService:
         try:
             preview_bgr, source_color_profile = self._reader.read_preview_with_color_profile_info(
                 path,
-                working_color_space=working_color_space,
+                display_color_space=display_color_space,
                 assumed_source_color_space=assumed_source_color_space,
                 rendering_intent=rendering_intent,
             )
@@ -153,14 +148,9 @@ class ImageService:
             raise ImageLoadError("Unable to read this image file") from exc
 
         preview_rgb = self._analyzer.build_preview_rgb(preview_bgr)
-        display_rgb = self._color_converter.convert_working_rgb_to_srgb(
-            preview_rgb,
-            working_color_space,
-            rendering_intent,
-        )
         return PreviewLoadResult(
-            preview_rgb=display_rgb,
-            working_color_space=working_color_space,
+            preview_rgb=preview_rgb,
+            display_color_space=display_color_space,
             assumed_source_color_space=assumed_source_color_space,
             rendering_intent=rendering_intent,
             source_color_profile=source_color_profile,

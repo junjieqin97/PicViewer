@@ -20,14 +20,14 @@ from pic_viewer.app.dto.image_analysis import ImageLoadResult, PreviewLoadResult
 from pic_viewer.common.errors import ColorProfileLoadError  # noqa: E402
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
-from pic_viewer.domain.models.color_space import LocalColorProfile, WorkingColorSpace  # noqa: E402
+from pic_viewer.domain.models.color_space import LocalColorProfile, ColorSpacePreset  # noqa: E402
 from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 from pic_viewer.ui.workers.image_worker import ImageLoadTask, PreviewLoadTask  # noqa: E402
 
 
-class WorkingColorSpaceControllerTests(unittest.TestCase):
-    """Validate UI-driven working color space reload behavior."""
+class DisplayColorSpaceControllerTests(unittest.TestCase):
+    """Validate UI-driven display color space reload behavior."""
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -40,8 +40,8 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         path = Path("/tmp/profiled.jpg")
         preview_result = PreviewLoadResult(
             preview_rgb=np.zeros((1, 1, 3), dtype=np.uint8),
-            working_color_space=WorkingColorSpace.DISPLAY_P3,
-            assumed_source_color_space=WorkingColorSpace.ADOBE_RGB_1998,
+            display_color_space=ColorSpacePreset.DISPLAY_P3,
+            assumed_source_color_space=ColorSpacePreset.ADOBE_RGB_1998,
             rendering_intent=RenderingIntent.RELATIVE_COLORIMETRIC,
         )
         service.load_preview.return_value = preview_result
@@ -50,39 +50,39 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         PreviewLoadTask(
             service,
             path,
-            WorkingColorSpace.DISPLAY_P3,
-            WorkingColorSpace.ADOBE_RGB_1998,
+            ColorSpacePreset.DISPLAY_P3,
+            ColorSpacePreset.ADOBE_RGB_1998,
             RenderingIntent.RELATIVE_COLORIMETRIC,
         ).run()
         ImageLoadTask(
             service,
             path,
-            WorkingColorSpace.PROPHOTO_RGB,
-            WorkingColorSpace.DISPLAY_P3,
+            ColorSpacePreset.PROPHOTO_RGB,
+            ColorSpacePreset.DISPLAY_P3,
             RenderingIntent.ABSOLUTE_COLORIMETRIC,
         ).run()
 
         service.load_preview.assert_called_once_with(
             path,
-            WorkingColorSpace.DISPLAY_P3,
-            WorkingColorSpace.ADOBE_RGB_1998,
+            ColorSpacePreset.DISPLAY_P3,
+            ColorSpacePreset.ADOBE_RGB_1998,
             RenderingIntent.RELATIVE_COLORIMETRIC,
         )
         service.load_and_analyze.assert_called_once_with(
             path,
-            WorkingColorSpace.PROPHOTO_RGB,
-            WorkingColorSpace.DISPLAY_P3,
+            ColorSpacePreset.PROPHOTO_RGB,
+            ColorSpacePreset.DISPLAY_P3,
             RenderingIntent.ABSOLUTE_COLORIMETRIC,
         )
 
     def test_worker_tasks_pass_local_color_profiles_to_service(self) -> None:
         service = MagicMock()
         path = Path("/tmp/profiled.jpg")
-        working_profile = self._local_profile(name="Local Working", file_name="working.icc")
+        display_profile = self._local_profile(name="Local Display", file_name="display.icc")
         source_profile = self._local_profile(name="Local Source", file_name="source.icc")
         service.load_preview.return_value = PreviewLoadResult(
             preview_rgb=np.zeros((1, 1, 3), dtype=np.uint8),
-            working_color_space=working_profile,
+            display_color_space=display_profile,
             assumed_source_color_space=source_profile,
             rendering_intent=RenderingIntent.RELATIVE_COLORIMETRIC,
         )
@@ -91,32 +91,32 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         PreviewLoadTask(
             service,
             path,
-            working_profile,
+            display_profile,
             source_profile,
             RenderingIntent.RELATIVE_COLORIMETRIC,
         ).run()
         ImageLoadTask(
             service,
             path,
-            working_profile,
+            display_profile,
             source_profile,
             RenderingIntent.RELATIVE_COLORIMETRIC,
         ).run()
 
         service.load_preview.assert_called_once_with(
             path,
-            working_profile,
+            display_profile,
             source_profile,
             RenderingIntent.RELATIVE_COLORIMETRIC,
         )
         service.load_and_analyze.assert_called_once_with(
             path,
-            working_profile,
+            display_profile,
             source_profile,
             RenderingIntent.RELATIVE_COLORIMETRIC,
         )
 
-    def test_worker_tasks_default_to_app_working_color_space(self) -> None:
+    def test_worker_tasks_default_to_app_display_color_space(self) -> None:
         service = MagicMock()
         path = Path("/tmp/profiled.jpg")
         service.load_preview.return_value = PreviewLoadResult(
@@ -129,18 +129,18 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
 
         service.load_preview.assert_called_once_with(
             path,
-            WorkingColorSpace.PROPHOTO_RGB,
-            WorkingColorSpace.SRGB,
+            ColorSpacePreset.SRGB,
+            ColorSpacePreset.SRGB,
             RenderingIntent.PERCEPTUAL,
         )
         service.load_and_analyze.assert_called_once_with(
             path,
-            WorkingColorSpace.PROPHOTO_RGB,
-            WorkingColorSpace.SRGB,
+            ColorSpacePreset.SRGB,
+            ColorSpacePreset.SRGB,
             RenderingIntent.PERCEPTUAL,
         )
 
-    def test_switching_working_color_space_clears_image_caches_and_reloads_open_tabs(self) -> None:
+    def test_switching_display_color_space_clears_image_caches_and_reloads_open_tabs(self) -> None:
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
         path = Path("/tmp/sample.jpg")
@@ -158,10 +158,10 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         controller._tab_preview_render_key_by_path[key] = object()
         controller._zoom_by_path[key] = 2.0
 
-        index = ui.comboWorkingColorSpace.findData(WorkingColorSpace.DISPLAY_P3)
-        MainController._on_working_color_space_changed(controller, index)
+        index = ui.comboDisplayColorSpace.findData(ColorSpacePreset.DISPLAY_P3)
+        MainController._on_display_color_space_changed(controller, index)
 
-        self.assertEqual(WorkingColorSpace.DISPLAY_P3, controller._working_color_space)
+        self.assertEqual(ColorSpacePreset.DISPLAY_P3, controller._display_color_space)
         self.assertNotIn(key, controller._images_by_path)
         self.assertNotIn(key, controller._preview_by_path)
         self.assertNotIn(key, controller._load_error_by_path)
@@ -192,10 +192,10 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         controller._tab_preview_render_key_by_path[key] = object()
         controller._zoom_by_path[key] = 2.0
 
-        index = ui.comboSpecifiedImageColorSpace.findData(WorkingColorSpace.DISPLAY_P3)
+        index = ui.comboSpecifiedImageColorSpace.findData(ColorSpacePreset.DISPLAY_P3)
         MainController._on_assumed_source_color_space_changed(controller, index)
 
-        self.assertEqual(WorkingColorSpace.DISPLAY_P3, controller._assumed_source_color_space)
+        self.assertEqual(ColorSpacePreset.DISPLAY_P3, controller._assumed_source_color_space)
         self.assertNotIn(key, controller._images_by_path)
         self.assertNotIn(key, controller._preview_by_path)
         self.assertNotIn(key, controller._load_error_by_path)
@@ -242,28 +242,28 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         controller._ensure_full_load.assert_called_once_with(path, 1)
         controller.update_info_for_image.assert_called_once_with(path)
 
-    def test_choose_local_working_icc_loads_profile_and_reloads_open_images(self) -> None:
+    def test_choose_local_display_icc_loads_profile_and_reloads_open_images(self) -> None:
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
-        local_profile = self._local_profile(name="Local Working", file_name="working.icc")
+        local_profile = self._local_profile(name="Local Display", file_name="display.icc")
         controller._image_service = MagicMock()
         controller._image_service.load_local_color_profile.return_value = local_profile
         controller._reload_open_images_for_color_settings = MagicMock()  # type: ignore[method-assign]
-        choose_index = ui.comboWorkingColorSpace.findText("Choose a local ICC...")
+        choose_index = ui.comboDisplayColorSpace.findText("Choose a local ICC...")
 
         with unittest.mock.patch(
             "pic_viewer.controllers.main_controller_analysis_mixin.QtWidgets.QFileDialog.getOpenFileName",
-            return_value=("/tmp/working.icc", "ICC Profiles (*.icc *.icm)"),
+            return_value=("/tmp/display.icc", "ICC Profiles (*.icc *.icm)"),
         ):
-            MainController._on_working_color_space_changed(controller, choose_index)
+            MainController._on_display_color_space_changed(controller, choose_index)
 
-        controller._image_service.load_local_color_profile.assert_called_once_with(Path("/tmp/working.icc"))
-        self.assertEqual(local_profile, controller._working_color_space)
-        self.assertEqual(local_profile, ui.comboWorkingColorSpace.currentData())
-        self.assertEqual("Local Working", ui.comboWorkingColorSpace.currentText())
+        controller._image_service.load_local_color_profile.assert_called_once_with(Path("/tmp/display.icc"))
+        self.assertEqual(local_profile, controller._display_color_space)
+        self.assertEqual(local_profile, ui.comboDisplayColorSpace.currentData())
+        self.assertEqual("Local Display", ui.comboDisplayColorSpace.currentText())
         self.assertEqual(
             "Choose a local ICC...",
-            ui.comboWorkingColorSpace.itemText(ui.comboWorkingColorSpace.count() - 1),
+            ui.comboDisplayColorSpace.itemText(ui.comboDisplayColorSpace.count() - 1),
         )
         controller._reload_open_images_for_color_settings.assert_called_once()
 
@@ -288,25 +288,25 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         self.assertEqual("Local Source", ui.comboSpecifiedImageColorSpace.currentText())
         controller._reload_open_images_for_color_settings.assert_called_once()
 
-    def test_canceling_local_icc_choice_restores_previous_working_color_space(self) -> None:
+    def test_canceling_local_icc_choice_restores_previous_display_color_space(self) -> None:
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
         controller._image_service = MagicMock()
         controller._reload_open_images_for_color_settings = MagicMock()  # type: ignore[method-assign]
-        choose_index = ui.comboWorkingColorSpace.findText("Choose a local ICC...")
+        choose_index = ui.comboDisplayColorSpace.findText("Choose a local ICC...")
 
         with unittest.mock.patch(
             "pic_viewer.controllers.main_controller_analysis_mixin.QtWidgets.QFileDialog.getOpenFileName",
             return_value=("", ""),
         ):
-            MainController._on_working_color_space_changed(controller, choose_index)
+            MainController._on_display_color_space_changed(controller, choose_index)
 
         controller._image_service.load_local_color_profile.assert_not_called()
-        self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, controller._working_color_space)
-        self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, ui.comboWorkingColorSpace.currentData())
+        self.assertEqual(ColorSpacePreset.SRGB, controller._display_color_space)
+        self.assertEqual(ColorSpacePreset.SRGB, ui.comboDisplayColorSpace.currentData())
         controller._reload_open_images_for_color_settings.assert_not_called()
 
-    def test_invalid_local_icc_choice_warns_and_restores_previous_working_color_space(self) -> None:
+    def test_invalid_local_icc_choice_warns_and_restores_previous_display_color_space(self) -> None:
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
         controller._image_service = MagicMock()
@@ -314,7 +314,7 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
             "Unable to load ICC profile"
         )
         controller._reload_open_images_for_color_settings = MagicMock()  # type: ignore[method-assign]
-        choose_index = ui.comboWorkingColorSpace.findText("Choose a local ICC...")
+        choose_index = ui.comboDisplayColorSpace.findText("Choose a local ICC...")
 
         with (
             unittest.mock.patch(
@@ -325,12 +325,12 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
                 "pic_viewer.controllers.main_controller_analysis_mixin.QtWidgets.QMessageBox.warning"
             ) as warning,
         ):
-            MainController._on_working_color_space_changed(controller, choose_index)
+            MainController._on_display_color_space_changed(controller, choose_index)
 
         controller._image_service.load_local_color_profile.assert_called_once_with(Path("/tmp/bad.icc"))
         warning.assert_called_once()
-        self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, controller._working_color_space)
-        self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, ui.comboWorkingColorSpace.currentData())
+        self.assertEqual(ColorSpacePreset.SRGB, controller._display_color_space)
+        self.assertEqual(ColorSpacePreset.SRGB, ui.comboDisplayColorSpace.currentData())
         controller._reload_open_images_for_color_settings.assert_not_called()
 
     def test_specified_source_selector_restores_local_profile_after_embedded_icc(self) -> None:
@@ -365,18 +365,18 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         self.assertEqual(local_profile, ui.comboSpecifiedImageColorSpace.currentData())
         self.assertEqual("Local Source", ui.comboSpecifiedImageColorSpace.currentText())
 
-    def test_stale_preview_result_from_old_working_space_is_ignored(self) -> None:
+    def test_stale_preview_result_from_old_display_space_is_ignored(self) -> None:
         window, _, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
         path = Path("/tmp/sample.jpg")
         key = str(path)
         controller._active_session_by_path[key] = 1
         controller._preview_tasks_by_path[key] = object()
-        controller._working_color_space = WorkingColorSpace.DISPLAY_P3
+        controller._display_color_space = ColorSpacePreset.DISPLAY_P3
         result = PreviewLoadResult(
             preview_rgb=np.zeros((1, 1, 3), dtype=np.uint8),
-            working_color_space=WorkingColorSpace.SRGB,
-            assumed_source_color_space=WorkingColorSpace.SRGB,
+            display_color_space=ColorSpacePreset.SRGB,
+            assumed_source_color_space=ColorSpacePreset.SRGB,
             rendering_intent=RenderingIntent.PERCEPTUAL,
             source_color_profile=ImageColorProfileInfo(
                 display_name="sRGB",
@@ -398,12 +398,12 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         key = str(path)
         controller._active_session_by_path[key] = 1
         controller._preview_tasks_by_path[key] = object()
-        controller._working_color_space = WorkingColorSpace.DISPLAY_P3
-        controller._assumed_source_color_space = WorkingColorSpace.ADOBE_RGB_1998
+        controller._display_color_space = ColorSpacePreset.DISPLAY_P3
+        controller._assumed_source_color_space = ColorSpacePreset.ADOBE_RGB_1998
         result = PreviewLoadResult(
             preview_rgb=np.zeros((1, 1, 3), dtype=np.uint8),
-            working_color_space=WorkingColorSpace.DISPLAY_P3,
-            assumed_source_color_space=WorkingColorSpace.SRGB,
+            display_color_space=ColorSpacePreset.DISPLAY_P3,
+            assumed_source_color_space=ColorSpacePreset.SRGB,
             rendering_intent=RenderingIntent.PERCEPTUAL,
             source_color_profile=ImageColorProfileInfo(
                 display_name="sRGB",
@@ -425,13 +425,13 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         key = str(path)
         controller._active_session_by_path[key] = 1
         controller._preview_tasks_by_path[key] = object()
-        controller._working_color_space = WorkingColorSpace.DISPLAY_P3
-        controller._assumed_source_color_space = WorkingColorSpace.ADOBE_RGB_1998
+        controller._display_color_space = ColorSpacePreset.DISPLAY_P3
+        controller._assumed_source_color_space = ColorSpacePreset.ADOBE_RGB_1998
         controller._rendering_intent = RenderingIntent.RELATIVE_COLORIMETRIC
         result = PreviewLoadResult(
             preview_rgb=np.zeros((1, 1, 3), dtype=np.uint8),
-            working_color_space=WorkingColorSpace.DISPLAY_P3,
-            assumed_source_color_space=WorkingColorSpace.ADOBE_RGB_1998,
+            display_color_space=ColorSpacePreset.DISPLAY_P3,
+            assumed_source_color_space=ColorSpacePreset.ADOBE_RGB_1998,
             rendering_intent=RenderingIntent.PERCEPTUAL,
             source_color_profile=ImageColorProfileInfo(
                 display_name="sRGB",
@@ -446,17 +446,17 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         self.assertNotIn(key, controller._preview_by_path)
         self.assertEqual("Display P3 (embedded ICC)", controller._ui.labelImageColorSpaceValue.text())
 
-    def test_stale_full_load_result_from_old_working_space_is_ignored(self) -> None:
+    def test_stale_full_load_result_from_old_display_space_is_ignored(self) -> None:
         window, _, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
         path = Path("/tmp/sample.jpg")
         key = str(path)
         controller._active_session_by_path[key] = 1
         controller._load_tasks_by_path[key] = object()
-        controller._working_color_space = WorkingColorSpace.DISPLAY_P3
+        controller._display_color_space = ColorSpacePreset.DISPLAY_P3
         analysis = MagicMock()
-        analysis.working_color_space = WorkingColorSpace.SRGB
-        analysis.assumed_source_color_space = WorkingColorSpace.SRGB
+        analysis.display_color_space = ColorSpacePreset.SRGB
+        analysis.assumed_source_color_space = ColorSpacePreset.SRGB
         analysis.rendering_intent = RenderingIntent.PERCEPTUAL
         analysis.source_color_profile = ImageColorProfileInfo(
             display_name="sRGB",
@@ -478,11 +478,11 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         key = str(path)
         controller._active_session_by_path[key] = 1
         controller._load_tasks_by_path[key] = object()
-        controller._working_color_space = WorkingColorSpace.DISPLAY_P3
-        controller._assumed_source_color_space = WorkingColorSpace.ADOBE_RGB_1998
+        controller._display_color_space = ColorSpacePreset.DISPLAY_P3
+        controller._assumed_source_color_space = ColorSpacePreset.ADOBE_RGB_1998
         analysis = MagicMock()
-        analysis.working_color_space = WorkingColorSpace.DISPLAY_P3
-        analysis.assumed_source_color_space = WorkingColorSpace.SRGB
+        analysis.display_color_space = ColorSpacePreset.DISPLAY_P3
+        analysis.assumed_source_color_space = ColorSpacePreset.SRGB
         analysis.rendering_intent = RenderingIntent.PERCEPTUAL
         analysis.source_color_profile = ImageColorProfileInfo(
             display_name="sRGB",
@@ -504,12 +504,12 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         key = str(path)
         controller._active_session_by_path[key] = 1
         controller._load_tasks_by_path[key] = object()
-        controller._working_color_space = WorkingColorSpace.DISPLAY_P3
-        controller._assumed_source_color_space = WorkingColorSpace.ADOBE_RGB_1998
+        controller._display_color_space = ColorSpacePreset.DISPLAY_P3
+        controller._assumed_source_color_space = ColorSpacePreset.ADOBE_RGB_1998
         controller._rendering_intent = RenderingIntent.RELATIVE_COLORIMETRIC
         analysis = MagicMock()
-        analysis.working_color_space = WorkingColorSpace.DISPLAY_P3
-        analysis.assumed_source_color_space = WorkingColorSpace.ADOBE_RGB_1998
+        analysis.display_color_space = ColorSpacePreset.DISPLAY_P3
+        analysis.assumed_source_color_space = ColorSpacePreset.ADOBE_RGB_1998
         analysis.rendering_intent = RenderingIntent.PERCEPTUAL
         analysis.source_color_profile = ImageColorProfileInfo(
             display_name="sRGB",
@@ -533,8 +533,8 @@ class WorkingColorSpaceControllerTests(unittest.TestCase):
         controller._main_window = window
         controller._ui = ui
         controller._tr = lambda text: text  # type: ignore[method-assign]
-        controller._working_color_space = WorkingColorSpace.PROPHOTO_RGB
-        controller._assumed_source_color_space = WorkingColorSpace.SRGB
+        controller._display_color_space = ColorSpacePreset.SRGB
+        controller._assumed_source_color_space = ColorSpacePreset.SRGB
         controller._rendering_intent = RenderingIntent.PERCEPTUAL
         controller._images_by_path = {}
         controller._preview_by_path = {}

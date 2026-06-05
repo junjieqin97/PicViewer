@@ -26,7 +26,7 @@ from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult, Pr
 from pic_viewer.app.dto.metadata import ImageMetadata  # noqa: E402
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
-from pic_viewer.domain.models.color_space import WorkingColorSpace  # noqa: E402
+from pic_viewer.domain.models.color_space import ColorSpacePreset  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 
 
@@ -235,9 +235,9 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         self.addCleanup(window.deleteLater)
         self._configure_analysis_rendering(controller)
         ui.comboSpecifiedImageColorSpace.setEnabled(False)
-        display_p3_index = ui.comboSpecifiedImageColorSpace.findData(WorkingColorSpace.DISPLAY_P3)
+        display_p3_index = ui.comboSpecifiedImageColorSpace.findData(ColorSpacePreset.DISPLAY_P3)
         ui.comboSpecifiedImageColorSpace.setCurrentIndex(display_p3_index)
-        controller._assumed_source_color_space = WorkingColorSpace.DISPLAY_P3
+        controller._assumed_source_color_space = ColorSpacePreset.DISPLAY_P3
         path = Path("/tmp/no-profile.jpg")
         controller._images_by_path[str(path)] = self._image_result(
             (255, 0, 0),
@@ -245,7 +245,7 @@ class InfoPanelLoadStateTests(unittest.TestCase):
                 display_name="Display P3",
                 status=ImageColorProfileStatus.MISSING,
                 uses_srgb_fallback=True,
-                assumed_color_space=WorkingColorSpace.DISPLAY_P3,
+                assumed_color_space=ColorSpacePreset.DISPLAY_P3,
             ),
         )
 
@@ -259,9 +259,9 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
         self._configure_analysis_rendering(controller)
-        display_p3_index = ui.comboSpecifiedImageColorSpace.findData(WorkingColorSpace.DISPLAY_P3)
+        display_p3_index = ui.comboSpecifiedImageColorSpace.findData(ColorSpacePreset.DISPLAY_P3)
         ui.comboSpecifiedImageColorSpace.setCurrentIndex(display_p3_index)
-        controller._assumed_source_color_space = WorkingColorSpace.DISPLAY_P3
+        controller._assumed_source_color_space = ColorSpacePreset.DISPLAY_P3
         profiled_path = Path("/tmp/profiled.jpg")
         fallback_path = Path("/tmp/no-profile.jpg")
         controller._images_by_path[str(profiled_path)] = self._image_result(
@@ -278,7 +278,7 @@ class InfoPanelLoadStateTests(unittest.TestCase):
                 display_name="Display P3",
                 status=ImageColorProfileStatus.MISSING,
                 uses_srgb_fallback=True,
-                assumed_color_space=WorkingColorSpace.DISPLAY_P3,
+                assumed_color_space=ColorSpacePreset.DISPLAY_P3,
             ),
         )
 
@@ -325,7 +325,7 @@ class InfoPanelLoadStateTests(unittest.TestCase):
                 display_name="Display P3",
                 status=ImageColorProfileStatus.MISSING,
                 uses_srgb_fallback=True,
-                assumed_color_space=WorkingColorSpace.DISPLAY_P3,
+                assumed_color_space=ColorSpacePreset.DISPLAY_P3,
             ),
         )
         invalid = MainController._format_source_color_profile_info(
@@ -334,7 +334,7 @@ class InfoPanelLoadStateTests(unittest.TestCase):
                 display_name="Adobe RGB (1998)",
                 status=ImageColorProfileStatus.INVALID,
                 uses_srgb_fallback=True,
-                assumed_color_space=WorkingColorSpace.ADOBE_RGB_1998,
+                assumed_color_space=ColorSpacePreset.ADOBE_RGB_1998,
             ),
         )
         failed = MainController._format_source_color_profile_info(
@@ -343,7 +343,7 @@ class InfoPanelLoadStateTests(unittest.TestCase):
                 display_name="Display P3",
                 status=ImageColorProfileStatus.CONVERSION_FAILED,
                 uses_srgb_fallback=True,
-                assumed_color_space=WorkingColorSpace.DISPLAY_P3,
+                assumed_color_space=ColorSpacePreset.DISPLAY_P3,
             ),
         )
 

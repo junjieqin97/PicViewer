@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 from PySide6 import QtCore, QtGui
 
+from pic_viewer.domain.models.color_space import ColorProfileSpec
 from pic_viewer.ui.utils.image_qt import to_qpixmap
 
 
@@ -20,7 +21,12 @@ class MainControllerFilmstripMixin:
         self._filmstrip_resize_timer.setInterval(120)
         self._filmstrip_resize_timer.timeout.connect(self._apply_filmstrip_icon_size)
 
-    def _update_filmstrip_icon(self, path: Path, preview_rgb: np.ndarray) -> None:
+    def _update_filmstrip_icon(
+        self,
+        path: Path,
+        preview_rgb: np.ndarray,
+        display_color_space: ColorProfileSpec,
+    ) -> None:
         item = self._find_filmstrip_item_by_path(path)
         if item is None:
             return
@@ -28,7 +34,12 @@ class MainControllerFilmstripMixin:
         if icon_size.width() <= 0 or icon_size.height() <= 0:
             icon_size = QtCore.QSize(self._filmstrip_icon_side, self._filmstrip_icon_side)
         dpr = self._device_pixel_ratio_for(self._ui.listFilmstrip)
-        pix = to_qpixmap(preview_rgb, icon_size, device_pixel_ratio=dpr)
+        pix = to_qpixmap(
+            preview_rgb,
+            icon_size,
+            device_pixel_ratio=dpr,
+            color_space=display_color_space,
+        )
         item.setIcon(QtGui.QIcon(pix))
 
     def _schedule_filmstrip_resize(self) -> None:
@@ -105,5 +116,10 @@ class MainControllerFilmstripMixin:
             item = self._find_filmstrip_item_by_path(Path(path_str))
             if item is None:
                 continue
-            pix = to_qpixmap(data.analysis.preview_rgb, icon_size, device_pixel_ratio=dpr)
+            pix = to_qpixmap(
+                data.analysis.preview_rgb,
+                icon_size,
+                device_pixel_ratio=dpr,
+                color_space=data.analysis.display_color_space,
+            )
             item.setIcon(QtGui.QIcon(pix))

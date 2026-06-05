@@ -11,7 +11,7 @@ from pic_viewer.app.dto.metadata import ImageMetadata
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
-    DEFAULT_WORKING_COLOR_SPACE,
+    DEFAULT_DISPLAY_COLOR_SPACE,
     ColorProfileSpec,
 )
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
@@ -42,7 +42,7 @@ class ImageAnalysis:
         waveform_r: Red channel waveform plot.
         waveform_g: Green channel waveform plot.
         waveform_b: Blue channel waveform plot.
-        working_color_space: Color space used for analysis data.
+        display_color_space: Color space used for analysis data.
         assumed_source_color_space: Fallback source color space used when ICC is unavailable.
         rendering_intent: ICC rendering intent used for gamut mapping.
         source_color_profile: Source ICC profile status used for decoding.
@@ -61,7 +61,7 @@ class ImageAnalysis:
     waveform_r: np.ndarray
     waveform_g: np.ndarray
     waveform_b: np.ndarray
-    working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE
+    display_color_space: ColorProfileSpec = DEFAULT_DISPLAY_COLOR_SPACE
     assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
     rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT
     source_color_profile: ImageColorProfileInfo = DEFAULT_SOURCE_COLOR_PROFILE
@@ -80,7 +80,7 @@ class PreviewLoadResult:
     """Fast preview payload used for incremental loading."""
 
     preview_rgb: np.ndarray
-    working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE
+    display_color_space: ColorProfileSpec = DEFAULT_DISPLAY_COLOR_SPACE
     assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
     rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT
     source_color_profile: ImageColorProfileInfo = DEFAULT_SOURCE_COLOR_PROFILE

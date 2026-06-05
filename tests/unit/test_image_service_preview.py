@@ -15,7 +15,7 @@ if str(SRC_ROOT) not in sys.path:
 from pic_viewer.app.services.image_service import ImageService  # noqa: E402
 from pic_viewer.common.errors import ImageLoadError  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
-from pic_viewer.domain.models.color_space import LocalColorProfile, WorkingColorSpace  # noqa: E402
+from pic_viewer.domain.models.color_space import LocalColorProfile, ColorSpacePreset  # noqa: E402
 from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel  # noqa: E402
 
@@ -39,7 +39,6 @@ class ImageServicePreviewTests(unittest.TestCase):
     def test_load_preview_returns_preview_payload(self) -> None:
         preview_bgr = np.zeros((8, 8, 3), dtype=np.uint8)
         preview_rgb = np.ones((8, 8, 3), dtype=np.uint8)
-        display_rgb = np.full((8, 8, 3), 2, dtype=np.uint8)
         source_profile = ImageColorProfileInfo(
             display_name="sRGB",
             status=ImageColorProfileStatus.MISSING,
@@ -47,32 +46,26 @@ class ImageServicePreviewTests(unittest.TestCase):
         )
         self.reader.read_preview_with_color_profile_info.return_value = (preview_bgr, source_profile)
         self.analyzer.build_preview_rgb.return_value = preview_rgb
-        self.color_converter.convert_working_rgb_to_srgb.return_value = display_rgb
 
-        result = self.service.load_preview(self.path, WorkingColorSpace.DISPLAY_P3)
+        result = self.service.load_preview(self.path, ColorSpacePreset.DISPLAY_P3)
 
         self.reader.read_preview_with_color_profile_info.assert_called_once_with(
             self.path,
-            working_color_space=WorkingColorSpace.DISPLAY_P3,
-            assumed_source_color_space=WorkingColorSpace.SRGB,
+            display_color_space=ColorSpacePreset.DISPLAY_P3,
+            assumed_source_color_space=ColorSpacePreset.SRGB,
             rendering_intent=RenderingIntent.PERCEPTUAL,
         )
         self.analyzer.build_preview_rgb.assert_called_once_with(preview_bgr)
-        self.color_converter.convert_working_rgb_to_srgb.assert_called_once_with(
-            preview_rgb,
-            WorkingColorSpace.DISPLAY_P3,
-            RenderingIntent.PERCEPTUAL,
-        )
-        self.assertEqual(WorkingColorSpace.DISPLAY_P3, result.working_color_space)
-        self.assertEqual(WorkingColorSpace.SRGB, result.assumed_source_color_space)
+        self.assertEqual([], self.color_converter.method_calls)
+        self.assertEqual(ColorSpacePreset.DISPLAY_P3, result.display_color_space)
+        self.assertEqual(ColorSpacePreset.SRGB, result.assumed_source_color_space)
         self.assertEqual(RenderingIntent.PERCEPTUAL, result.rendering_intent)
         self.assertEqual(source_profile, result.source_color_profile)
-        np.testing.assert_array_equal(result.preview_rgb, display_rgb)
+        np.testing.assert_array_equal(result.preview_rgb, preview_rgb)
 
-    def test_load_preview_defaults_to_app_working_color_space(self) -> None:
+    def test_load_preview_defaults_to_app_display_color_space(self) -> None:
         preview_bgr = np.zeros((8, 8, 3), dtype=np.uint8)
         preview_rgb = np.ones((8, 8, 3), dtype=np.uint8)
-        display_rgb = np.full((8, 8, 3), 2, dtype=np.uint8)
         source_profile = ImageColorProfileInfo(
             display_name="sRGB",
             status=ImageColorProfileStatus.MISSING,
@@ -80,27 +73,21 @@ class ImageServicePreviewTests(unittest.TestCase):
         )
         self.reader.read_preview_with_color_profile_info.return_value = (preview_bgr, source_profile)
         self.analyzer.build_preview_rgb.return_value = preview_rgb
-        self.color_converter.convert_working_rgb_to_srgb.return_value = display_rgb
 
         result = self.service.load_preview(self.path)
 
         self.reader.read_preview_with_color_profile_info.assert_called_once_with(
             self.path,
-            working_color_space=WorkingColorSpace.PROPHOTO_RGB,
-            assumed_source_color_space=WorkingColorSpace.SRGB,
+            display_color_space=ColorSpacePreset.SRGB,
+            assumed_source_color_space=ColorSpacePreset.SRGB,
             rendering_intent=RenderingIntent.PERCEPTUAL,
         )
-        self.color_converter.convert_working_rgb_to_srgb.assert_called_once_with(
-            preview_rgb,
-            WorkingColorSpace.PROPHOTO_RGB,
-            RenderingIntent.PERCEPTUAL,
-        )
-        self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, result.working_color_space)
+        self.assertEqual([], self.color_converter.method_calls)
+        self.assertEqual(ColorSpacePreset.SRGB, result.display_color_space)
 
     def test_load_preview_passes_specified_source_color_space(self) -> None:
         preview_bgr = np.zeros((8, 8, 3), dtype=np.uint8)
         preview_rgb = np.ones((8, 8, 3), dtype=np.uint8)
-        display_rgb = np.full((8, 8, 3), 2, dtype=np.uint8)
         source_profile = ImageColorProfileInfo(
             display_name="Display P3",
             status=ImageColorProfileStatus.MISSING,
@@ -108,35 +95,29 @@ class ImageServicePreviewTests(unittest.TestCase):
         )
         self.reader.read_preview_with_color_profile_info.return_value = (preview_bgr, source_profile)
         self.analyzer.build_preview_rgb.return_value = preview_rgb
-        self.color_converter.convert_working_rgb_to_srgb.return_value = display_rgb
 
         result = self.service.load_preview(
             self.path,
-            WorkingColorSpace.PROPHOTO_RGB,
-            WorkingColorSpace.DISPLAY_P3,
+            ColorSpacePreset.PROPHOTO_RGB,
+            ColorSpacePreset.DISPLAY_P3,
             RenderingIntent.ABSOLUTE_COLORIMETRIC,
         )
 
         self.reader.read_preview_with_color_profile_info.assert_called_once_with(
             self.path,
-            working_color_space=WorkingColorSpace.PROPHOTO_RGB,
-            assumed_source_color_space=WorkingColorSpace.DISPLAY_P3,
+            display_color_space=ColorSpacePreset.PROPHOTO_RGB,
+            assumed_source_color_space=ColorSpacePreset.DISPLAY_P3,
             rendering_intent=RenderingIntent.ABSOLUTE_COLORIMETRIC,
         )
-        self.color_converter.convert_working_rgb_to_srgb.assert_called_once_with(
-            preview_rgb,
-            WorkingColorSpace.PROPHOTO_RGB,
-            RenderingIntent.ABSOLUTE_COLORIMETRIC,
-        )
-        self.assertEqual(WorkingColorSpace.PROPHOTO_RGB, result.working_color_space)
-        self.assertEqual(WorkingColorSpace.DISPLAY_P3, result.assumed_source_color_space)
+        self.assertEqual([], self.color_converter.method_calls)
+        self.assertEqual(ColorSpacePreset.PROPHOTO_RGB, result.display_color_space)
+        self.assertEqual(ColorSpacePreset.DISPLAY_P3, result.assumed_source_color_space)
         self.assertEqual(RenderingIntent.ABSOLUTE_COLORIMETRIC, result.rendering_intent)
 
     def test_load_preview_passes_local_color_profiles(self) -> None:
         preview_bgr = np.zeros((8, 8, 3), dtype=np.uint8)
         preview_rgb = np.ones((8, 8, 3), dtype=np.uint8)
-        display_rgb = np.full((8, 8, 3), 2, dtype=np.uint8)
-        working_profile = self._local_profile(name="Local Working", file_name="working.icc")
+        display_profile = self._local_profile(name="Local Display", file_name="display.icc")
         source_profile_spec = self._local_profile(name="Local Source", file_name="source.icc")
         source_profile = ImageColorProfileInfo(
             display_name="Local Source",
@@ -146,27 +127,22 @@ class ImageServicePreviewTests(unittest.TestCase):
         )
         self.reader.read_preview_with_color_profile_info.return_value = (preview_bgr, source_profile)
         self.analyzer.build_preview_rgb.return_value = preview_rgb
-        self.color_converter.convert_working_rgb_to_srgb.return_value = display_rgb
 
         result = self.service.load_preview(
             self.path,
-            working_profile,
+            display_profile,
             source_profile_spec,
             RenderingIntent.RELATIVE_COLORIMETRIC,
         )
 
         self.reader.read_preview_with_color_profile_info.assert_called_once_with(
             self.path,
-            working_color_space=working_profile,
+            display_color_space=display_profile,
             assumed_source_color_space=source_profile_spec,
             rendering_intent=RenderingIntent.RELATIVE_COLORIMETRIC,
         )
-        self.color_converter.convert_working_rgb_to_srgb.assert_called_once_with(
-            preview_rgb,
-            working_profile,
-            RenderingIntent.RELATIVE_COLORIMETRIC,
-        )
-        self.assertEqual(working_profile, result.working_color_space)
+        self.assertEqual([], self.color_converter.method_calls)
+        self.assertEqual(display_profile, result.display_color_space)
         self.assertEqual(source_profile_spec, result.assumed_source_color_space)
 
     def test_load_preview_propagates_image_load_error(self) -> None:

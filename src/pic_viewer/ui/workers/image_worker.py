@@ -11,7 +11,7 @@ from pic_viewer.app.services.image_service import ImageService
 from pic_viewer.common.errors import ImageLoadError, ImageProcessError
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
-    DEFAULT_WORKING_COLOR_SPACE,
+    DEFAULT_DISPLAY_COLOR_SPACE,
     ColorProfileSpec,
 )
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
@@ -33,14 +33,14 @@ class PreviewLoadTask(QtCore.QRunnable):
         self,
         service: ImageService,
         path: Path,
-        working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE,
+        display_color_space: ColorProfileSpec = DEFAULT_DISPLAY_COLOR_SPACE,
         assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> None:
         super().__init__()
         self._service = service
         self._path = path
-        self._working_color_space = working_color_space
+        self._display_color_space = display_color_space
         self._assumed_source_color_space = assumed_source_color_space
         self._rendering_intent = rendering_intent
         self.signals = ImageTaskSignals()
@@ -53,7 +53,7 @@ class PreviewLoadTask(QtCore.QRunnable):
         try:
             result = self._service.load_preview(
                 self._path,
-                self._working_color_space,
+                self._display_color_space,
                 self._assumed_source_color_space,
                 self._rendering_intent,
             )
@@ -75,14 +75,14 @@ class ImageLoadTask(QtCore.QRunnable):
         self,
         service: ImageService,
         path: Path,
-        working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE,
+        display_color_space: ColorProfileSpec = DEFAULT_DISPLAY_COLOR_SPACE,
         assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> None:
         super().__init__()
         self._service = service
         self._path = path
-        self._working_color_space = working_color_space
+        self._display_color_space = display_color_space
         self._assumed_source_color_space = assumed_source_color_space
         self._rendering_intent = rendering_intent
         self.signals = ImageTaskSignals()
@@ -95,7 +95,7 @@ class ImageLoadTask(QtCore.QRunnable):
         try:
             result = self._service.load_and_analyze(
                 self._path,
-                self._working_color_space,
+                self._display_color_space,
                 self._assumed_source_color_space,
                 self._rendering_intent,
             )

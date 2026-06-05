@@ -17,7 +17,7 @@ from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     ColorProfileSpec,
     LocalColorProfile,
-    WorkingColorSpace,
+    ColorSpacePreset,
 )
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
 
@@ -25,13 +25,13 @@ logger = logging.getLogger(__name__)
 
 
 class ColorProfileConverter:
-    """Convert decoded image pixels between embedded and working ICC profiles."""
+    """Convert decoded image pixels from source ICC profiles into display profiles."""
 
-    _QT_COLOR_SPACES: dict[WorkingColorSpace, QtGui.QColorSpace.NamedColorSpace] = {
-        WorkingColorSpace.SRGB: QtGui.QColorSpace.NamedColorSpace.SRgb,
-        WorkingColorSpace.DISPLAY_P3: QtGui.QColorSpace.NamedColorSpace.DisplayP3,
-        WorkingColorSpace.ADOBE_RGB_1998: QtGui.QColorSpace.NamedColorSpace.AdobeRgb,
-        WorkingColorSpace.PROPHOTO_RGB: QtGui.QColorSpace.NamedColorSpace.ProPhotoRgb,
+    _QT_COLOR_SPACES: dict[ColorSpacePreset, QtGui.QColorSpace.NamedColorSpace] = {
+        ColorSpacePreset.SRGB: QtGui.QColorSpace.NamedColorSpace.SRgb,
+        ColorSpacePreset.DISPLAY_P3: QtGui.QColorSpace.NamedColorSpace.DisplayP3,
+        ColorSpacePreset.ADOBE_RGB_1998: QtGui.QColorSpace.NamedColorSpace.AdobeRgb,
+        ColorSpacePreset.PROPHOTO_RGB: QtGui.QColorSpace.NamedColorSpace.ProPhotoRgb,
     }
     _PILLOW_RENDERING_INTENTS: dict[RenderingIntent, ImageCms.Intent] = {
         RenderingIntent.PERCEPTUAL: ImageCms.Intent.PERCEPTUAL,
@@ -41,8 +41,8 @@ class ColorProfileConverter:
     }
 
     def __init__(self) -> None:
-        self._profile_bytes_by_space: dict[WorkingColorSpace, bytes] = {}
-        self._profiles_by_space: dict[WorkingColorSpace, ImageCms.ImageCmsProfile] = {}
+        self._profile_bytes_by_space: dict[ColorSpacePreset, bytes] = {}
+        self._profiles_by_space: dict[ColorSpacePreset, ImageCms.ImageCmsProfile] = {}
         self._profiles_by_local_key: dict[str, ImageCms.ImageCmsProfile] = {}
 
     def profile_for(self, color_space: ColorProfileSpec) -> ImageCms.ImageCmsProfile:
@@ -64,8 +64,8 @@ class ColorProfileConverter:
         self._profiles_by_space[color_space] = profile
         return profile
 
-    def profile_bytes_for(self, color_space: WorkingColorSpace) -> bytes:
-        """Return ICC profile bytes for a supported working color space."""
+    def profile_bytes_for(self, color_space: ColorSpacePreset) -> bytes:
+        """Return ICC profile bytes for a supported display color space."""
 
         cached = self._profile_bytes_by_space.get(color_space)
         if cached is not None:
@@ -79,6 +79,29 @@ class ColorProfileConverter:
             raise RuntimeError(f"Qt color space does not expose ICC bytes: {color_space.value}")
         self._profile_bytes_by_space[color_space] = profile_bytes
         return profile_bytes
+
+    def qt_color_space_for(self, color_space: ColorProfileSpec) -> QtGui.QColorSpace:
+        """Return a Qt color space for tagging display preview images.
+
+        Args:
+            color_space: Built-in preset or session-local ICC profile.
+
+        Returns:
+            QColorSpace: Valid Qt color space for QImage metadata.
+
+        Raises:
+            RuntimeError: If Qt cannot construct a color space from the ICC profile.
+        """
+
+        if isinstance(color_space, LocalColorProfile):
+            qt_color_space = QtGui.QColorSpace.fromIccProfile(color_space.profile_bytes)
+            label = color_space.stable_key
+        else:
+            qt_color_space = QtGui.QColorSpace(self._QT_COLOR_SPACES[color_space])
+            label = color_space.value
+        if not qt_color_space.isValid():
+            raise RuntimeError(f"Qt color space is invalid: {label}")
+        return qt_color_space
 
     def load_local_profile(self, path: Path) -> LocalColorProfile:
         """Load and validate a user-selected local ICC or ICM profile.
@@ -116,42 +139,42 @@ class ColorProfileConverter:
             profile_bytes=profile_bytes,
         )
 
-    def convert_file_bgr_to_working_space(
+    def convert_file_bgr_to_display_space(
         self,
         path: Path,
         bgr: np.ndarray,
-        working_color_space: ColorProfileSpec,
+        display_color_space: ColorProfileSpec,
         assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> np.ndarray:
-        """Convert decoded BGR pixels from embedded ICC profile to working space.
+        """Convert decoded BGR pixels from embedded ICC profile to display space.
 
         Args:
             path: Source file path used only for ICC profile extraction.
             bgr: Decoded BGR image pixels.
-            working_color_space: Target RGB working color space.
+            display_color_space: Target RGB display color space.
             assumed_source_color_space: Source color space to use when ICC is unavailable.
             rendering_intent: ICC rendering intent used for gamut mapping.
 
         Returns:
-            A BGR uint8 array in the selected working color space. If profile
+            A BGR uint8 array in the selected display color space. If profile
             extraction or conversion fails, the source is treated as sRGB.
         """
 
-        converted_bgr, _profile_info = self.convert_file_bgr_to_working_space_with_info(
+        converted_bgr, _profile_info = self.convert_file_bgr_to_display_space_with_info(
             path,
             bgr,
-            working_color_space,
+            display_color_space,
             assumed_source_color_space,
             rendering_intent,
         )
         return converted_bgr
 
-    def convert_file_bgr_to_working_space_with_info(
+    def convert_file_bgr_to_display_space_with_info(
         self,
         path: Path,
         bgr: np.ndarray,
-        working_color_space: ColorProfileSpec,
+        display_color_space: ColorProfileSpec,
         assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> tuple[np.ndarray, ImageColorProfileInfo]:
@@ -161,17 +184,17 @@ class ColorProfileConverter:
         if self._is_empty_image(bgr):
             return bgr, source_info
 
-        if source_info.uses_srgb_fallback and self._fallback_source_space(source_info) == working_color_space:
+        if source_info.uses_srgb_fallback and self._fallback_source_space(source_info) == display_color_space:
             return bgr.copy(), source_info
 
-        target_profile = self.profile_for(working_color_space)
+        target_profile = self.profile_for(display_color_space)
         rgb = self._bgr_to_rgb(bgr)
         converted_rgb = self._convert_rgb_with_profiles(
             rgb,
             source_profile,
             target_profile,
             source_path=path,
-            target_label=self._profile_label(working_color_space),
+            target_label=self._profile_label(display_color_space),
             rendering_intent=rendering_intent,
         )
         if converted_rgb is None and not source_info.uses_srgb_fallback:
@@ -179,7 +202,7 @@ class ColorProfileConverter:
                 ImageColorProfileStatus.CONVERSION_FAILED,
                 assumed_source_color_space,
             )
-            if assumed_source_color_space == working_color_space:
+            if assumed_source_color_space == display_color_space:
                 converted_rgb = rgb.copy()
             else:
                 converted_rgb = self._convert_rgb_with_profiles(
@@ -187,35 +210,12 @@ class ColorProfileConverter:
                     self.profile_for(assumed_source_color_space),
                     target_profile,
                     source_path=path,
-                    target_label=self._profile_label(working_color_space),
+                    target_label=self._profile_label(display_color_space),
                     rendering_intent=rendering_intent,
                 )
         if converted_rgb is None:
             converted_rgb = rgb.copy()
         return self._rgb_to_bgr(converted_rgb), source_info
-
-    def convert_working_rgb_to_srgb(
-        self,
-        rgb: np.ndarray,
-        working_color_space: ColorProfileSpec,
-        rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
-    ) -> np.ndarray:
-        """Convert preview RGB pixels from the working color space to sRGB."""
-
-        if self._is_empty_image(rgb) or working_color_space == WorkingColorSpace.SRGB:
-            return rgb.copy()
-
-        converted = self._convert_rgb_with_profiles(
-            rgb,
-            self.profile_for(working_color_space),
-            self.profile_for(WorkingColorSpace.SRGB),
-            source_path=None,
-            target_label=WorkingColorSpace.SRGB.value,
-            rendering_intent=rendering_intent,
-        )
-        if converted is None:
-            return rgb.copy()
-        return converted
 
     def _source_profile_for_path(
         self,
@@ -259,7 +259,7 @@ class ColorProfileConverter:
         )
 
     def _fallback_source_space(self, info: ImageColorProfileInfo) -> ColorProfileSpec:
-        return info.assumed_color_space or WorkingColorSpace.SRGB
+        return info.assumed_color_space or ColorSpacePreset.SRGB
 
     def _profile_from_bytes(self, profile_bytes: bytes) -> ImageCms.ImageCmsProfile:
         return ImageCms.getOpenProfile(io.BytesIO(profile_bytes))
@@ -284,7 +284,7 @@ class ColorProfileConverter:
         return color_space.display_name
 
     def _profile_label(self, color_space: ColorProfileSpec) -> str:
-        if isinstance(color_space, WorkingColorSpace):
+        if isinstance(color_space, ColorSpacePreset):
             return color_space.value
         return color_space.stable_key
 

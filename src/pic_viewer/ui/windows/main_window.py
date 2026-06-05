@@ -8,9 +8,9 @@ from pic_viewer.app.services.analysis_view_service import AnalysisViewService
 from pic_viewer.app.services.image_service import ImageService
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
-    DEFAULT_WORKING_COLOR_SPACE,
+    DEFAULT_DISPLAY_COLOR_SPACE,
     LOCAL_COLOR_PROFILE_CHOICE_DATA,
-    WORKING_COLOR_SPACE_ORDER,
+    COLOR_SPACE_PRESET_ORDER,
 )
 from pic_viewer.domain.models.rendering_intent import (
     DEFAULT_RENDERING_INTENT,
@@ -553,7 +553,7 @@ class MainWindowUI:
             QtWidgets.QSizePolicy.Policy.Expanding,
             QtWidgets.QSizePolicy.Policy.Fixed,
         )
-        for color_space in WORKING_COLOR_SPACE_ORDER:
+        for color_space in COLOR_SPACE_PRESET_ORDER:
             self.comboSpecifiedImageColorSpace.addItem(color_space.display_name, color_space)
         self.comboSpecifiedImageColorSpace.addItem(
             self._tr("Choose a local ICC..."),
@@ -589,32 +589,32 @@ class MainWindowUI:
         rendering_intent_layout.addWidget(self.comboRenderingIntent, 1)
         analysis_layout.addWidget(self.widgetRenderingIntent)
 
-        self.widgetWorkingColorSpace = QtWidgets.QWidget(self.tabAnalysis)
-        self.widgetWorkingColorSpace.setObjectName("widgetWorkingColorSpace")
-        working_space_layout = QtWidgets.QHBoxLayout(self.widgetWorkingColorSpace)
-        working_space_layout.setObjectName("layoutWorkingColorSpace")
-        working_space_layout.setContentsMargins(0, 0, 0, 0)
-        working_space_layout.setSpacing(8)
-        self.labelWorkingColorSpaceTitle = QtWidgets.QLabel(self.widgetWorkingColorSpace)
-        self.labelWorkingColorSpaceTitle.setObjectName("labelWorkingColorSpaceTitle")
-        self.comboWorkingColorSpace = QtWidgets.QComboBox(self.widgetWorkingColorSpace)
-        self.comboWorkingColorSpace.setObjectName("comboWorkingColorSpace")
-        self.comboWorkingColorSpace.setSizePolicy(
+        self.widgetDisplayColorSpace = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetDisplayColorSpace.setObjectName("widgetDisplayColorSpace")
+        display_space_layout = QtWidgets.QHBoxLayout(self.widgetDisplayColorSpace)
+        display_space_layout.setObjectName("layoutDisplayColorSpace")
+        display_space_layout.setContentsMargins(0, 0, 0, 0)
+        display_space_layout.setSpacing(8)
+        self.labelDisplayColorSpaceTitle = QtWidgets.QLabel(self.widgetDisplayColorSpace)
+        self.labelDisplayColorSpaceTitle.setObjectName("labelDisplayColorSpaceTitle")
+        self.comboDisplayColorSpace = QtWidgets.QComboBox(self.widgetDisplayColorSpace)
+        self.comboDisplayColorSpace.setObjectName("comboDisplayColorSpace")
+        self.comboDisplayColorSpace.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
             QtWidgets.QSizePolicy.Policy.Fixed,
         )
-        for color_space in WORKING_COLOR_SPACE_ORDER:
-            self.comboWorkingColorSpace.addItem(color_space.display_name, color_space)
-        self.comboWorkingColorSpace.addItem(
+        for color_space in COLOR_SPACE_PRESET_ORDER:
+            self.comboDisplayColorSpace.addItem(color_space.display_name, color_space)
+        self.comboDisplayColorSpace.addItem(
             self._tr("Choose a local ICC..."),
             LOCAL_COLOR_PROFILE_CHOICE_DATA,
         )
-        default_index = self.comboWorkingColorSpace.findData(DEFAULT_WORKING_COLOR_SPACE)
+        default_index = self.comboDisplayColorSpace.findData(DEFAULT_DISPLAY_COLOR_SPACE)
         if default_index >= 0:
-            self.comboWorkingColorSpace.setCurrentIndex(default_index)
-        working_space_layout.addWidget(self.labelWorkingColorSpaceTitle)
-        working_space_layout.addWidget(self.comboWorkingColorSpace, 1)
-        analysis_layout.addWidget(self.widgetWorkingColorSpace)
+            self.comboDisplayColorSpace.setCurrentIndex(default_index)
+        display_space_layout.addWidget(self.labelDisplayColorSpaceTitle)
+        display_space_layout.addWidget(self.comboDisplayColorSpace, 1)
+        analysis_layout.addWidget(self.widgetDisplayColorSpace)
 
         self.frameHistogramAnalysis = QtWidgets.QFrame(self.tabAnalysis)
         self.frameHistogramAnalysis.setObjectName("frameHistogramAnalysis")
@@ -909,11 +909,11 @@ class MainWindowUI:
         self.labelImageColorSpaceValue.setText(self._tr("Not Loaded"))
         self.labelSpecifiedImageColorSpaceTitle.setText(self._tr("Specify Image Color Space"))
         self.labelRenderingIntentTitle.setText(self._tr("Rendering Intent"))
-        self.labelWorkingColorSpaceTitle.setText(self._tr("Working Color Space"))
-        for index, color_space in enumerate(WORKING_COLOR_SPACE_ORDER):
+        self.labelDisplayColorSpaceTitle.setText(self._tr("Display Color Space"))
+        for index, color_space in enumerate(COLOR_SPACE_PRESET_ORDER):
             self.comboSpecifiedImageColorSpace.setItemText(index, self._tr(color_space.display_name))
-            self.comboWorkingColorSpace.setItemText(index, self._tr(color_space.display_name))
-        for combo in (self.comboSpecifiedImageColorSpace, self.comboWorkingColorSpace):
+            self.comboDisplayColorSpace.setItemText(index, self._tr(color_space.display_name))
+        for combo in (self.comboSpecifiedImageColorSpace, self.comboDisplayColorSpace):
             choose_index = combo.findData(LOCAL_COLOR_PROFILE_CHOICE_DATA)
             if choose_index >= 0:
                 combo.setItemText(choose_index, self._tr("Choose a local ICC..."))

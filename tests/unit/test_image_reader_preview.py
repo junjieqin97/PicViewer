@@ -16,7 +16,7 @@ if str(SRC_ROOT) not in sys.path:
 
 from pic_viewer.common.errors import ImageLoadError  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
-from pic_viewer.domain.models.color_space import LocalColorProfile, WorkingColorSpace  # noqa: E402
+from pic_viewer.domain.models.color_space import LocalColorProfile, ColorSpacePreset  # noqa: E402
 from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.infra.adapters.image_reader import ImageReader  # noqa: E402
 
@@ -42,31 +42,31 @@ class ImageReaderPreviewTests(unittest.TestCase):
         np.testing.assert_array_equal(image, reduced)
         self.assertGreaterEqual(imread.call_count, 1)
 
-    def test_read_preview_applies_working_color_space_conversion(self) -> None:
+    def test_read_preview_applies_display_color_space_conversion(self) -> None:
         converted = np.full((12, 12, 3), 128, dtype=np.uint8)
         converter = unittest.mock.MagicMock()
-        converter.convert_file_bgr_to_working_space.return_value = converted
+        converter.convert_file_bgr_to_display_space.return_value = converted
         reader = ImageReader(allow_raw=False, color_converter=converter)
         reduced = np.zeros((12, 12, 3), dtype=np.uint8)
 
         with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
             path = Path(tmp.name)
             with patch("pic_viewer.infra.adapters.image_reader.cv2.imread", return_value=reduced):
-                image = reader.read_preview(path, max_edge=2000, working_color_space=WorkingColorSpace.DISPLAY_P3)
+                image = reader.read_preview(path, max_edge=2000, display_color_space=ColorSpacePreset.DISPLAY_P3)
 
         np.testing.assert_array_equal(image, converted)
-        converter.convert_file_bgr_to_working_space.assert_called_once_with(
+        converter.convert_file_bgr_to_display_space.assert_called_once_with(
             path,
             reduced,
-            WorkingColorSpace.DISPLAY_P3,
-            WorkingColorSpace.SRGB,
+            ColorSpacePreset.DISPLAY_P3,
+            ColorSpacePreset.SRGB,
             RenderingIntent.PERCEPTUAL,
         )
 
-    def test_read_preview_defaults_to_app_working_color_space(self) -> None:
+    def test_read_preview_defaults_to_app_display_color_space(self) -> None:
         converted = np.full((12, 12, 3), 128, dtype=np.uint8)
         converter = unittest.mock.MagicMock()
-        converter.convert_file_bgr_to_working_space.return_value = converted
+        converter.convert_file_bgr_to_display_space.return_value = converted
         reader = ImageReader(allow_raw=False, color_converter=converter)
         reduced = np.zeros((12, 12, 3), dtype=np.uint8)
 
@@ -76,15 +76,15 @@ class ImageReaderPreviewTests(unittest.TestCase):
                 image = reader.read_preview(path, max_edge=2000)
 
         np.testing.assert_array_equal(image, converted)
-        converter.convert_file_bgr_to_working_space.assert_called_once_with(
+        converter.convert_file_bgr_to_display_space.assert_called_once_with(
             path,
             reduced,
-            WorkingColorSpace.PROPHOTO_RGB,
-            WorkingColorSpace.SRGB,
+            ColorSpacePreset.SRGB,
+            ColorSpacePreset.SRGB,
             RenderingIntent.PERCEPTUAL,
         )
 
-    def test_read_with_color_profile_info_defaults_to_app_working_color_space(self) -> None:
+    def test_read_with_color_profile_info_defaults_to_app_display_color_space(self) -> None:
         converted = np.full((12, 12, 3), 128, dtype=np.uint8)
         profile_info = ImageColorProfileInfo(
             display_name="sRGB",
@@ -92,7 +92,7 @@ class ImageReaderPreviewTests(unittest.TestCase):
             uses_srgb_fallback=True,
         )
         converter = unittest.mock.MagicMock()
-        converter.convert_file_bgr_to_working_space_with_info.return_value = (converted, profile_info)
+        converter.convert_file_bgr_to_display_space_with_info.return_value = (converted, profile_info)
         reader = ImageReader(allow_raw=False, color_converter=converter)
         source = np.zeros((12, 12, 3), dtype=np.uint8)
 
@@ -103,11 +103,11 @@ class ImageReaderPreviewTests(unittest.TestCase):
 
         np.testing.assert_array_equal(image, converted)
         self.assertEqual(profile_info, info)
-        converter.convert_file_bgr_to_working_space_with_info.assert_called_once_with(
+        converter.convert_file_bgr_to_display_space_with_info.assert_called_once_with(
             path,
             source,
-            WorkingColorSpace.PROPHOTO_RGB,
-            WorkingColorSpace.SRGB,
+            ColorSpacePreset.SRGB,
+            ColorSpacePreset.SRGB,
             RenderingIntent.PERCEPTUAL,
         )
 
@@ -119,7 +119,7 @@ class ImageReaderPreviewTests(unittest.TestCase):
             uses_srgb_fallback=False,
         )
         converter = unittest.mock.MagicMock()
-        converter.convert_file_bgr_to_working_space_with_info.return_value = (converted, profile_info)
+        converter.convert_file_bgr_to_display_space_with_info.return_value = (converted, profile_info)
         reader = ImageReader(allow_raw=False, color_converter=converter)
         reduced = np.zeros((12, 12, 3), dtype=np.uint8)
 
@@ -129,17 +129,17 @@ class ImageReaderPreviewTests(unittest.TestCase):
                 image, info = reader.read_preview_with_color_profile_info(
                     path,
                     max_edge=2000,
-                    working_color_space=WorkingColorSpace.DISPLAY_P3,
+                    display_color_space=ColorSpacePreset.DISPLAY_P3,
                     rendering_intent=RenderingIntent.RELATIVE_COLORIMETRIC,
                 )
 
         np.testing.assert_array_equal(image, converted)
         self.assertEqual(profile_info, info)
-        converter.convert_file_bgr_to_working_space_with_info.assert_called_once_with(
+        converter.convert_file_bgr_to_display_space_with_info.assert_called_once_with(
             path,
             reduced,
-            WorkingColorSpace.DISPLAY_P3,
-            WorkingColorSpace.SRGB,
+            ColorSpacePreset.DISPLAY_P3,
+            ColorSpacePreset.SRGB,
             RenderingIntent.RELATIVE_COLORIMETRIC,
         )
 
@@ -151,7 +151,7 @@ class ImageReaderPreviewTests(unittest.TestCase):
             uses_srgb_fallback=True,
         )
         converter = unittest.mock.MagicMock()
-        converter.convert_file_bgr_to_working_space_with_info.return_value = (converted, profile_info)
+        converter.convert_file_bgr_to_display_space_with_info.return_value = (converted, profile_info)
         reader = ImageReader(allow_raw=False, color_converter=converter)
         reduced = np.zeros((12, 12, 3), dtype=np.uint8)
 
@@ -161,27 +161,27 @@ class ImageReaderPreviewTests(unittest.TestCase):
                 image, info = reader.read_preview_with_color_profile_info(
                     path,
                     max_edge=2000,
-                    working_color_space=WorkingColorSpace.PROPHOTO_RGB,
-                    assumed_source_color_space=WorkingColorSpace.DISPLAY_P3,
+                    display_color_space=ColorSpacePreset.PROPHOTO_RGB,
+                    assumed_source_color_space=ColorSpacePreset.DISPLAY_P3,
                     rendering_intent=RenderingIntent.ABSOLUTE_COLORIMETRIC,
                 )
 
         np.testing.assert_array_equal(image, converted)
         self.assertEqual(profile_info, info)
-        converter.convert_file_bgr_to_working_space_with_info.assert_called_once_with(
+        converter.convert_file_bgr_to_display_space_with_info.assert_called_once_with(
             path,
             reduced,
-            WorkingColorSpace.PROPHOTO_RGB,
-            WorkingColorSpace.DISPLAY_P3,
+            ColorSpacePreset.PROPHOTO_RGB,
+            ColorSpacePreset.DISPLAY_P3,
             RenderingIntent.ABSOLUTE_COLORIMETRIC,
         )
 
     def test_read_preview_with_color_profile_info_passes_local_color_profiles(self) -> None:
         converted = np.full((12, 12, 3), 128, dtype=np.uint8)
-        working_profile = LocalColorProfile(
-            display_name="Local Working",
-            path=Path("/tmp/working.icc"),
-            profile_bytes=b"working-profile",
+        display_profile = LocalColorProfile(
+            display_name="Local Display",
+            path=Path("/tmp/display.icc"),
+            profile_bytes=b"display-profile",
         )
         source_profile_spec = LocalColorProfile(
             display_name="Local Source",
@@ -195,7 +195,7 @@ class ImageReaderPreviewTests(unittest.TestCase):
             assumed_color_space=source_profile_spec,
         )
         converter = unittest.mock.MagicMock()
-        converter.convert_file_bgr_to_working_space_with_info.return_value = (converted, profile_info)
+        converter.convert_file_bgr_to_display_space_with_info.return_value = (converted, profile_info)
         reader = ImageReader(allow_raw=False, color_converter=converter)
         reduced = np.zeros((12, 12, 3), dtype=np.uint8)
 
@@ -205,17 +205,17 @@ class ImageReaderPreviewTests(unittest.TestCase):
                 image, info = reader.read_preview_with_color_profile_info(
                     path,
                     max_edge=2000,
-                    working_color_space=working_profile,
+                    display_color_space=display_profile,
                     assumed_source_color_space=source_profile_spec,
                     rendering_intent=RenderingIntent.RELATIVE_COLORIMETRIC,
                 )
 
         np.testing.assert_array_equal(image, converted)
         self.assertEqual(profile_info, info)
-        converter.convert_file_bgr_to_working_space_with_info.assert_called_once_with(
+        converter.convert_file_bgr_to_display_space_with_info.assert_called_once_with(
             path,
             reduced,
-            working_profile,
+            display_profile,
             source_profile_spec,
             RenderingIntent.RELATIVE_COLORIMETRIC,
         )

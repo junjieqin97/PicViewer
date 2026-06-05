@@ -59,7 +59,7 @@ class MainControllerLoadingMixin:
         task = PreviewLoadTask(
             self._image_service,
             path,
-            self._working_color_space,
+            self._display_color_space,
             self._assumed_source_color_space,
             self._rendering_intent,
         )
@@ -91,7 +91,7 @@ class MainControllerLoadingMixin:
         task = ImageLoadTask(
             self._image_service,
             path,
-            self._working_color_space,
+            self._display_color_space,
             self._assumed_source_color_space,
             self._rendering_intent,
         )
@@ -115,8 +115,8 @@ class MainControllerLoadingMixin:
         self._preview_tasks_by_path.pop(key, None)
         if not self._is_session_active(path, session):
             return
-        if self._color_profile_key(result.working_color_space) != self._color_profile_key(
-            self._working_color_space
+        if self._color_profile_key(result.display_color_space) != self._color_profile_key(
+            self._display_color_space
         ):
             return
         if self._color_profile_key(result.assumed_source_color_space) != self._color_profile_key(
@@ -129,13 +129,13 @@ class MainControllerLoadingMixin:
         self._load_error_by_path.pop(key, None)
         self._preview_by_path[key] = result
         self._tab_preview_render_key_by_path.pop(key, None)
-        self._update_filmstrip_icon(path, result.preview_rgb)
+        self._update_filmstrip_icon(path, result.preview_rgb, result.display_color_space)
         if key in self._images_by_path:
             return
         if self._current_image_path() == path:
             self.update_info_for_image(path)
         else:
-            self._refresh_tab_preview_pixmap(path, result.preview_rgb)
+            self._refresh_tab_preview_pixmap(path, result.preview_rgb, result.display_color_space)
 
     def _on_preview_error(self, path: Path, session: int, message: str) -> None:
         self._preview_tasks_by_path.pop(str(path), None)
@@ -153,8 +153,8 @@ class MainControllerLoadingMixin:
         self._load_tasks_by_path.pop(key, None)
         if not self._is_session_active(path, session):
             return
-        if self._color_profile_key(result.analysis.working_color_space) != self._color_profile_key(
-            self._working_color_space
+        if self._color_profile_key(result.analysis.display_color_space) != self._color_profile_key(
+            self._display_color_space
         ):
             return
         if self._color_profile_key(result.analysis.assumed_source_color_space) != self._color_profile_key(
@@ -170,7 +170,11 @@ class MainControllerLoadingMixin:
         # 强制下一次刷新使用最新分析结果重渲染。
         self._analysis_render_key_by_path.pop(key, None)
         self._tab_preview_render_key_by_path.pop(key, None)
-        self._update_filmstrip_icon(path, result.analysis.preview_rgb)
+        self._update_filmstrip_icon(
+            path,
+            result.analysis.preview_rgb,
+            result.analysis.display_color_space,
+        )
 
         if self._current_image_path() == path:
             self.update_info_for_image(path)

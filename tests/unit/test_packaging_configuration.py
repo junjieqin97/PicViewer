@@ -54,14 +54,14 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("recursive-include packaging/icons *.ico *.icns", manifest)
         self.assertIn("recursive-include scripts *.py *.sh", manifest)
 
-    def test_i18n_sources_include_working_color_space_label(self) -> None:
+    def test_i18n_sources_include_display_color_space_label(self) -> None:
         i18n_dir = PROJECT_ROOT / "src" / "pic_viewer" / "ui" / "resources" / "i18n"
         en_ts = (i18n_dir / "picviewer_en.ts").read_text(encoding="utf-8")
         zh_ts = (i18n_dir / "picviewer_zh_CN.ts").read_text(encoding="utf-8")
 
-        self.assertIn("<source>Working Color Space</source>", en_ts)
-        self.assertIn("<source>Working Color Space</source>", zh_ts)
-        self.assertIn("<translation>工作色彩空间</translation>", zh_ts)
+        self.assertIn("<source>Display Color Space</source>", en_ts)
+        self.assertIn("<source>Display Color Space</source>", zh_ts)
+        self.assertIn("<translation>显示色彩空间</translation>", zh_ts)
         self.assertIn("<source>Image Color Space</source>", en_ts)
         self.assertIn("<source>Image Color Space</source>", zh_ts)
         self.assertIn("<translation>图片色彩空间</translation>", zh_ts)

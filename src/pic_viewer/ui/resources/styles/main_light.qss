@@ -276,7 +276,7 @@ QWidget#widgetAnalysisModeSummary {
 QWidget#widgetImageColorSpace,
 QWidget#widgetSpecifiedImageColorSpace,
 QWidget#widgetRenderingIntent,
-QWidget#widgetWorkingColorSpace {
+QWidget#widgetDisplayColorSpace {
     background: transparent;
 }
 
@@ -286,13 +286,13 @@ QLabel#labelPseudoColorTitle,
 QLabel#labelImageColorSpaceTitle,
 QLabel#labelSpecifiedImageColorSpaceTitle,
 QLabel#labelRenderingIntentTitle,
-QLabel#labelWorkingColorSpaceTitle {
+QLabel#labelDisplayColorSpaceTitle {
     color: #657386;
 }
 
 QComboBox#comboSpecifiedImageColorSpace,
 QComboBox#comboRenderingIntent,
-QComboBox#comboWorkingColorSpace {
+QComboBox#comboDisplayColorSpace {
     color: #1f252d;
     background: #ffffff;
     border: 1px solid #cbd6e3;

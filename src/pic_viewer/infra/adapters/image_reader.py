@@ -13,7 +13,7 @@ from pic_viewer.common.errors import ImageLoadError
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
-    DEFAULT_WORKING_COLOR_SPACE,
+    DEFAULT_DISPLAY_COLOR_SPACE,
     ColorProfileSpec,
 )
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
@@ -32,20 +32,20 @@ class ImageReader:
     def read(
         self,
         path: Path,
-        working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE,
+        display_color_space: ColorProfileSpec = DEFAULT_DISPLAY_COLOR_SPACE,
         assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> np.ndarray:
-        """Read image file into BGR array in the selected working space.
+        """Read image file into BGR array in the selected display space.
 
         Args:
             path: File path to load.
-            working_color_space: Target RGB working color space.
+            display_color_space: Target RGB display color space.
             assumed_source_color_space: Source color space to use when ICC is unavailable.
             rendering_intent: ICC rendering intent used for gamut mapping.
 
         Returns:
-            numpy.ndarray: BGR image array in the working color space.
+            numpy.ndarray: BGR image array in the display color space.
 
         Raises:
             ImageLoadError: If the file cannot be loaded.
@@ -55,10 +55,10 @@ class ImageReader:
 
         image = cv2.imread(str(path), cv2.IMREAD_COLOR)
         if image is not None:
-            return self._convert_to_working_space(
+            return self._convert_to_display_space(
                 path,
                 image,
-                working_color_space,
+                display_color_space,
                 assumed_source_color_space,
                 rendering_intent,
             )
@@ -69,10 +69,10 @@ class ImageReader:
         raw_image = self._read_raw(path, preview=False)
         if raw_image is None:
             raise ImageLoadError("Unable to read this image file")
-        return self._convert_to_working_space(
+        return self._convert_to_display_space(
             path,
             raw_image,
-            working_color_space,
+            display_color_space,
             DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
             rendering_intent,
         )
@@ -80,7 +80,7 @@ class ImageReader:
     def read_with_color_profile_info(
         self,
         path: Path,
-        working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE,
+        display_color_space: ColorProfileSpec = DEFAULT_DISPLAY_COLOR_SPACE,
         assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> tuple[np.ndarray, ImageColorProfileInfo]:
@@ -90,10 +90,10 @@ class ImageReader:
 
         image = cv2.imread(str(path), cv2.IMREAD_COLOR)
         if image is not None:
-            return self._convert_to_working_space_with_info(
+            return self._convert_to_display_space_with_info(
                 path,
                 image,
-                working_color_space,
+                display_color_space,
                 assumed_source_color_space,
                 rendering_intent,
             )
@@ -104,10 +104,10 @@ class ImageReader:
         raw_image = self._read_raw(path, preview=False)
         if raw_image is None:
             raise ImageLoadError("Unable to read this image file")
-        return self._convert_to_working_space_with_info(
+        return self._convert_to_display_space_with_info(
             path,
             raw_image,
-            working_color_space,
+            display_color_space,
             DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
             rendering_intent,
         )
@@ -116,7 +116,7 @@ class ImageReader:
         self,
         path: Path,
         max_edge: int = 1920,
-        working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE,
+        display_color_space: ColorProfileSpec = DEFAULT_DISPLAY_COLOR_SPACE,
         assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> np.ndarray:
@@ -134,10 +134,10 @@ class ImageReader:
             image = cv2.imread(str(path), flag)
             if image is not None:
                 preview = self._resize_if_needed(image, max_edge)
-                return self._convert_to_working_space(
+                return self._convert_to_display_space(
                     path,
                     preview,
-                    working_color_space,
+                    display_color_space,
                     assumed_source_color_space,
                     rendering_intent,
                 )
@@ -145,10 +145,10 @@ class ImageReader:
         image = cv2.imread(str(path), cv2.IMREAD_COLOR)
         if image is not None:
             preview = self._resize_if_needed(image, max_edge)
-            return self._convert_to_working_space(
+            return self._convert_to_display_space(
                 path,
                 preview,
-                working_color_space,
+                display_color_space,
                 assumed_source_color_space,
                 rendering_intent,
             )
@@ -160,10 +160,10 @@ class ImageReader:
         if raw_image is None:
             raise ImageLoadError("Unable to read this image file")
         preview = self._resize_if_needed(raw_image, max_edge)
-        return self._convert_to_working_space(
+        return self._convert_to_display_space(
             path,
             preview,
-            working_color_space,
+            display_color_space,
             DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
             rendering_intent,
         )
@@ -172,7 +172,7 @@ class ImageReader:
         self,
         path: Path,
         max_edge: int = 1920,
-        working_color_space: ColorProfileSpec = DEFAULT_WORKING_COLOR_SPACE,
+        display_color_space: ColorProfileSpec = DEFAULT_DISPLAY_COLOR_SPACE,
         assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
     ) -> tuple[np.ndarray, ImageColorProfileInfo]:
@@ -190,10 +190,10 @@ class ImageReader:
             image = cv2.imread(str(path), flag)
             if image is not None:
                 preview = self._resize_if_needed(image, max_edge)
-                return self._convert_to_working_space_with_info(
+                return self._convert_to_display_space_with_info(
                     path,
                     preview,
-                    working_color_space,
+                    display_color_space,
                     assumed_source_color_space,
                     rendering_intent,
                 )
@@ -201,10 +201,10 @@ class ImageReader:
         image = cv2.imread(str(path), cv2.IMREAD_COLOR)
         if image is not None:
             preview = self._resize_if_needed(image, max_edge)
-            return self._convert_to_working_space_with_info(
+            return self._convert_to_display_space_with_info(
                 path,
                 preview,
-                working_color_space,
+                display_color_space,
                 assumed_source_color_space,
                 rendering_intent,
             )
@@ -216,10 +216,10 @@ class ImageReader:
         if raw_image is None:
             raise ImageLoadError("Unable to read this image file")
         preview = self._resize_if_needed(raw_image, max_edge)
-        return self._convert_to_working_space_with_info(
+        return self._convert_to_display_space_with_info(
             path,
             preview,
-            working_color_space,
+            display_color_space,
             DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
             rendering_intent,
         )
@@ -240,34 +240,34 @@ class ImageReader:
         )
         return cv2.resize(bgr, resized, interpolation=cv2.INTER_AREA)
 
-    def _convert_to_working_space(
+    def _convert_to_display_space(
         self,
         path: Path,
         bgr: np.ndarray,
-        working_color_space: ColorProfileSpec,
+        display_color_space: ColorProfileSpec,
         assumed_source_color_space: ColorProfileSpec,
         rendering_intent: RenderingIntent,
     ) -> np.ndarray:
-        return self._color_converter.convert_file_bgr_to_working_space(
+        return self._color_converter.convert_file_bgr_to_display_space(
             path,
             bgr,
-            working_color_space,
+            display_color_space,
             assumed_source_color_space,
             rendering_intent,
         )
 
-    def _convert_to_working_space_with_info(
+    def _convert_to_display_space_with_info(
         self,
         path: Path,
         bgr: np.ndarray,
-        working_color_space: ColorProfileSpec,
+        display_color_space: ColorProfileSpec,
         assumed_source_color_space: ColorProfileSpec,
         rendering_intent: RenderingIntent,
     ) -> tuple[np.ndarray, ImageColorProfileInfo]:
-        return self._color_converter.convert_file_bgr_to_working_space_with_info(
+        return self._color_converter.convert_file_bgr_to_display_space_with_info(
             path,
             bgr,
-            working_color_space,
+            display_color_space,
             assumed_source_color_space,
             rendering_intent,
         )

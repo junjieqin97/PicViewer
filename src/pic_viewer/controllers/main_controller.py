@@ -20,8 +20,7 @@ from pic_viewer.controllers.main_controller_reference_line_mixin import MainCont
 from pic_viewer.controllers.main_controller_tabs_mixin import MainControllerTabsMixin
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
-    DEFAULT_WORKING_COLOR_SPACE,
-    WorkingColorSpace,
+    DEFAULT_DISPLAY_COLOR_SPACE,
 )
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
@@ -78,7 +77,7 @@ class MainController(
         self._detached_image_windows: Dict[str, QtWidgets.QWidget] = {}
         self._detached_info_windows: Dict[str, QtWidgets.QWidget] = {}
         self._view_settings = AnalysisViewSettings(mode=LumaRgbMode.LUMA, channel=RgbChannel.ALL)
-        self._working_color_space = DEFAULT_WORKING_COLOR_SPACE
+        self._display_color_space = DEFAULT_DISPLAY_COLOR_SPACE
         self._assumed_source_color_space = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
         self._rendering_intent = DEFAULT_RENDERING_INTENT
         self._last_splitter_sizes: Optional[list[int]] = None
@@ -162,7 +161,7 @@ class MainController(
             self._on_assumed_source_color_space_changed
         )
         self._ui.comboRenderingIntent.currentIndexChanged.connect(self._on_rendering_intent_changed)
-        self._ui.comboWorkingColorSpace.currentIndexChanged.connect(self._on_working_color_space_changed)
+        self._ui.comboDisplayColorSpace.currentIndexChanged.connect(self._on_display_color_space_changed)
         if hasattr(self._ui, "actToggleUnderexposed"):
             self._ui.actToggleUnderexposed.toggled.connect(self._on_underexposed_toggled)
         if hasattr(self._ui, "actToggleOverexposed"):
