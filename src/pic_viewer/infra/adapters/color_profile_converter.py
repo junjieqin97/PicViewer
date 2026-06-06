@@ -129,12 +129,12 @@ class ColorProfileConverter:
         if not profile_bytes:
             raise ColorProfileLoadError("ICC profile file is empty")
         try:
-            profile = self._profile_from_bytes(profile_bytes)
+            self._profile_from_bytes(profile_bytes)
         except (ImageCms.PyCMSError, OSError, ValueError) as exc:
             logger.warning("Invalid local ICC profile: path=%s", profile_path)
             raise ColorProfileLoadError("Unable to load ICC profile") from exc
         return LocalColorProfile(
-            display_name=self._local_profile_display_name(profile, profile_path),
+            display_name=profile_path.stem,
             path=profile_path,
             profile_bytes=profile_bytes,
         )
@@ -273,12 +273,6 @@ class ColorProfileConverter:
             if cleaned:
                 return cleaned
         return "Embedded ICC"
-
-    def _local_profile_display_name(self, profile: ImageCms.ImageCmsProfile, path: Path) -> str:
-        display_name = self._profile_display_name(profile)
-        if display_name == "Embedded ICC":
-            return path.name
-        return display_name
 
     def _profile_display_label(self, color_space: ColorProfileSpec) -> str:
         return color_space.display_name

@@ -46,8 +46,24 @@ class ColorProfileConverterTests(unittest.TestCase):
         self.assertIsInstance(profile, LocalColorProfile)
         self.assertEqual("camera-profile.icc", profile.path.name)
         self.assertEqual(profile_bytes, profile.profile_bytes)
-        self.assertTrue(profile.display_name)
+        self.assertEqual("camera-profile", profile.display_name)
         self.assertTrue(profile.stable_key.startswith("local:"))
+
+    def test_local_icc_display_name_uses_file_stem_to_distinguish_matching_profile_names(self) -> None:
+        converter = ColorProfileConverter()
+        profile_bytes = converter.profile_bytes_for(ColorSpacePreset.SRGB)
+
+        with TemporaryDirectory() as tmp_dir:
+            first_path = Path(tmp_dir) / "camera-a.icc"
+            second_path = Path(tmp_dir) / "camera-b.icm"
+            first_path.write_bytes(profile_bytes)
+            second_path.write_bytes(profile_bytes)
+
+            first_profile = converter.load_local_profile(first_path)
+            second_profile = converter.load_local_profile(second_path)
+
+        self.assertEqual("camera-a", first_profile.display_name)
+        self.assertEqual("camera-b", second_profile.display_name)
 
     def test_local_icc_file_rejects_non_icc_extension(self) -> None:
         converter = ColorProfileConverter()
