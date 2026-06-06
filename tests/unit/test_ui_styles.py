@@ -114,6 +114,20 @@ class UiStylesTests(unittest.TestCase):
         self.assertIn("QLabel#labelRenderingIntentTitle", light_style)
         self.assertIn("QComboBox#comboRenderingIntent", light_style)
 
+    def test_analysis_color_selectors_use_fixed_width_styles(self) -> None:
+        selector = (
+            "QComboBox#comboSpecifiedImageColorSpace,\n"
+            "QComboBox#comboRenderingIntent,\n"
+            "QComboBox#comboDisplayColorSpace"
+        )
+
+        for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
+            with self.subTest(theme=theme):
+                rule = self._style_block(styles.load_stylesheet(theme), selector)
+
+                self.assertIn("min-width: 144px", rule)
+                self.assertIn("max-width: 144px", rule)
+
     def test_theme_from_color_scheme_maps_system_values(self) -> None:
         self.assertEqual(
             styles.AppearanceTheme.LIGHT,

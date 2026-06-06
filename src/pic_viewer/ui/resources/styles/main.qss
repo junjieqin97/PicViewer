@@ -297,6 +297,8 @@ QComboBox#comboDisplayColorSpace {
     border: 1px solid #424a54;
     border-radius: 4px;
     padding: 3px 6px;
+    min-width: 144px;
+    max-width: 144px;
 }
 
 QComboBox#comboSpecifiedImageColorSpace:disabled {
