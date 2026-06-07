@@ -111,6 +111,12 @@ QTabWidget#tabsImages QTabBar::tab:selected:hover {
     border-top-color: #216eb3;
 }
 
+QTabWidget#tabsImages QTabBar::close-button {
+    image: url("@PICVIEWER_ICON_DIR@/tab-close-on-light.svg");
+    width: 12px;
+    height: 12px;
+}
+
 QWidget#floatingTabWindow {
     background: #f5f7fa;
     color: #1f252d;

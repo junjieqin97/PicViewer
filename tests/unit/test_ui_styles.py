@@ -149,6 +149,21 @@ class UiStylesTests(unittest.TestCase):
         self.assertNotIn("QTabBar::close-button", style_sheet)
         self.assertNotIn("QToolButton#buttonImageTabClose", style_sheet)
 
+    def test_light_stylesheet_uses_black_image_tab_close_button(self) -> None:
+        style_sheet = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
+
+        close_button_block = self._style_block(
+            style_sheet,
+            "QTabWidget#tabsImages QTabBar::close-button",
+        )
+        close_icon_path = PROJECT_ROOT / "src/pic_viewer/ui/resources/icons/tab-close-on-light.svg"
+
+        self.assertIn("tab-close-on-light.svg", close_button_block)
+        self.assertIn(close_icon_path.as_posix(), close_button_block)
+        self.assertNotIn("@PICVIEWER_ICON_DIR@", close_button_block)
+        self.assertIn("width: 12px", close_button_block)
+        self.assertIn("height: 12px", close_button_block)
+
     def test_tab_headers_use_rounded_top_corners(self) -> None:
         style_sheet = styles.load_stylesheet()
 
