@@ -91,6 +91,43 @@ class UiStylesTests(unittest.TestCase):
             self.assertIn("background: #eef2f6", rule)
             self.assertNotIn("background: #20262d", rule)
 
+    def test_specified_image_color_space_selector_has_disabled_gray_styles(self) -> None:
+        dark_style = styles.load_stylesheet(styles.AppearanceTheme.DARK)
+        light_style = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
+
+        dark_rule = self._style_block(dark_style, "QComboBox#comboSpecifiedImageColorSpace:disabled")
+        light_rule = self._style_block(light_style, "QComboBox#comboSpecifiedImageColorSpace:disabled")
+
+        self.assertIn("color: #6f7782", dark_rule)
+        self.assertIn("background: #24282e", dark_rule)
+        self.assertIn("border: 1px solid #343b44", dark_rule)
+        self.assertIn("color: #9aa4af", light_rule)
+        self.assertIn("background: #eef2f6", light_rule)
+        self.assertIn("border: 1px solid #d8e0ea", light_rule)
+
+    def test_rendering_intent_selector_uses_color_setting_styles(self) -> None:
+        dark_style = styles.load_stylesheet(styles.AppearanceTheme.DARK)
+        light_style = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
+
+        self.assertIn("QLabel#labelRenderingIntentTitle", dark_style)
+        self.assertIn("QComboBox#comboRenderingIntent", dark_style)
+        self.assertIn("QLabel#labelRenderingIntentTitle", light_style)
+        self.assertIn("QComboBox#comboRenderingIntent", light_style)
+
+    def test_analysis_color_selectors_use_fixed_width_styles(self) -> None:
+        selector = (
+            "QComboBox#comboSpecifiedImageColorSpace,\n"
+            "QComboBox#comboRenderingIntent,\n"
+            "QComboBox#comboDisplayColorSpace"
+        )
+
+        for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
+            with self.subTest(theme=theme):
+                rule = self._style_block(styles.load_stylesheet(theme), selector)
+
+                self.assertIn("min-width: 144px", rule)
+                self.assertIn("max-width: 144px", rule)
+
     def test_theme_from_color_scheme_maps_system_values(self) -> None:
         self.assertEqual(
             styles.AppearanceTheme.LIGHT,

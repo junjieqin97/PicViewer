@@ -7,6 +7,7 @@ from __future__ import annotations
 # - opencv-python>=4.7
 # - numpy>=1.23
 # - pyexiv2>=2.15.5,<3
+# - Pillow>=10.0
 # - rawpy>=0.17 (optional, for RAW formats)
 
 import argparse
@@ -25,6 +26,7 @@ from pic_viewer.app.services.image_service import ImageService
 from pic_viewer.config.logging_config import configure_logging
 from pic_viewer.config.settings import AppSettings, load_settings
 from pic_viewer.domain.rules.analysis import ImageAnalyzer
+from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConverter
 from pic_viewer.infra.adapters.image_reader import ImageReader
 from pic_viewer.infra.adapters.metadata_reader import MetadataReader
 from pic_viewer.ui.i18n.runtime import install_translator, resolve_language
@@ -56,10 +58,16 @@ def parse_command_line(argv: Sequence[str]) -> tuple[bool, list[str]]:
 def build_services(settings: AppSettings) -> ImageService:
     """Wire application services and dependencies."""
 
-    reader = ImageReader(allow_raw=settings.allow_raw)
+    color_converter = ColorProfileConverter()
+    reader = ImageReader(allow_raw=settings.allow_raw, color_converter=color_converter)
     analyzer = ImageAnalyzer()
     metadata_reader = MetadataReader()
-    return ImageService(reader=reader, analyzer=analyzer, metadata_reader=metadata_reader)
+    return ImageService(
+        reader=reader,
+        analyzer=analyzer,
+        metadata_reader=metadata_reader,
+        color_converter=color_converter,
+    )
 
 
 def main(argv: Sequence[str] | None = None) -> None:
@@ -78,6 +86,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     logging.getLogger(__name__).info("UI language: requested=%s, active=%s", requested_language, active_language)
 
     service = build_services(settings)
+    service.warm_up_optional_backends()
     view_service = AnalysisViewService()
     window = MainWindow(service, view_service)
     window.setWindowIcon(app_icon)

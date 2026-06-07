@@ -7,3 +7,7 @@ class ImageLoadError(Exception):
 
 class ImageProcessError(Exception):
     """Raised when image processing fails."""
+
+
+class ColorProfileLoadError(Exception):
+    """Raised when a local ICC profile cannot be loaded."""

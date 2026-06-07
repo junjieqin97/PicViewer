@@ -10,6 +10,20 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.dto.analysis_view import AnalysisViewSettings, LumaRgbMode, RgbChannel
 from pic_viewer.app.dto.image_analysis import ImageAnalysis
+from pic_viewer.common.errors import ColorProfileLoadError
+from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus
+from pic_viewer.domain.models.color_space import (
+    DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+    DEFAULT_DISPLAY_COLOR_SPACE,
+    LOCAL_COLOR_PROFILE_CHOICE_DATA,
+    ColorProfileSpec,
+    LocalColorProfile,
+    ColorSpacePreset,
+)
+from pic_viewer.domain.models.rendering_intent import (
+    DEFAULT_RENDERING_INTENT,
+    RenderingIntent,
+)
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
 from pic_viewer.ui.utils.image_qt import to_qpixmap
 from pic_viewer.ui.utils.signal_blocker import block_signals
@@ -126,6 +140,204 @@ class MainControllerAnalysisMixin:
         self._view_settings = AnalysisViewSettings(mode=LumaRgbMode.RGB, channel=channel)
         self._sync_view_actions()
         self._refresh_view_for_current_image()
+
+    def _on_display_color_space_changed(self, index: int) -> None:
+        """Reload open images when the global display color space changes."""
+
+        combo = self._ui.comboDisplayColorSpace
+        selected = combo.itemData(index)
+        if selected == LOCAL_COLOR_PROFILE_CHOICE_DATA:
+            self._choose_and_apply_local_color_profile(
+                combo,
+                "_display_color_space",
+            )
+            return
+        if isinstance(selected, str):
+            try:
+                selected = ColorSpacePreset(selected)
+            except ValueError:
+                return
+        if not isinstance(selected, (ColorSpacePreset, LocalColorProfile)):
+            return
+        if selected == self._display_color_space:
+            return
+
+        self._display_color_space = selected
+        self._current_analysis_render_key = None
+        self._reload_open_images_for_color_settings()
+
+    def _on_assumed_source_color_space_changed(self, index: int) -> None:
+        """Reload open images when the fallback source color space changes."""
+
+        combo = self._ui.comboSpecifiedImageColorSpace
+        selected = combo.itemData(index)
+        if selected == LOCAL_COLOR_PROFILE_CHOICE_DATA:
+            self._choose_and_apply_local_color_profile(
+                combo,
+                "_assumed_source_color_space",
+            )
+            return
+        if isinstance(selected, str):
+            try:
+                selected = ColorSpacePreset(selected)
+            except ValueError:
+                return
+        if not isinstance(selected, (ColorSpacePreset, LocalColorProfile)):
+            return
+        if selected == self._assumed_source_color_space:
+            return
+
+        self._assumed_source_color_space = selected
+        self._current_analysis_render_key = None
+        self._reload_open_images_for_color_settings()
+
+    def _choose_and_apply_local_color_profile(
+        self,
+        combo: QtWidgets.QComboBox,
+        state_attr: str,
+    ) -> None:
+        """Load a local ICC profile and apply it to a color-space selector."""
+
+        previous = getattr(self, state_attr)
+        path, _filter = QtWidgets.QFileDialog.getOpenFileName(
+            self._main_window,
+            self._tr("Choose ICC Profile"),
+            "",
+            self._tr("ICC Profiles (*.icc *.icm)"),
+        )
+        if not path:
+            self._restore_combo_color_profile(combo, previous)
+            return
+
+        try:
+            profile = self._image_service.load_local_color_profile(Path(path))
+        except ColorProfileLoadError as exc:
+            self._restore_combo_color_profile(combo, previous)
+            QtWidgets.QMessageBox.warning(
+                self._main_window,
+                self._tr("Unable to Load ICC Profile"),
+                self._localize_color_profile_error(str(exc)),
+            )
+            return
+
+        self._set_combo_local_color_profile(combo, profile)
+        if profile == previous:
+            return
+        setattr(self, state_attr, profile)
+        self._current_analysis_render_key = None
+        self._reload_open_images_for_color_settings()
+
+    def _set_combo_local_color_profile(
+        self,
+        combo: QtWidgets.QComboBox,
+        profile: LocalColorProfile,
+    ) -> None:
+        """Insert or replace the session-local ICC item before the chooser."""
+
+        with block_signals(combo):
+            for item_index in range(combo.count() - 1, -1, -1):
+                if isinstance(combo.itemData(item_index), LocalColorProfile):
+                    combo.removeItem(item_index)
+            choose_index = combo.findData(LOCAL_COLOR_PROFILE_CHOICE_DATA)
+            insert_index = choose_index if choose_index >= 0 else combo.count()
+            combo.insertItem(insert_index, profile.display_name, profile)
+            combo.setItemData(
+                insert_index,
+                str(profile.path),
+                QtCore.Qt.ItemDataRole.ToolTipRole,
+            )
+            combo.setCurrentIndex(insert_index)
+
+    def _restore_combo_color_profile(
+        self,
+        combo: QtWidgets.QComboBox,
+        color_profile: ColorProfileSpec,
+    ) -> None:
+        """Restore a selector to its previous profile after cancel or failure."""
+
+        index = combo.findData(color_profile)
+        with block_signals(combo):
+            if index >= 0:
+                combo.setCurrentIndex(index)
+            else:
+                combo.setCurrentIndex(-1)
+
+    def _color_profile_key(self, color_profile: ColorProfileSpec) -> str:
+        """Return a stable key for built-in or local ICC profile settings."""
+
+        if isinstance(color_profile, ColorSpacePreset):
+            return color_profile.value
+        return color_profile.stable_key
+
+    def _localize_color_profile_error(self, message: str) -> str:
+        """Return localized user-facing text for local ICC load errors."""
+
+        mapping = {
+            "ICC profile files must use .icc or .icm extension": self._tr(
+                "ICC profile files must use .icc or .icm extension"
+            ),
+            "ICC profile file does not exist": self._tr("ICC profile file does not exist"),
+            "Unable to read ICC profile file": self._tr("Unable to read ICC profile file"),
+            "ICC profile file is empty": self._tr("ICC profile file is empty"),
+            "Unable to load ICC profile": self._tr("Unable to load ICC profile"),
+        }
+        return mapping.get(message, self._tr("Unable to load ICC profile"))
+
+    def _on_rendering_intent_changed(self, index: int) -> None:
+        """Reload open images when the global ICC rendering intent changes."""
+
+        combo = self._ui.comboRenderingIntent
+        selected = combo.itemData(index)
+        if isinstance(selected, str):
+            try:
+                selected = RenderingIntent(selected)
+            except ValueError:
+                return
+        if not isinstance(selected, RenderingIntent):
+            return
+        if selected == self._rendering_intent:
+            return
+
+        self._rendering_intent = selected
+        self._current_analysis_render_key = None
+        self._reload_open_images_for_color_settings()
+
+    def _reload_open_images_for_display_color_space(self) -> None:
+        """Clear image caches and restart loads for the selected display space."""
+
+        self._reload_open_images_for_color_settings()
+
+    def _reload_open_images_for_color_settings(self) -> None:
+        """Clear image caches and restart loads for the selected color settings."""
+
+        paths: list[Path] = []
+        seen: set[str] = set()
+        for tab in self._all_image_tab_widgets():
+            path = self._tab_path(tab)
+            if path is None:
+                continue
+            key = str(path)
+            if key in seen:
+                continue
+            seen.add(key)
+            paths.append(path)
+
+        active_path = self._current_image_path()
+        for path in paths:
+            key = str(path)
+            self._images_by_path.pop(key, None)
+            self._preview_by_path.pop(key, None)
+            self._load_error_by_path.pop(key, None)
+            self._preview_tasks_by_path.pop(key, None)
+            self._load_tasks_by_path.pop(key, None)
+            self._analysis_render_key_by_path.pop(key, None)
+            self._tab_preview_render_key_by_path.pop(key, None)
+            session = self._start_path_session(path)
+            self._ensure_preview_load(path, session)
+            self._ensure_full_load(path, session)
+
+        if active_path is not None:
+            self.update_info_for_image(active_path)
 
     def _sync_view_actions(self) -> None:
         """Keep menu actions aligned with the current view settings."""
@@ -348,9 +560,21 @@ class MainControllerAnalysisMixin:
             self._last_metadata_path = None
             preview = self._preview_by_path.get(str(image_path))
             if preview is not None:
-                self._refresh_tab_preview_pixmap(image_path, preview.preview_rgb)
+                self._sync_specified_image_color_space_enabled(preview.source_color_profile)
+                self._set_image_color_space_value(
+                    self._format_source_color_profile_info(preview.source_color_profile)
+                )
+                self._refresh_tab_preview_pixmap(
+                    image_path,
+                    preview.preview_rgb,
+                    preview.display_color_space,
+                )
             return
 
+        self._sync_specified_image_color_space_enabled(data.analysis.source_color_profile)
+        self._set_image_color_space_value(
+            self._format_source_color_profile_info(data.analysis.source_color_profile)
+        )
         if str(image_path) != self._last_metadata_path:
             self._ui.tabsMetadata.setCurrentIndex(0)
         self._last_metadata_path = str(image_path)
@@ -366,6 +590,9 @@ class MainControllerAnalysisMixin:
             round(dpr, 2),
             self._view_settings.mode.value,
             self._view_settings.channel.value,
+            self._color_profile_key(data.analysis.display_color_space),
+            self._color_profile_key(data.analysis.assumed_source_color_space),
+            data.analysis.rendering_intent.value,
         )
         path_key = str(image_path)
         current_render_key = (path_key, render_key)
@@ -406,6 +633,8 @@ class MainControllerAnalysisMixin:
 
     def _set_info_placeholders(self) -> None:
         self._current_analysis_render_key = None
+        self._set_specified_image_color_space_enabled(True)
+        self._set_image_color_space_value(self._tr("Not Loaded"))
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
         self._ui.widgetHistogram.setText(self._tr("Histogram Placeholder"))
@@ -413,6 +642,8 @@ class MainControllerAnalysisMixin:
 
     def _set_info_loading_placeholders(self) -> None:
         self._current_analysis_render_key = None
+        self._set_specified_image_color_space_enabled(True)
+        self._set_image_color_space_value(self._tr("Loading"))
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
         self._ui.widgetHistogram.setText(self._tr("Generating histogram..."))
@@ -420,11 +651,62 @@ class MainControllerAnalysisMixin:
 
     def _set_info_error_placeholders(self) -> None:
         self._current_analysis_render_key = None
+        self._set_specified_image_color_space_enabled(True)
+        self._set_image_color_space_value(self._tr("Unavailable"))
         message = self._tr("Image failed to load. Analysis is unavailable.")
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
         self._ui.widgetHistogram.setText(message)
         self._ui.widgetWaveform.setText(message)
+
+    def _set_image_color_space_value(self, text: str) -> None:
+        if not hasattr(self._ui, "labelImageColorSpaceValue"):
+            return
+        self._ui.labelImageColorSpaceValue.setText(text)
+        self._ui.labelImageColorSpaceValue.setToolTip(text)
+
+    def _sync_specified_image_color_space_enabled(self, info: ImageColorProfileInfo) -> None:
+        enabled = info.status != ImageColorProfileStatus.EMBEDDED
+        self._set_specified_image_color_space_enabled(enabled)
+
+    def _set_specified_image_color_space_enabled(self, enabled: bool) -> None:
+        if not hasattr(self._ui, "comboSpecifiedImageColorSpace"):
+            return
+        combo = self._ui.comboSpecifiedImageColorSpace
+        with block_signals(combo):
+            if enabled:
+                combo.setEnabled(True)
+                if combo.currentIndex() < 0:
+                    selected = getattr(
+                        self,
+                        "_assumed_source_color_space",
+                        DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+                    )
+                    index = combo.findData(selected)
+                    if index >= 0:
+                        combo.setCurrentIndex(index)
+                return
+            combo.setCurrentIndex(-1)
+            combo.setEnabled(False)
+
+    def _format_source_color_profile_info(self, info: ImageColorProfileInfo) -> str:
+        if info.status == ImageColorProfileStatus.EMBEDDED:
+            return self._tr("{name} (embedded ICC)").format(name=info.display_name)
+        assumed = getattr(info, "assumed_color_space", None)
+        has_specified_fallback = assumed is not None and assumed != DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
+        if info.status == ImageColorProfileStatus.INVALID:
+            if has_specified_fallback:
+                return self._tr("{name} (specified, unreadable ICC)").format(name=info.display_name)
+            return self._tr("sRGB (default, unreadable ICC)")
+        if info.status == ImageColorProfileStatus.CONVERSION_FAILED:
+            if has_specified_fallback:
+                return self._tr("{name} (specified fallback, ICC conversion failed)").format(
+                    name=info.display_name
+                )
+            return self._tr("sRGB (fallback, ICC conversion failed)")
+        if has_specified_fallback:
+            return self._tr("{name} (specified, no embedded ICC)").format(name=info.display_name)
+        return self._tr("sRGB (default, no embedded ICC)")
 
     def _refresh_current_image_pixmap(self) -> None:
         """Refresh the current image pixmap using the stored zoom settings."""
@@ -438,21 +720,31 @@ class MainControllerAnalysisMixin:
         if data is None:
             preview = self._preview_by_path.get(str(path))
             if preview is not None:
-                self._refresh_tab_preview_pixmap(path, preview.preview_rgb)
+                self._refresh_tab_preview_pixmap(path, preview.preview_rgb, preview.display_color_space)
             return
         self._refresh_tab_pixmap(path, data.analysis)
 
     def _refresh_tab_pixmap(self, path: Path, analysis: ImageAnalysis) -> None:
         """Render the image preview inside the tab for the given path."""
 
-        self._set_tab_pixmap(path, analysis.preview_rgb)
+        self._set_tab_pixmap(path, analysis.preview_rgb, analysis.display_color_space)
 
-    def _refresh_tab_preview_pixmap(self, path: Path, preview_rgb: np.ndarray) -> None:
+    def _refresh_tab_preview_pixmap(
+        self,
+        path: Path,
+        preview_rgb: np.ndarray,
+        display_color_space: ColorProfileSpec,
+    ) -> None:
         """Render a lightweight preview before full analysis completes."""
 
-        self._set_tab_pixmap(path, preview_rgb)
+        self._set_tab_pixmap(path, preview_rgb, display_color_space)
 
-    def _set_tab_pixmap(self, path: Path, preview_rgb: np.ndarray) -> None:
+    def _set_tab_pixmap(
+        self,
+        path: Path,
+        preview_rgb: np.ndarray,
+        display_color_space: ColorProfileSpec,
+    ) -> None:
         """Render an RGB preview inside the tab for the given path."""
 
         tab = self._tab_widget_for_path(path)
@@ -478,6 +770,11 @@ class MainControllerAnalysisMixin:
             self._show_underexposed,
             self._show_overexposed,
             self._focus_peak_level.value if self._focus_peak_level is not None else None,
+            self._color_profile_key(display_color_space),
+            self._color_profile_key(
+                getattr(self, "_assumed_source_color_space", DEFAULT_ASSUMED_IMAGE_COLOR_SPACE)
+            ),
+            getattr(self, "_rendering_intent", DEFAULT_RENDERING_INTENT).value,
             id(preview_rgb),
         )
         if (
@@ -492,7 +789,12 @@ class MainControllerAnalysisMixin:
             show_overexposed=self._show_overexposed,
             focus_peak_level=self._focus_peak_level,
         )
-        pixmap = to_qpixmap(display_rgb, target_size, device_pixel_ratio=dpr)
+        pixmap = to_qpixmap(
+            display_rgb,
+            target_size,
+            device_pixel_ratio=dpr,
+            color_space=display_color_space,
+        )
         lbl.setPixmap(pixmap)
         lbl.setText("")
         if not pixmap.isNull():

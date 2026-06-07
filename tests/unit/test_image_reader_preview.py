@@ -15,6 +15,9 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.common.errors import ImageLoadError  # noqa: E402
+from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
+from pic_viewer.domain.models.color_space import LocalColorProfile, ColorSpacePreset  # noqa: E402
+from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.infra.adapters.image_reader import ImageReader  # noqa: E402
 
 
@@ -38,6 +41,184 @@ class ImageReaderPreviewTests(unittest.TestCase):
 
         np.testing.assert_array_equal(image, reduced)
         self.assertGreaterEqual(imread.call_count, 1)
+
+    def test_read_preview_applies_display_color_space_conversion(self) -> None:
+        converted = np.full((12, 12, 3), 128, dtype=np.uint8)
+        converter = unittest.mock.MagicMock()
+        converter.convert_file_bgr_to_display_space.return_value = converted
+        reader = ImageReader(allow_raw=False, color_converter=converter)
+        reduced = np.zeros((12, 12, 3), dtype=np.uint8)
+
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
+            path = Path(tmp.name)
+            with patch("pic_viewer.infra.adapters.image_reader.cv2.imread", return_value=reduced):
+                image = reader.read_preview(path, max_edge=2000, display_color_space=ColorSpacePreset.DISPLAY_P3)
+
+        np.testing.assert_array_equal(image, converted)
+        converter.convert_file_bgr_to_display_space.assert_called_once_with(
+            path,
+            reduced,
+            ColorSpacePreset.DISPLAY_P3,
+            ColorSpacePreset.SRGB,
+            RenderingIntent.PERCEPTUAL,
+        )
+
+    def test_read_preview_defaults_to_app_display_color_space(self) -> None:
+        converted = np.full((12, 12, 3), 128, dtype=np.uint8)
+        converter = unittest.mock.MagicMock()
+        converter.convert_file_bgr_to_display_space.return_value = converted
+        reader = ImageReader(allow_raw=False, color_converter=converter)
+        reduced = np.zeros((12, 12, 3), dtype=np.uint8)
+
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
+            path = Path(tmp.name)
+            with patch("pic_viewer.infra.adapters.image_reader.cv2.imread", return_value=reduced):
+                image = reader.read_preview(path, max_edge=2000)
+
+        np.testing.assert_array_equal(image, converted)
+        converter.convert_file_bgr_to_display_space.assert_called_once_with(
+            path,
+            reduced,
+            ColorSpacePreset.SRGB,
+            ColorSpacePreset.SRGB,
+            RenderingIntent.PERCEPTUAL,
+        )
+
+    def test_read_with_color_profile_info_defaults_to_app_display_color_space(self) -> None:
+        converted = np.full((12, 12, 3), 128, dtype=np.uint8)
+        profile_info = ImageColorProfileInfo(
+            display_name="sRGB",
+            status=ImageColorProfileStatus.MISSING,
+            uses_srgb_fallback=True,
+        )
+        converter = unittest.mock.MagicMock()
+        converter.convert_file_bgr_to_display_space_with_info.return_value = (converted, profile_info)
+        reader = ImageReader(allow_raw=False, color_converter=converter)
+        source = np.zeros((12, 12, 3), dtype=np.uint8)
+
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
+            path = Path(tmp.name)
+            with patch("pic_viewer.infra.adapters.image_reader.cv2.imread", return_value=source):
+                image, info = reader.read_with_color_profile_info(path)
+
+        np.testing.assert_array_equal(image, converted)
+        self.assertEqual(profile_info, info)
+        converter.convert_file_bgr_to_display_space_with_info.assert_called_once_with(
+            path,
+            source,
+            ColorSpacePreset.SRGB,
+            ColorSpacePreset.SRGB,
+            RenderingIntent.PERCEPTUAL,
+        )
+
+    def test_read_preview_with_color_profile_info_returns_pixels_and_source_info(self) -> None:
+        converted = np.full((12, 12, 3), 128, dtype=np.uint8)
+        profile_info = ImageColorProfileInfo(
+            display_name="Display P3",
+            status=ImageColorProfileStatus.EMBEDDED,
+            uses_srgb_fallback=False,
+        )
+        converter = unittest.mock.MagicMock()
+        converter.convert_file_bgr_to_display_space_with_info.return_value = (converted, profile_info)
+        reader = ImageReader(allow_raw=False, color_converter=converter)
+        reduced = np.zeros((12, 12, 3), dtype=np.uint8)
+
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
+            path = Path(tmp.name)
+            with patch("pic_viewer.infra.adapters.image_reader.cv2.imread", return_value=reduced):
+                image, info = reader.read_preview_with_color_profile_info(
+                    path,
+                    max_edge=2000,
+                    display_color_space=ColorSpacePreset.DISPLAY_P3,
+                    rendering_intent=RenderingIntent.RELATIVE_COLORIMETRIC,
+                )
+
+        np.testing.assert_array_equal(image, converted)
+        self.assertEqual(profile_info, info)
+        converter.convert_file_bgr_to_display_space_with_info.assert_called_once_with(
+            path,
+            reduced,
+            ColorSpacePreset.DISPLAY_P3,
+            ColorSpacePreset.SRGB,
+            RenderingIntent.RELATIVE_COLORIMETRIC,
+        )
+
+    def test_read_preview_with_color_profile_info_passes_specified_source_color_space(self) -> None:
+        converted = np.full((12, 12, 3), 128, dtype=np.uint8)
+        profile_info = ImageColorProfileInfo(
+            display_name="Display P3",
+            status=ImageColorProfileStatus.MISSING,
+            uses_srgb_fallback=True,
+        )
+        converter = unittest.mock.MagicMock()
+        converter.convert_file_bgr_to_display_space_with_info.return_value = (converted, profile_info)
+        reader = ImageReader(allow_raw=False, color_converter=converter)
+        reduced = np.zeros((12, 12, 3), dtype=np.uint8)
+
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
+            path = Path(tmp.name)
+            with patch("pic_viewer.infra.adapters.image_reader.cv2.imread", return_value=reduced):
+                image, info = reader.read_preview_with_color_profile_info(
+                    path,
+                    max_edge=2000,
+                    display_color_space=ColorSpacePreset.PROPHOTO_RGB,
+                    assumed_source_color_space=ColorSpacePreset.DISPLAY_P3,
+                    rendering_intent=RenderingIntent.ABSOLUTE_COLORIMETRIC,
+                )
+
+        np.testing.assert_array_equal(image, converted)
+        self.assertEqual(profile_info, info)
+        converter.convert_file_bgr_to_display_space_with_info.assert_called_once_with(
+            path,
+            reduced,
+            ColorSpacePreset.PROPHOTO_RGB,
+            ColorSpacePreset.DISPLAY_P3,
+            RenderingIntent.ABSOLUTE_COLORIMETRIC,
+        )
+
+    def test_read_preview_with_color_profile_info_passes_local_color_profiles(self) -> None:
+        converted = np.full((12, 12, 3), 128, dtype=np.uint8)
+        display_profile = LocalColorProfile(
+            display_name="Local Display",
+            path=Path("/tmp/display.icc"),
+            profile_bytes=b"display-profile",
+        )
+        source_profile_spec = LocalColorProfile(
+            display_name="Local Source",
+            path=Path("/tmp/source.icc"),
+            profile_bytes=b"source-profile",
+        )
+        profile_info = ImageColorProfileInfo(
+            display_name="Local Source",
+            status=ImageColorProfileStatus.MISSING,
+            uses_srgb_fallback=True,
+            assumed_color_space=source_profile_spec,
+        )
+        converter = unittest.mock.MagicMock()
+        converter.convert_file_bgr_to_display_space_with_info.return_value = (converted, profile_info)
+        reader = ImageReader(allow_raw=False, color_converter=converter)
+        reduced = np.zeros((12, 12, 3), dtype=np.uint8)
+
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
+            path = Path(tmp.name)
+            with patch("pic_viewer.infra.adapters.image_reader.cv2.imread", return_value=reduced):
+                image, info = reader.read_preview_with_color_profile_info(
+                    path,
+                    max_edge=2000,
+                    display_color_space=display_profile,
+                    assumed_source_color_space=source_profile_spec,
+                    rendering_intent=RenderingIntent.RELATIVE_COLORIMETRIC,
+                )
+
+        np.testing.assert_array_equal(image, converted)
+        self.assertEqual(profile_info, info)
+        converter.convert_file_bgr_to_display_space_with_info.assert_called_once_with(
+            path,
+            reduced,
+            display_profile,
+            source_profile_spec,
+            RenderingIntent.RELATIVE_COLORIMETRIC,
+        )
 
     def test_read_preview_raises_for_unsupported_format_when_raw_disabled(self) -> None:
         reader = ImageReader(allow_raw=False)

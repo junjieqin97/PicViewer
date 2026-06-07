@@ -32,7 +32,7 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn('"pyinstaller', pyproject)
         self.assertIn('"tomli>=2.0; python_version < \\"3.11\\""', pyproject)
 
-    def test_metadata_backend_dependencies_are_declared_in_correct_groups(self) -> None:
+    def test_runtime_image_backend_dependencies_are_declared(self) -> None:
         pyproject = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
         runtime_dependencies = pyproject.split("dependencies = [", maxsplit=1)[1].split(
             "]\n\n[project.optional-dependencies]",
@@ -41,8 +41,8 @@ class PackagingConfigurationTests(unittest.TestCase):
         packaging_extra = pyproject.split("packaging = [", maxsplit=1)[1].split("]\n", maxsplit=1)[0]
 
         self.assertIn('"pyexiv2>=2.15.5,<3"', runtime_dependencies)
-        self.assertNotIn('"Pillow>=10.0"', runtime_dependencies)
-        self.assertIn('"Pillow>=10.0"', packaging_extra)
+        self.assertIn('"Pillow>=10.0"', runtime_dependencies)
+        self.assertNotIn('"Pillow>=10.0"', packaging_extra)
 
     def test_manifest_includes_runtime_resources_and_release_files(self) -> None:
         manifest = (PROJECT_ROOT / "MANIFEST.in").read_text(encoding="utf-8")
@@ -53,6 +53,43 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("recursive-include packaging *.spec", manifest)
         self.assertIn("recursive-include packaging/icons *.ico *.icns", manifest)
         self.assertIn("recursive-include scripts *.py *.sh", manifest)
+
+    def test_i18n_sources_include_display_color_space_label(self) -> None:
+        i18n_dir = PROJECT_ROOT / "src" / "pic_viewer" / "ui" / "resources" / "i18n"
+        en_ts = (i18n_dir / "picviewer_en.ts").read_text(encoding="utf-8")
+        zh_ts = (i18n_dir / "picviewer_zh_CN.ts").read_text(encoding="utf-8")
+
+        self.assertIn("<source>Display Color Space</source>", en_ts)
+        self.assertIn("<source>Display Color Space</source>", zh_ts)
+        self.assertIn("<translation>显示色彩空间</translation>", zh_ts)
+        self.assertIn("<source>Image Color Space</source>", en_ts)
+        self.assertIn("<source>Image Color Space</source>", zh_ts)
+        self.assertIn("<translation>图片色彩空间</translation>", zh_ts)
+        self.assertIn("<source>Specify Image Color Space</source>", en_ts)
+        self.assertIn("<source>Specify Image Color Space</source>", zh_ts)
+        self.assertIn("<translation>指定图片色彩空间</translation>", zh_ts)
+        self.assertIn("<source>Rendering Intent</source>", en_ts)
+        self.assertIn("<source>Rendering Intent</source>", zh_ts)
+        self.assertIn("<translation>渲染意图</translation>", zh_ts)
+        self.assertIn("<source>Choose a local ICC...</source>", en_ts)
+        self.assertIn("<source>Choose a local ICC...</source>", zh_ts)
+        self.assertIn("<translation>选择本地 ICC...</translation>", zh_ts)
+        self.assertIn("<source>Choose ICC Profile</source>", en_ts)
+        self.assertIn("<source>ICC Profiles (*.icc *.icm)</source>", en_ts)
+        self.assertIn("<source>Unable to Load ICC Profile</source>", en_ts)
+        self.assertIn("<source>Unable to load ICC profile</source>", en_ts)
+        for label in (
+            "Perceptual",
+            "Relative Colorimetric",
+            "Saturation",
+            "Absolute Colorimetric",
+        ):
+            self.assertIn(f"<source>{label}</source>", en_ts)
+            self.assertIn(f"<source>{label}</source>", zh_ts)
+        self.assertIn("<source>sRGB (default, no embedded ICC)</source>", en_ts)
+        self.assertIn("<source>sRGB (fallback, ICC conversion failed)</source>", en_ts)
+        self.assertIn("<source>{name} (specified, no embedded ICC)</source>", en_ts)
+        self.assertIn("<source>{name} (specified fallback, ICC conversion failed)</source>", en_ts)
 
     def test_pyproject_includes_icon_package_data(self) -> None:
         pyproject = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
@@ -92,10 +129,16 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("RUNTIME_METADATA_PACKAGES", spec)
         metadata_packages = spec.split("RUNTIME_METADATA_PACKAGES = (", maxsplit=1)[1].split(")", maxsplit=1)[0]
         self.assertNotIn('"picviewer"', metadata_packages)
-        for package_name in ("PySide6", "opencv-python", "numpy", "pyexiv2", "rawpy"):
+        for package_name in ("PySide6", "opencv-python", "numpy", "pyexiv2", "Pillow", "rawpy"):
             self.assertIn(f'"{package_name}"', spec)
         self.assertNotIn('"PySide2"', spec)
         self.assertIn("_collect_runtime_metadata(RUNTIME_METADATA_PACKAGES)", spec)
+
+    def test_pyinstaller_spec_collects_pillow_imagecms_runtime(self) -> None:
+        spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")
+
+        self.assertIn('"PIL.ImageCms"', spec)
+        self.assertIn('"PIL._imagingcms"', spec)
 
     def test_pyinstaller_spec_generates_picviewer_metadata_from_pyproject(self) -> None:
         spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")
