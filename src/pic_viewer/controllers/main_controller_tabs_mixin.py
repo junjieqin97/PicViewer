@@ -756,10 +756,13 @@ class MainControllerTabsMixin:
 
     def _refresh_actions_state(self) -> None:
         has_image_tab = self._has_image_tabs()
+        current_path = self._current_image_path()
+        can_show_in_folder = current_path is not None and current_path.parent.is_dir()
         self._ui.actCloseTab.setEnabled(has_image_tab)
         self._ui.actZoomIn.setEnabled(has_image_tab)
         self._ui.actZoomOut.setEnabled(has_image_tab)
         self._ui.actFitToWindow.setEnabled(has_image_tab)
+        self._ui.actShowInFolder.setEnabled(can_show_in_folder)
 
     def _update_tab_title(self, tab_index: int, path: Path) -> None:
         if tab_index < 0 or tab_index >= self._ui.tabsImages.count():

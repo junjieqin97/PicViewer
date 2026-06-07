@@ -136,6 +136,26 @@ class MainWindowShortcutTests(unittest.TestCase):
         self.assertEqual(ui.actToggleMetadataOverlay, view_actions[3])
         self.assertEqual(ui.menuAppearance.menuAction(), view_actions[-1])
 
+    def test_image_context_menu_contains_show_in_folder_action(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        context_actions = [action for action in ui.menuImageContext.actions() if not action.isSeparator()]
+
+        self.assertEqual("actShowInFolder", ui.actShowInFolder.objectName())
+        self.assertEqual("Show in Folder", ui.actShowInFolder.text())
+        self.assertTrue(ui.actShowInFolder.shortcut().isEmpty())
+        self.assertEqual(
+            [ui.actZoomIn, ui.actZoomOut, ui.actFitToWindow, ui.actShowInFolder],
+            context_actions,
+        )
+        self.assertNotIn(ui.actShowInFolder, ui.menuFile.actions())
+        self.assertNotIn(ui.actShowInFolder, ui.menuView.actions())
+        self.assertNotIn(ui.actShowInFolder, ui.menuTools.actions())
+        self.assertNotIn(ui.actShowInFolder, ui.menuHelp.actions())
+
     def test_initial_appearance_action_follows_system_theme(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()

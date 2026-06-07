@@ -133,33 +133,43 @@
     <context>
         <name>MainControllerInteractionMixin</name>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="177" />
-            <location filename="main_controller_interaction_mixin.py" line="339" />
+            <location filename="main_controller_interaction_mixin.py" line="122" />
+            <source>Warning</source>
+            <translation>警告</translation>
+        </message>
+        <message>
+            <location filename="main_controller_interaction_mixin.py" line="123" />
+            <source>Unable to open the image folder.</source>
+            <translation>无法打开图片所在文件夹。</translation>
+        </message>
+        <message>
+            <location filename="main_controller_interaction_mixin.py" line="228" />
+            <location filename="main_controller_interaction_mixin.py" line="390" />
             <source>Info</source>
             <translation>提示</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="178" />
+            <location filename="main_controller_interaction_mixin.py" line="229" />
             <source>No supported image files were found in the dropped files.</source>
             <translation>拖入的文件中未找到可打开的图片文件</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="187" />
+            <location filename="main_controller_interaction_mixin.py" line="238" />
             <source>Skipped {count} unsupported file(s).</source>
             <translation>已跳过 {count} 个不支持的文件。</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="340" />
+            <location filename="main_controller_interaction_mixin.py" line="391" />
             <source>This feature is not implemented yet (TODO).</source>
             <translation>该功能尚未实现（TODO）</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="346" />
+            <location filename="main_controller_interaction_mixin.py" line="397" />
             <source>About</source>
             <translation>关于</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="359" />
+            <location filename="main_controller_interaction_mixin.py" line="410" />
             <source>&lt;div style="font-size: 12pt;"&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;Version {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class="about-light" style="font-weight: 300;"&gt;A desktop photo viewer for common image formats and camera RAW files.&lt;/p&gt;&lt;p class="about-light" style="font-weight: 300;"&gt;Copyright (c) {years} {owner}. All rights reserved.&lt;/p&gt;&lt;/div&gt;</source>
             <translation>&lt;div style="font-size: 12pt;"&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;版本 {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class="about-light" style="font-weight: 300;"&gt;用于预览常见图片格式和相机 RAW 文件的桌面照片查看器。&lt;/p&gt;&lt;p class="about-light" style="font-weight: 300;"&gt;版权所有 (c) {years} {owner}。保留所有权利。&lt;/p&gt;&lt;/div&gt;</translation>
         </message>
@@ -409,12 +419,12 @@
             <translation>快捷键：{shortcut}</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="802" />
+            <location filename="main_controller_tabs_mixin.py" line="805" />
             <source>Filmstrip hidden. Current file: {path}</source>
             <translation>胶卷窗格已隐藏。当前文件：{path}</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="809" />
+            <location filename="main_controller_tabs_mixin.py" line="812" />
             <source>Current: {name} ({index}/{total})</source>
             <translation>当前：{name}（{index}/{total}）</translation>
         </message>
@@ -422,314 +432,319 @@
     <context>
         <name>MainWindowUI</name>
         <message>
-            <location filename="main_window.py" line="510" />
-            <location filename="main_window.py" line="560" />
-            <location filename="main_window.py" line="857" />
+            <location filename="main_window.py" line="514" />
+            <location filename="main_window.py" line="564" />
+            <location filename="main_window.py" line="862" />
             <source>Choose a local ICC...</source>
             <translation>选择本地 ICC...</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="794" />
+            <location filename="main_window.py" line="798" />
             <source>PicViewer</source>
             <translation>PicViewer</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="796" />
+            <location filename="main_window.py" line="800" />
             <source>Open Image...</source>
             <translation>打开图片…</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="797" />
+            <location filename="main_window.py" line="801" />
             <source>Open Folder...</source>
             <translation>打开文件夹…</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="798" />
+            <location filename="main_window.py" line="802" />
             <source>Close Current Tab</source>
             <translation>关闭当前标签</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="799" />
+            <location filename="main_window.py" line="803" />
             <source>Exit</source>
             <translation>退出</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="800" />
+            <location filename="main_window.py" line="804" />
             <source>Zoom In</source>
             <translation>放大</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="801" />
+            <location filename="main_window.py" line="805" />
             <source>Zoom Out</source>
             <translation>缩小</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="802" />
+            <location filename="main_window.py" line="806" />
             <source>Fit to Window</source>
             <translation>适配窗口</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="803" />
+            <location filename="main_window.py" line="807" />
+            <source>Show in Folder</source>
+            <translation>在文件夹中显示</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="808" />
             <source>Light</source>
             <translation>浅色</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="804" />
+            <location filename="main_window.py" line="809" />
             <source>Dark</source>
             <translation>深色</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="805" />
+            <location filename="main_window.py" line="810" />
             <source>Info Panel</source>
             <translation>信息区</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="806" />
+            <location filename="main_window.py" line="811" />
             <source>Analysis Toolbar</source>
             <translation>分析工具栏</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="807" />
+            <location filename="main_window.py" line="812" />
             <source>Filmstrip</source>
             <translation>胶卷窗格</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="808" />
+            <location filename="main_window.py" line="813" />
             <source>Show Metadata Overlay</source>
             <translation>显示元数据叠加</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="809" />
+            <location filename="main_window.py" line="814" />
             <source>Cross Reference Line</source>
             <translation>十字形参考线</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="810" />
+            <location filename="main_window.py" line="815" />
             <source>Diagonal Reference Line</source>
             <translation>对角线参考线</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="811" />
+            <location filename="main_window.py" line="816" />
             <source>Rule of Thirds Reference Line</source>
             <translation>三等分井字形参考线</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="812" />
+            <location filename="main_window.py" line="817" />
             <source>About</source>
             <translation>关于</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="813" />
+            <location filename="main_window.py" line="818" />
             <source>Third-Party License Information</source>
             <translation>第三方库许可证信息</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="814" />
+            <location filename="main_window.py" line="819" />
             <source>Luma Mode</source>
             <translation>明度模式</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="815" />
+            <location filename="main_window.py" line="820" />
             <source>RGB Mode</source>
             <translation>RGB模式</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="816" />
+            <location filename="main_window.py" line="821" />
             <source>All RGB Channels</source>
             <translation>RGB全部通道</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="817" />
+            <location filename="main_window.py" line="822" />
             <source>Red Channel Only</source>
             <translation>仅红通道</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="818" />
+            <location filename="main_window.py" line="823" />
             <source>Green Channel Only</source>
             <translation>仅绿通道</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="819" />
+            <location filename="main_window.py" line="824" />
             <source>Blue Channel Only</source>
             <translation>仅蓝通道</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="820" />
+            <location filename="main_window.py" line="825" />
             <source>Show Underexposed</source>
             <translation>显示欠曝</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="821" />
+            <location filename="main_window.py" line="826" />
             <source>Show Overexposed</source>
             <translation>显示过曝</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="822" />
+            <location filename="main_window.py" line="827" />
             <source>High</source>
             <translation>高</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="823" />
+            <location filename="main_window.py" line="828" />
             <source>Medium</source>
             <translation>中</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="824" />
+            <location filename="main_window.py" line="829" />
             <source>Low</source>
             <translation>低</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="827" />
+            <location filename="main_window.py" line="832" />
             <source>File</source>
             <translation>文件</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="828" />
+            <location filename="main_window.py" line="833" />
             <source>View</source>
             <translation>查看</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="829" />
+            <location filename="main_window.py" line="834" />
             <source>Appearance</source>
             <translation>外观</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="830" />
+            <location filename="main_window.py" line="835" />
             <source>Reference Lines</source>
             <translation>参考线</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="831" />
+            <location filename="main_window.py" line="836" />
             <source>Tools</source>
             <translation>工具</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="832" />
+            <location filename="main_window.py" line="837" />
             <source>Histogram/Waveform Mode</source>
             <translation>直方图/波形图模式</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="833" />
+            <location filename="main_window.py" line="838" />
             <source>RGB Channels</source>
             <translation>RGB通道</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="834" />
+            <location filename="main_window.py" line="839" />
             <source>Pseudo Color</source>
             <translation>伪色</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="835" />
+            <location filename="main_window.py" line="840" />
             <source>Show Peaks</source>
             <translation>显示峰值</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="836" />
+            <location filename="main_window.py" line="841" />
             <source>Help</source>
             <translation>帮助</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="838" />
+            <location filename="main_window.py" line="843" />
             <source>Analysis</source>
             <translation>分析</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="839" />
+            <location filename="main_window.py" line="844" />
             <source>Metadata</source>
             <translation>元数据</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="841" />
+            <location filename="main_window.py" line="846" />
             <source>General</source>
             <translation>通用</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="842" />
+            <location filename="main_window.py" line="847" />
             <source>Exif</source>
             <translation>Exif</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="843" />
+            <location filename="main_window.py" line="848" />
             <source>IPTC</source>
             <translation>IPTC</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="844" />
+            <location filename="main_window.py" line="849" />
             <source>TIFF</source>
             <translation>TIFF</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="846" />
+            <location filename="main_window.py" line="851" />
             <source>Image Color Space</source>
             <translation>图片色彩空间</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="847" />
+            <location filename="main_window.py" line="852" />
             <source>Not Loaded</source>
             <translation>未加载</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="848" />
+            <location filename="main_window.py" line="853" />
             <source>Specify Image Color Space</source>
             <translation>指定图片色彩空间</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="849" />
+            <location filename="main_window.py" line="854" />
             <source>Rendering Intent</source>
             <translation>渲染意图</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="850" />
+            <location filename="main_window.py" line="855" />
             <source>Display Color Space</source>
             <translation>显示色彩空间</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="864" />
+            <location filename="main_window.py" line="869" />
             <source>Histogram Placeholder</source>
             <translation>直方图占位图</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="866" />
+            <location filename="main_window.py" line="871" />
             <source>Show/Hide Underexposed Areas</source>
             <translation>显示/隐藏欠曝区域</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="867" />
+            <location filename="main_window.py" line="872" />
             <source>Show/Hide Overexposed Areas</source>
             <translation>显示/隐藏过曝区域</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="869" />
+            <location filename="main_window.py" line="874" />
             <source>Waveform Placeholder</source>
             <translation>波形图占位图</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="894" />
+            <location filename="main_window.py" line="899" />
             <source>Perceptual</source>
             <translation>感知</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="895" />
+            <location filename="main_window.py" line="900" />
             <source>Relative Colorimetric</source>
             <translation>相对色度</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="896" />
+            <location filename="main_window.py" line="901" />
             <source>Saturation</source>
             <translation>饱和度</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="897" />
+            <location filename="main_window.py" line="902" />
             <source>Absolute Colorimetric</source>
             <translation>绝对色度</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="902" />
+            <location filename="main_window.py" line="907" />
             <source>Key</source>
             <translation>键</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="902" />
+            <location filename="main_window.py" line="907" />
             <source>Value</source>
             <translation>值</translation>
         </message>
@@ -737,7 +752,7 @@
     <context>
         <name>MainWindow</name>
         <message>
-            <location filename="main_window.py" line="920" />
+            <location filename="main_window.py" line="925" />
             <source>Ready</source>
             <translation>准备就绪</translation>
         </message>

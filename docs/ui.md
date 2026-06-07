@@ -95,7 +95,7 @@ Constraint: the right info area width is adjustable by default; when the main wi
 - Specification: each tab should contain only one main display control; do not stack additional buttons/toolbars inside the tab (all tool entries are in the menu bar).
 - Naming rules:
 - The display control inside a tab is named `viewImage` (if using `QGraphicsView`) or `lblImage` (if using `QLabel` as a placeholder).
-- Context menu: right-clicking in the `image display area` opens a context menu containing `Zoom In`, `Zoom Out`, and `Fit to Window`; their behavior must remain consistent with the `top menu bar` actions. See `5.2 MenuBar Actions`.
+- Context menu: right-clicking in the `image display area` opens a context menu containing `Zoom In`, `Zoom Out`, `Fit to Window`, and `Show in Folder`; zoom behavior must remain consistent with the `top menu bar` actions, and `Show in Folder` opens the current image's parent directory. See `5.2 MenuBar Actions`.
 - Mouse wheel: scrolling up in the `image display area` performs `Zoom In`, and scrolling down performs `Zoom Out`; the implementation must reuse the zoom logic from the `top menu bar`.
 
 ### 3.2 Right Info Area (Info Panel)
@@ -224,6 +224,7 @@ Actions (names must be consistent; copy may mix Chinese and English, but consist
 - `actZoomIn`: Zoom In
 - `actZoomOut`: Zoom Out
 - `actFitToWindow`: Fit to Window
+- `actShowInFolder`: Show in Folder (image context menu only)
 - `actAppearanceLight`: Light (checkable, mutually exclusive with Dark)
 - `actAppearanceDark`: Dark (checkable, mutually exclusive with Light)
 - `actToggleInfoPanel`: Info Panel (checkable, checked = visible)

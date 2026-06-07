@@ -76,6 +76,8 @@ class MainWindowUI:
         self.actZoomOut.setObjectName("actZoomOut")
         self.actFitToWindow = QtGui.QAction(self._main_window)
         self.actFitToWindow.setObjectName("actFitToWindow")
+        self.actShowInFolder = QtGui.QAction(self._main_window)
+        self.actShowInFolder.setObjectName("actShowInFolder")
         self.actAppearanceLight = QtGui.QAction(self._main_window)
         self.actAppearanceLight.setObjectName("actAppearanceLight")
         self.actAppearanceLight.setCheckable(True)
@@ -316,6 +318,8 @@ class MainWindowUI:
         self.menuImageContext.addAction(self.actZoomOut)
         self.menuImageContext.addSeparator()
         self.menuImageContext.addAction(self.actFitToWindow)
+        self.menuImageContext.addSeparator()
+        self.menuImageContext.addAction(self.actShowInFolder)
 
     def create_widgets(self) -> None:
         self.info_panel_histogram_size = QtCore.QSize(
@@ -800,6 +804,7 @@ class MainWindowUI:
         self.actZoomIn.setText(self._tr("Zoom In"))
         self.actZoomOut.setText(self._tr("Zoom Out"))
         self.actFitToWindow.setText(self._tr("Fit to Window"))
+        self.actShowInFolder.setText(self._tr("Show in Folder"))
         self.actAppearanceLight.setText(self._tr("Light"))
         self.actAppearanceDark.setText(self._tr("Dark"))
         self.actToggleInfoPanel.setText(self._tr("Info Panel"))
