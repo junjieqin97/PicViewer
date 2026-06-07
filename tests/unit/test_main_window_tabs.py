@@ -457,34 +457,17 @@ class MainWindowTabsTests(unittest.TestCase):
 
         self.assertLessEqual(controller._calculate_filmstrip_icon_side(), 72)
 
-    def test_analysis_mode_summary_is_visible_above_info_tabs(self) -> None:
+    def test_info_panel_starts_with_info_tabs(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
         ui.setup_ui(window)
         self.addCleanup(window.deleteLater)
 
-        self.assertEqual("widgetAnalysisModeSummary", ui.widgetAnalysisModeSummary.objectName())
-        self.assertEqual("labelAnalysisModeTitle", ui.labelAnalysisModeTitle.objectName())
-        self.assertEqual("labelAnalysisModeValue", ui.labelAnalysisModeValue.objectName())
-        self.assertEqual("labelAnalysisChannelTitle", ui.labelAnalysisChannelTitle.objectName())
-        self.assertEqual("labelAnalysisChannelValue", ui.labelAnalysisChannelValue.objectName())
-        self.assertEqual("labelPseudoColorTitle", ui.labelPseudoColorTitle.objectName())
-        self.assertEqual("labelPseudoColorValue", ui.labelPseudoColorValue.objectName())
-
-        self.assertIs(ui.widgetAnalysisModeSummary, ui.layoutInfo.itemAt(0).widget())
-        self.assertIs(ui.tabsInfo, ui.layoutInfo.itemAt(1).widget())
+        self.assertFalse(hasattr(ui, "widgetAnalysisModeSummary"))
+        self.assertIs(ui.tabsInfo, ui.layoutInfo.itemAt(0).widget())
         self.assertEqual(2, ui.tabsInfo.count())
         self.assertEqual("Analysis", ui.tabsInfo.tabText(0))
         self.assertEqual("Metadata", ui.tabsInfo.tabText(1))
-        self.assertEqual("Analysis Mode", ui.labelAnalysisModeTitle.text())
-        self.assertEqual("Luma Mode", ui.labelAnalysisModeValue.text())
-        self.assertEqual("RGB Channels", ui.labelAnalysisChannelTitle.text())
-        self.assertEqual("Not Applicable", ui.labelAnalysisChannelValue.text())
-        self.assertEqual("Pseudo Color State", ui.labelPseudoColorTitle.text())
-        self.assertEqual(
-            "Underexposed: Off / Overexposed: Off / Peaks: Off",
-            ui.labelPseudoColorValue.text(),
-        )
 
     def test_analysis_tab_has_display_color_space_selector(self) -> None:
         window = QtWidgets.QMainWindow()

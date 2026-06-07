@@ -458,55 +458,6 @@ class MainWindowUI:
         self.layoutInfo.setObjectName("layoutInfo")
         self.layoutInfo.setContentsMargins(8, 8, 8, 8)
 
-        self.widgetAnalysisModeSummary = QtWidgets.QWidget(self.scrollInfo)
-        self.widgetAnalysisModeSummary.setObjectName("widgetAnalysisModeSummary")
-        self.widgetAnalysisModeSummary.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Expanding,
-            QtWidgets.QSizePolicy.Policy.Fixed,
-        )
-        summary_layout = QtWidgets.QGridLayout(self.widgetAnalysisModeSummary)
-        summary_layout.setObjectName("layoutAnalysisModeSummary")
-        summary_layout.setContentsMargins(4, 0, 4, 4)
-        summary_layout.setHorizontalSpacing(8)
-        summary_layout.setVerticalSpacing(2)
-
-        self.labelAnalysisModeTitle = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
-        self.labelAnalysisModeTitle.setObjectName("labelAnalysisModeTitle")
-        self.labelAnalysisModeValue = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
-        self.labelAnalysisModeValue.setObjectName("labelAnalysisModeValue")
-        self.labelAnalysisModeValue.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Expanding,
-            QtWidgets.QSizePolicy.Policy.Preferred,
-        )
-        self.labelAnalysisModeValue.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.labelAnalysisChannelTitle = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
-        self.labelAnalysisChannelTitle.setObjectName("labelAnalysisChannelTitle")
-        self.labelAnalysisChannelValue = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
-        self.labelAnalysisChannelValue.setObjectName("labelAnalysisChannelValue")
-        self.labelAnalysisChannelValue.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Expanding,
-            QtWidgets.QSizePolicy.Policy.Preferred,
-        )
-        self.labelAnalysisChannelValue.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.labelPseudoColorTitle = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
-        self.labelPseudoColorTitle.setObjectName("labelPseudoColorTitle")
-        self.labelPseudoColorValue = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
-        self.labelPseudoColorValue.setObjectName("labelPseudoColorValue")
-        self.labelPseudoColorValue.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Expanding,
-            QtWidgets.QSizePolicy.Policy.Preferred,
-        )
-        self.labelPseudoColorValue.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
-
-        summary_layout.addWidget(self.labelAnalysisModeTitle, 0, 0)
-        summary_layout.addWidget(self.labelAnalysisModeValue, 0, 1)
-        summary_layout.addWidget(self.labelAnalysisChannelTitle, 1, 0)
-        summary_layout.addWidget(self.labelAnalysisChannelValue, 1, 1)
-        summary_layout.addWidget(self.labelPseudoColorTitle, 2, 0)
-        summary_layout.addWidget(self.labelPseudoColorValue, 2, 1)
-        summary_layout.setColumnStretch(1, 1)
-        self.layoutInfo.addWidget(self.widgetAnalysisModeSummary)
-
         self.tabsInfo = DetachableTabWidget("info", self.scrollInfo)
         self.tabsInfo.setObjectName("tabsInfo")
         self.tabsInfo.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
@@ -891,19 +842,6 @@ class MainWindowUI:
         self.tabsMetadata.setTabText(self.tabsMetadata.indexOf(self.tabMetadataExif), self._tr("Exif"))
         self.tabsMetadata.setTabText(self.tabsMetadata.indexOf(self.tabMetadataIptc), self._tr("IPTC"))
         self.tabsMetadata.setTabText(self.tabsMetadata.indexOf(self.tabMetadataTiff), self._tr("TIFF"))
-
-        self.labelAnalysisModeTitle.setText(self._tr("Analysis Mode"))
-        self.labelAnalysisModeValue.setText(self._tr("Luma Mode"))
-        self.labelAnalysisChannelTitle.setText(self._tr("RGB Channels"))
-        self.labelAnalysisChannelValue.setText(self._tr("Not Applicable"))
-        self.labelPseudoColorTitle.setText(self._tr("Pseudo Color State"))
-        self.labelPseudoColorValue.setText(
-            self._tr("Underexposed: {under} / Overexposed: {over} / Peaks: {peaks}").format(
-                under=self._tr("Off"),
-                over=self._tr("Off"),
-                peaks=self._tr("Off"),
-            )
-        )
 
         self.labelImageColorSpaceTitle.setText(self._tr("Image Color Space"))
         self.labelImageColorSpaceValue.setText(self._tr("Not Loaded"))

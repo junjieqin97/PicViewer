@@ -273,12 +273,6 @@ QFrame#separatorAnalysisToolbar {
     margin-right: 4px;
 }
 
-QWidget#widgetAnalysisModeSummary {
-    background: #ffffff;
-    border: 1px solid #d3dce8;
-    border-radius: 4px;
-}
-
 QWidget#widgetImageColorSpace,
 QWidget#widgetSpecifiedImageColorSpace,
 QWidget#widgetRenderingIntent,
@@ -286,9 +280,6 @@ QWidget#widgetDisplayColorSpace {
     background: transparent;
 }
 
-QLabel#labelAnalysisModeTitle,
-QLabel#labelAnalysisChannelTitle,
-QLabel#labelPseudoColorTitle,
 QLabel#labelImageColorSpaceTitle,
 QLabel#labelSpecifiedImageColorSpaceTitle,
 QLabel#labelRenderingIntentTitle,
@@ -314,9 +305,6 @@ QComboBox#comboSpecifiedImageColorSpace:disabled {
     border: 1px solid #d8e0ea;
 }
 
-QLabel#labelAnalysisModeValue,
-QLabel#labelAnalysisChannelValue,
-QLabel#labelPseudoColorValue,
 QLabel#labelImageColorSpaceValue {
     color: #1f252d;
 }

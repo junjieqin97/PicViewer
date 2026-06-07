@@ -104,7 +104,7 @@ The right info area is a non-scrollable panel containing two top-level informati
 
 - Container: `scrollInfo: QWidget` (outer layer is not scrollable)
 - Content layout: `layoutInfo: QVBoxLayout`
-- The top of the info area must display a lightweight summary: current analysis mode, RGB channel, pseudo color state (underexposed/overexposed toggles, peaking level).
+- The top of the info area must start with `tabsInfo`; no separate summary panel is shown above the info tabs.
 
 Inside the info area, use `DetachableTabWidget` (`QTabWidget` subclass):
 
