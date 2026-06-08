@@ -55,77 +55,77 @@
             <translation>无法加载 ICC 配置文件</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="580" />
+            <location filename="main_controller_analysis_mixin.py" line="576" />
             <source>Not Loaded</source>
             <translation>未加载</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="583" />
+            <location filename="main_controller_analysis_mixin.py" line="579" />
             <source>Histogram Placeholder</source>
             <translation>直方图占位图</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="584" />
+            <location filename="main_controller_analysis_mixin.py" line="580" />
             <source>Waveform Placeholder</source>
             <translation>波形图占位图</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="589" />
+            <location filename="main_controller_analysis_mixin.py" line="585" />
             <source>Loading</source>
             <translation>正在加载</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="592" />
+            <location filename="main_controller_analysis_mixin.py" line="588" />
             <source>Generating histogram...</source>
             <translation>正在生成直方图…</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="593" />
+            <location filename="main_controller_analysis_mixin.py" line="589" />
             <source>Generating waveform...</source>
             <translation>正在生成波形图…</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="598" />
+            <location filename="main_controller_analysis_mixin.py" line="594" />
             <source>Unavailable</source>
             <translation>不可用</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="599" />
+            <location filename="main_controller_analysis_mixin.py" line="595" />
             <source>Image failed to load. Analysis is unavailable.</source>
             <translation>图片加载失败，无法生成分析</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="637" />
+            <location filename="main_controller_analysis_mixin.py" line="633" />
             <source>{name} (embedded ICC)</source>
             <translation>{name}（嵌入 ICC）</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="642" />
+            <location filename="main_controller_analysis_mixin.py" line="638" />
             <source>{name} (specified, unreadable ICC)</source>
             <translation>{name}（指定，ICC 不可读）</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="643" />
+            <location filename="main_controller_analysis_mixin.py" line="639" />
             <source>sRGB (default, unreadable ICC)</source>
             <translation>sRGB（默认，ICC 不可读）</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="646" />
+            <location filename="main_controller_analysis_mixin.py" line="642" />
             <source>{name} (specified fallback, ICC conversion failed)</source>
             <translation>{name}（指定回退，ICC 转换失败）</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="649" />
+            <location filename="main_controller_analysis_mixin.py" line="645" />
             <source>sRGB (fallback, ICC conversion failed)</source>
             <translation>sRGB（回退，ICC 转换失败）</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="651" />
+            <location filename="main_controller_analysis_mixin.py" line="647" />
             <source>{name} (specified, no embedded ICC)</source>
             <translation>{name}（指定，无嵌入 ICC）</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="652" />
+            <location filename="main_controller_analysis_mixin.py" line="648" />
             <source>sRGB (default, no embedded ICC)</source>
             <translation>sRGB（默认，无嵌入 ICC）</translation>
         </message>
@@ -143,33 +143,33 @@
             <translation>无法打开图片所在文件夹。</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="228" />
-            <location filename="main_controller_interaction_mixin.py" line="390" />
+            <location filename="main_controller_interaction_mixin.py" line="247" />
+            <location filename="main_controller_interaction_mixin.py" line="409" />
             <source>Info</source>
             <translation>提示</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="229" />
+            <location filename="main_controller_interaction_mixin.py" line="248" />
             <source>No supported image files were found in the dropped files.</source>
             <translation>拖入的文件中未找到可打开的图片文件</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="238" />
+            <location filename="main_controller_interaction_mixin.py" line="257" />
             <source>Skipped {count} unsupported file(s).</source>
             <translation>已跳过 {count} 个不支持的文件。</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="391" />
+            <location filename="main_controller_interaction_mixin.py" line="410" />
             <source>This feature is not implemented yet (TODO).</source>
             <translation>该功能尚未实现（TODO）</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="397" />
+            <location filename="main_controller_interaction_mixin.py" line="416" />
             <source>About</source>
             <translation>关于</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="410" />
+            <location filename="main_controller_interaction_mixin.py" line="429" />
             <source>&lt;div style="font-size: 12pt;"&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;Version {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class="about-light" style="font-weight: 300;"&gt;A desktop photo viewer for common image formats and camera RAW files.&lt;/p&gt;&lt;p class="about-light" style="font-weight: 300;"&gt;Copyright (c) {years} {owner}. All rights reserved.&lt;/p&gt;&lt;/div&gt;</source>
             <translation>&lt;div style="font-size: 12pt;"&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;版本 {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class="about-light" style="font-weight: 300;"&gt;用于预览常见图片格式和相机 RAW 文件的桌面照片查看器。&lt;/p&gt;&lt;p class="about-light" style="font-weight: 300;"&gt;版权所有 (c) {years} {owner}。保留所有权利。&lt;/p&gt;&lt;/div&gt;</translation>
         </message>
@@ -177,29 +177,15 @@
     <context>
         <name>MainControllerLoadingMixin</name>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="56" />
-            <source>Loading preview</source>
-            <translation>正在加载预览</translation>
+            <location filename="main_controller_loading_mixin.py" line="58" />
+            <location filename="main_controller_loading_mixin.py" line="90" />
+            <source>Loading...</source>
+            <translation>加载中...</translation>
         </message>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="57" />
-            <source>Loading preview: {name}</source>
-            <translation>正在加载预览：{name}</translation>
-        </message>
-        <message>
-            <location filename="main_controller_loading_mixin.py" line="84" />
+            <location filename="main_controller_loading_mixin.py" line="86" />
             <source>Loading image: {name}</source>
             <translation>正在读取图片：{name}</translation>
-        </message>
-        <message>
-            <location filename="main_controller_loading_mixin.py" line="88" />
-            <source>Loading image</source>
-            <translation>正在读取图片</translation>
-        </message>
-        <message>
-            <location filename="main_controller_loading_mixin.py" line="89" />
-            <source>Loading image and generating analysis: {name}</source>
-            <translation>正在读取图片并生成分析：{name}</translation>
         </message>
         <message>
             <location filename="main_controller_loading_mixin.py" line="147" />
@@ -207,38 +193,38 @@
             <translation>预览失败，正在尝试读取完整图片：{name}</translation>
         </message>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="184" />
+            <location filename="main_controller_loading_mixin.py" line="185" />
             <source>Loaded: {name}</source>
             <translation>加载完成：{name}</translation>
         </message>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="197" />
+            <location filename="main_controller_loading_mixin.py" line="198" />
             <source>Failed to load: {name}</source>
             <translation>加载失败：{name}</translation>
         </message>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="208" />
+            <location filename="main_controller_loading_mixin.py" line="209" />
             <source>Image file does not exist</source>
             <translation>图片文件不存在</translation>
         </message>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="209" />
+            <location filename="main_controller_loading_mixin.py" line="210" />
             <source>Unsupported image format</source>
             <translation>不支持该图片格式</translation>
         </message>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="210" />
+            <location filename="main_controller_loading_mixin.py" line="211" />
             <source>Unable to read this image file</source>
             <translation>无法读取该图片文件</translation>
         </message>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="211" />
+            <location filename="main_controller_loading_mixin.py" line="212" />
             <source>Image analysis failed</source>
             <translation>图像分析失败</translation>
         </message>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="212" />
-            <location filename="main_controller_loading_mixin.py" line="216" />
+            <location filename="main_controller_loading_mixin.py" line="213" />
+            <location filename="main_controller_loading_mixin.py" line="217" />
             <source>An unknown error occurred while processing the image</source>
             <translation>处理图片时发生未知错误</translation>
         </message>
@@ -366,65 +352,57 @@
             <location filename="main_controller_tabs_mixin.py" line="89" />
             <location filename="main_controller_tabs_mixin.py" line="105" />
             <location filename="main_controller_tabs_mixin.py" line="126" />
-            <location filename="main_controller_tabs_mixin.py" line="297" />
-            <source>Loading preview</source>
-            <translation>正在加载预览</translation>
-        </message>
-        <message>
-            <location filename="main_controller_tabs_mixin.py" line="90" />
-            <location filename="main_controller_tabs_mixin.py" line="106" />
-            <location filename="main_controller_tabs_mixin.py" line="127" />
             <location filename="main_controller_tabs_mixin.py" line="298" />
-            <source>Loading preview: {name}</source>
-            <translation>正在加载预览：{name}</translation>
+            <source>Loading...</source>
+            <translation>加载中...</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="318" />
+            <location filename="main_controller_tabs_mixin.py" line="319" />
             <source>Unable to Open Image</source>
             <translation>无法打开图片</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="320" />
+            <location filename="main_controller_tabs_mixin.py" line="321" />
             <source>File: {name}</source>
             <translation>文件：{name}</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="321" />
+            <location filename="main_controller_tabs_mixin.py" line="322" />
             <source>Retry</source>
             <translation>重试</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="431" />
+            <location filename="main_controller_tabs_mixin.py" line="432" />
             <source>Start Browsing Photos</source>
             <translation>开始浏览照片</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="440" />
+            <location filename="main_controller_tabs_mixin.py" line="441" />
             <source>Open an image or choose a folder to start previewing.</source>
             <translation>打开单张图片或选择文件夹开始预览。</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="446" />
+            <location filename="main_controller_tabs_mixin.py" line="447" />
             <source>Drop files here to open them</source>
             <translation>将图片文件拖到这里即可打开</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="499" />
+            <location filename="main_controller_tabs_mixin.py" line="500" />
             <source>Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</source>
             <translation>支持格式：JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="531" />
+            <location filename="main_controller_tabs_mixin.py" line="532" />
             <source>Shortcut: {shortcut}</source>
             <translation>快捷键：{shortcut}</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="805" />
+            <location filename="main_controller_tabs_mixin.py" line="806" />
             <source>Filmstrip hidden. Current file: {path}</source>
             <translation>胶卷窗格已隐藏。当前文件：{path}</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="812" />
+            <location filename="main_controller_tabs_mixin.py" line="813" />
             <source>Current: {name} ({index}/{total})</source>
             <translation>当前：{name}（{index}/{total}）</translation>
         </message>

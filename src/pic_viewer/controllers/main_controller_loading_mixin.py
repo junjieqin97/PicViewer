@@ -6,6 +6,8 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+from PySide6 import QtCore
+
 from pic_viewer.app.dto.image_analysis import ImageLoadResult, PreviewLoadResult
 from pic_viewer.ui.workers.image_worker import ImageLoadTask, PreviewLoadTask
 
@@ -53,8 +55,8 @@ class MainControllerLoadingMixin:
 
         self._show_tab_loading_state(
             path,
-            self._tr("Loading preview"),
-            self._tr("Loading preview: {name}").format(name=path.name),
+            self._tr("Loading..."),
+            "",
         )
         task = PreviewLoadTask(
             self._image_service,
@@ -85,8 +87,8 @@ class MainControllerLoadingMixin:
         if key not in self._preview_by_path:
             self._show_tab_loading_state(
                 path,
-                self._tr("Loading image"),
-                self._tr("Loading image and generating analysis: {name}").format(name=path.name),
+                self._tr("Loading..."),
+                "",
             )
         task = ImageLoadTask(
             self._image_service,
@@ -134,8 +136,6 @@ class MainControllerLoadingMixin:
             return
         if self._current_image_path() == path:
             self.update_info_for_image(path)
-        else:
-            self._refresh_tab_preview_pixmap(path, result.preview_rgb, result.display_color_space)
 
     def _on_preview_error(self, path: Path, session: int, message: str) -> None:
         self._preview_tasks_by_path.pop(str(path), None)
@@ -178,6 +178,7 @@ class MainControllerLoadingMixin:
 
         if self._current_image_path() == path:
             self.update_info_for_image(path)
+            QtCore.QTimer.singleShot(0, self._refresh_current_image_pixmap)
         else:
             self._refresh_tab_pixmap(path, result.analysis)
 

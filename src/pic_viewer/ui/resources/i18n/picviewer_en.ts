@@ -55,77 +55,77 @@
             <translation>Unable to load ICC profile</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="580" />
+            <location filename="main_controller_analysis_mixin.py" line="576" />
             <source>Not Loaded</source>
             <translation>Not Loaded</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="583" />
+            <location filename="main_controller_analysis_mixin.py" line="579" />
             <source>Histogram Placeholder</source>
             <translation>Histogram Placeholder</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="584" />
+            <location filename="main_controller_analysis_mixin.py" line="580" />
             <source>Waveform Placeholder</source>
             <translation>Waveform Placeholder</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="589" />
+            <location filename="main_controller_analysis_mixin.py" line="585" />
             <source>Loading</source>
             <translation>Loading</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="592" />
+            <location filename="main_controller_analysis_mixin.py" line="588" />
             <source>Generating histogram...</source>
             <translation>Generating histogram...</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="593" />
+            <location filename="main_controller_analysis_mixin.py" line="589" />
             <source>Generating waveform...</source>
             <translation>Generating waveform...</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="598" />
+            <location filename="main_controller_analysis_mixin.py" line="594" />
             <source>Unavailable</source>
             <translation>Unavailable</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="599" />
+            <location filename="main_controller_analysis_mixin.py" line="595" />
             <source>Image failed to load. Analysis is unavailable.</source>
             <translation>Image failed to load. Analysis is unavailable.</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="637" />
+            <location filename="main_controller_analysis_mixin.py" line="633" />
             <source>{name} (embedded ICC)</source>
             <translation>{name} (embedded ICC)</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="642" />
+            <location filename="main_controller_analysis_mixin.py" line="638" />
             <source>{name} (specified, unreadable ICC)</source>
             <translation>{name} (specified, unreadable ICC)</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="643" />
+            <location filename="main_controller_analysis_mixin.py" line="639" />
             <source>sRGB (default, unreadable ICC)</source>
             <translation>sRGB (default, unreadable ICC)</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="646" />
+            <location filename="main_controller_analysis_mixin.py" line="642" />
             <source>{name} (specified fallback, ICC conversion failed)</source>
             <translation>{name} (specified fallback, ICC conversion failed)</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="649" />
+            <location filename="main_controller_analysis_mixin.py" line="645" />
             <source>sRGB (fallback, ICC conversion failed)</source>
             <translation>sRGB (fallback, ICC conversion failed)</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="651" />
+            <location filename="main_controller_analysis_mixin.py" line="647" />
             <source>{name} (specified, no embedded ICC)</source>
             <translation>{name} (specified, no embedded ICC)</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="652" />
+            <location filename="main_controller_analysis_mixin.py" line="648" />
             <source>sRGB (default, no embedded ICC)</source>
             <translation>sRGB (default, no embedded ICC)</translation>
         </message>
@@ -143,33 +143,33 @@
             <translation>Unable to open the image folder.</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="228" />
-            <location filename="main_controller_interaction_mixin.py" line="390" />
+            <location filename="main_controller_interaction_mixin.py" line="247" />
+            <location filename="main_controller_interaction_mixin.py" line="409" />
             <source>Info</source>
             <translation>Info</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="229" />
+            <location filename="main_controller_interaction_mixin.py" line="248" />
             <source>No supported image files were found in the dropped files.</source>
             <translation>No supported image files were found in the dropped files.</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="238" />
+            <location filename="main_controller_interaction_mixin.py" line="257" />
             <source>Skipped {count} unsupported file(s).</source>
             <translation>Skipped {count} unsupported file(s).</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="391" />
+            <location filename="main_controller_interaction_mixin.py" line="410" />
             <source>This feature is not implemented yet (TODO).</source>
             <translation>This feature is not implemented yet (TODO).</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="397" />
+            <location filename="main_controller_interaction_mixin.py" line="416" />
             <source>About</source>
             <translation>About</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="410" />
+            <location filename="main_controller_interaction_mixin.py" line="429" />
             <source>&lt;div style="font-size: 12pt;"&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;Version {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class="about-light" style="font-weight: 300;"&gt;A desktop photo viewer for common image formats and camera RAW files.&lt;/p&gt;&lt;p class="about-light" style="font-weight: 300;"&gt;Copyright (c) {years} {owner}. All rights reserved.&lt;/p&gt;&lt;/div&gt;</source>
             <translation>&lt;div style="font-size: 12pt;"&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;Version {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class="about-light" style="font-weight: 300;"&gt;A desktop photo viewer for common image formats and camera RAW files.&lt;/p&gt;&lt;p class="about-light" style="font-weight: 300;"&gt;Copyright (c) {years} {owner}. All rights reserved.&lt;/p&gt;&lt;/div&gt;</translation>
         </message>
@@ -177,29 +177,15 @@
     <context>
         <name>MainControllerLoadingMixin</name>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="56" />
-            <source>Loading preview</source>
-            <translation>Loading preview</translation>
+            <location filename="main_controller_loading_mixin.py" line="58" />
+            <location filename="main_controller_loading_mixin.py" line="90" />
+            <source>Loading...</source>
+            <translation>Loading...</translation>
         </message>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="57" />
-            <source>Loading preview: {name}</source>
-            <translation>Loading preview: {name}</translation>
-        </message>
-        <message>
-            <location filename="main_controller_loading_mixin.py" line="84" />
+            <location filename="main_controller_loading_mixin.py" line="86" />
             <source>Loading image: {name}</source>
             <translation>Loading image: {name}</translation>
-        </message>
-        <message>
-            <location filename="main_controller_loading_mixin.py" line="88" />
-            <source>Loading image</source>
-            <translation>Loading image</translation>
-        </message>
-        <message>
-            <location filename="main_controller_loading_mixin.py" line="89" />
-            <source>Loading image and generating analysis: {name}</source>
-            <translation>Loading image and generating analysis: {name}</translation>
         </message>
         <message>
             <location filename="main_controller_loading_mixin.py" line="147" />
@@ -207,38 +193,38 @@
             <translation>Preview failed, trying full image load: {name}</translation>
         </message>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="184" />
+            <location filename="main_controller_loading_mixin.py" line="185" />
             <source>Loaded: {name}</source>
             <translation>Loaded: {name}</translation>
         </message>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="197" />
+            <location filename="main_controller_loading_mixin.py" line="198" />
             <source>Failed to load: {name}</source>
             <translation>Failed to load: {name}</translation>
         </message>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="208" />
+            <location filename="main_controller_loading_mixin.py" line="209" />
             <source>Image file does not exist</source>
             <translation>Image file does not exist</translation>
         </message>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="209" />
+            <location filename="main_controller_loading_mixin.py" line="210" />
             <source>Unsupported image format</source>
             <translation>Unsupported image format</translation>
         </message>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="210" />
+            <location filename="main_controller_loading_mixin.py" line="211" />
             <source>Unable to read this image file</source>
             <translation>Unable to read this image file</translation>
         </message>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="211" />
+            <location filename="main_controller_loading_mixin.py" line="212" />
             <source>Image analysis failed</source>
             <translation>Image analysis failed</translation>
         </message>
         <message>
-            <location filename="main_controller_loading_mixin.py" line="212" />
-            <location filename="main_controller_loading_mixin.py" line="216" />
+            <location filename="main_controller_loading_mixin.py" line="213" />
+            <location filename="main_controller_loading_mixin.py" line="217" />
             <source>An unknown error occurred while processing the image</source>
             <translation>An unknown error occurred while processing the image</translation>
         </message>
@@ -366,65 +352,57 @@
             <location filename="main_controller_tabs_mixin.py" line="89" />
             <location filename="main_controller_tabs_mixin.py" line="105" />
             <location filename="main_controller_tabs_mixin.py" line="126" />
-            <location filename="main_controller_tabs_mixin.py" line="297" />
-            <source>Loading preview</source>
-            <translation>Loading preview</translation>
-        </message>
-        <message>
-            <location filename="main_controller_tabs_mixin.py" line="90" />
-            <location filename="main_controller_tabs_mixin.py" line="106" />
-            <location filename="main_controller_tabs_mixin.py" line="127" />
             <location filename="main_controller_tabs_mixin.py" line="298" />
-            <source>Loading preview: {name}</source>
-            <translation>Loading preview: {name}</translation>
+            <source>Loading...</source>
+            <translation>Loading...</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="318" />
+            <location filename="main_controller_tabs_mixin.py" line="319" />
             <source>Unable to Open Image</source>
             <translation>Unable to Open Image</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="320" />
+            <location filename="main_controller_tabs_mixin.py" line="321" />
             <source>File: {name}</source>
             <translation>File: {name}</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="321" />
+            <location filename="main_controller_tabs_mixin.py" line="322" />
             <source>Retry</source>
             <translation>Retry</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="431" />
+            <location filename="main_controller_tabs_mixin.py" line="432" />
             <source>Start Browsing Photos</source>
             <translation>Start Browsing Photos</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="440" />
+            <location filename="main_controller_tabs_mixin.py" line="441" />
             <source>Open an image or choose a folder to start previewing.</source>
             <translation>Open an image or choose a folder to start previewing.</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="446" />
+            <location filename="main_controller_tabs_mixin.py" line="447" />
             <source>Drop files here to open them</source>
             <translation>Drop files here to open them</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="499" />
+            <location filename="main_controller_tabs_mixin.py" line="500" />
             <source>Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</source>
             <translation>Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="531" />
+            <location filename="main_controller_tabs_mixin.py" line="532" />
             <source>Shortcut: {shortcut}</source>
             <translation>Shortcut: {shortcut}</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="805" />
+            <location filename="main_controller_tabs_mixin.py" line="806" />
             <source>Filmstrip hidden. Current file: {path}</source>
             <translation>Filmstrip hidden. Current file: {path}</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="812" />
+            <location filename="main_controller_tabs_mixin.py" line="813" />
             <source>Current: {name} ({index}/{total})</source>
             <translation>Current: {name} ({index}/{total})</translation>
         </message>

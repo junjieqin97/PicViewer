@@ -132,6 +132,8 @@ class MainControllerInteractionMixin:
             handle.setCursor(cursor)
 
     def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:  # type: ignore[override]
+        if self._handle_image_viewport_resize_event(watched, event):
+            return False
         if self._handle_file_drop_event(watched, event):
             return True
         if self._handle_image_wheel_zoom_event(watched, event):
@@ -146,6 +148,23 @@ class MainControllerInteractionMixin:
             if "already deleted" in str(exc):
                 return False
             raise
+
+    def _handle_image_viewport_resize_event(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        """Refresh the current full image when its viewport changes size."""
+
+        if event.type() != QtCore.QEvent.Type.Resize:
+            return False
+        if not isinstance(watched, QtWidgets.QWidget):
+            return False
+        if watched.property("_image_viewport_refresh") is not True:
+            return False
+        path = self._current_image_path()
+        if path is None:
+            return False
+        if str(path) not in getattr(self, "_images_by_path", {}):
+            return False
+        self._refresh_current_image_pixmap()
+        return False
 
     def _handle_file_drop_event(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
         """Accept and open supported local image files dropped on the workspace."""

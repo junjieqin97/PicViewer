@@ -93,6 +93,7 @@ Constraint: the right info area width is adjustable by default; when the main wi
 - Tab content structure (inside each tab):
 - `ImageViewWidget` (recommended to use `QGraphicsView + QGraphicsScene`, or use `QLabel` as a placeholder)
 - Specification: each tab should contain only one main display control; do not stack additional buttons/toolbars inside the tab (all tool entries are in the menu bar).
+- Loading state: while the selected image is still loading its full display payload, the image tab shows only centered `Loading...` text. Fast preview images must not be rendered inside the image tab; they are used only for the bottom filmstrip thumbnails.
 - Naming rules:
 - The display control inside a tab is named `viewImage` (if using `QGraphicsView`) or `lblImage` (if using `QLabel` as a placeholder).
 - Context menu: right-clicking in the `image display area` opens a context menu containing `Zoom In`, `Zoom Out`, `Fit to Window`, and `Show in Folder`; zoom behavior must remain consistent with the `top menu bar` actions, and `Show in Folder` opens the current image's parent directory. See `5.2 MenuBar Actions`.
@@ -278,7 +279,7 @@ Shortcuts for common features must be set as follows:
 - Switch image tab => update the right info area (placeholder update first) + update the selected filmstrip item; the currently selected image triggers full parsing in the background (histogram/waveform/metadata).
 - Click filmstrip item => switch to the corresponding tab.
 - Close tab => synchronously remove the corresponding filmstrip item; if the closed tab is the current tab, switch to an adjacent tab and synchronize updates.
-- Open Folder => first load fast previews for each image concurrently, then perform full parsing on demand (when selected).
+- Open Folder => first load fast previews for each image concurrently for the filmstrip, then perform full parsing on demand (when selected). The selected image tab remains in the centered `Loading...` state until the full display payload is available.
 
 Performance constraint: background image loading uses a thread pool with a default maximum concurrency of 8.
 

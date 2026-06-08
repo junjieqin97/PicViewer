@@ -507,11 +507,6 @@ class MainControllerAnalysisMixin:
                 self._set_image_color_space_value(
                     self._format_source_color_profile_info(preview.source_color_profile)
                 )
-                self._refresh_tab_preview_pixmap(
-                    image_path,
-                    preview.preview_rgb,
-                    preview.display_color_space,
-                )
             return
 
         self._sync_specified_image_color_space_enabled(data.analysis.source_color_profile)
@@ -573,6 +568,7 @@ class MainControllerAnalysisMixin:
             return
         if str(path) not in self._images_by_path:
             return
+        self._refresh_current_image_pixmap()
 
     def _set_info_placeholders(self) -> None:
         self._current_analysis_render_key = None
@@ -661,9 +657,6 @@ class MainControllerAnalysisMixin:
             return
         data = self._images_by_path.get(str(path))
         if data is None:
-            preview = self._preview_by_path.get(str(path))
-            if preview is not None:
-                self._refresh_tab_preview_pixmap(path, preview.preview_rgb, preview.display_color_space)
             return
         self._refresh_tab_pixmap(path, data.analysis)
 
@@ -671,16 +664,6 @@ class MainControllerAnalysisMixin:
         """Render the image preview inside the tab for the given path."""
 
         self._set_tab_pixmap(path, analysis.preview_rgb, analysis.display_color_space)
-
-    def _refresh_tab_preview_pixmap(
-        self,
-        path: Path,
-        preview_rgb: np.ndarray,
-        display_color_space: ColorProfileSpec,
-    ) -> None:
-        """Render a lightweight preview before full analysis completes."""
-
-        self._set_tab_pixmap(path, preview_rgb, display_color_space)
 
     def _set_tab_pixmap(
         self,
