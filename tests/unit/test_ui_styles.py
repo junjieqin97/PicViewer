@@ -139,12 +139,12 @@ class UiStylesTests(unittest.TestCase):
         self.assertIn("color: #edf1f5", dark_popup_rule)
         self.assertIn("background: #171a1e", dark_popup_rule)
         self.assertIn("border: 1px solid #424a54", dark_popup_rule)
-        self.assertIn("selection-background-color: #33465b", dark_popup_rule)
+        self.assertIn("selection-background-color: #3d6fa3", dark_popup_rule)
         self.assertIn("selection-color: #ffffff", dark_popup_rule)
         self.assertIn("color: #1f252d", light_popup_rule)
         self.assertIn("background: #ffffff", light_popup_rule)
         self.assertIn("border: 1px solid #cbd6e3", light_popup_rule)
-        self.assertIn("selection-background-color: #cfe5fb", light_popup_rule)
+        self.assertIn("selection-background-color: #b9d7f3", light_popup_rule)
         self.assertIn("selection-color: #0f172a", light_popup_rule)
 
         dark_hover_rule = self._style_block(
@@ -163,15 +163,55 @@ class UiStylesTests(unittest.TestCase):
             light_style,
             "QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected",
         )
+        dark_active_selected_rule = self._style_block(
+            dark_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:active",
+        )
+        dark_inactive_selected_rule = self._style_block(
+            dark_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:!active",
+        )
+        light_active_selected_rule = self._style_block(
+            light_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:active",
+        )
+        light_inactive_selected_rule = self._style_block(
+            light_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:!active",
+        )
 
-        self.assertIn("background: #29313a", dark_hover_rule)
+        self.assertIn("background: #345f8d", dark_hover_rule)
         self.assertIn("color: #ffffff", dark_hover_rule)
-        self.assertIn("background: #33465b", dark_selected_rule)
+        self.assertIn("background: #3d6fa3", dark_selected_rule)
         self.assertIn("color: #ffffff", dark_selected_rule)
-        self.assertIn("background: #e7f0fa", light_hover_rule)
+        self.assertIn("background: #cfe5fb", light_hover_rule)
         self.assertIn("color: #0f172a", light_hover_rule)
-        self.assertIn("background: #cfe5fb", light_selected_rule)
+        self.assertIn("background: #b9d7f3", light_selected_rule)
         self.assertIn("color: #0f172a", light_selected_rule)
+        self.assertIn("background: #3d6fa3", dark_active_selected_rule)
+        self.assertIn("background: #3d6fa3", dark_inactive_selected_rule)
+        self.assertIn("background: #b9d7f3", light_active_selected_rule)
+        self.assertIn("background: #b9d7f3", light_inactive_selected_rule)
+
+        min_highlight_delta = 72
+        for popup_rule, highlighted_rule in (
+            (dark_popup_rule, dark_hover_rule),
+            (dark_popup_rule, dark_selected_rule),
+            (dark_popup_rule, dark_active_selected_rule),
+            (dark_popup_rule, dark_inactive_selected_rule),
+            (light_popup_rule, light_hover_rule),
+            (light_popup_rule, light_selected_rule),
+            (light_popup_rule, light_active_selected_rule),
+            (light_popup_rule, light_inactive_selected_rule),
+        ):
+            with self.subTest(highlighted_rule=highlighted_rule.split("{", maxsplit=1)[0]):
+                popup_background = self._style_property(popup_rule, "background")
+                highlighted_background = self._style_property(highlighted_rule, "background")
+
+                self.assertGreaterEqual(
+                    self._rgb_distance(popup_background, highlighted_background),
+                    min_highlight_delta,
+                )
 
     def test_theme_from_color_scheme_maps_system_values(self) -> None:
         self.assertEqual(
@@ -251,6 +291,27 @@ class UiStylesTests(unittest.TestCase):
         block_start = style_sheet.index(f"{selector} {{")
         block_end = style_sheet.index("}", block_start)
         return style_sheet[block_start:block_end]
+
+    @staticmethod
+    def _style_property(style_block: str, property_name: str) -> str:
+        property_start = style_block.index(f"{property_name}: ") + len(property_name) + 2
+        property_end = style_block.index(";", property_start)
+        return style_block[property_start:property_end]
+
+    @staticmethod
+    def _rgb_distance(first_color: str, second_color: str) -> int:
+        first_channels = UiStylesTests._hex_color_channels(first_color)
+        second_channels = UiStylesTests._hex_color_channels(second_color)
+        return sum(abs(first - second) for first, second in zip(first_channels, second_channels))
+
+    @staticmethod
+    def _hex_color_channels(color: str) -> tuple[int, int, int]:
+        color_value = color.removeprefix("#")
+        return (
+            int(color_value[0:2], 16),
+            int(color_value[2:4], 16),
+            int(color_value[4:6], 16),
+        )
 
 
 if __name__ == "__main__":

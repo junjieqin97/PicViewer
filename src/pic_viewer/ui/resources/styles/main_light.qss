@@ -301,7 +301,7 @@ QWidget#tabAnalysis QComboBox QAbstractItemView {
     color: #1f252d;
     background: #ffffff;
     border: 1px solid #cbd6e3;
-    selection-background-color: #cfe5fb;
+    selection-background-color: #b9d7f3;
     selection-color: #0f172a;
     outline: none;
 }
@@ -312,12 +312,22 @@ QWidget#tabAnalysis QComboBox QAbstractItemView::item {
 }
 
 QWidget#tabAnalysis QComboBox QAbstractItemView::item:hover {
-    background: #e7f0fa;
+    background: #cfe5fb;
     color: #0f172a;
 }
 
 QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected {
-    background: #cfe5fb;
+    background: #b9d7f3;
+    color: #0f172a;
+}
+
+QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:active {
+    background: #b9d7f3;
+    color: #0f172a;
+}
+
+QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:!active {
+    background: #b9d7f3;
     color: #0f172a;
 }
 
