@@ -19,6 +19,7 @@ from pic_viewer.domain.models.rendering_intent import (
 )
 from pic_viewer.ui.resources import styles
 from pic_viewer.ui.resources.icons import icon_path
+from pic_viewer.ui.widgets.combo_popup_delegate import ComboPopupItemDelegate
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel
 from pic_viewer.ui.widgets.detachable_tabs import DetachableTabWidget
 
@@ -517,6 +518,7 @@ class MainWindowUI:
         specified_index = self.comboSpecifiedImageColorSpace.findData(DEFAULT_ASSUMED_IMAGE_COLOR_SPACE)
         if specified_index >= 0:
             self.comboSpecifiedImageColorSpace.setCurrentIndex(specified_index)
+        self._apply_combo_popup_delegate(self.comboSpecifiedImageColorSpace)
         specified_space_layout.addWidget(self.labelSpecifiedImageColorSpaceTitle)
         specified_space_layout.addWidget(self.comboSpecifiedImageColorSpace, 1)
         analysis_layout.addWidget(self.widgetSpecifiedImageColorSpace)
@@ -540,6 +542,7 @@ class MainWindowUI:
         rendering_index = self.comboRenderingIntent.findData(DEFAULT_RENDERING_INTENT)
         if rendering_index >= 0:
             self.comboRenderingIntent.setCurrentIndex(rendering_index)
+        self._apply_combo_popup_delegate(self.comboRenderingIntent)
         rendering_intent_layout.addWidget(self.labelRenderingIntentTitle)
         rendering_intent_layout.addWidget(self.comboRenderingIntent, 1)
         analysis_layout.addWidget(self.widgetRenderingIntent)
@@ -567,6 +570,7 @@ class MainWindowUI:
         default_index = self.comboDisplayColorSpace.findData(DEFAULT_DISPLAY_COLOR_SPACE)
         if default_index >= 0:
             self.comboDisplayColorSpace.setCurrentIndex(default_index)
+        self._apply_combo_popup_delegate(self.comboDisplayColorSpace)
         display_space_layout.addWidget(self.labelDisplayColorSpaceTitle)
         display_space_layout.addWidget(self.comboDisplayColorSpace, 1)
         analysis_layout.addWidget(self.widgetDisplayColorSpace)
@@ -720,6 +724,10 @@ class MainWindowUI:
         separator.setFrameShape(QtWidgets.QFrame.Shape.VLine)
         separator.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
         layout.addWidget(separator)
+
+    @staticmethod
+    def _apply_combo_popup_delegate(combo: QtWidgets.QComboBox) -> None:
+        combo.setItemDelegate(ComboPopupItemDelegate(combo))
 
     def create_layouts(self) -> None:
         self.layoutMain = QtWidgets.QVBoxLayout(self.central)
