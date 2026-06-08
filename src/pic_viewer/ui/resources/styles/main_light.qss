@@ -287,9 +287,7 @@ QLabel#labelDisplayColorSpaceTitle {
     color: #657386;
 }
 
-QComboBox#comboSpecifiedImageColorSpace,
-QComboBox#comboRenderingIntent,
-QComboBox#comboDisplayColorSpace {
+QWidget#tabAnalysis QComboBox {
     color: #1f252d;
     background: #ffffff;
     border: 1px solid #cbd6e3;
@@ -299,7 +297,31 @@ QComboBox#comboDisplayColorSpace {
     max-width: 144px;
 }
 
-QComboBox#comboSpecifiedImageColorSpace:disabled {
+QWidget#tabAnalysis QComboBox QAbstractItemView {
+    color: #1f252d;
+    background: #ffffff;
+    border: 1px solid #cbd6e3;
+    selection-background-color: #cfe5fb;
+    selection-color: #0f172a;
+    outline: none;
+}
+
+QWidget#tabAnalysis QComboBox QAbstractItemView::item {
+    padding: 4px 8px;
+    min-height: 20px;
+}
+
+QWidget#tabAnalysis QComboBox QAbstractItemView::item:hover {
+    background: #e7f0fa;
+    color: #0f172a;
+}
+
+QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected {
+    background: #cfe5fb;
+    color: #0f172a;
+}
+
+QWidget#tabAnalysis QComboBox#comboSpecifiedImageColorSpace:disabled {
     color: #9aa4af;
     background: #eef2f6;
     border: 1px solid #d8e0ea;

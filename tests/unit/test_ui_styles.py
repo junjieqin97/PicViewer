@@ -95,8 +95,9 @@ class UiStylesTests(unittest.TestCase):
         dark_style = styles.load_stylesheet(styles.AppearanceTheme.DARK)
         light_style = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
 
-        dark_rule = self._style_block(dark_style, "QComboBox#comboSpecifiedImageColorSpace:disabled")
-        light_rule = self._style_block(light_style, "QComboBox#comboSpecifiedImageColorSpace:disabled")
+        selector = "QWidget#tabAnalysis QComboBox#comboSpecifiedImageColorSpace:disabled"
+        dark_rule = self._style_block(dark_style, selector)
+        light_rule = self._style_block(light_style, selector)
 
         self.assertIn("color: #6f7782", dark_rule)
         self.assertIn("background: #24282e", dark_rule)
@@ -110,23 +111,67 @@ class UiStylesTests(unittest.TestCase):
         light_style = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
 
         self.assertIn("QLabel#labelRenderingIntentTitle", dark_style)
-        self.assertIn("QComboBox#comboRenderingIntent", dark_style)
+        self.assertIn("QWidget#tabAnalysis QComboBox", dark_style)
         self.assertIn("QLabel#labelRenderingIntentTitle", light_style)
-        self.assertIn("QComboBox#comboRenderingIntent", light_style)
+        self.assertIn("QWidget#tabAnalysis QComboBox", light_style)
 
     def test_analysis_color_selectors_use_fixed_width_styles(self) -> None:
-        selector = (
-            "QComboBox#comboSpecifiedImageColorSpace,\n"
-            "QComboBox#comboRenderingIntent,\n"
-            "QComboBox#comboDisplayColorSpace"
-        )
-
         for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
             with self.subTest(theme=theme):
-                rule = self._style_block(styles.load_stylesheet(theme), selector)
+                rule = self._style_block(styles.load_stylesheet(theme), "QWidget#tabAnalysis QComboBox")
 
                 self.assertIn("min-width: 144px", rule)
                 self.assertIn("max-width: 144px", rule)
+
+    def test_analysis_combo_popup_views_use_theme_contrast(self) -> None:
+        dark_style = styles.load_stylesheet(styles.AppearanceTheme.DARK)
+        light_style = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
+
+        dark_popup_rule = self._style_block(
+            dark_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView",
+        )
+        light_popup_rule = self._style_block(
+            light_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView",
+        )
+
+        self.assertIn("color: #edf1f5", dark_popup_rule)
+        self.assertIn("background: #171a1e", dark_popup_rule)
+        self.assertIn("border: 1px solid #424a54", dark_popup_rule)
+        self.assertIn("selection-background-color: #33465b", dark_popup_rule)
+        self.assertIn("selection-color: #ffffff", dark_popup_rule)
+        self.assertIn("color: #1f252d", light_popup_rule)
+        self.assertIn("background: #ffffff", light_popup_rule)
+        self.assertIn("border: 1px solid #cbd6e3", light_popup_rule)
+        self.assertIn("selection-background-color: #cfe5fb", light_popup_rule)
+        self.assertIn("selection-color: #0f172a", light_popup_rule)
+
+        dark_hover_rule = self._style_block(
+            dark_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView::item:hover",
+        )
+        dark_selected_rule = self._style_block(
+            dark_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected",
+        )
+        light_hover_rule = self._style_block(
+            light_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView::item:hover",
+        )
+        light_selected_rule = self._style_block(
+            light_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected",
+        )
+
+        self.assertIn("background: #29313a", dark_hover_rule)
+        self.assertIn("color: #ffffff", dark_hover_rule)
+        self.assertIn("background: #33465b", dark_selected_rule)
+        self.assertIn("color: #ffffff", dark_selected_rule)
+        self.assertIn("background: #e7f0fa", light_hover_rule)
+        self.assertIn("color: #0f172a", light_hover_rule)
+        self.assertIn("background: #cfe5fb", light_selected_rule)
+        self.assertIn("color: #0f172a", light_selected_rule)
 
     def test_theme_from_color_scheme_maps_system_values(self) -> None:
         self.assertEqual(
