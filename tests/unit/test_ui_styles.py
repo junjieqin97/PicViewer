@@ -228,10 +228,22 @@ class UiStylesTests(unittest.TestCase):
         )
         self.assertEqual(styles.AppearanceTheme.LIGHT, styles.theme_from_color_scheme(object()))
 
-    def test_stylesheet_does_not_override_native_tab_close_button(self) -> None:
+    def test_dark_stylesheet_uses_white_image_tab_close_button(self) -> None:
         style_sheet = styles.load_stylesheet(styles.AppearanceTheme.DARK)
 
-        self.assertNotIn("QTabBar::close-button", style_sheet)
+        close_button_block = self._style_block(
+            style_sheet,
+            "QTabWidget#tabsImages QTabBar::close-button",
+        )
+        close_icon_path = PROJECT_ROOT / "src/pic_viewer/ui/resources/icons/tab-close.svg"
+        close_icon = close_icon_path.read_text(encoding="utf-8")
+
+        self.assertIn("tab-close.svg", close_button_block)
+        self.assertIn(close_icon_path.as_posix(), close_button_block)
+        self.assertNotIn("@PICVIEWER_ICON_DIR@", close_button_block)
+        self.assertIn('stroke="#ffffff"', close_icon)
+        self.assertIn("width: 12px", close_button_block)
+        self.assertIn("height: 12px", close_button_block)
         self.assertNotIn("QToolButton#buttonImageTabClose", style_sheet)
 
     def test_light_stylesheet_uses_black_image_tab_close_button(self) -> None:
