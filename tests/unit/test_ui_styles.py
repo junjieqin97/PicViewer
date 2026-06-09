@@ -249,6 +249,36 @@ class UiStylesTests(unittest.TestCase):
         self.assertIn("width: 12px", close_button_block)
         self.assertIn("height: 12px", close_button_block)
 
+    def test_tab_bar_tracks_use_panel_backgrounds(self) -> None:
+        expected_backgrounds = {
+            styles.AppearanceTheme.DARK: {
+                "QTabWidget#tabsImages QTabBar": "#1f2226",
+                "QTabWidget#tabsInfo QTabBar": "#252a30",
+                "QTabWidget#tabsMetadata QTabBar": "#24282d",
+            },
+            styles.AppearanceTheme.LIGHT: {
+                "QTabWidget#tabsImages QTabBar": "#f5f7fa",
+                "QTabWidget#tabsInfo QTabBar": "#f7f9fc",
+                "QTabWidget#tabsMetadata QTabBar": "#ffffff",
+            },
+        }
+
+        for theme, selector_backgrounds in expected_backgrounds.items():
+            with self.subTest(theme=theme):
+                style_sheet = styles.load_stylesheet(theme)
+
+                for selector, background in selector_backgrounds.items():
+                    tab_widget_selector = selector.rsplit(" ", maxsplit=1)[0]
+
+                    self.assertIn(f"{selector} {{", style_sheet)
+                    self.assertIn(f"{tab_widget_selector}::tab-bar {{", style_sheet)
+
+                    tab_bar_block = self._style_block(style_sheet, selector)
+                    tab_bar_subcontrol_block = self._style_block(style_sheet, f"{tab_widget_selector}::tab-bar")
+
+                    self.assertIn(f"background: {background}", tab_bar_block)
+                    self.assertIn(f"background: {background}", tab_bar_subcontrol_block)
+
     def test_tab_headers_use_rounded_top_corners(self) -> None:
         style_sheet = styles.load_stylesheet()
 

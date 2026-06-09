@@ -51,6 +51,29 @@ QWidget#tabMetadata {
 
 QTabWidget#tabsImages::tab-bar {
     alignment: left;
+    background: #1f2226;
+}
+
+QTabWidget#tabsInfo::tab-bar {
+    alignment: left;
+    background: #252a30;
+}
+
+QTabWidget#tabsMetadata::tab-bar {
+    alignment: left;
+    background: #24282d;
+}
+
+QTabWidget#tabsImages QTabBar {
+    background: #1f2226;
+}
+
+QTabWidget#tabsInfo QTabBar {
+    background: #252a30;
+}
+
+QTabWidget#tabsMetadata QTabBar {
+    background: #24282d;
 }
 
 QTabBar::tab {
