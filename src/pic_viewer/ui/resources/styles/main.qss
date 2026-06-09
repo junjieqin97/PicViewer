@@ -56,8 +56,8 @@ QTabWidget#tabsImages::tab-bar {
 QTabBar::tab {
     background: #2b3036;
     color: #c7ccd2;
-    border: 1px solid #3b4149;
-    border-bottom-color: #24282d;
+    border: 1px solid transparent;
+    outline: none;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
     min-height: 0px;
@@ -73,15 +73,13 @@ QTabBar::tab:hover {
 QTabBar::tab:selected {
     background: #3a414a;
     color: #ffffff;
-    border-bottom-color: #3a414a;
 }
 
 QTabWidget#tabsImages QTabBar::tab {
     background: #272c33;
     color: #cbd2da;
-    border: 1px solid #454d57;
+    border: 1px solid transparent;
     border-top: 2px solid transparent;
-    border-bottom-color: #24282d;
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
     min-height: 0px;
@@ -92,22 +90,15 @@ QTabWidget#tabsImages QTabBar::tab {
 QTabWidget#tabsImages QTabBar::tab:hover {
     background: #34404b;
     color: #f3f6f8;
-    border-color: #5d6976;
-    border-top-color: #6f8fb8;
 }
 
 QTabWidget#tabsImages QTabBar::tab:selected {
     background: #3f4a56;
     color: #ffffff;
-    border-color: #718297;
-    border-top-color: #9fc4f0;
-    border-bottom-color: #3f4a56;
 }
 
 QTabWidget#tabsImages QTabBar::tab:selected:hover {
     background: #45515f;
-    border-color: #8294aa;
-    border-top-color: #b4d2f2;
 }
 
 QWidget#floatingTabWindow {

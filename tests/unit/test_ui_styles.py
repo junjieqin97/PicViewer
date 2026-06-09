@@ -268,6 +268,33 @@ class UiStylesTests(unittest.TestCase):
         self.assertIn("min-height: 0px", image_tab_block)
         self.assertIn("padding: 2px 10px 2px 12px", image_tab_block)
 
+    def test_tab_headers_do_not_draw_visible_borders(self) -> None:
+        for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
+            with self.subTest(theme=theme):
+                style_sheet = styles.load_stylesheet(theme)
+                tab_block = self._style_block(style_sheet, "QTabBar::tab")
+                image_tab_block = self._style_block(style_sheet, "QTabWidget#tabsImages QTabBar::tab")
+
+                self.assertIn("border: 1px solid transparent;", tab_block)
+                self.assertIn("outline: none;", tab_block)
+                self.assertNotIn("border-bottom-color:", tab_block)
+                self.assertIn("border: 1px solid transparent;", image_tab_block)
+                self.assertIn("border-top: 2px solid transparent;", image_tab_block)
+                self.assertNotIn("border-bottom-color:", image_tab_block)
+
+                for selector in (
+                    "QTabBar::tab:hover",
+                    "QTabBar::tab:selected",
+                    "QTabWidget#tabsImages QTabBar::tab:hover",
+                    "QTabWidget#tabsImages QTabBar::tab:selected",
+                    "QTabWidget#tabsImages QTabBar::tab:selected:hover",
+                ):
+                    state_block = self._style_block(style_sheet, selector)
+
+                    self.assertNotIn("border-color:", state_block)
+                    self.assertNotIn("border-top-color:", state_block)
+                    self.assertNotIn("border-bottom-color:", state_block)
+
     def test_load_stylesheet_returns_empty_string_when_file_missing(self) -> None:
         missing_path = PROJECT_ROOT / "missing-main.qss"
 
