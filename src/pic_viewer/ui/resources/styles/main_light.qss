@@ -52,12 +52,12 @@ QWidget#tabMetadata {
 
 QTabWidget#tabsImages::tab-bar {
     alignment: left;
-    background: #f5f7fa;
+    background: #ffffff;
 }
 
 QTabWidget#tabsInfo::tab-bar {
     alignment: left;
-    background: #f7f9fc;
+    background: #ffffff;
 }
 
 QTabWidget#tabsMetadata::tab-bar {
@@ -66,11 +66,11 @@ QTabWidget#tabsMetadata::tab-bar {
 }
 
 QTabWidget#tabsImages QTabBar {
-    background: #f5f7fa;
+    background: #ffffff;
 }
 
 QTabWidget#tabsInfo QTabBar {
-    background: #f7f9fc;
+    background: #ffffff;
 }
 
 QTabWidget#tabsMetadata QTabBar {
@@ -97,32 +97,6 @@ QTabBar::tab:hover {
 QTabBar::tab:selected {
     background: #ffffff;
     color: #111827;
-}
-
-QTabWidget#tabsImages QTabBar::tab {
-    background: #e8eef5;
-    color: #334155;
-    border: 1px solid transparent;
-    border-top: 2px solid transparent;
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
-    min-height: 0px;
-    padding: 2px 10px 2px 12px;
-    margin-right: 2px;
-}
-
-QTabWidget#tabsImages QTabBar::tab:hover {
-    background: #dfe8f2;
-    color: #172033;
-}
-
-QTabWidget#tabsImages QTabBar::tab:selected {
-    background: #ffffff;
-    color: #0f172a;
-}
-
-QTabWidget#tabsImages QTabBar::tab:selected:hover {
-    background: #f8fbff;
 }
 
 QTabWidget#tabsImages QTabBar::close-button {

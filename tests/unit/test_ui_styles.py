@@ -35,8 +35,8 @@ class UiStylesTests(unittest.TestCase):
         self.assertIn("color: #f0f3f6", style_sheet)
         self.assertIn("QTabWidget#tabsImages::tab-bar", style_sheet)
         self.assertIn("alignment: left", style_sheet)
-        self.assertIn("QTabWidget#tabsImages QTabBar::tab:selected", style_sheet)
-        self.assertIn("QTabWidget#tabsImages QTabBar::tab:hover", style_sheet)
+        self.assertIn("QTabBar::tab:selected", style_sheet)
+        self.assertIn("QTabBar::tab:hover", style_sheet)
         self.assertIn("QScrollArea#scrollImage", style_sheet)
         self.assertIn("QWidget#viewportImageCanvas", style_sheet)
         self.assertIn("QScrollArea#scrollImage QScrollBar:horizontal", style_sheet)
@@ -252,14 +252,14 @@ class UiStylesTests(unittest.TestCase):
     def test_tab_bar_tracks_use_panel_backgrounds(self) -> None:
         expected_backgrounds = {
             styles.AppearanceTheme.DARK: {
-                "QTabWidget#tabsImages QTabBar": "#1f2226",
-                "QTabWidget#tabsInfo QTabBar": "#252a30",
                 "QTabWidget#tabsMetadata QTabBar": "#24282d",
+                "QTabWidget#tabsImages QTabBar": "#24282d",
+                "QTabWidget#tabsInfo QTabBar": "#24282d",
             },
             styles.AppearanceTheme.LIGHT: {
-                "QTabWidget#tabsImages QTabBar": "#f5f7fa",
-                "QTabWidget#tabsInfo QTabBar": "#f7f9fc",
                 "QTabWidget#tabsMetadata QTabBar": "#ffffff",
+                "QTabWidget#tabsImages QTabBar": "#ffffff",
+                "QTabWidget#tabsInfo QTabBar": "#ffffff",
             },
         }
 
@@ -284,40 +284,47 @@ class UiStylesTests(unittest.TestCase):
 
         self.assertIn("border-top-left-radius: 5px", style_sheet)
         self.assertIn("border-top-right-radius: 5px", style_sheet)
-        self.assertIn("border-top-left-radius: 6px", style_sheet)
-        self.assertIn("border-top-right-radius: 6px", style_sheet)
+
+    def test_image_and_info_tabs_reuse_metadata_tab_header_styles(self) -> None:
+        selectors = (
+            "QTabWidget#tabsImages QTabBar::tab",
+            "QTabWidget#tabsImages QTabBar::tab:hover",
+            "QTabWidget#tabsImages QTabBar::tab:selected",
+            "QTabWidget#tabsImages QTabBar::tab:selected:hover",
+            "QTabWidget#tabsInfo QTabBar::tab",
+            "QTabWidget#tabsInfo QTabBar::tab:hover",
+            "QTabWidget#tabsInfo QTabBar::tab:selected",
+            "QTabWidget#tabsInfo QTabBar::tab:selected:hover",
+        )
+
+        for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
+            with self.subTest(theme=theme):
+                style_sheet = styles.load_stylesheet(theme)
+
+                for selector in selectors:
+                    self.assertNotIn(f"{selector} {{", style_sheet)
 
     def test_tab_headers_keep_height_close_to_text_height(self) -> None:
         style_sheet = styles.load_stylesheet()
 
         tab_block = self._style_block(style_sheet, "QTabBar::tab")
-        image_tab_block = self._style_block(style_sheet, "QTabWidget#tabsImages QTabBar::tab")
 
         self.assertIn("min-height: 0px", tab_block)
         self.assertIn("padding: 2px 12px", tab_block)
-        self.assertIn("min-height: 0px", image_tab_block)
-        self.assertIn("padding: 2px 10px 2px 12px", image_tab_block)
 
     def test_tab_headers_do_not_draw_visible_borders(self) -> None:
         for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
             with self.subTest(theme=theme):
                 style_sheet = styles.load_stylesheet(theme)
                 tab_block = self._style_block(style_sheet, "QTabBar::tab")
-                image_tab_block = self._style_block(style_sheet, "QTabWidget#tabsImages QTabBar::tab")
 
                 self.assertIn("border: 1px solid transparent;", tab_block)
                 self.assertIn("outline: none;", tab_block)
                 self.assertNotIn("border-bottom-color:", tab_block)
-                self.assertIn("border: 1px solid transparent;", image_tab_block)
-                self.assertIn("border-top: 2px solid transparent;", image_tab_block)
-                self.assertNotIn("border-bottom-color:", image_tab_block)
 
                 for selector in (
                     "QTabBar::tab:hover",
                     "QTabBar::tab:selected",
-                    "QTabWidget#tabsImages QTabBar::tab:hover",
-                    "QTabWidget#tabsImages QTabBar::tab:selected",
-                    "QTabWidget#tabsImages QTabBar::tab:selected:hover",
                 ):
                     state_block = self._style_block(style_sheet, selector)
 
