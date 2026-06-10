@@ -1,10 +1,14 @@
 # PicViewer
 
-This project is developed by AI.
-
-Please see the [AGENTS.md](AGENTS.md).
+> A desktop photo viewer for common image formats and camera RAW files.
 
 ## Installation and Startup
+
+On Windows, you can install it via the winget:
+
+```bash
+winget install PicViewer
+```
 
 Run from development source:
 
