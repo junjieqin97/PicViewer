@@ -32,6 +32,7 @@ RUNTIME_METADATA_PACKAGES = (
     "opencv-python",
     "numpy",
     "pyexiv2",
+    "Pillow",
     "rawpy",
 )
 OPTIONAL_METADATA_PACKAGES = {"rawpy"}
@@ -121,6 +122,11 @@ try:
     hiddenimports += collect_submodules("rawpy")
 except Exception:
     hiddenimports.append("rawpy")
+
+hiddenimports += [
+    "PIL.ImageCms",
+    "PIL._imagingcms",
+]
 
 a = Analysis(
     [str(SRC_ROOT / "pic_viewer" / "main.py")],

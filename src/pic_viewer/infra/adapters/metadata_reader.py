@@ -23,6 +23,20 @@ class MetadataReader:
     _read_lock = threading.RLock()
     _TIFF_PREFIXES = ("Exif.Image.", "Exif.Thumbnail.")
 
+    def warm_up(self) -> None:
+        """Load the optional pyexiv2 backend before image workers start.
+
+        pyexiv2 loads native libraries through ctypes on first import. Doing
+        that from a background QRunnable can hold the Python GIL long enough
+        to make the Qt main thread appear frozen while opening the first image.
+        Warm-up failures are non-fatal because metadata is optional.
+        """
+
+        try:
+            self._load_pyexiv2()
+        except (ImportError, OSError):
+            logger.warning("pyexiv2 is not available, metadata warm-up skipped", exc_info=True)
+
     def read(self, path: Path) -> ImageMetadata:
         """Extract metadata; failures degrade gracefully to empty sections.
 

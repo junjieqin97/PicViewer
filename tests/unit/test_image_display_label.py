@@ -7,6 +7,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from tests.unit.qt_test_utils import QtWidgetTestCase
 from PySide6 import QtCore, QtGui, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -18,7 +19,7 @@ from pic_viewer.domain.rules.reference_lines import ReferenceLineSettings  # noq
 from pic_viewer.ui.widgets.image_display_label import ImageDisplayLabel  # noqa: E402
 
 
-class ImageDisplayLabelTests(unittest.TestCase):
+class ImageDisplayLabelTests(QtWidgetTestCase):
     """Validate image display overlay rendering."""
 
     @classmethod

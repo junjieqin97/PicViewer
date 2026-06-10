@@ -6,8 +6,20 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.analysis_view_service import AnalysisViewService
 from pic_viewer.app.services.image_service import ImageService
+from pic_viewer.domain.models.color_space import (
+    DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+    DEFAULT_DISPLAY_COLOR_SPACE,
+    LOCAL_COLOR_PROFILE_CHOICE_DATA,
+    COLOR_SPACE_PRESET_ORDER,
+)
+from pic_viewer.domain.models.rendering_intent import (
+    DEFAULT_RENDERING_INTENT,
+    RENDERING_INTENT_ORDER,
+    RenderingIntent,
+)
 from pic_viewer.ui.resources import styles
 from pic_viewer.ui.resources.icons import icon_path
+from pic_viewer.ui.widgets.combo_popup_delegate import ComboPopupItemDelegate
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel
 from pic_viewer.ui.widgets.detachable_tabs import DetachableTabWidget
 
@@ -65,6 +77,8 @@ class MainWindowUI:
         self.actZoomOut.setObjectName("actZoomOut")
         self.actFitToWindow = QtGui.QAction(self._main_window)
         self.actFitToWindow.setObjectName("actFitToWindow")
+        self.actShowInFolder = QtGui.QAction(self._main_window)
+        self.actShowInFolder.setObjectName("actShowInFolder")
         self.actAppearanceLight = QtGui.QAction(self._main_window)
         self.actAppearanceLight.setObjectName("actAppearanceLight")
         self.actAppearanceLight.setCheckable(True)
@@ -305,6 +319,8 @@ class MainWindowUI:
         self.menuImageContext.addAction(self.actZoomOut)
         self.menuImageContext.addSeparator()
         self.menuImageContext.addAction(self.actFitToWindow)
+        self.menuImageContext.addSeparator()
+        self.menuImageContext.addAction(self.actShowInFolder)
 
     def create_widgets(self) -> None:
         self.info_panel_histogram_size = QtCore.QSize(
@@ -447,55 +463,6 @@ class MainWindowUI:
         self.layoutInfo.setObjectName("layoutInfo")
         self.layoutInfo.setContentsMargins(8, 8, 8, 8)
 
-        self.widgetAnalysisModeSummary = QtWidgets.QWidget(self.scrollInfo)
-        self.widgetAnalysisModeSummary.setObjectName("widgetAnalysisModeSummary")
-        self.widgetAnalysisModeSummary.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Expanding,
-            QtWidgets.QSizePolicy.Policy.Fixed,
-        )
-        summary_layout = QtWidgets.QGridLayout(self.widgetAnalysisModeSummary)
-        summary_layout.setObjectName("layoutAnalysisModeSummary")
-        summary_layout.setContentsMargins(4, 0, 4, 4)
-        summary_layout.setHorizontalSpacing(8)
-        summary_layout.setVerticalSpacing(2)
-
-        self.labelAnalysisModeTitle = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
-        self.labelAnalysisModeTitle.setObjectName("labelAnalysisModeTitle")
-        self.labelAnalysisModeValue = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
-        self.labelAnalysisModeValue.setObjectName("labelAnalysisModeValue")
-        self.labelAnalysisModeValue.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Expanding,
-            QtWidgets.QSizePolicy.Policy.Preferred,
-        )
-        self.labelAnalysisModeValue.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.labelAnalysisChannelTitle = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
-        self.labelAnalysisChannelTitle.setObjectName("labelAnalysisChannelTitle")
-        self.labelAnalysisChannelValue = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
-        self.labelAnalysisChannelValue.setObjectName("labelAnalysisChannelValue")
-        self.labelAnalysisChannelValue.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Expanding,
-            QtWidgets.QSizePolicy.Policy.Preferred,
-        )
-        self.labelAnalysisChannelValue.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.labelPseudoColorTitle = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
-        self.labelPseudoColorTitle.setObjectName("labelPseudoColorTitle")
-        self.labelPseudoColorValue = QtWidgets.QLabel(self.widgetAnalysisModeSummary)
-        self.labelPseudoColorValue.setObjectName("labelPseudoColorValue")
-        self.labelPseudoColorValue.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Expanding,
-            QtWidgets.QSizePolicy.Policy.Preferred,
-        )
-        self.labelPseudoColorValue.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
-
-        summary_layout.addWidget(self.labelAnalysisModeTitle, 0, 0)
-        summary_layout.addWidget(self.labelAnalysisModeValue, 0, 1)
-        summary_layout.addWidget(self.labelAnalysisChannelTitle, 1, 0)
-        summary_layout.addWidget(self.labelAnalysisChannelValue, 1, 1)
-        summary_layout.addWidget(self.labelPseudoColorTitle, 2, 0)
-        summary_layout.addWidget(self.labelPseudoColorValue, 2, 1)
-        summary_layout.setColumnStretch(1, 1)
-        self.layoutInfo.addWidget(self.widgetAnalysisModeSummary)
-
         self.tabsInfo = DetachableTabWidget("info", self.scrollInfo)
         self.tabsInfo.setObjectName("tabsInfo")
         self.tabsInfo.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
@@ -507,10 +474,114 @@ class MainWindowUI:
         analysis_layout.setContentsMargins(6, 6, 6, 6)
         analysis_layout.setSpacing(8)
 
+        self.widgetImageColorSpace = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetImageColorSpace.setObjectName("widgetImageColorSpace")
+        image_space_layout = QtWidgets.QHBoxLayout(self.widgetImageColorSpace)
+        image_space_layout.setObjectName("layoutImageColorSpace")
+        image_space_layout.setContentsMargins(0, 0, 0, 0)
+        image_space_layout.setSpacing(8)
+        self.labelImageColorSpaceTitle = QtWidgets.QLabel(self.widgetImageColorSpace)
+        self.labelImageColorSpaceTitle.setObjectName("labelImageColorSpaceTitle")
+        self.labelImageColorSpaceValue = QtWidgets.QLabel(self.widgetImageColorSpace)
+        self.labelImageColorSpaceValue.setObjectName("labelImageColorSpaceValue")
+        self.labelImageColorSpaceValue.setTextInteractionFlags(
+            QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self.labelImageColorSpaceValue.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Fixed,
+        )
+        image_space_layout.addWidget(self.labelImageColorSpaceTitle)
+        image_space_layout.addWidget(self.labelImageColorSpaceValue, 1)
+        analysis_layout.addWidget(self.widgetImageColorSpace)
+
+        self.widgetSpecifiedImageColorSpace = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetSpecifiedImageColorSpace.setObjectName("widgetSpecifiedImageColorSpace")
+        specified_space_layout = QtWidgets.QHBoxLayout(self.widgetSpecifiedImageColorSpace)
+        specified_space_layout.setObjectName("layoutSpecifiedImageColorSpace")
+        specified_space_layout.setContentsMargins(0, 0, 0, 0)
+        specified_space_layout.setSpacing(8)
+        self.labelSpecifiedImageColorSpaceTitle = QtWidgets.QLabel(self.widgetSpecifiedImageColorSpace)
+        self.labelSpecifiedImageColorSpaceTitle.setObjectName("labelSpecifiedImageColorSpaceTitle")
+        self.comboSpecifiedImageColorSpace = QtWidgets.QComboBox(self.widgetSpecifiedImageColorSpace)
+        self.comboSpecifiedImageColorSpace.setObjectName("comboSpecifiedImageColorSpace")
+        self.comboSpecifiedImageColorSpace.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Fixed,
+        )
+        for color_space in COLOR_SPACE_PRESET_ORDER:
+            self.comboSpecifiedImageColorSpace.addItem(color_space.display_name, color_space)
+        self.comboSpecifiedImageColorSpace.addItem(
+            self._tr("Choose a local ICC..."),
+            LOCAL_COLOR_PROFILE_CHOICE_DATA,
+        )
+        specified_index = self.comboSpecifiedImageColorSpace.findData(DEFAULT_ASSUMED_IMAGE_COLOR_SPACE)
+        if specified_index >= 0:
+            self.comboSpecifiedImageColorSpace.setCurrentIndex(specified_index)
+        self._apply_combo_popup_delegate(self.comboSpecifiedImageColorSpace)
+        specified_space_layout.addWidget(self.labelSpecifiedImageColorSpaceTitle)
+        specified_space_layout.addWidget(self.comboSpecifiedImageColorSpace, 1)
+        analysis_layout.addWidget(self.widgetSpecifiedImageColorSpace)
+
+        self.widgetRenderingIntent = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetRenderingIntent.setObjectName("widgetRenderingIntent")
+        rendering_intent_layout = QtWidgets.QHBoxLayout(self.widgetRenderingIntent)
+        rendering_intent_layout.setObjectName("layoutRenderingIntent")
+        rendering_intent_layout.setContentsMargins(0, 0, 0, 0)
+        rendering_intent_layout.setSpacing(8)
+        self.labelRenderingIntentTitle = QtWidgets.QLabel(self.widgetRenderingIntent)
+        self.labelRenderingIntentTitle.setObjectName("labelRenderingIntentTitle")
+        self.comboRenderingIntent = QtWidgets.QComboBox(self.widgetRenderingIntent)
+        self.comboRenderingIntent.setObjectName("comboRenderingIntent")
+        self.comboRenderingIntent.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Fixed,
+        )
+        for rendering_intent in RENDERING_INTENT_ORDER:
+            self.comboRenderingIntent.addItem(rendering_intent.display_name, rendering_intent)
+        rendering_index = self.comboRenderingIntent.findData(DEFAULT_RENDERING_INTENT)
+        if rendering_index >= 0:
+            self.comboRenderingIntent.setCurrentIndex(rendering_index)
+        self._apply_combo_popup_delegate(self.comboRenderingIntent)
+        rendering_intent_layout.addWidget(self.labelRenderingIntentTitle)
+        rendering_intent_layout.addWidget(self.comboRenderingIntent, 1)
+        analysis_layout.addWidget(self.widgetRenderingIntent)
+
+        self.widgetDisplayColorSpace = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetDisplayColorSpace.setObjectName("widgetDisplayColorSpace")
+        display_space_layout = QtWidgets.QHBoxLayout(self.widgetDisplayColorSpace)
+        display_space_layout.setObjectName("layoutDisplayColorSpace")
+        display_space_layout.setContentsMargins(0, 0, 0, 0)
+        display_space_layout.setSpacing(8)
+        self.labelDisplayColorSpaceTitle = QtWidgets.QLabel(self.widgetDisplayColorSpace)
+        self.labelDisplayColorSpaceTitle.setObjectName("labelDisplayColorSpaceTitle")
+        self.comboDisplayColorSpace = QtWidgets.QComboBox(self.widgetDisplayColorSpace)
+        self.comboDisplayColorSpace.setObjectName("comboDisplayColorSpace")
+        self.comboDisplayColorSpace.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Fixed,
+        )
+        for color_space in COLOR_SPACE_PRESET_ORDER:
+            self.comboDisplayColorSpace.addItem(color_space.display_name, color_space)
+        self.comboDisplayColorSpace.addItem(
+            self._tr("Choose a local ICC..."),
+            LOCAL_COLOR_PROFILE_CHOICE_DATA,
+        )
+        default_index = self.comboDisplayColorSpace.findData(DEFAULT_DISPLAY_COLOR_SPACE)
+        if default_index >= 0:
+            self.comboDisplayColorSpace.setCurrentIndex(default_index)
+        self._apply_combo_popup_delegate(self.comboDisplayColorSpace)
+        display_space_layout.addWidget(self.labelDisplayColorSpaceTitle)
+        display_space_layout.addWidget(self.comboDisplayColorSpace, 1)
+        analysis_layout.addWidget(self.widgetDisplayColorSpace)
+
         self.frameHistogramAnalysis = QtWidgets.QFrame(self.tabAnalysis)
         self.frameHistogramAnalysis.setObjectName("frameHistogramAnalysis")
         self.frameHistogramAnalysis.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
-        self.frameHistogramAnalysis.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.frameHistogramAnalysis.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Fixed,
+            QtWidgets.QSizePolicy.Policy.Fixed,
+        )
         hist_frame_layout = QtWidgets.QVBoxLayout(self.frameHistogramAnalysis)
         hist_frame_layout.setContentsMargins(8, 8, 8, 8)
         hist_frame_layout.setSpacing(0)
@@ -654,6 +725,10 @@ class MainWindowUI:
         separator.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
         layout.addWidget(separator)
 
+    @staticmethod
+    def _apply_combo_popup_delegate(combo: QtWidgets.QComboBox) -> None:
+        combo.setItemDelegate(ComboPopupItemDelegate(combo))
+
     def create_layouts(self) -> None:
         self.layoutMain = QtWidgets.QVBoxLayout(self.central)
         self.layoutMain.setObjectName("layoutMain")
@@ -737,6 +812,7 @@ class MainWindowUI:
         self.actZoomIn.setText(self._tr("Zoom In"))
         self.actZoomOut.setText(self._tr("Zoom Out"))
         self.actFitToWindow.setText(self._tr("Fit to Window"))
+        self.actShowInFolder.setText(self._tr("Show in Folder"))
         self.actAppearanceLight.setText(self._tr("Light"))
         self.actAppearanceDark.setText(self._tr("Dark"))
         self.actToggleInfoPanel.setText(self._tr("Info Panel"))
@@ -780,18 +856,23 @@ class MainWindowUI:
         self.tabsMetadata.setTabText(self.tabsMetadata.indexOf(self.tabMetadataIptc), self._tr("IPTC"))
         self.tabsMetadata.setTabText(self.tabsMetadata.indexOf(self.tabMetadataTiff), self._tr("TIFF"))
 
-        self.labelAnalysisModeTitle.setText(self._tr("Analysis Mode"))
-        self.labelAnalysisModeValue.setText(self._tr("Luma Mode"))
-        self.labelAnalysisChannelTitle.setText(self._tr("RGB Channels"))
-        self.labelAnalysisChannelValue.setText(self._tr("Not Applicable"))
-        self.labelPseudoColorTitle.setText(self._tr("Pseudo Color State"))
-        self.labelPseudoColorValue.setText(
-            self._tr("Underexposed: {under} / Overexposed: {over} / Peaks: {peaks}").format(
-                under=self._tr("Off"),
-                over=self._tr("Off"),
-                peaks=self._tr("Off"),
+        self.labelImageColorSpaceTitle.setText(self._tr("Image Color Space"))
+        self.labelImageColorSpaceValue.setText(self._tr("Not Loaded"))
+        self.labelSpecifiedImageColorSpaceTitle.setText(self._tr("Specify Image Color Space"))
+        self.labelRenderingIntentTitle.setText(self._tr("Rendering Intent"))
+        self.labelDisplayColorSpaceTitle.setText(self._tr("Display Color Space"))
+        for index, color_space in enumerate(COLOR_SPACE_PRESET_ORDER):
+            self.comboSpecifiedImageColorSpace.setItemText(index, self._tr(color_space.display_name))
+            self.comboDisplayColorSpace.setItemText(index, self._tr(color_space.display_name))
+        for combo in (self.comboSpecifiedImageColorSpace, self.comboDisplayColorSpace):
+            choose_index = combo.findData(LOCAL_COLOR_PROFILE_CHOICE_DATA)
+            if choose_index >= 0:
+                combo.setItemText(choose_index, self._tr("Choose a local ICC..."))
+        for index, rendering_intent in enumerate(RENDERING_INTENT_ORDER):
+            self.comboRenderingIntent.setItemText(
+                index,
+                self._translated_rendering_intent_label(rendering_intent),
             )
-        )
 
         self.widgetHistogram.setText(self._tr("Histogram Placeholder"))
         self.widgetHistogram.set_triangle_tooltips(
@@ -820,6 +901,15 @@ class MainWindowUI:
         )
         for action in actions:
             action.setToolTip(action.text())
+
+    def _translated_rendering_intent_label(self, rendering_intent: RenderingIntent) -> str:
+        labels = {
+            RenderingIntent.PERCEPTUAL: self._tr("Perceptual"),
+            RenderingIntent.RELATIVE_COLORIMETRIC: self._tr("Relative Colorimetric"),
+            RenderingIntent.SATURATION: self._tr("Saturation"),
+            RenderingIntent.ABSOLUTE_COLORIMETRIC: self._tr("Absolute Colorimetric"),
+        }
+        return labels[rendering_intent]
 
     def _set_metadata_headers(self) -> None:
         headers = [self._tr("Key"), self._tr("Value")]

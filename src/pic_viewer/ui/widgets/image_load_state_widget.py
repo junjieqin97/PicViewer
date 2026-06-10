@@ -20,14 +20,17 @@ class ImageLoadStateWidget(QtWidgets.QWidget):
 
         Args:
             title: Short state title.
-            detail: Additional state detail.
+            detail: Ignored for loading states; kept for API compatibility.
         """
 
         self.label_title.setText(title)
-        self.label_detail.setText(detail)
+        self.label_detail.setText("")
+        self.label_detail.setVisible(False)
         self.label_reason.setText("")
+        self.label_reason.setVisible(False)
         self.label_file_name.setText("")
-        self.progress.setVisible(True)
+        self.label_file_name.setVisible(False)
+        self.progress.setVisible(False)
         self.button_retry.setVisible(False)
 
     def set_error(self, title: str, reason: str, file_name: str, retry_text: str) -> None:
@@ -42,8 +45,11 @@ class ImageLoadStateWidget(QtWidgets.QWidget):
 
         self.label_title.setText(title)
         self.label_detail.setText("")
+        self.label_detail.setVisible(False)
         self.label_reason.setText(reason)
+        self.label_reason.setVisible(True)
         self.label_file_name.setText(file_name)
+        self.label_file_name.setVisible(True)
         self.progress.setVisible(False)
         self.button_retry.setText(retry_text)
         self.button_retry.setVisible(True)

@@ -7,6 +7,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from tests.unit.qt_test_utils import QtWidgetTestCase
 from PySide6 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -17,7 +18,7 @@ if str(SRC_ROOT) not in sys.path:
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 
 
-class MainWindowReferenceLineTests(unittest.TestCase):
+class MainWindowReferenceLineTests(QtWidgetTestCase):
     """Validate reference line menu actions and image label compatibility."""
 
     @classmethod
