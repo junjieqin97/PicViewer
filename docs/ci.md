@@ -44,6 +44,11 @@ The packaging scripts remain the source of truth for generating the app
 bundle, DMG, and MSI. The workflow only orchestrates those scripts in GitHub
 Actions.
 
+The release jobs pin Qt/PySide6 to `6.9.2` through `QT_RUNTIME_VERSION` before
+installing packaging dependencies. Keeping the native Qt runtime stable across
+GitHub runner image updates reduces release-only failures in headless unit tests
+and PyInstaller packaging.
+
 ## Windows WiX EULA Handling
 
 The Windows job installs WiX with the .NET SDK and runs:

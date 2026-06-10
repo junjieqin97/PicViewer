@@ -7,6 +7,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from tests.unit.qt_test_utils import QtWidgetTestCase
 from PySide6 import QtCore, QtGui, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -18,7 +19,7 @@ from pic_viewer.ui.widgets.combo_popup_delegate import ComboPopupItemDelegate  #
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 
 
-class ComboPopupItemDelegateTests(unittest.TestCase):
+class ComboPopupItemDelegateTests(QtWidgetTestCase):
     """Validate combo popup item highlighting independent of platform delegates."""
 
     @classmethod
