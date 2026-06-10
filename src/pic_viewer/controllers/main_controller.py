@@ -147,6 +147,7 @@ class MainController(
         self._ui.actZoomIn.triggered.connect(self._zoom_in)
         self._ui.actZoomOut.triggered.connect(self._zoom_out)
         self._ui.actFitToWindow.triggered.connect(self._fit_to_window)
+        self._ui.actShowInFolder.triggered.connect(self._show_current_image_in_folder)
 
         self._ui.actToggleInfoPanel.toggled.connect(self._toggle_info_panel)
         self._ui.actToggleAnalysisToolbar.toggled.connect(self._toggle_analysis_toolbar)

@@ -52,13 +52,36 @@ QWidget#tabMetadata {
 
 QTabWidget#tabsImages::tab-bar {
     alignment: left;
+    background: #ffffff;
+}
+
+QTabWidget#tabsInfo::tab-bar {
+    alignment: left;
+    background: #ffffff;
+}
+
+QTabWidget#tabsMetadata::tab-bar {
+    alignment: left;
+    background: #ffffff;
+}
+
+QTabWidget#tabsImages QTabBar {
+    background: #ffffff;
+}
+
+QTabWidget#tabsInfo QTabBar {
+    background: #ffffff;
+}
+
+QTabWidget#tabsMetadata QTabBar {
+    background: #ffffff;
 }
 
 QTabBar::tab {
     background: #edf2f7;
     color: #344154;
-    border: 1px solid #d4dce7;
-    border-bottom-color: #ffffff;
+    border: 1px solid transparent;
+    outline: none;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
     min-height: 0px;
@@ -74,41 +97,12 @@ QTabBar::tab:hover {
 QTabBar::tab:selected {
     background: #ffffff;
     color: #111827;
-    border-bottom-color: #ffffff;
 }
 
-QTabWidget#tabsImages QTabBar::tab {
-    background: #e8eef5;
-    color: #334155;
-    border: 1px solid #cdd7e3;
-    border-top: 2px solid transparent;
-    border-bottom-color: #ffffff;
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
-    min-height: 0px;
-    padding: 2px 10px 2px 12px;
-    margin-right: 2px;
-}
-
-QTabWidget#tabsImages QTabBar::tab:hover {
-    background: #dfe8f2;
-    color: #172033;
-    border-color: #b8c7d9;
-    border-top-color: #4d8fd3;
-}
-
-QTabWidget#tabsImages QTabBar::tab:selected {
-    background: #ffffff;
-    color: #0f172a;
-    border-color: #a9b9cc;
-    border-top-color: #2f7fca;
-    border-bottom-color: #ffffff;
-}
-
-QTabWidget#tabsImages QTabBar::tab:selected:hover {
-    background: #f8fbff;
-    border-color: #98adc3;
-    border-top-color: #216eb3;
+QTabWidget#tabsImages QTabBar::close-button {
+    image: url("@PICVIEWER_ICON_DIR@/tab-close-on-light.svg");
+    width: 12px;
+    height: 12px;
 }
 
 QWidget#floatingTabWindow {
@@ -267,12 +261,6 @@ QFrame#separatorAnalysisToolbar {
     margin-right: 4px;
 }
 
-QWidget#widgetAnalysisModeSummary {
-    background: #ffffff;
-    border: 1px solid #d3dce8;
-    border-radius: 4px;
-}
-
 QWidget#widgetImageColorSpace,
 QWidget#widgetSpecifiedImageColorSpace,
 QWidget#widgetRenderingIntent,
@@ -280,9 +268,6 @@ QWidget#widgetDisplayColorSpace {
     background: transparent;
 }
 
-QLabel#labelAnalysisModeTitle,
-QLabel#labelAnalysisChannelTitle,
-QLabel#labelPseudoColorTitle,
 QLabel#labelImageColorSpaceTitle,
 QLabel#labelSpecifiedImageColorSpaceTitle,
 QLabel#labelRenderingIntentTitle,
@@ -290,9 +275,7 @@ QLabel#labelDisplayColorSpaceTitle {
     color: #657386;
 }
 
-QComboBox#comboSpecifiedImageColorSpace,
-QComboBox#comboRenderingIntent,
-QComboBox#comboDisplayColorSpace {
+QWidget#tabAnalysis QComboBox {
     color: #1f252d;
     background: #ffffff;
     border: 1px solid #cbd6e3;
@@ -302,15 +285,46 @@ QComboBox#comboDisplayColorSpace {
     max-width: 144px;
 }
 
-QComboBox#comboSpecifiedImageColorSpace:disabled {
+QWidget#tabAnalysis QComboBox QAbstractItemView {
+    color: #1f252d;
+    background: #ffffff;
+    border: 1px solid #cbd6e3;
+    selection-background-color: #b9d7f3;
+    selection-color: #0f172a;
+    outline: none;
+}
+
+QWidget#tabAnalysis QComboBox QAbstractItemView::item {
+    padding: 4px 8px;
+    min-height: 20px;
+}
+
+QWidget#tabAnalysis QComboBox QAbstractItemView::item:hover {
+    background: #cfe5fb;
+    color: #0f172a;
+}
+
+QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected {
+    background: #b9d7f3;
+    color: #0f172a;
+}
+
+QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:active {
+    background: #b9d7f3;
+    color: #0f172a;
+}
+
+QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:!active {
+    background: #b9d7f3;
+    color: #0f172a;
+}
+
+QWidget#tabAnalysis QComboBox#comboSpecifiedImageColorSpace:disabled {
     color: #9aa4af;
     background: #eef2f6;
     border: 1px solid #d8e0ea;
 }
 
-QLabel#labelAnalysisModeValue,
-QLabel#labelAnalysisChannelValue,
-QLabel#labelPseudoColorValue,
 QLabel#labelImageColorSpaceValue {
     color: #1f252d;
 }

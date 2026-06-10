@@ -361,29 +361,6 @@ class MainControllerAnalysisMixin:
         if not rgb_mode:
             with block_signals(self._ui.actChannelAll):
                 self._ui.actChannelAll.setChecked(True)
-        self._sync_analysis_mode_summary()
-
-    def _sync_analysis_mode_summary(self) -> None:
-        """Update the visible analysis mode summary from current settings."""
-
-        if not hasattr(self._ui, "labelAnalysisModeValue"):
-            return
-
-        if self._view_settings.mode == LumaRgbMode.LUMA:
-            mode_text = self._tr("Luma Mode")
-            channel_text = self._tr("Not Applicable")
-        else:
-            mode_text = self._tr("RGB Mode")
-            channel_text_by_channel = {
-                RgbChannel.ALL: self._tr("All"),
-                RgbChannel.RED: self._tr("Red"),
-                RgbChannel.GREEN: self._tr("Green"),
-                RgbChannel.BLUE: self._tr("Blue"),
-            }
-            channel_text = channel_text_by_channel[self._view_settings.channel]
-
-        self._ui.labelAnalysisModeValue.setText(mode_text)
-        self._ui.labelAnalysisChannelValue.setText(channel_text)
 
     def _on_underexposed_toggled(self, active: bool) -> None:
         """Handle underexposed clipping toggle changes."""
@@ -424,8 +401,6 @@ class MainControllerAnalysisMixin:
                 self._ui.actToggleOverexposed.setChecked(self._show_overexposed)
         self._sync_focus_peak_actions()
 
-        self._sync_pseudo_color_summary()
-
         histogram_widget = self._ui.widgetHistogram
         if not hasattr(histogram_widget, "set_clipping_state"):
             return
@@ -434,25 +409,6 @@ class MainControllerAnalysisMixin:
                 self._show_underexposed,
                 self._show_overexposed,
             )
-
-    def _sync_pseudo_color_summary(self) -> None:
-        """Update the visible pseudo-color toggle summary from controller state."""
-
-        if not hasattr(self._ui, "labelPseudoColorValue"):
-            return
-
-        enabled_text = self._tr("On")
-        disabled_text = self._tr("Off")
-        under_text = enabled_text if self._show_underexposed else disabled_text
-        over_text = enabled_text if self._show_overexposed else disabled_text
-        peak_text = self._focus_peak_level_summary_text()
-        self._ui.labelPseudoColorValue.setText(
-            self._tr("Underexposed: {under} / Overexposed: {over} / Peaks: {peaks}").format(
-                under=under_text,
-                over=over_text,
-                peaks=peak_text,
-            )
-        )
 
     def _sync_focus_peak_actions(self) -> None:
         """Keep focus peaking menu actions aligned with controller state."""
@@ -469,19 +425,6 @@ class MainControllerAnalysisMixin:
             action = getattr(self._ui, action_name)
             with block_signals(action):
                 action.setChecked(current_level == level)
-
-    def _focus_peak_level_summary_text(self) -> str:
-        """Return localized focus peaking status text."""
-
-        level = getattr(self, "_focus_peak_level", None)
-        if level is None:
-            return self._tr("Off")
-        labels = {
-            FocusPeakLevel.HIGH: self._tr("High"),
-            FocusPeakLevel.MEDIUM: self._tr("Medium"),
-            FocusPeakLevel.LOW: self._tr("Low"),
-        }
-        return labels[level]
 
     def _refresh_overlay_for_current_image(self) -> None:
         """Refresh current image pixmap when clipping overlay state changes."""
@@ -564,11 +507,6 @@ class MainControllerAnalysisMixin:
                 self._set_image_color_space_value(
                     self._format_source_color_profile_info(preview.source_color_profile)
                 )
-                self._refresh_tab_preview_pixmap(
-                    image_path,
-                    preview.preview_rgb,
-                    preview.display_color_space,
-                )
             return
 
         self._sync_specified_image_color_space_enabled(data.analysis.source_color_profile)
@@ -630,6 +568,7 @@ class MainControllerAnalysisMixin:
             return
         if str(path) not in self._images_by_path:
             return
+        self._refresh_current_image_pixmap()
 
     def _set_info_placeholders(self) -> None:
         self._current_analysis_render_key = None
@@ -718,9 +657,6 @@ class MainControllerAnalysisMixin:
             return
         data = self._images_by_path.get(str(path))
         if data is None:
-            preview = self._preview_by_path.get(str(path))
-            if preview is not None:
-                self._refresh_tab_preview_pixmap(path, preview.preview_rgb, preview.display_color_space)
             return
         self._refresh_tab_pixmap(path, data.analysis)
 
@@ -728,16 +664,6 @@ class MainControllerAnalysisMixin:
         """Render the image preview inside the tab for the given path."""
 
         self._set_tab_pixmap(path, analysis.preview_rgb, analysis.display_color_space)
-
-    def _refresh_tab_preview_pixmap(
-        self,
-        path: Path,
-        preview_rgb: np.ndarray,
-        display_color_space: ColorProfileSpec,
-    ) -> None:
-        """Render a lightweight preview before full analysis completes."""
-
-        self._set_tab_pixmap(path, preview_rgb, display_color_space)
 
     def _set_tab_pixmap(
         self,

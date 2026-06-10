@@ -51,13 +51,36 @@ QWidget#tabMetadata {
 
 QTabWidget#tabsImages::tab-bar {
     alignment: left;
+    background: #24282d;
+}
+
+QTabWidget#tabsInfo::tab-bar {
+    alignment: left;
+    background: #24282d;
+}
+
+QTabWidget#tabsMetadata::tab-bar {
+    alignment: left;
+    background: #24282d;
+}
+
+QTabWidget#tabsImages QTabBar {
+    background: #24282d;
+}
+
+QTabWidget#tabsInfo QTabBar {
+    background: #24282d;
+}
+
+QTabWidget#tabsMetadata QTabBar {
+    background: #24282d;
 }
 
 QTabBar::tab {
     background: #2b3036;
     color: #c7ccd2;
-    border: 1px solid #3b4149;
-    border-bottom-color: #24282d;
+    border: 1px solid transparent;
+    outline: none;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
     min-height: 0px;
@@ -73,41 +96,12 @@ QTabBar::tab:hover {
 QTabBar::tab:selected {
     background: #3a414a;
     color: #ffffff;
-    border-bottom-color: #3a414a;
 }
 
-QTabWidget#tabsImages QTabBar::tab {
-    background: #272c33;
-    color: #cbd2da;
-    border: 1px solid #454d57;
-    border-top: 2px solid transparent;
-    border-bottom-color: #24282d;
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
-    min-height: 0px;
-    padding: 2px 10px 2px 12px;
-    margin-right: 2px;
-}
-
-QTabWidget#tabsImages QTabBar::tab:hover {
-    background: #34404b;
-    color: #f3f6f8;
-    border-color: #5d6976;
-    border-top-color: #6f8fb8;
-}
-
-QTabWidget#tabsImages QTabBar::tab:selected {
-    background: #3f4a56;
-    color: #ffffff;
-    border-color: #718297;
-    border-top-color: #9fc4f0;
-    border-bottom-color: #3f4a56;
-}
-
-QTabWidget#tabsImages QTabBar::tab:selected:hover {
-    background: #45515f;
-    border-color: #8294aa;
-    border-top-color: #b4d2f2;
+QTabWidget#tabsImages QTabBar::close-button {
+    image: url("@PICVIEWER_ICON_DIR@/tab-close.svg");
+    width: 12px;
+    height: 12px;
 }
 
 QWidget#floatingTabWindow {
@@ -266,12 +260,6 @@ QFrame#separatorAnalysisToolbar {
     margin-right: 4px;
 }
 
-QWidget#widgetAnalysisModeSummary {
-    background: #20242a;
-    border: 1px solid #384049;
-    border-radius: 4px;
-}
-
 QWidget#widgetImageColorSpace,
 QWidget#widgetSpecifiedImageColorSpace,
 QWidget#widgetRenderingIntent,
@@ -279,9 +267,6 @@ QWidget#widgetDisplayColorSpace {
     background: transparent;
 }
 
-QLabel#labelAnalysisModeTitle,
-QLabel#labelAnalysisChannelTitle,
-QLabel#labelPseudoColorTitle,
 QLabel#labelImageColorSpaceTitle,
 QLabel#labelSpecifiedImageColorSpaceTitle,
 QLabel#labelRenderingIntentTitle,
@@ -289,9 +274,7 @@ QLabel#labelDisplayColorSpaceTitle {
     color: #9aa4af;
 }
 
-QComboBox#comboSpecifiedImageColorSpace,
-QComboBox#comboRenderingIntent,
-QComboBox#comboDisplayColorSpace {
+QWidget#tabAnalysis QComboBox {
     color: #edf1f5;
     background: #171a1e;
     border: 1px solid #424a54;
@@ -301,15 +284,46 @@ QComboBox#comboDisplayColorSpace {
     max-width: 144px;
 }
 
-QComboBox#comboSpecifiedImageColorSpace:disabled {
+QWidget#tabAnalysis QComboBox QAbstractItemView {
+    color: #edf1f5;
+    background: #171a1e;
+    border: 1px solid #424a54;
+    selection-background-color: #3d6fa3;
+    selection-color: #ffffff;
+    outline: none;
+}
+
+QWidget#tabAnalysis QComboBox QAbstractItemView::item {
+    padding: 4px 8px;
+    min-height: 20px;
+}
+
+QWidget#tabAnalysis QComboBox QAbstractItemView::item:hover {
+    background: #345f8d;
+    color: #ffffff;
+}
+
+QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected {
+    background: #3d6fa3;
+    color: #ffffff;
+}
+
+QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:active {
+    background: #3d6fa3;
+    color: #ffffff;
+}
+
+QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:!active {
+    background: #3d6fa3;
+    color: #ffffff;
+}
+
+QWidget#tabAnalysis QComboBox#comboSpecifiedImageColorSpace:disabled {
     color: #6f7782;
     background: #24282e;
     border: 1px solid #343b44;
 }
 
-QLabel#labelAnalysisModeValue,
-QLabel#labelAnalysisChannelValue,
-QLabel#labelPseudoColorValue,
 QLabel#labelImageColorSpaceValue {
     color: #edf1f5;
 }

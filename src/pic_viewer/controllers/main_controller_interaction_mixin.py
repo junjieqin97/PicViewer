@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from html import escape
 from pathlib import Path
 from typing import Optional
@@ -13,6 +14,8 @@ from pic_viewer.app.services.image_file_policy import filter_supported_image_pat
 from pic_viewer.app.services.third_party_license_service import load_third_party_licenses
 from pic_viewer.ui.resources.icons import load_app_icon
 from pic_viewer.ui.windows.third_party_license_dialog import ThirdPartyLicenseDialog
+
+logger = logging.getLogger(__name__)
 
 
 class MainControllerInteractionMixin:
@@ -72,6 +75,54 @@ class MainControllerInteractionMixin:
         self._refresh_actions_state()
         self._image_context_menu.exec(global_pos)
 
+    def _show_current_image_in_folder(self) -> None:
+        """Open the current image's parent directory in the platform file manager."""
+
+        path = self._current_image_path()
+        if path is None:
+            logger.warning("Cannot show image in folder: no current image is active")
+            self._show_in_folder_warning()
+            return
+
+        folder = path.parent
+        if not folder.is_dir():
+            logger.warning(
+                "Cannot show image in folder: parent directory is unavailable path=%s folder=%s",
+                path,
+                folder,
+            )
+            self._show_in_folder_warning()
+            return
+
+        url = QtCore.QUrl.fromLocalFile(str(folder))
+        try:
+            opened = QtGui.QDesktopServices.openUrl(url)
+        except Exception:
+            logger.exception(
+                "Cannot show image in folder: desktop service failed path=%s folder=%s",
+                path,
+                folder,
+            )
+            self._show_in_folder_warning()
+            return
+
+        if not opened:
+            logger.warning(
+                "Cannot show image in folder: desktop service rejected path=%s folder=%s",
+                path,
+                folder,
+            )
+            self._show_in_folder_warning()
+
+    def _show_in_folder_warning(self) -> None:
+        """Warn the user that the image folder could not be opened."""
+
+        QtWidgets.QMessageBox.warning(
+            self._main_window,
+            self._tr("Warning"),
+            self._tr("Unable to open the image folder."),
+        )
+
     def _set_splitter_handle_cursor(self) -> None:
         self._set_splitter_cursor(self._ui.splitMain, QtCore.Qt.CursorShape.SplitHCursor)
 
@@ -81,6 +132,8 @@ class MainControllerInteractionMixin:
             handle.setCursor(cursor)
 
     def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:  # type: ignore[override]
+        if self._handle_image_viewport_resize_event(watched, event):
+            return False
         if self._handle_file_drop_event(watched, event):
             return True
         if self._handle_image_wheel_zoom_event(watched, event):
@@ -95,6 +148,23 @@ class MainControllerInteractionMixin:
             if "already deleted" in str(exc):
                 return False
             raise
+
+    def _handle_image_viewport_resize_event(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        """Refresh the current full image when its viewport changes size."""
+
+        if event.type() != QtCore.QEvent.Type.Resize:
+            return False
+        if not isinstance(watched, QtWidgets.QWidget):
+            return False
+        if watched.property("_image_viewport_refresh") is not True:
+            return False
+        path = self._current_image_path()
+        if path is None:
+            return False
+        if str(path) not in getattr(self, "_images_by_path", {}):
+            return False
+        self._refresh_current_image_pixmap()
+        return False
 
     def _handle_file_drop_event(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
         """Accept and open supported local image files dropped on the workspace."""

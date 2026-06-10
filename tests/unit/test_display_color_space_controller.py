@@ -551,7 +551,6 @@ class DisplayColorSpaceControllerTests(unittest.TestCase):
         controller._ensure_full_load = MagicMock()  # type: ignore[method-assign]
         controller.update_info_for_image = MagicMock()  # type: ignore[method-assign]
         controller._update_filmstrip_icon = MagicMock()  # type: ignore[method-assign]
-        controller._refresh_tab_preview_pixmap = MagicMock()  # type: ignore[method-assign]
         return window, ui, controller
 
     def _local_profile(self, name: str = "Local Profile", file_name: str = "local.icc") -> LocalColorProfile:

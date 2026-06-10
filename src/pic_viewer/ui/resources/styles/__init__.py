@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 STYLESHEET_NAME = "main.qss"
 LIGHT_STYLESHEET_NAME = "main_light.qss"
+ICON_DIR_PLACEHOLDER = "@PICVIEWER_ICON_DIR@"
 
 
 class AppearanceTheme(str, Enum):
@@ -70,6 +71,18 @@ def stylesheet_path(theme: AppearanceTheme | None = None) -> Path:
     return Path(__file__).resolve().with_name(_STYLESHEET_NAMES[selected_theme])
 
 
+def _icon_resource_dir() -> Path:
+    """Return the directory containing icon resources referenced by QSS."""
+
+    return Path(__file__).resolve().parents[1] / "icons"
+
+
+def _resolve_resource_placeholders(style_sheet: str) -> str:
+    """Replace QSS resource placeholders with absolute resource paths."""
+
+    return style_sheet.replace(ICON_DIR_PLACEHOLDER, _icon_resource_dir().as_posix())
+
+
 def load_stylesheet(theme: AppearanceTheme | None = None) -> str:
     """Load the QSS resource for a theme.
 
@@ -79,7 +92,7 @@ def load_stylesheet(theme: AppearanceTheme | None = None) -> str:
 
     path = stylesheet_path(theme)
     try:
-        return path.read_text(encoding="utf-8")
+        return _resolve_resource_placeholders(path.read_text(encoding="utf-8"))
     except OSError:
         logger.exception("Failed to load stylesheet resource: %s", path)
         return ""
