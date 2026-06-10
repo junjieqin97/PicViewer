@@ -11,6 +11,13 @@ from pic_viewer.app.dto.analysis_view import AnalysisView, AnalysisViewSettings,
 from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult, PreviewLoadResult
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
 from pic_viewer.common.errors import ImageLoadError
+from pic_viewer.domain.models.color_space import (
+    DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+    DEFAULT_DISPLAY_COLOR_SPACE,
+    ColorProfileSpec,
+    LocalColorProfile,
+)
+from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
 from pic_viewer.domain.rules.analysis import ImageAnalyzer
 from pic_viewer.domain.rules.exposure_overlay import ExposureOverlayOptions, apply_exposure_overlay
 from pic_viewer.domain.rules.focus_peaking import (
@@ -18,6 +25,7 @@ from pic_viewer.domain.rules.focus_peaking import (
     FocusPeakingOptions,
     apply_focus_peaking_overlay,
 )
+from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConverter
 from pic_viewer.infra.adapters.image_reader import ImageReader
 from pic_viewer.infra.adapters.metadata_reader import MetadataReader
 
@@ -27,16 +35,32 @@ logger = logging.getLogger(__name__)
 class ImageService:
     """Coordinate image I/O and analysis use cases."""
 
-    def __init__(self, reader: ImageReader, analyzer: ImageAnalyzer, metadata_reader: MetadataReader) -> None:
+    def __init__(
+        self,
+        reader: ImageReader,
+        analyzer: ImageAnalyzer,
+        metadata_reader: MetadataReader,
+        color_converter: ColorProfileConverter,
+    ) -> None:
         self._reader = reader
         self._analyzer = analyzer
         self._metadata_reader = metadata_reader
+        self._color_converter = color_converter
 
-    def load_and_analyze(self, path: Path) -> ImageLoadResult:
+    def load_and_analyze(
+        self,
+        path: Path,
+        display_color_space: ColorProfileSpec = DEFAULT_DISPLAY_COLOR_SPACE,
+        assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
+    ) -> ImageLoadResult:
         """Load an image, compute analysis artifacts, and read metadata.
 
         Args:
             path: Path to image file.
+            display_color_space: Target RGB display color space.
+            assumed_source_color_space: Source color space to use when ICC is unavailable.
+            rendering_intent: ICC rendering intent used for gamut mapping.
 
         Returns:
             ImageLoadResult: Analysis payload and metadata for the UI layer.
@@ -47,7 +71,12 @@ class ImageService:
         """
 
         try:
-            bgr = self._reader.read(path)
+            bgr, source_color_profile = self._reader.read_with_color_profile_info(
+                path,
+                display_color_space=display_color_space,
+                assumed_source_color_space=assumed_source_color_space,
+                rendering_intent=rendering_intent,
+            )
         except ImageLoadError:
             raise
         except Exception as exc:  # pragma: no cover - defensive safety net
@@ -69,6 +98,10 @@ class ImageService:
             waveform_r=result.waveform_r,
             waveform_g=result.waveform_g,
             waveform_b=result.waveform_b,
+            display_color_space=display_color_space,
+            assumed_source_color_space=assumed_source_color_space,
+            rendering_intent=rendering_intent,
+            source_color_profile=source_color_profile,
         )
 
         raw_metadata = self._metadata_reader.read(path)
@@ -82,11 +115,32 @@ class ImageService:
 
         return ImageLoadResult(analysis=analysis, metadata=metadata)
 
-    def load_preview(self, path: Path) -> PreviewLoadResult:
+    def load_local_color_profile(self, path: Path) -> LocalColorProfile:
+        """Load and validate a user-selected local ICC profile."""
+
+        return self._color_converter.load_local_profile(path)
+
+    def warm_up_optional_backends(self) -> None:
+        """Prepare optional native backends before background image loads start."""
+
+        self._metadata_reader.warm_up()
+
+    def load_preview(
+        self,
+        path: Path,
+        display_color_space: ColorProfileSpec = DEFAULT_DISPLAY_COLOR_SPACE,
+        assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
+    ) -> PreviewLoadResult:
         """Load a lightweight preview without metadata or analysis plots."""
 
         try:
-            preview_bgr = self._reader.read_preview(path)
+            preview_bgr, source_color_profile = self._reader.read_preview_with_color_profile_info(
+                path,
+                display_color_space=display_color_space,
+                assumed_source_color_space=assumed_source_color_space,
+                rendering_intent=rendering_intent,
+            )
         except ImageLoadError:
             raise
         except Exception as exc:  # pragma: no cover - defensive safety net
@@ -94,7 +148,13 @@ class ImageService:
             raise ImageLoadError("Unable to read this image file") from exc
 
         preview_rgb = self._analyzer.build_preview_rgb(preview_bgr)
-        return PreviewLoadResult(preview_rgb=preview_rgb)
+        return PreviewLoadResult(
+            preview_rgb=preview_rgb,
+            display_color_space=display_color_space,
+            assumed_source_color_space=assumed_source_color_space,
+            rendering_intent=rendering_intent,
+            source_color_profile=source_color_profile,
+        )
 
     def render_analysis_view(
         self,

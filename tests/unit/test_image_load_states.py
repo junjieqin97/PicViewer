@@ -22,9 +22,12 @@ from pic_viewer.app.dto.analysis_view import (  # noqa: E402
     LumaRgbMode,
     RgbChannel,
 )
-from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult  # noqa: E402
+from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult, PreviewLoadResult  # noqa: E402
 from pic_viewer.app.dto.metadata import ImageMetadata  # noqa: E402
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
+from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
+from pic_viewer.domain.models.color_space import ColorSpacePreset  # noqa: E402
+from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 
 
@@ -37,7 +40,7 @@ class ImageLoadStateTests(unittest.TestCase):
         if cls._app is None:
             cls._app = QtWidgets.QApplication([])
 
-    def test_new_image_tab_shows_preview_loading_state(self) -> None:
+    def test_new_image_tab_shows_loading_text_only_state(self) -> None:
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
         path = Path("/tmp/sample.jpg")
@@ -47,14 +50,18 @@ class ImageLoadStateTests(unittest.TestCase):
         state = ui.tabsImages.findChild(QtWidgets.QWidget, "widgetImageLoadState")
         title = ui.tabsImages.findChild(QtWidgets.QLabel, "labelImageLoadStateTitle")
         detail = ui.tabsImages.findChild(QtWidgets.QLabel, "labelImageLoadStateDetail")
+        progress = ui.tabsImages.findChild(QtWidgets.QProgressBar, "progressImageLoadState")
         stack = ui.tabsImages.findChild(QtWidgets.QStackedWidget, "stackImageContent")
         self.assertIsNotNone(state)
         self.assertIsNotNone(title)
         self.assertIsNotNone(detail)
+        self.assertIsNotNone(progress)
         self.assertIsNotNone(stack)
         self.assertIs(stack.currentWidget(), state)
-        self.assertEqual("Loading preview", title.text())
-        self.assertIn(path.name, detail.text())
+        self.assertEqual("Loading...", title.text())
+        self.assertEqual("", detail.text())
+        self.assertTrue(detail.isHidden())
+        self.assertTrue(progress.isHidden())
 
     def test_full_load_failure_shows_specific_inline_reason(self) -> None:
         window, ui, controller = self._build_controller()
@@ -146,6 +153,7 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         self.assertEqual("Generating histogram...", ui.widgetHistogram.text())
         self.assertEqual("Generating waveform...", ui.widgetWaveform.text())
         self.assertEqual("Reading metadata...", ui.tableMetadataGeneral.item(0, 0).text())
+        self.assertEqual("Loading", ui.labelImageColorSpaceValue.text())
 
     def test_failed_image_shows_analysis_failure_and_reason(self) -> None:
         window, ui, controller = self._build_controller()
@@ -159,6 +167,203 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         self.assertEqual("Image failed to load. Analysis is unavailable.", ui.widgetWaveform.text())
         self.assertEqual("Failure Reason", ui.tableMetadataGeneral.item(1, 0).text())
         self.assertEqual("Unable to read this image file", ui.tableMetadataGeneral.item(1, 1).text())
+        self.assertEqual("Unavailable", ui.labelImageColorSpaceValue.text())
+
+    def test_no_current_image_shows_not_loaded_color_space_info(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        ui.comboSpecifiedImageColorSpace.setEnabled(False)
+
+        MainController.update_info_for_image(controller, None)
+
+        self.assertEqual("Not Loaded", ui.labelImageColorSpaceValue.text())
+        self.assertTrue(ui.comboSpecifiedImageColorSpace.isEnabled())
+
+    def test_preview_payload_updates_color_space_info_before_full_load(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        path = Path("/tmp/preview.jpg")
+        self._add_image_tab(controller, path)
+        controller._preview_by_path[str(path)] = PreviewLoadResult(
+            preview_rgb=np.zeros((8, 8, 3), dtype=np.uint8),
+            source_color_profile=ImageColorProfileInfo(
+                display_name="sRGB",
+                status=ImageColorProfileStatus.MISSING,
+                uses_srgb_fallback=True,
+            ),
+        )
+
+        MainController.update_info_for_image(controller, path)
+
+        self.assertEqual("sRGB (default, no embedded ICC)", ui.labelImageColorSpaceValue.text())
+        self.assertTrue(ui.comboSpecifiedImageColorSpace.isEnabled())
+        stack = ui.tabsImages.findChild(QtWidgets.QStackedWidget, "stackImageContent")
+        state = ui.tabsImages.findChild(QtWidgets.QWidget, "widgetImageLoadState")
+        lbl_image = ui.tabsImages.findChild(QtWidgets.QLabel, "lblImage")
+        self.assertIsNotNone(stack)
+        self.assertIsNotNone(state)
+        self.assertIsNotNone(lbl_image)
+        self.assertIs(stack.currentWidget(), state)
+        self._assert_label_has_no_pixmap(lbl_image)
+
+    def test_preview_payload_with_embedded_icc_disables_specified_image_color_space_selector(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        path = Path("/tmp/profiled-preview.jpg")
+        controller._preview_by_path[str(path)] = PreviewLoadResult(
+            preview_rgb=np.zeros((8, 8, 3), dtype=np.uint8),
+            source_color_profile=ImageColorProfileInfo(
+                display_name="Example Profile",
+                status=ImageColorProfileStatus.EMBEDDED,
+                uses_srgb_fallback=False,
+            ),
+        )
+
+        MainController.update_info_for_image(controller, path)
+
+        self.assertEqual("Example Profile (embedded ICC)", ui.labelImageColorSpaceValue.text())
+        self.assertFalse(ui.comboSpecifiedImageColorSpace.isEnabled())
+        self.assertEqual("", ui.comboSpecifiedImageColorSpace.currentText())
+
+    def test_full_load_updates_color_space_info_from_analysis_payload(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        self._configure_analysis_rendering(controller)
+        path = Path("/tmp/profiled.jpg")
+        controller._images_by_path[str(path)] = self._image_result(
+            (255, 0, 0),
+            source_color_profile=ImageColorProfileInfo(
+                display_name="Example Profile",
+                status=ImageColorProfileStatus.EMBEDDED,
+                uses_srgb_fallback=False,
+            ),
+        )
+
+        MainController.update_info_for_image(controller, path)
+
+        self.assertEqual("Example Profile (embedded ICC)", ui.labelImageColorSpaceValue.text())
+        self.assertFalse(ui.comboSpecifiedImageColorSpace.isEnabled())
+
+    def test_full_load_with_fallback_profile_enables_specified_image_color_space_selector(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        self._configure_analysis_rendering(controller)
+        ui.comboSpecifiedImageColorSpace.setEnabled(False)
+        display_p3_index = ui.comboSpecifiedImageColorSpace.findData(ColorSpacePreset.DISPLAY_P3)
+        ui.comboSpecifiedImageColorSpace.setCurrentIndex(display_p3_index)
+        controller._assumed_source_color_space = ColorSpacePreset.DISPLAY_P3
+        path = Path("/tmp/no-profile.jpg")
+        controller._images_by_path[str(path)] = self._image_result(
+            (255, 0, 0),
+            source_color_profile=ImageColorProfileInfo(
+                display_name="Display P3",
+                status=ImageColorProfileStatus.MISSING,
+                uses_srgb_fallback=True,
+                assumed_color_space=ColorSpacePreset.DISPLAY_P3,
+            ),
+        )
+
+        MainController.update_info_for_image(controller, path)
+
+        self.assertEqual("Display P3 (specified, no embedded ICC)", ui.labelImageColorSpaceValue.text())
+        self.assertTrue(ui.comboSpecifiedImageColorSpace.isEnabled())
+        self.assertEqual("Display P3", ui.comboSpecifiedImageColorSpace.currentText())
+
+    def test_specified_image_color_space_selector_restores_selection_after_embedded_icc(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        self._configure_analysis_rendering(controller)
+        display_p3_index = ui.comboSpecifiedImageColorSpace.findData(ColorSpacePreset.DISPLAY_P3)
+        ui.comboSpecifiedImageColorSpace.setCurrentIndex(display_p3_index)
+        controller._assumed_source_color_space = ColorSpacePreset.DISPLAY_P3
+        profiled_path = Path("/tmp/profiled.jpg")
+        fallback_path = Path("/tmp/no-profile.jpg")
+        controller._images_by_path[str(profiled_path)] = self._image_result(
+            (255, 0, 0),
+            source_color_profile=ImageColorProfileInfo(
+                display_name="Example Profile",
+                status=ImageColorProfileStatus.EMBEDDED,
+                uses_srgb_fallback=False,
+            ),
+        )
+        controller._images_by_path[str(fallback_path)] = self._image_result(
+            (0, 255, 0),
+            source_color_profile=ImageColorProfileInfo(
+                display_name="Display P3",
+                status=ImageColorProfileStatus.MISSING,
+                uses_srgb_fallback=True,
+                assumed_color_space=ColorSpacePreset.DISPLAY_P3,
+            ),
+        )
+
+        MainController.update_info_for_image(controller, profiled_path)
+        self.assertFalse(ui.comboSpecifiedImageColorSpace.isEnabled())
+        self.assertEqual("", ui.comboSpecifiedImageColorSpace.currentText())
+
+        MainController.update_info_for_image(controller, fallback_path)
+
+        self.assertTrue(ui.comboSpecifiedImageColorSpace.isEnabled())
+        self.assertEqual("Display P3", ui.comboSpecifiedImageColorSpace.currentText())
+
+    def test_color_space_info_formats_invalid_and_conversion_fallback_states(self) -> None:
+        window, _ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+
+        invalid = MainController._format_source_color_profile_info(
+            controller,
+            ImageColorProfileInfo(
+                display_name="sRGB",
+                status=ImageColorProfileStatus.INVALID,
+                uses_srgb_fallback=True,
+            ),
+        )
+        failed = MainController._format_source_color_profile_info(
+            controller,
+            ImageColorProfileInfo(
+                display_name="sRGB",
+                status=ImageColorProfileStatus.CONVERSION_FAILED,
+                uses_srgb_fallback=True,
+            ),
+        )
+
+        self.assertEqual("sRGB (default, unreadable ICC)", invalid)
+        self.assertEqual("sRGB (fallback, ICC conversion failed)", failed)
+
+    def test_color_space_info_formats_specified_fallback_states(self) -> None:
+        window, _ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+
+        missing = MainController._format_source_color_profile_info(
+            controller,
+            ImageColorProfileInfo(
+                display_name="Display P3",
+                status=ImageColorProfileStatus.MISSING,
+                uses_srgb_fallback=True,
+                assumed_color_space=ColorSpacePreset.DISPLAY_P3,
+            ),
+        )
+        invalid = MainController._format_source_color_profile_info(
+            controller,
+            ImageColorProfileInfo(
+                display_name="Adobe RGB (1998)",
+                status=ImageColorProfileStatus.INVALID,
+                uses_srgb_fallback=True,
+                assumed_color_space=ColorSpacePreset.ADOBE_RGB_1998,
+            ),
+        )
+        failed = MainController._format_source_color_profile_info(
+            controller,
+            ImageColorProfileInfo(
+                display_name="Display P3",
+                status=ImageColorProfileStatus.CONVERSION_FAILED,
+                uses_srgb_fallback=True,
+                assumed_color_space=ColorSpacePreset.DISPLAY_P3,
+            ),
+        )
+
+        self.assertEqual("Display P3 (specified, no embedded ICC)", missing)
+        self.assertEqual("Adobe RGB (1998) (specified, unreadable ICC)", invalid)
+        self.assertEqual("Display P3 (specified fallback, ICC conversion failed)", failed)
 
     def test_switching_back_to_cached_image_refreshes_analysis_pixmaps(self) -> None:
         window, ui, controller = self._build_controller()
@@ -319,6 +524,115 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         self.assertIsNotNone(lbl_image)
         self.assertFalse(lbl_image.is_metadata_overlay_visible())
 
+    def test_preview_load_updates_filmstrip_but_keeps_image_tab_loading(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        path = Path("/tmp/preview-only.jpg")
+        self._add_image_tab(controller, path)
+        controller._add_filmstrip_placeholder_item(path)
+        key = str(path)
+        controller._active_session_by_path[key] = 1
+        controller._preview_tasks_by_path[key] = object()
+        controller._update_filmstrip_icon = MagicMock()  # type: ignore[method-assign]
+        controller.update_info_for_image = MagicMock()  # type: ignore[method-assign]
+        result = PreviewLoadResult(
+            preview_rgb=np.full((8, 8, 3), 96, dtype=np.uint8),
+            source_color_profile=ImageColorProfileInfo(
+                display_name="sRGB",
+                status=ImageColorProfileStatus.MISSING,
+                uses_srgb_fallback=True,
+            ),
+        )
+
+        MainController._on_preview_loaded(controller, path, 1, result)
+
+        self.assertIs(controller._preview_by_path[key], result)
+        controller._update_filmstrip_icon.assert_called_once_with(
+            path,
+            result.preview_rgb,
+            result.display_color_space,
+        )
+        controller.update_info_for_image.assert_called_once_with(path)
+        stack = ui.tabsImages.findChild(QtWidgets.QStackedWidget, "stackImageContent")
+        state = ui.tabsImages.findChild(QtWidgets.QWidget, "widgetImageLoadState")
+        lbl_image = ui.tabsImages.findChild(QtWidgets.QLabel, "lblImage")
+        self.assertIsNotNone(stack)
+        self.assertIsNotNone(state)
+        self.assertIsNotNone(lbl_image)
+        self.assertIs(stack.currentWidget(), state)
+        self._assert_label_has_no_pixmap(lbl_image)
+
+    def test_full_load_shows_image_page_and_fits_current_viewport(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        self._configure_analysis_rendering(controller)
+        path = Path("/tmp/full.jpg")
+        self._add_image_tab(controller, path)
+        window.resize(1200, 800)
+        window.show()
+        self._app.processEvents()
+        result = self._image_result((20, 40, 80))
+        key = str(path)
+        controller._active_session_by_path[key] = 1
+        controller._load_tasks_by_path[key] = object()
+        controller._update_filmstrip_icon = MagicMock()  # type: ignore[method-assign]
+
+        MainController._on_loaded(controller, path, 1, result)
+
+        stack = ui.tabsImages.findChild(QtWidgets.QStackedWidget, "stackImageContent")
+        image_page = ui.tabsImages.findChild(QtWidgets.QWidget, "pageImagePreview")
+        current_tab = controller._tab_widget_for_path(path)
+        self.assertIsNotNone(current_tab)
+        scroll_area = current_tab.findChild(QtWidgets.QScrollArea, "scrollImage")
+        lbl_image = current_tab.findChild(QtWidgets.QLabel, "lblImage")
+        self.assertIsNotNone(stack)
+        self.assertIsNotNone(image_page)
+        self.assertIsNotNone(scroll_area)
+        self.assertIsNotNone(lbl_image)
+        self.assertIs(stack.currentWidget(), image_page)
+        pixmap = lbl_image.pixmap()
+        self.assertIsNotNone(pixmap)
+        self.assertFalse(pixmap.isNull())
+        logical = controller._pixmap_logical_size(pixmap)
+        self.assertEqual(scroll_area.viewport().height(), logical.height())
+        self.assertLessEqual(logical.width(), scroll_area.viewport().width())
+
+    def test_folder_full_load_refreshes_after_viewport_layout_stabilizes(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        self._configure_analysis_rendering(controller)
+        controller._ensure_preview_load = MagicMock()  # type: ignore[method-assign]
+        controller._ensure_full_load = MagicMock()  # type: ignore[method-assign]
+        window.resize(1200, 800)
+        window.show()
+        self._app.processEvents()
+        paths = [Path(f"/tmp/folder-{index}.jpg") for index in range(6)]
+        controller._open_image_paths(paths)
+        last_path = paths[-1]
+        key = str(last_path)
+        result = self._image_result((64, 96, 128))
+        controller._active_session_by_path[key] = 1
+        controller._load_tasks_by_path[key] = object()
+        controller._update_filmstrip_icon = MagicMock()  # type: ignore[method-assign]
+
+        MainController._on_loaded(controller, last_path, 1, result)
+        self._app.processEvents()
+
+        current_tab = controller._tab_widget_for_path(last_path)
+        self.assertIsNotNone(current_tab)
+        scroll_area = current_tab.findChild(QtWidgets.QScrollArea, "scrollImage")
+        lbl_image = current_tab.findChild(QtWidgets.QLabel, "lblImage")
+        self.assertIsNotNone(scroll_area)
+        self.assertIsNotNone(lbl_image)
+        pixmap = lbl_image.pixmap()
+        self.assertIsNotNone(pixmap)
+        self.assertFalse(pixmap.isNull())
+        logical = controller._pixmap_logical_size(pixmap)
+        self.assertGreater(logical.width(), 500)
+        self.assertGreater(logical.height(), 300)
+        self.assertLessEqual(logical.width(), scroll_area.viewport().width())
+        self.assertLessEqual(logical.height(), scroll_area.viewport().height())
+
     def _build_controller(self) -> tuple[QtWidgets.QMainWindow, MainWindowUI, MainController]:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
@@ -326,12 +640,18 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         controller = MainController.__new__(MainController)
         QtCore.QObject.__init__(controller, window)
         controller._ui = ui
+        controller._main_window = window
         controller._tr = lambda text: text  # type: ignore[method-assign]
+        controller._display_color_space = ColorSpacePreset.SRGB
+        controller._assumed_source_color_space = ColorSpacePreset.SRGB
+        controller._rendering_intent = RenderingIntent.PERCEPTUAL
         controller._images_by_path = {}
         controller._preview_by_path = {}
         controller._load_tasks_by_path = {}
         controller._preview_tasks_by_path = {}
         controller._load_error_by_path = {}
+        controller._active_session_by_path = {}
+        controller._session_counter_by_path = {}
         controller._last_metadata_path = None
         controller._show_underexposed = False
         controller._show_overexposed = False
@@ -346,6 +666,20 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         controller._image_drag_start_pos = None
         controller._image_drag_start_scroll = None
         controller._image_drag_scroll_area = None
+        controller._detached_image_windows = {}
+        controller._detached_info_windows = {}
+        controller._syncing_selection = False
+        controller._active_image_path = None
+        controller._analysis_render_key_by_path = {}
+        controller._current_analysis_render_key = None
+        controller._view_settings = AnalysisViewSettings(
+            mode=LumaRgbMode.LUMA,
+            channel=RgbChannel.ALL,
+        )
+        controller._image_service = MagicMock()
+        controller._image_service.build_preview_with_pseudo_color_overlay.side_effect = (
+            lambda preview_rgb, **_kwargs: preview_rgb
+        )
         return window, ui, controller
 
     def _configure_analysis_rendering(self, controller: MainController) -> None:
@@ -386,6 +720,7 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         self,
         color_rgb: tuple[int, int, int],
         metadata: ImageMetadata | None = None,
+        source_color_profile: ImageColorProfileInfo | None = None,
     ) -> ImageLoadResult:
         rgb = np.zeros((8, 8, 3), dtype=np.uint8)
         rgb[:] = color_rgb
@@ -403,6 +738,12 @@ class InfoPanelLoadStateTests(unittest.TestCase):
             waveform_r=rgb,
             waveform_g=rgb,
             waveform_b=rgb,
+            source_color_profile=source_color_profile
+            or ImageColorProfileInfo(
+                display_name="sRGB",
+                status=ImageColorProfileStatus.MISSING,
+                uses_srgb_fallback=True,
+            ),
         )
         return ImageLoadResult(
             analysis=analysis,
@@ -421,6 +762,12 @@ class InfoPanelLoadStateTests(unittest.TestCase):
         image = pixmap.toImage()
         color = image.pixelColor(image.width() // 2, image.height() // 2)
         return color.red(), color.green(), color.blue()
+
+    def _assert_label_has_no_pixmap(self, label: QtWidgets.QLabel) -> None:
+        pixmap = label.pixmap()
+        if pixmap is None:
+            return
+        self.assertTrue(pixmap.isNull())
 
 
 if __name__ == "__main__":

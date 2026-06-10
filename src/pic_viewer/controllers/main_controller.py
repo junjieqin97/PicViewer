@@ -18,6 +18,11 @@ from pic_viewer.controllers.main_controller_loading_mixin import MainControllerL
 from pic_viewer.controllers.main_controller_metadata_mixin import MainControllerMetadataMixin
 from pic_viewer.controllers.main_controller_reference_line_mixin import MainControllerReferenceLineMixin
 from pic_viewer.controllers.main_controller_tabs_mixin import MainControllerTabsMixin
+from pic_viewer.domain.models.color_space import (
+    DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+    DEFAULT_DISPLAY_COLOR_SPACE,
+)
+from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
 from pic_viewer.domain.rules.reference_lines import ReferenceLineSettings
 from pic_viewer.ui.workers.image_worker import ImageLoadTask, PreviewLoadTask
@@ -72,6 +77,9 @@ class MainController(
         self._detached_image_windows: Dict[str, QtWidgets.QWidget] = {}
         self._detached_info_windows: Dict[str, QtWidgets.QWidget] = {}
         self._view_settings = AnalysisViewSettings(mode=LumaRgbMode.LUMA, channel=RgbChannel.ALL)
+        self._display_color_space = DEFAULT_DISPLAY_COLOR_SPACE
+        self._assumed_source_color_space = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
+        self._rendering_intent = DEFAULT_RENDERING_INTENT
         self._last_splitter_sizes: Optional[list[int]] = None
         self._last_metadata_path: Optional[str] = None
         self._cursor_boundary_margin = 4
@@ -139,6 +147,7 @@ class MainController(
         self._ui.actZoomIn.triggered.connect(self._zoom_in)
         self._ui.actZoomOut.triggered.connect(self._zoom_out)
         self._ui.actFitToWindow.triggered.connect(self._fit_to_window)
+        self._ui.actShowInFolder.triggered.connect(self._show_current_image_in_folder)
 
         self._ui.actToggleInfoPanel.toggled.connect(self._toggle_info_panel)
         self._ui.actToggleAnalysisToolbar.toggled.connect(self._toggle_analysis_toolbar)
@@ -149,6 +158,11 @@ class MainController(
         self._ui.actChannelRed.triggered.connect(lambda: self._change_channel(RgbChannel.RED))
         self._ui.actChannelGreen.triggered.connect(lambda: self._change_channel(RgbChannel.GREEN))
         self._ui.actChannelBlue.triggered.connect(lambda: self._change_channel(RgbChannel.BLUE))
+        self._ui.comboSpecifiedImageColorSpace.currentIndexChanged.connect(
+            self._on_assumed_source_color_space_changed
+        )
+        self._ui.comboRenderingIntent.currentIndexChanged.connect(self._on_rendering_intent_changed)
+        self._ui.comboDisplayColorSpace.currentIndexChanged.connect(self._on_display_color_space_changed)
         if hasattr(self._ui, "actToggleUnderexposed"):
             self._ui.actToggleUnderexposed.toggled.connect(self._on_underexposed_toggled)
         if hasattr(self._ui, "actToggleOverexposed"):

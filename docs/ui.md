@@ -93,9 +93,10 @@ Constraint: the right info area width is adjustable by default; when the main wi
 - Tab content structure (inside each tab):
 - `ImageViewWidget` (recommended to use `QGraphicsView + QGraphicsScene`, or use `QLabel` as a placeholder)
 - Specification: each tab should contain only one main display control; do not stack additional buttons/toolbars inside the tab (all tool entries are in the menu bar).
+- Loading state: while the selected image is still loading its full display payload, the image tab shows only centered `Loading...` text. Fast preview images must not be rendered inside the image tab; they are used only for the bottom filmstrip thumbnails.
 - Naming rules:
 - The display control inside a tab is named `viewImage` (if using `QGraphicsView`) or `lblImage` (if using `QLabel` as a placeholder).
-- Context menu: right-clicking in the `image display area` opens a context menu containing `Zoom In`, `Zoom Out`, and `Fit to Window`; their behavior must remain consistent with the `top menu bar` actions. See `5.2 MenuBar Actions`.
+- Context menu: right-clicking in the `image display area` opens a context menu containing `Zoom In`, `Zoom Out`, `Fit to Window`, and `Show in Folder`; zoom behavior must remain consistent with the `top menu bar` actions, and `Show in Folder` opens the current image's parent directory. See `5.2 MenuBar Actions`.
 - Mouse wheel: scrolling up in the `image display area` performs `Zoom In`, and scrolling down performs `Zoom Out`; the implementation must reuse the zoom logic from the `top menu bar`.
 
 ### 3.2 Right Info Area (Info Panel)
@@ -104,7 +105,7 @@ The right info area is a non-scrollable panel containing two top-level informati
 
 - Container: `scrollInfo: QWidget` (outer layer is not scrollable)
 - Content layout: `layoutInfo: QVBoxLayout`
-- The top of the info area must display a lightweight summary: current analysis mode, RGB channel, pseudo color state (underexposed/overexposed toggles, peaking level).
+- The top of the info area must start with `tabsInfo`; no separate summary panel is shown above the info tabs.
 
 Inside the info area, use `DetachableTabWidget` (`QTabWidget` subclass):
 
@@ -122,7 +123,10 @@ Inside the info area, use `DetachableTabWidget` (`QTabWidget` subclass):
 
 Each info tab is first implemented with placeholder controls (the metadata table may scroll internally):
 
-- Analysis: `tabAnalysis` uses a vertical layout and displays the histogram and waveform from top to bottom; both analysis charts should be centered horizontally and aligned near the top.
+- Analysis: `tabAnalysis` uses a vertical layout. From top to bottom it displays the current source image color space status, a `Specify Image Color Space` selector, the `Rendering Intent` selector, the `Display Color Space` selector, the histogram, and the waveform. Both analysis charts should be centered horizontally and aligned near the top.
+  - `Specify Image Color Space` uses `sRGB`, `Display P3`, `Adobe RGB (1998)`, `ProPhoto RGB`, and `Choose a local ICC...`; `sRGB` is selected by default. `Choose a local ICC...` opens a file dialog for `.icc` and `.icm` files, validates the profile, inserts the selected local profile before the chooser entry, and keeps it only for the current application session. It is a global fallback source color space selector used only when no embedded ICC profile is present, the embedded ICC profile cannot be read, or embedded ICC conversion fails. It is disabled with a gray style and blank visible text when the current image has a valid embedded ICC profile, then restored to the selected fallback value when fallback, loading, failed, or empty states enable it again.
+  - `Rendering Intent` uses `Perceptual`, `Relative Colorimetric`, `Saturation`, and `Absolute Colorimetric`; `Perceptual` is selected by default. It is a global ICC gamut mapping selector used for image-to-display-space conversion.
+  - `Display Color Space` uses `sRGB`, `Display P3`, `Adobe RGB (1998)`, `ProPhoto RGB`, and `Choose a local ICC...`; `sRGB` is selected by default. `Choose a local ICC...` opens the same `.icc`/`.icm` file dialog, validates the profile, inserts the selected local profile before the chooser entry, and keeps it only for the current application session.
 - Histogram: `widgetHistogram` (may initially be a `QLabel` with "Histogram Placeholder")
   - Fixed display size: height 100 x width 256 (logical pixels)
   - Clickable small triangles must be displayed in the upper-left and upper-right corners of the histogram:
@@ -192,6 +196,18 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `tabsInfo: DetachableTabWidget`
 - `tabAnalysis: QWidget`
 - `tabMetadata: QWidget`
+- `widgetImageColorSpace: QWidget`
+- `labelImageColorSpaceTitle: QLabel`
+- `labelImageColorSpaceValue: QLabel`
+- `widgetSpecifiedImageColorSpace: QWidget`
+- `labelSpecifiedImageColorSpaceTitle: QLabel`
+- `comboSpecifiedImageColorSpace: QComboBox`
+- `widgetRenderingIntent: QWidget`
+- `labelRenderingIntentTitle: QLabel`
+- `comboRenderingIntent: QComboBox`
+- `widgetDisplayColorSpace: QWidget`
+- `labelDisplayColorSpaceTitle: QLabel`
+- `comboDisplayColorSpace: QComboBox`
 - `frameFilmstrip: QFrame`
 - `listFilmstrip: QListWidget`
 - `labelFilmstripSummary: QLabel` (right side of the status bar; displays the current file summary when the filmstrip pane is hidden)
@@ -209,6 +225,7 @@ Actions (names must be consistent; copy may mix Chinese and English, but consist
 - `actZoomIn`: Zoom In
 - `actZoomOut`: Zoom Out
 - `actFitToWindow`: Fit to Window
+- `actShowInFolder`: Show in Folder (image context menu only)
 - `actAppearanceLight`: Light (checkable, mutually exclusive with Dark)
 - `actAppearanceDark`: Dark (checkable, mutually exclusive with Light)
 - `actToggleInfoPanel`: Info Panel (checkable, checked = visible)
@@ -262,7 +279,7 @@ Shortcuts for common features must be set as follows:
 - Switch image tab => update the right info area (placeholder update first) + update the selected filmstrip item; the currently selected image triggers full parsing in the background (histogram/waveform/metadata).
 - Click filmstrip item => switch to the corresponding tab.
 - Close tab => synchronously remove the corresponding filmstrip item; if the closed tab is the current tab, switch to an adjacent tab and synchronize updates.
-- Open Folder => first load fast previews for each image concurrently, then perform full parsing on demand (when selected).
+- Open Folder => first load fast previews for each image concurrently for the filmstrip, then perform full parsing on demand (when selected). The selected image tab remains in the centered `Loading...` state until the full display payload is available.
 
 Performance constraint: background image loading uses a thread pool with a default maximum concurrency of 8.
 

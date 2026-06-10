@@ -86,8 +86,8 @@ class MainControllerTabsMixin:
                 self._load_error_by_path.pop(str(path), None)
                 self._show_tab_loading_state(
                     path,
-                    self._tr("Loading preview"),
-                    self._tr("Loading preview: {name}").format(name=path.name),
+                    self._tr("Loading..."),
+                    "",
                 )
             self._update_filmstrip_text(path)
             if activate:
@@ -102,8 +102,8 @@ class MainControllerTabsMixin:
                 self._load_error_by_path.pop(str(path), None)
                 self._show_tab_loading_state(
                     path,
-                    self._tr("Loading preview"),
-                    self._tr("Loading preview: {name}").format(name=path.name),
+                    self._tr("Loading..."),
+                    "",
                 )
             self._update_tab_title(existing_tab, path)
             self._update_filmstrip_text(path)
@@ -123,8 +123,8 @@ class MainControllerTabsMixin:
         self._set_zoom_state(path, 1.0, True)
         self._show_tab_loading_state(
             path,
-            self._tr("Loading preview"),
-            self._tr("Loading preview: {name}").format(name=path.name),
+            self._tr("Loading..."),
+            "",
         )
 
         self._add_filmstrip_placeholder_item(path)
@@ -250,6 +250,7 @@ class MainControllerTabsMixin:
         scroll_area.viewport().setCursor(QtCore.Qt.CursorShape.OpenHandCursor)
         scroll_area.viewport().setProperty("_image_drag_area", True)
         scroll_area.viewport().setProperty("_image_zoom_area", True)
+        scroll_area.viewport().setProperty("_image_viewport_refresh", True)
         self._track_image_display_widgets(scroll_area, lbl_image)
         return image_page
 
@@ -294,8 +295,8 @@ class MainControllerTabsMixin:
         session = self._start_path_session(path)
         self._show_tab_loading_state(
             path,
-            self._tr("Loading preview"),
-            self._tr("Loading preview: {name}").format(name=path.name),
+            self._tr("Loading..."),
+            "",
         )
         self.update_info_for_image(path)
         self._ensure_preview_load(path, session)
@@ -756,10 +757,13 @@ class MainControllerTabsMixin:
 
     def _refresh_actions_state(self) -> None:
         has_image_tab = self._has_image_tabs()
+        current_path = self._current_image_path()
+        can_show_in_folder = current_path is not None and current_path.parent.is_dir()
         self._ui.actCloseTab.setEnabled(has_image_tab)
         self._ui.actZoomIn.setEnabled(has_image_tab)
         self._ui.actZoomOut.setEnabled(has_image_tab)
         self._ui.actFitToWindow.setEnabled(has_image_tab)
+        self._ui.actShowInFolder.setEnabled(can_show_in_folder)
 
     def _update_tab_title(self, tab_index: int, path: Path) -> None:
         if tab_index < 0 or tab_index >= self._ui.tabsImages.count():

@@ -35,8 +35,8 @@ class UiStylesTests(unittest.TestCase):
         self.assertIn("color: #f0f3f6", style_sheet)
         self.assertIn("QTabWidget#tabsImages::tab-bar", style_sheet)
         self.assertIn("alignment: left", style_sheet)
-        self.assertIn("QTabWidget#tabsImages QTabBar::tab:selected", style_sheet)
-        self.assertIn("QTabWidget#tabsImages QTabBar::tab:hover", style_sheet)
+        self.assertIn("QTabBar::tab:selected", style_sheet)
+        self.assertIn("QTabBar::tab:hover", style_sheet)
         self.assertIn("QScrollArea#scrollImage", style_sheet)
         self.assertIn("QWidget#viewportImageCanvas", style_sheet)
         self.assertIn("QScrollArea#scrollImage QScrollBar:horizontal", style_sheet)
@@ -91,6 +91,128 @@ class UiStylesTests(unittest.TestCase):
             self.assertIn("background: #eef2f6", rule)
             self.assertNotIn("background: #20262d", rule)
 
+    def test_specified_image_color_space_selector_has_disabled_gray_styles(self) -> None:
+        dark_style = styles.load_stylesheet(styles.AppearanceTheme.DARK)
+        light_style = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
+
+        selector = "QWidget#tabAnalysis QComboBox#comboSpecifiedImageColorSpace:disabled"
+        dark_rule = self._style_block(dark_style, selector)
+        light_rule = self._style_block(light_style, selector)
+
+        self.assertIn("color: #6f7782", dark_rule)
+        self.assertIn("background: #24282e", dark_rule)
+        self.assertIn("border: 1px solid #343b44", dark_rule)
+        self.assertIn("color: #9aa4af", light_rule)
+        self.assertIn("background: #eef2f6", light_rule)
+        self.assertIn("border: 1px solid #d8e0ea", light_rule)
+
+    def test_rendering_intent_selector_uses_color_setting_styles(self) -> None:
+        dark_style = styles.load_stylesheet(styles.AppearanceTheme.DARK)
+        light_style = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
+
+        self.assertIn("QLabel#labelRenderingIntentTitle", dark_style)
+        self.assertIn("QWidget#tabAnalysis QComboBox", dark_style)
+        self.assertIn("QLabel#labelRenderingIntentTitle", light_style)
+        self.assertIn("QWidget#tabAnalysis QComboBox", light_style)
+
+    def test_analysis_color_selectors_use_fixed_width_styles(self) -> None:
+        for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
+            with self.subTest(theme=theme):
+                rule = self._style_block(styles.load_stylesheet(theme), "QWidget#tabAnalysis QComboBox")
+
+                self.assertIn("min-width: 144px", rule)
+                self.assertIn("max-width: 144px", rule)
+
+    def test_analysis_combo_popup_views_use_theme_contrast(self) -> None:
+        dark_style = styles.load_stylesheet(styles.AppearanceTheme.DARK)
+        light_style = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
+
+        dark_popup_rule = self._style_block(
+            dark_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView",
+        )
+        light_popup_rule = self._style_block(
+            light_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView",
+        )
+
+        self.assertIn("color: #edf1f5", dark_popup_rule)
+        self.assertIn("background: #171a1e", dark_popup_rule)
+        self.assertIn("border: 1px solid #424a54", dark_popup_rule)
+        self.assertIn("selection-background-color: #3d6fa3", dark_popup_rule)
+        self.assertIn("selection-color: #ffffff", dark_popup_rule)
+        self.assertIn("color: #1f252d", light_popup_rule)
+        self.assertIn("background: #ffffff", light_popup_rule)
+        self.assertIn("border: 1px solid #cbd6e3", light_popup_rule)
+        self.assertIn("selection-background-color: #b9d7f3", light_popup_rule)
+        self.assertIn("selection-color: #0f172a", light_popup_rule)
+
+        dark_hover_rule = self._style_block(
+            dark_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView::item:hover",
+        )
+        dark_selected_rule = self._style_block(
+            dark_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected",
+        )
+        light_hover_rule = self._style_block(
+            light_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView::item:hover",
+        )
+        light_selected_rule = self._style_block(
+            light_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected",
+        )
+        dark_active_selected_rule = self._style_block(
+            dark_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:active",
+        )
+        dark_inactive_selected_rule = self._style_block(
+            dark_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:!active",
+        )
+        light_active_selected_rule = self._style_block(
+            light_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:active",
+        )
+        light_inactive_selected_rule = self._style_block(
+            light_style,
+            "QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:!active",
+        )
+
+        self.assertIn("background: #345f8d", dark_hover_rule)
+        self.assertIn("color: #ffffff", dark_hover_rule)
+        self.assertIn("background: #3d6fa3", dark_selected_rule)
+        self.assertIn("color: #ffffff", dark_selected_rule)
+        self.assertIn("background: #cfe5fb", light_hover_rule)
+        self.assertIn("color: #0f172a", light_hover_rule)
+        self.assertIn("background: #b9d7f3", light_selected_rule)
+        self.assertIn("color: #0f172a", light_selected_rule)
+        self.assertIn("background: #3d6fa3", dark_active_selected_rule)
+        self.assertIn("background: #3d6fa3", dark_inactive_selected_rule)
+        self.assertIn("background: #b9d7f3", light_active_selected_rule)
+        self.assertIn("background: #b9d7f3", light_inactive_selected_rule)
+
+        min_highlight_delta = 72
+        for popup_rule, highlighted_rule in (
+            (dark_popup_rule, dark_hover_rule),
+            (dark_popup_rule, dark_selected_rule),
+            (dark_popup_rule, dark_active_selected_rule),
+            (dark_popup_rule, dark_inactive_selected_rule),
+            (light_popup_rule, light_hover_rule),
+            (light_popup_rule, light_selected_rule),
+            (light_popup_rule, light_active_selected_rule),
+            (light_popup_rule, light_inactive_selected_rule),
+        ):
+            with self.subTest(highlighted_rule=highlighted_rule.split("{", maxsplit=1)[0]):
+                popup_background = self._style_property(popup_rule, "background")
+                highlighted_background = self._style_property(highlighted_rule, "background")
+
+                self.assertGreaterEqual(
+                    self._rgb_distance(popup_background, highlighted_background),
+                    min_highlight_delta,
+                )
+
     def test_theme_from_color_scheme_maps_system_values(self) -> None:
         self.assertEqual(
             styles.AppearanceTheme.LIGHT,
@@ -106,30 +228,121 @@ class UiStylesTests(unittest.TestCase):
         )
         self.assertEqual(styles.AppearanceTheme.LIGHT, styles.theme_from_color_scheme(object()))
 
-    def test_stylesheet_does_not_override_native_tab_close_button(self) -> None:
+    def test_dark_stylesheet_uses_white_image_tab_close_button(self) -> None:
         style_sheet = styles.load_stylesheet(styles.AppearanceTheme.DARK)
 
-        self.assertNotIn("QTabBar::close-button", style_sheet)
+        close_button_block = self._style_block(
+            style_sheet,
+            "QTabWidget#tabsImages QTabBar::close-button",
+        )
+        close_icon_path = PROJECT_ROOT / "src/pic_viewer/ui/resources/icons/tab-close.svg"
+        close_icon = close_icon_path.read_text(encoding="utf-8")
+
+        self.assertIn("tab-close.svg", close_button_block)
+        self.assertIn(close_icon_path.as_posix(), close_button_block)
+        self.assertNotIn("@PICVIEWER_ICON_DIR@", close_button_block)
+        self.assertIn('stroke="#ffffff"', close_icon)
+        self.assertIn("width: 12px", close_button_block)
+        self.assertIn("height: 12px", close_button_block)
         self.assertNotIn("QToolButton#buttonImageTabClose", style_sheet)
+
+    def test_light_stylesheet_uses_black_image_tab_close_button(self) -> None:
+        style_sheet = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
+
+        close_button_block = self._style_block(
+            style_sheet,
+            "QTabWidget#tabsImages QTabBar::close-button",
+        )
+        close_icon_path = PROJECT_ROOT / "src/pic_viewer/ui/resources/icons/tab-close-on-light.svg"
+
+        self.assertIn("tab-close-on-light.svg", close_button_block)
+        self.assertIn(close_icon_path.as_posix(), close_button_block)
+        self.assertNotIn("@PICVIEWER_ICON_DIR@", close_button_block)
+        self.assertIn("width: 12px", close_button_block)
+        self.assertIn("height: 12px", close_button_block)
+
+    def test_tab_bar_tracks_use_panel_backgrounds(self) -> None:
+        expected_backgrounds = {
+            styles.AppearanceTheme.DARK: {
+                "QTabWidget#tabsMetadata QTabBar": "#24282d",
+                "QTabWidget#tabsImages QTabBar": "#24282d",
+                "QTabWidget#tabsInfo QTabBar": "#24282d",
+            },
+            styles.AppearanceTheme.LIGHT: {
+                "QTabWidget#tabsMetadata QTabBar": "#ffffff",
+                "QTabWidget#tabsImages QTabBar": "#ffffff",
+                "QTabWidget#tabsInfo QTabBar": "#ffffff",
+            },
+        }
+
+        for theme, selector_backgrounds in expected_backgrounds.items():
+            with self.subTest(theme=theme):
+                style_sheet = styles.load_stylesheet(theme)
+
+                for selector, background in selector_backgrounds.items():
+                    tab_widget_selector = selector.rsplit(" ", maxsplit=1)[0]
+
+                    self.assertIn(f"{selector} {{", style_sheet)
+                    self.assertIn(f"{tab_widget_selector}::tab-bar {{", style_sheet)
+
+                    tab_bar_block = self._style_block(style_sheet, selector)
+                    tab_bar_subcontrol_block = self._style_block(style_sheet, f"{tab_widget_selector}::tab-bar")
+
+                    self.assertIn(f"background: {background}", tab_bar_block)
+                    self.assertIn(f"background: {background}", tab_bar_subcontrol_block)
 
     def test_tab_headers_use_rounded_top_corners(self) -> None:
         style_sheet = styles.load_stylesheet()
 
         self.assertIn("border-top-left-radius: 5px", style_sheet)
         self.assertIn("border-top-right-radius: 5px", style_sheet)
-        self.assertIn("border-top-left-radius: 6px", style_sheet)
-        self.assertIn("border-top-right-radius: 6px", style_sheet)
+
+    def test_image_and_info_tabs_reuse_metadata_tab_header_styles(self) -> None:
+        selectors = (
+            "QTabWidget#tabsImages QTabBar::tab",
+            "QTabWidget#tabsImages QTabBar::tab:hover",
+            "QTabWidget#tabsImages QTabBar::tab:selected",
+            "QTabWidget#tabsImages QTabBar::tab:selected:hover",
+            "QTabWidget#tabsInfo QTabBar::tab",
+            "QTabWidget#tabsInfo QTabBar::tab:hover",
+            "QTabWidget#tabsInfo QTabBar::tab:selected",
+            "QTabWidget#tabsInfo QTabBar::tab:selected:hover",
+        )
+
+        for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
+            with self.subTest(theme=theme):
+                style_sheet = styles.load_stylesheet(theme)
+
+                for selector in selectors:
+                    self.assertNotIn(f"{selector} {{", style_sheet)
 
     def test_tab_headers_keep_height_close_to_text_height(self) -> None:
         style_sheet = styles.load_stylesheet()
 
         tab_block = self._style_block(style_sheet, "QTabBar::tab")
-        image_tab_block = self._style_block(style_sheet, "QTabWidget#tabsImages QTabBar::tab")
 
         self.assertIn("min-height: 0px", tab_block)
         self.assertIn("padding: 2px 12px", tab_block)
-        self.assertIn("min-height: 0px", image_tab_block)
-        self.assertIn("padding: 2px 10px 2px 12px", image_tab_block)
+
+    def test_tab_headers_do_not_draw_visible_borders(self) -> None:
+        for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
+            with self.subTest(theme=theme):
+                style_sheet = styles.load_stylesheet(theme)
+                tab_block = self._style_block(style_sheet, "QTabBar::tab")
+
+                self.assertIn("border: 1px solid transparent;", tab_block)
+                self.assertIn("outline: none;", tab_block)
+                self.assertNotIn("border-bottom-color:", tab_block)
+
+                for selector in (
+                    "QTabBar::tab:hover",
+                    "QTabBar::tab:selected",
+                ):
+                    state_block = self._style_block(style_sheet, selector)
+
+                    self.assertNotIn("border-color:", state_block)
+                    self.assertNotIn("border-top-color:", state_block)
+                    self.assertNotIn("border-bottom-color:", state_block)
 
     def test_load_stylesheet_returns_empty_string_when_file_missing(self) -> None:
         missing_path = PROJECT_ROOT / "missing-main.qss"
@@ -154,6 +367,27 @@ class UiStylesTests(unittest.TestCase):
         block_start = style_sheet.index(f"{selector} {{")
         block_end = style_sheet.index("}", block_start)
         return style_sheet[block_start:block_end]
+
+    @staticmethod
+    def _style_property(style_block: str, property_name: str) -> str:
+        property_start = style_block.index(f"{property_name}: ") + len(property_name) + 2
+        property_end = style_block.index(";", property_start)
+        return style_block[property_start:property_end]
+
+    @staticmethod
+    def _rgb_distance(first_color: str, second_color: str) -> int:
+        first_channels = UiStylesTests._hex_color_channels(first_color)
+        second_channels = UiStylesTests._hex_color_channels(second_color)
+        return sum(abs(first - second) for first, second in zip(first_channels, second_channels))
+
+    @staticmethod
+    def _hex_color_channels(color: str) -> tuple[int, int, int]:
+        color_value = color.removeprefix("#")
+        return (
+            int(color_value[0:2], 16),
+            int(color_value[2:4], 16),
+            int(color_value[4:6], 16),
+        )
 
 
 if __name__ == "__main__":

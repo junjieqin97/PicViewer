@@ -47,6 +47,25 @@ class _FakePyexiv2Image:
 class MetadataReaderTests(unittest.TestCase):
     """Validate the pyexiv2 metadata adapter."""
 
+    def test_warm_up_loads_optional_pyexiv2_backend(self) -> None:
+        reader = MetadataReader()
+
+        with patch.object(reader, "_load_pyexiv2", return_value=object()) as load_backend:
+            reader.warm_up()
+
+        load_backend.assert_called_once_with()
+
+    def test_warm_up_import_failure_is_non_fatal(self) -> None:
+        reader = MetadataReader()
+
+        with (
+            patch.object(reader, "_load_pyexiv2", side_effect=ImportError("missing")),
+            self.assertLogs("pic_viewer.infra.adapters.metadata_reader", level="WARNING") as logs,
+        ):
+            reader.warm_up()
+
+        self.assertTrue(any("metadata warm-up skipped" in message for message in logs.output))
+
     def test_reads_pyexiv2_metadata_into_existing_sections(self) -> None:
         fake_image = _FakePyexiv2Image(
             exif={
