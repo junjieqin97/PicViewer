@@ -9,6 +9,7 @@ import numpy as np
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from tests.unit.qt_test_utils import QtWidgetTestCase
 from PySide6 import QtCore, QtWidgets  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -21,7 +22,7 @@ from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConver
 from pic_viewer.ui.utils.image_qt import to_qpixmap  # noqa: E402
 
 
-class ImageQtColorSpaceTests(unittest.TestCase):
+class ImageQtColorSpaceTests(QtWidgetTestCase):
     """Validate Qt image conversion preserves display color space metadata."""
 
     @classmethod

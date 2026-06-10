@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from tests.unit.qt_test_utils import QtWidgetTestCase
 from PySide6 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -17,7 +18,7 @@ from pic_viewer.app.services.third_party_license_service import ThirdPartyLicens
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
 
 
-class AboutDialogTests(unittest.TestCase):
+class AboutDialogTests(QtWidgetTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls._app = QtWidgets.QApplication.instance()

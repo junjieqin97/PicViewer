@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from tests.unit.qt_test_utils import QtWidgetTestCase
 from PySide6 import QtCore, QtGui, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -21,7 +22,7 @@ from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel  # noqa: E402
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel  # noqa: E402
 
 
-class MainControllerClippingToggleTests(unittest.TestCase):
+class MainControllerClippingToggleTests(QtWidgetTestCase):
     """Validate clipping marker signal flow and refresh behavior."""
 
     @classmethod
@@ -31,6 +32,7 @@ class MainControllerClippingToggleTests(unittest.TestCase):
             cls._app = QtWidgets.QApplication([])
 
     def setUp(self) -> None:
+        super().setUp()
         self.widget = HistogramClippingLabel()
         self.act_toggle_underexposed = QtGui.QAction()
         self.act_toggle_underexposed.setCheckable(True)

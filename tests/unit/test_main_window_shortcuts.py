@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from tests.unit.qt_test_utils import QtWidgetTestCase
 from PySide6 import QtGui, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -19,7 +20,7 @@ from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 from pic_viewer.ui.resources import styles  # noqa: E402
 
 
-class MainWindowShortcutTests(unittest.TestCase):
+class MainWindowShortcutTests(QtWidgetTestCase):
     """Validate key shortcuts configured in MainWindowUI."""
 
     @classmethod

@@ -7,6 +7,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from tests.unit.qt_test_utils import QtWidgetTestCase
 from PySide6 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -22,7 +23,7 @@ from pic_viewer.ui.windows.third_party_license_dialog import (  # noqa: E402
 )
 
 
-class ThirdPartyLicenseDialogTests(unittest.TestCase):
+class ThirdPartyLicenseDialogTests(QtWidgetTestCase):
     """Validate the third-party license dialog presentation."""
 
     @classmethod
