@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, call
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from tests.unit.qt_test_utils import QtWidgetTestCase
 from PySide6 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -29,7 +30,7 @@ from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 from pic_viewer.ui.widgets.detachable_tabs import DetachableTabWidget  # noqa: E402
 
 
-class MainWindowTabsTests(unittest.TestCase):
+class MainWindowTabsTests(QtWidgetTestCase):
     """Validate tab alignment behavior in the image display area."""
 
     @classmethod

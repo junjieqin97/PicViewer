@@ -204,7 +204,15 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("activate-environment: PicViewer", workflow)
         self.assertIn("python-version: \"3.10\"", workflow)
         self.assertIn("brew install inih", workflow)
-        self.assertIn("conda install -y -c conda-forge pyside6 qt6-main", workflow)
+        self.assertIn("QT_RUNTIME_VERSION: \"6.9.2\"", workflow)
+        self.assertIn(
+            'conda install -y -c conda-forge "pyside6=$QT_RUNTIME_VERSION" "qt6-main=$QT_RUNTIME_VERSION"',
+            workflow,
+        )
+        self.assertIn(
+            'conda install -y -c conda-forge "pyside6=$env:QT_RUNTIME_VERSION" "qt6-main=$env:QT_RUNTIME_VERSION"',
+            workflow,
+        )
         self.assertIn("$CONDA_PREFIX/lib/qt6/bin", workflow)
         self.assertIn("$env:CONDA_PREFIX", workflow)
         self.assertIn("Library\\bin", workflow)
@@ -241,6 +249,8 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("macOS", ci_doc)
         self.assertIn("Apple Silicon", ci_doc)
         self.assertIn("arm64", ci_doc)
+        self.assertIn("Qt/PySide6", ci_doc)
+        self.assertIn("6.9.2", ci_doc)
         self.assertIn("Windows", ci_doc)
         self.assertIn("MSI", ci_doc)
         self.assertIn("WiX", ci_doc)

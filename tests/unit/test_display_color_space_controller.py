@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import numpy as np
+from tests.unit.qt_test_utils import QtWidgetTestCase
 from PySide6 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -26,7 +27,7 @@ from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 from pic_viewer.ui.workers.image_worker import ImageLoadTask, PreviewLoadTask  # noqa: E402
 
 
-class DisplayColorSpaceControllerTests(unittest.TestCase):
+class DisplayColorSpaceControllerTests(QtWidgetTestCase):
     """Validate UI-driven display color space reload behavior."""
 
     @classmethod

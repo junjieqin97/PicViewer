@@ -5,12 +5,13 @@ import importlib.util
 from pathlib import Path
 import unittest
 
+from tests.unit.qt_test_utils import QtWidgetTestCase
 from PySide6 import QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
-class AppIconResourceTests(unittest.TestCase):
+class AppIconResourceTests(QtWidgetTestCase):
     """Validate PicViewer application icon runtime resources."""
 
     @classmethod

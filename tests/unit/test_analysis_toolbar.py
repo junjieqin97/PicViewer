@@ -7,6 +7,7 @@ import unittest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from tests.unit.qt_test_utils import QtWidgetTestCase
 from PySide6 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -18,7 +19,7 @@ from pic_viewer.controllers.main_controller import MainController  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 
 
-class AnalysisToolbarTests(unittest.TestCase):
+class AnalysisToolbarTests(QtWidgetTestCase):
     """Validate the compact top analysis toolbar."""
 
     @classmethod

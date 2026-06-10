@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import numpy as np
+from tests.unit.qt_test_utils import QtWidgetTestCase
 from PySide6 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -31,7 +32,7 @@ from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 
 
-class ImageLoadStateTests(unittest.TestCase):
+class ImageLoadStateTests(QtWidgetTestCase):
     """Validate inline loading, failure, and retry states for image tabs."""
 
     @classmethod
@@ -133,7 +134,7 @@ class ImageLoadStateTests(unittest.TestCase):
         return window, ui, controller
 
 
-class InfoPanelLoadStateTests(unittest.TestCase):
+class InfoPanelLoadStateTests(QtWidgetTestCase):
     """Validate right-side analysis and metadata placeholders."""
 
     @classmethod

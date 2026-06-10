@@ -10,6 +10,9 @@ on:
 permissions:
   contents: write
 
+env:
+  QT_RUNTIME_VERSION: "6.9.2"
+
 jobs:
   release-metadata:
     name: Read release metadata
@@ -85,7 +88,7 @@ jobs:
       - name: Install packaging dependencies
         run: |
           brew install inih
-          conda install -y -c conda-forge pyside6 qt6-main
+          conda install -y -c conda-forge "pyside6=$QT_RUNTIME_VERSION" "qt6-main=$QT_RUNTIME_VERSION"
           if [ -d "$CONDA_PREFIX/lib/qt6/bin" ]; then
             echo "$CONDA_PREFIX/lib/qt6/bin" >> "$GITHUB_PATH"
             export PATH="$CONDA_PREFIX/lib/qt6/bin:$PATH"
@@ -154,7 +157,7 @@ jobs:
       - name: Install packaging dependencies
         run: |
           conda activate PicViewer
-          conda install -y -c conda-forge pyside6 qt6-main
+          conda install -y -c conda-forge "pyside6=$env:QT_RUNTIME_VERSION" "qt6-main=$env:QT_RUNTIME_VERSION"
           $qtToolDirs = @(
             "$env:CONDA_PREFIX\Library\bin"
             "$env:CONDA_PREFIX\lib\qt6\bin"

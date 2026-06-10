@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from tests.unit.qt_test_utils import QtWidgetTestCase
 from PySide6 import QtCore, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -18,7 +19,7 @@ if str(SRC_ROOT) not in sys.path:
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
 
 
-class MainControllerZoomFeedbackTests(unittest.TestCase):
+class MainControllerZoomFeedbackTests(QtWidgetTestCase):
     """Validate status-bar feedback for image zoom actions."""
 
     @classmethod
