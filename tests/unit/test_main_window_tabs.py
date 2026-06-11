@@ -5,7 +5,7 @@ import sys
 import tempfile
 from pathlib import Path
 import unittest
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -626,11 +626,30 @@ class MainWindowTabsTests(QtWidgetTestCase):
         self.assertIn("JPG", format_label.text())
         self.assertIn("PNG", format_label.text())
         self.assertIn("TIFF", format_label.text())
+        self.assertIn("WEBP", format_label.text())
+        self.assertIn("AVIF", format_label.text())
+        self.assertIn("HEIF/HEIC", format_label.text())
         self.assertIn("DNG", format_label.text())
         open_file_shortcut = controller._shortcut_text(ui.actOpenFile)
         open_folder_shortcut = controller._shortcut_text(ui.actOpenFolder)
         self.assertTrue(any(open_file_shortcut in text for text in label_texts))
         self.assertTrue(any(open_folder_shortcut in text for text in label_texts))
+
+    def test_open_file_dialog_filter_includes_modern_image_formats(self) -> None:
+        window, _ui, controller = self._build_tabs_controller()
+        self.addCleanup(window.deleteLater)
+        controller.open_image = MagicMock()  # type: ignore[method-assign]
+
+        with patch(
+            "pic_viewer.controllers.main_controller_tabs_mixin.QtWidgets.QFileDialog.getOpenFileName",
+            return_value=("/tmp/phone.HEIC", ""),
+        ) as dialog:
+            controller._open_file()
+
+        filter_text = dialog.call_args.args[3]
+        for suffix in ("*.webp", "*.avif", "*.heif", "*.heic"):
+            self.assertIn(suffix, filter_text)
+        controller.open_image.assert_called_once_with(Path("/tmp/phone.HEIC"))
 
     def test_empty_image_placeholder_shows_drop_hint(self) -> None:
         window, ui, controller = self._build_tabs_controller()

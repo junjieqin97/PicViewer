@@ -33,6 +33,8 @@ RUNTIME_METADATA_PACKAGES = (
     "numpy",
     "pyexiv2",
     "Pillow",
+    "pillow-heif",
+    "pillow-avif-plugin",
     "rawpy",
 )
 OPTIONAL_METADATA_PACKAGES = {"rawpy"}
@@ -122,6 +124,18 @@ try:
     hiddenimports += collect_submodules("rawpy")
 except Exception:
     hiddenimports.append("rawpy")
+
+try:
+    binaries += collect_dynamic_libs("pillow_heif")
+    hiddenimports += collect_submodules("pillow_heif")
+except Exception:
+    hiddenimports.append("pillow_heif")
+
+try:
+    binaries += collect_dynamic_libs("pillow_avif")
+    hiddenimports += collect_submodules("pillow_avif")
+except Exception:
+    hiddenimports.append("pillow_avif")
 
 hiddenimports += [
     "PIL.ImageCms",

@@ -8,6 +8,7 @@ from typing import Optional
 
 import cv2
 import numpy as np
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from pic_viewer.common.errors import ImageLoadError
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo
@@ -18,6 +19,7 @@ from pic_viewer.domain.models.color_space import (
 )
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
 from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConverter
+from pic_viewer.infra.adapters.pillow_image_plugins import register_optional_pillow_image_plugins
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +65,16 @@ class ImageReader:
                 rendering_intent,
             )
 
+        pillow_image = self._read_pillow(path)
+        if pillow_image is not None:
+            return self._convert_to_display_space(
+                path,
+                pillow_image,
+                display_color_space,
+                assumed_source_color_space,
+                rendering_intent,
+            )
+
         if not self._allow_raw:
             raise ImageLoadError("Unsupported image format")
 
@@ -93,6 +105,16 @@ class ImageReader:
             return self._convert_to_display_space_with_info(
                 path,
                 image,
+                display_color_space,
+                assumed_source_color_space,
+                rendering_intent,
+            )
+
+        pillow_image = self._read_pillow(path)
+        if pillow_image is not None:
+            return self._convert_to_display_space_with_info(
+                path,
+                pillow_image,
                 display_color_space,
                 assumed_source_color_space,
                 rendering_intent,
@@ -145,6 +167,17 @@ class ImageReader:
         image = cv2.imread(str(path), cv2.IMREAD_COLOR)
         if image is not None:
             preview = self._resize_if_needed(image, max_edge)
+            return self._convert_to_display_space(
+                path,
+                preview,
+                display_color_space,
+                assumed_source_color_space,
+                rendering_intent,
+            )
+
+        pillow_image = self._read_pillow(path)
+        if pillow_image is not None:
+            preview = self._resize_if_needed(pillow_image, max_edge)
             return self._convert_to_display_space(
                 path,
                 preview,
@@ -209,6 +242,17 @@ class ImageReader:
                 rendering_intent,
             )
 
+        pillow_image = self._read_pillow(path)
+        if pillow_image is not None:
+            preview = self._resize_if_needed(pillow_image, max_edge)
+            return self._convert_to_display_space_with_info(
+                path,
+                preview,
+                display_color_space,
+                assumed_source_color_space,
+                rendering_intent,
+            )
+
         if not self._allow_raw:
             raise ImageLoadError("Unsupported image format")
 
@@ -239,6 +283,22 @@ class ImageReader:
             max(1, int(round(height * scale))),
         )
         return cv2.resize(bgr, resized, interpolation=cv2.INTER_AREA)
+
+    def _read_pillow(self, path: Path) -> Optional[np.ndarray]:
+        """Attempt to decode a non-RAW image through Pillow plugins."""
+
+        register_optional_pillow_image_plugins()
+        try:
+            with Image.open(path) as image:
+                transposed = ImageOps.exif_transpose(image)
+                rgb = np.asarray(transposed.convert("RGB"), dtype=np.uint8).copy()
+        except (FileNotFoundError, OSError, UnidentifiedImageError, ValueError):
+            logger.info("Pillow image decoder could not read file: %s", path, exc_info=True)
+            return None
+        except Exception:
+            logger.exception("Unexpected Pillow image decoder failure: %s", path)
+            return None
+        return np.ascontiguousarray(rgb[:, :, ::-1])
 
     def _convert_to_display_space(
         self,

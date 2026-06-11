@@ -1,6 +1,6 @@
 # PicViewer
 
-> A desktop photo viewer for common image formats and camera RAW files.
+> A desktop photo viewer for common image formats, modern formats such as AVIF/WebP/HEIF/HEIC, and camera RAW files.
 
 ## Installation and Startup
 

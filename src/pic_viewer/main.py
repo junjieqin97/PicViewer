@@ -8,6 +8,8 @@ from __future__ import annotations
 # - numpy>=1.23
 # - pyexiv2>=2.15.5,<3
 # - Pillow>=10.0
+# - pillow-heif>=1,<2
+# - pillow-avif-plugin>=1.5,<2
 # - rawpy>=0.17 (optional, for RAW formats)
 
 import argparse

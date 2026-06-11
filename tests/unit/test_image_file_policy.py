@@ -23,6 +23,10 @@ class ImageFilePolicyTests(unittest.TestCase):
         self.assertIn(".jpeg", SUPPORTED_IMAGE_SUFFIXES)
         self.assertIn(".png", SUPPORTED_IMAGE_SUFFIXES)
         self.assertIn(".tiff", SUPPORTED_IMAGE_SUFFIXES)
+        self.assertIn(".webp", SUPPORTED_IMAGE_SUFFIXES)
+        self.assertIn(".avif", SUPPORTED_IMAGE_SUFFIXES)
+        self.assertIn(".heif", SUPPORTED_IMAGE_SUFFIXES)
+        self.assertIn(".heic", SUPPORTED_IMAGE_SUFFIXES)
         self.assertIn(".dng", SUPPORTED_IMAGE_SUFFIXES)
         self.assertIn(".raf", SUPPORTED_IMAGE_SUFFIXES)
 
@@ -30,23 +34,26 @@ class ImageFilePolicyTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
             upper_case = root / "sample.JPG"
+            heic_file = root / "phone.HEIC"
             raw_file = root / "camera.NEF"
             text_file = root / "notes.txt"
             directory = root / "folder.png"
             missing = root / "missing.png"
             upper_case.write_bytes(b"image")
+            heic_file.write_bytes(b"heic")
             raw_file.write_bytes(b"raw")
             text_file.write_text("not an image", encoding="utf-8")
             directory.mkdir()
 
             self.assertTrue(is_supported_image_path(upper_case))
+            self.assertTrue(is_supported_image_path(heic_file))
             self.assertFalse(is_supported_image_path(text_file))
             self.assertFalse(is_supported_image_path(directory))
             self.assertFalse(is_supported_image_path(missing))
 
-            filtered = filter_supported_image_paths([upper_case, text_file, directory, raw_file, missing])
+            filtered = filter_supported_image_paths([upper_case, text_file, directory, heic_file, raw_file, missing])
 
-        self.assertEqual([upper_case, raw_file], filtered)
+        self.assertEqual([upper_case, heic_file, raw_file], filtered)
 
 
 if __name__ == "__main__":
