@@ -509,6 +509,7 @@ class MainControllerAnalysisMixin:
                 )
             return
 
+        self._reset_pixel_sample_if_analysis_changed(image_path, data.analysis)
         self._sync_specified_image_color_space_enabled(data.analysis.source_color_profile)
         self._set_image_color_space_value(
             self._format_source_color_profile_info(data.analysis.source_color_profile)
@@ -572,6 +573,7 @@ class MainControllerAnalysisMixin:
 
     def _set_info_placeholders(self) -> None:
         self._current_analysis_render_key = None
+        self._reset_pixel_sample_display()
         self._set_specified_image_color_space_enabled(True)
         self._set_image_color_space_value(self._tr("Not Loaded"))
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
@@ -581,6 +583,7 @@ class MainControllerAnalysisMixin:
 
     def _set_info_loading_placeholders(self) -> None:
         self._current_analysis_render_key = None
+        self._reset_pixel_sample_display()
         self._set_specified_image_color_space_enabled(True)
         self._set_image_color_space_value(self._tr("Loading"))
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
@@ -590,6 +593,7 @@ class MainControllerAnalysisMixin:
 
     def _set_info_error_placeholders(self) -> None:
         self._current_analysis_render_key = None
+        self._reset_pixel_sample_display()
         self._set_specified_image_color_space_enabled(True)
         self._set_image_color_space_value(self._tr("Unavailable"))
         message = self._tr("Image failed to load. Analysis is unavailable.")
@@ -603,6 +607,16 @@ class MainControllerAnalysisMixin:
             return
         self._ui.labelImageColorSpaceValue.setText(text)
         self._ui.labelImageColorSpaceValue.setToolTip(text)
+
+    def _reset_pixel_sample_if_analysis_changed(self, image_path: Path, analysis: ImageAnalysis) -> None:
+        """Clear hover sample values after switching images or analysis data."""
+
+        current_key = getattr(self, "_pixel_sample_analysis_key", None)
+        if current_key is None:
+            return
+        next_key = (str(image_path), id(analysis.analysis_bgr))
+        if current_key != next_key:
+            self._reset_pixel_sample_display()
 
     def _sync_specified_image_color_space_enabled(self, info: ImageColorProfileInfo) -> None:
         enabled = info.status != ImageColorProfileStatus.EMBEDDED

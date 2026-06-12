@@ -584,7 +584,36 @@ class MainWindowUI:
         )
         hist_frame_layout = QtWidgets.QVBoxLayout(self.frameHistogramAnalysis)
         hist_frame_layout.setContentsMargins(8, 8, 8, 8)
-        hist_frame_layout.setSpacing(0)
+        hist_frame_layout.setSpacing(4)
+        self.widgetPixelSampleValues = QtWidgets.QWidget(self.frameHistogramAnalysis)
+        self.widgetPixelSampleValues.setObjectName("widgetPixelSampleValues")
+        self.widgetPixelSampleValues.setFixedWidth(self.info_panel_histogram_size.width())
+        self.widgetPixelSampleValues.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Fixed,
+            QtWidgets.QSizePolicy.Policy.Fixed,
+        )
+        pixel_sample_layout = QtWidgets.QHBoxLayout(self.widgetPixelSampleValues)
+        pixel_sample_layout.setObjectName("layoutPixelSampleValues")
+        pixel_sample_layout.setContentsMargins(0, 0, 0, 0)
+        pixel_sample_layout.setSpacing(0)
+        self.labelPixelRedValue = QtWidgets.QLabel("-1", self.widgetPixelSampleValues)
+        self.labelPixelRedValue.setObjectName("labelPixelRedValue")
+        self.labelPixelGreenValue = QtWidgets.QLabel("-1", self.widgetPixelSampleValues)
+        self.labelPixelGreenValue.setObjectName("labelPixelGreenValue")
+        self.labelPixelBlueValue = QtWidgets.QLabel("-1", self.widgetPixelSampleValues)
+        self.labelPixelBlueValue.setObjectName("labelPixelBlueValue")
+        self.labelPixelLumaValue = QtWidgets.QLabel("-1", self.widgetPixelSampleValues)
+        self.labelPixelLumaValue.setObjectName("labelPixelLumaValue")
+        for label in (
+            self.labelPixelRedValue,
+            self.labelPixelGreenValue,
+            self.labelPixelBlueValue,
+            self.labelPixelLumaValue,
+        ):
+            label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            label.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+            pixel_sample_layout.addWidget(label, 1)
+        hist_frame_layout.addWidget(self.widgetPixelSampleValues)
         self.widgetHistogram = HistogramClippingLabel("", self.frameHistogramAnalysis)
         self.widgetHistogram.setObjectName("widgetHistogram")
         self.widgetHistogram.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)

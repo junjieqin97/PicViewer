@@ -98,6 +98,32 @@ class ImageDisplayLabelTests(QtWidgetTestCase):
         self.assertFalse(self._has_light_pixel(image, QtCore.QRect(0, 0, 18, 18)))
         self.assertTrue(self._has_light_pixel(image, QtCore.QRect(20, 20, 80, 32)))
 
+    def test_image_pixel_position_maps_label_position_to_image_pixel(self) -> None:
+        label = ImageDisplayLabel()
+        self.addCleanup(label.deleteLater)
+        label.resize(100, 60)
+        pixmap = QtGui.QPixmap(80, 40)
+        pixmap.fill(QtGui.QColor(0, 0, 0))
+        label.setPixmap(pixmap)
+
+        self.assertTrue(hasattr(label, "image_pixel_position_at"))
+        self.assertEqual((0, 0), label.image_pixel_position_at(QtCore.QPoint(10, 10), (4, 8)))
+        self.assertEqual((4, 2), label.image_pixel_position_at(QtCore.QPoint(50, 30), (4, 8)))
+        self.assertEqual((7, 3), label.image_pixel_position_at(QtCore.QPoint(89, 49), (4, 8)))
+
+    def test_image_pixel_position_returns_none_outside_pixmap(self) -> None:
+        label = ImageDisplayLabel()
+        self.addCleanup(label.deleteLater)
+        label.resize(100, 60)
+        pixmap = QtGui.QPixmap(80, 40)
+        pixmap.fill(QtGui.QColor(0, 0, 0))
+        label.setPixmap(pixmap)
+
+        self.assertTrue(hasattr(label, "image_pixel_position_at"))
+        self.assertIsNone(label.image_pixel_position_at(QtCore.QPoint(9, 10), (4, 8)))
+        self.assertIsNone(label.image_pixel_position_at(QtCore.QPoint(90, 49), (4, 8)))
+        self.assertIsNone(label.image_pixel_position_at(QtCore.QPoint(10, 50), (4, 8)))
+
     def _has_light_pixel(self, image: QtGui.QImage, rect: QtCore.QRect) -> bool:
         for y in range(rect.top(), rect.bottom() + 1):
             for x in range(rect.left(), rect.right() + 1):

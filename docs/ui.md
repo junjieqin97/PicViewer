@@ -129,6 +129,13 @@ Each info tab is first implemented with placeholder controls (the metadata table
   - `Display Color Space` uses `sRGB`, `Display P3`, `Adobe RGB (1998)`, `ProPhoto RGB`, and `Choose a local ICC...`; `sRGB` is selected by default. `Choose a local ICC...` opens the same `.icc`/`.icm` file dialog, validates the profile, inserts the selected local profile before the chooser entry, and keeps it only for the current application session.
 - Histogram: `widgetHistogram` (may initially be a `QLabel` with "Histogram Placeholder")
   - Fixed display size: height 100 x width 256 (logical pixels)
+  - Above the histogram widget, `widgetPixelSampleValues` displays four numeric labels from left to right:
+    - `labelPixelRedValue`: red channel value, shown in red.
+    - `labelPixelGreenValue`: green channel value, shown in green.
+    - `labelPixelBlueValue`: blue channel value, shown in blue.
+    - `labelPixelLumaValue`: luma value, shown in white.
+  - The four labels default to `-1`. When the mouse pointer is over the active analyzed image, they display the RGB and luma values for the image pixel under the pointer. When the pointer is outside the image, all four labels return to `-1`.
+  - The luma readout uses the same luma definition as the luma histogram. When the luma value is not `-1`, the histogram displays a black vertical marker at that luma position.
   - Clickable small triangles must be displayed in the upper-left and upper-right corners of the histogram:
     - The upper-left triangle toggles the `underexposed` warning: underexposed areas are displayed on the main image with a semi-transparent `green` pseudo-color overlay.
     - The upper-right triangle toggles the `overexposed` warning: overexposed areas are displayed on the main image with a semi-transparent `red` pseudo-color overlay.
@@ -208,6 +215,11 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `widgetDisplayColorSpace: QWidget`
 - `labelDisplayColorSpaceTitle: QLabel`
 - `comboDisplayColorSpace: QComboBox`
+- `widgetPixelSampleValues: QWidget`
+- `labelPixelRedValue: QLabel`
+- `labelPixelGreenValue: QLabel`
+- `labelPixelBlueValue: QLabel`
+- `labelPixelLumaValue: QLabel`
 - `frameFilmstrip: QFrame`
 - `listFilmstrip: QListWidget`
 - `labelFilmstripSummary: QLabel` (right side of the status bar; displays the current file summary when the filmstrip pane is hidden)

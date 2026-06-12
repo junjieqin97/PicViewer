@@ -114,6 +114,7 @@ class MainController(
         self._image_drag_start_scroll: Optional[QtCore.QPoint] = None
         self._image_drag_scroll_area: Optional[QtWidgets.QScrollArea] = None
         self._image_context_menu = self._ui.menuImageContext
+        self._pixel_sample_analysis_key: Optional[tuple[str, int]] = None
 
         self._connect_signals()
         self._install_cursor_tracking()

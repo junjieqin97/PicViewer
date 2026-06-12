@@ -124,6 +124,26 @@ class UiStylesTests(QtWidgetTestCase):
                 self.assertIn("min-width: 144px", rule)
                 self.assertIn("max-width: 144px", rule)
 
+    def test_pixel_sample_value_labels_use_channel_colors(self) -> None:
+        for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
+            with self.subTest(theme=theme):
+                style_sheet = styles.load_stylesheet(theme)
+
+                self.assertIn("QLabel#labelPixelRedValue", style_sheet)
+                self.assertIn("QLabel#labelPixelGreenValue", style_sheet)
+                self.assertIn("QLabel#labelPixelBlueValue", style_sheet)
+                self.assertIn("QLabel#labelPixelLumaValue", style_sheet)
+
+                red_rule = self._style_block(style_sheet, "QLabel#labelPixelRedValue")
+                green_rule = self._style_block(style_sheet, "QLabel#labelPixelGreenValue")
+                blue_rule = self._style_block(style_sheet, "QLabel#labelPixelBlueValue")
+                luma_rule = self._style_block(style_sheet, "QLabel#labelPixelLumaValue")
+
+                self.assertIn("color: #ff4d4d", red_rule)
+                self.assertIn("color: #48c774", green_rule)
+                self.assertIn("color: #4da3ff", blue_rule)
+                self.assertIn("color: #ffffff", luma_rule)
+
     def test_analysis_combo_popup_views_use_theme_contrast(self) -> None:
         dark_style = styles.load_stylesheet(styles.AppearanceTheme.DARK)
         light_style = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)

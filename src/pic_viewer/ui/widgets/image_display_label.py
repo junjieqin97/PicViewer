@@ -124,6 +124,44 @@ class ImageDisplayLabel(QtWidgets.QLabel):
             baseline += font_metrics.lineSpacing()
         painter.end()
 
+    def image_pixel_position_at(
+        self,
+        pos: QtCore.QPoint,
+        image_size: tuple[int, int],
+    ) -> tuple[int, int] | None:
+        """Map a widget-local position to image pixel coordinates.
+
+        Args:
+            pos: Position in this label's coordinate system.
+            image_size: Source image size as (height, width).
+
+        Returns:
+            tuple[int, int] | None: (x, y) image coordinates, or None when the
+            position is outside the displayed pixmap.
+        """
+
+        pixmap = self.pixmap()
+        if pixmap is None or pixmap.isNull():
+            return None
+        image_height, image_width = image_size
+        if image_height <= 0 or image_width <= 0:
+            return None
+
+        pixmap_rect = self._pixmap_logical_rect(pixmap)
+        if pixmap_rect.width() <= 0 or pixmap_rect.height() <= 0:
+            return None
+        if not pixmap_rect.contains(pos):
+            return None
+
+        relative_x = pos.x() - pixmap_rect.left()
+        relative_y = pos.y() - pixmap_rect.top()
+        image_x = int(relative_x * image_width / pixmap_rect.width())
+        image_y = int(relative_y * image_height / pixmap_rect.height())
+        return (
+            min(image_width - 1, max(0, image_x)),
+            min(image_height - 1, max(0, image_y)),
+        )
+
     def _pixmap_logical_rect(self, pixmap: QtGui.QPixmap) -> QtCore.QRect:
         dpr = pixmap.devicePixelRatio()
         dpr = dpr if dpr and dpr > 0 else 1.0

@@ -329,6 +329,30 @@ QLabel#labelImageColorSpaceValue {
     color: #1f252d;
 }
 
+QWidget#widgetPixelSampleValues {
+    background: transparent;
+}
+
+QLabel#labelPixelRedValue {
+    color: #ff4d4d;
+    font-weight: 600;
+}
+
+QLabel#labelPixelGreenValue {
+    color: #48c774;
+    font-weight: 600;
+}
+
+QLabel#labelPixelBlueValue {
+    color: #4da3ff;
+    font-weight: 600;
+}
+
+QLabel#labelPixelLumaValue {
+    color: #ffffff;
+    font-weight: 600;
+}
+
 QFrame#frameHistogramAnalysis,
 QFrame#frameWaveformAnalysis {
     background: #f4f7fb;

@@ -12,7 +12,13 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from pic_viewer.app.services.app_metadata_service import AppMetadata, load_app_metadata
 from pic_viewer.app.services.image_file_policy import filter_supported_image_paths
 from pic_viewer.app.services.third_party_license_service import load_third_party_licenses
+from pic_viewer.domain.rules.pixel_sample import (
+    INVALID_PIXEL_SAMPLE,
+    PixelSample,
+    sample_analysis_pixel,
+)
 from pic_viewer.ui.resources.icons import load_app_icon
+from pic_viewer.ui.widgets.image_display_label import ImageDisplayLabel
 from pic_viewer.ui.windows.third_party_license_dialog import ThirdPartyLicenseDialog
 
 logger = logging.getLogger(__name__)
@@ -140,6 +146,7 @@ class MainControllerInteractionMixin:
             return True
         if self._handle_image_drag_event(watched, event):
             return True
+        self._handle_pixel_sample_event(watched, event)
         if event.type() in (QtCore.QEvent.Type.MouseMove, QtCore.QEvent.Type.Enter, QtCore.QEvent.Type.Leave):
             self._refresh_image_cursor(watched, event)
         try:
@@ -343,6 +350,104 @@ class MainControllerInteractionMixin:
             return True
 
         return False
+
+    def _handle_pixel_sample_event(self, watched: QtCore.QObject, event: QtCore.QEvent) -> None:
+        """Update RGB/luma sample readouts for image hover events."""
+
+        if event.type() == QtCore.QEvent.Type.Leave:
+            if isinstance(watched, QtWidgets.QWidget) and self._image_label_for_widget(watched) is not None:
+                self._reset_pixel_sample_display()
+            return
+        if event.type() != QtCore.QEvent.Type.MouseMove:
+            return
+        if not isinstance(event, QtGui.QMouseEvent):
+            return
+        if not isinstance(watched, QtWidgets.QWidget):
+            return
+
+        label = self._image_label_for_widget(watched)
+        if label is None:
+            return
+        path = self._image_path_for_widget(label)
+        current_path = self._current_image_path()
+        if path is None or current_path is None or path != current_path:
+            self._reset_pixel_sample_display()
+            return
+
+        data = self._images_by_path.get(str(path))
+        if data is None:
+            self._reset_pixel_sample_display()
+            return
+
+        analysis_bgr = data.analysis.analysis_bgr
+        if not hasattr(label, "image_pixel_position_at"):
+            self._reset_pixel_sample_display()
+            return
+
+        label_pos = label.mapFrom(watched, event.position().toPoint())
+        pixel_pos = label.image_pixel_position_at(label_pos, analysis_bgr.shape[:2])
+        if pixel_pos is None:
+            self._reset_pixel_sample_display()
+            return
+
+        x, y = pixel_pos
+        sample = sample_analysis_pixel(analysis_bgr, x, y)
+        self._set_pixel_sample_display(sample, str(path), id(analysis_bgr))
+
+    def _image_label_for_widget(self, widget: QtWidgets.QWidget) -> ImageDisplayLabel | None:
+        """Resolve the image display label from an image widget or viewport."""
+
+        if isinstance(widget, ImageDisplayLabel) and widget.objectName() == "lblImage":
+            return widget
+        scroll_area = self._resolve_image_scroll_area(widget)
+        if scroll_area is None:
+            return None
+        label = scroll_area.widget()
+        if isinstance(label, ImageDisplayLabel):
+            return label
+        return None
+
+    def _image_path_for_widget(self, widget: QtWidgets.QWidget) -> Optional[Path]:
+        """Return the image path associated with a widget's tab container."""
+
+        current: Optional[QtWidgets.QWidget] = widget
+        while current is not None:
+            raw = current.property("image_path")
+            if raw:
+                return Path(str(raw))
+            current = current.parentWidget()
+        return None
+
+    def _set_pixel_sample_display(
+        self,
+        sample: PixelSample,
+        path_key: str | None = None,
+        analysis_id: int | None = None,
+    ) -> None:
+        """Show one pixel sample in the analysis panel."""
+
+        for attr, value in (
+            ("labelPixelRedValue", sample.red),
+            ("labelPixelGreenValue", sample.green),
+            ("labelPixelBlueValue", sample.blue),
+            ("labelPixelLumaValue", sample.luma),
+        ):
+            label = getattr(self._ui, attr, None)
+            if isinstance(label, QtWidgets.QLabel):
+                label.setText(str(value))
+
+        histogram = getattr(self._ui, "widgetHistogram", None)
+        if hasattr(histogram, "set_luma_marker_value"):
+            histogram.set_luma_marker_value(sample.luma)
+        if sample == INVALID_PIXEL_SAMPLE:
+            self._pixel_sample_analysis_key = None
+        elif path_key is not None and analysis_id is not None:
+            self._pixel_sample_analysis_key = (path_key, analysis_id)
+
+    def _reset_pixel_sample_display(self) -> None:
+        """Reset analysis pixel readouts and hide the histogram marker."""
+
+        self._set_pixel_sample_display(INVALID_PIXEL_SAMPLE)
 
     def _refresh_image_cursor(self, watched: QtCore.QObject, event: QtCore.QEvent) -> None:
         """Ensure the hand cursor appears over the image area."""

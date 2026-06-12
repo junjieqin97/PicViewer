@@ -125,6 +125,32 @@ class MainControllerClippingToggleTests(QtWidgetTestCase):
         underexposed_toggled.assert_called_once_with(True)
         overexposed_toggled.assert_called_once_with(True)
 
+    def test_luma_marker_value_can_be_set_and_cleared(self) -> None:
+        self.assertTrue(hasattr(self.widget, "set_luma_marker_value"))
+        self.assertTrue(hasattr(self.widget, "luma_marker_value"))
+
+        self.widget.set_luma_marker_value(128)
+
+        self.assertEqual(128, self.widget.luma_marker_value())
+
+        self.widget.set_luma_marker_value(-1)
+
+        self.assertEqual(-1, self.widget.luma_marker_value())
+
+    def test_luma_marker_renders_black_vertical_line(self) -> None:
+        self.assertTrue(hasattr(self.widget, "set_luma_marker_value"))
+        self.widget.resize(256, 100)
+        pixmap = QtGui.QPixmap(256, 100)
+        pixmap.fill(QtGui.QColor(255, 255, 255))
+        self.widget.setPixmap(pixmap)
+        self.widget.set_luma_marker_value(128)
+
+        image = QtGui.QImage(self.widget.size(), QtGui.QImage.Format.Format_RGB32)
+        image.fill(QtGui.QColor(255, 255, 255))
+        self.widget.render(image)
+
+        self.assertEqual(QtGui.QColor(0, 0, 0), QtGui.QColor(image.pixel(128, 50)))
+
     def test_tooltip_event_uses_qhelp_event_positions(self) -> None:
         self.widget.resize(256, 100)
         self.widget.set_triangle_tooltips("Under", "Over")
