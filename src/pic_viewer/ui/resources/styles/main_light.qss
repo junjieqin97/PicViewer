@@ -349,7 +349,7 @@ QLabel#labelPixelBlueValue {
 }
 
 QLabel#labelPixelLumaValue {
-    color: #ffffff;
+    color: #000000;
     font-weight: 600;
 }
 
