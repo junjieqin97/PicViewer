@@ -28,7 +28,8 @@ class MainControllerTabsMixin:
         image_filter_label = self._tr("Image Files")
         all_files_label = self._tr("All Files")
         filter_text = (
-            f"{image_filter_label} (*.jpg *.jpeg *.png *.tif *.tiff *.bmp *.dng *.nef *.cr2 *.arw *.raf);;"
+            f"{image_filter_label} (*.jpg *.jpeg *.png *.tif *.tiff *.bmp *.webp *.avif "
+            "*.heif *.heic *.dng *.nef *.cr2 *.arw *.raf);;"
             f"{all_files_label} (*)"
         )
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
@@ -497,7 +498,10 @@ class MainControllerTabsMixin:
         content_layout.addWidget(actions_container, 0, QtCore.Qt.AlignmentFlag.AlignHCenter)
 
         label_formats = QtWidgets.QLabel(
-            self._tr("Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF"),
+            self._tr(
+                "Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, WEBP, AVIF, HEIF/HEIC, "
+                "DNG, NEF, CR2, ARW, RAF"
+            ),
             content,
         )
         label_formats.setObjectName("labelEmptyFormats")

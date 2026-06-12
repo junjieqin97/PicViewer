@@ -163,6 +163,23 @@ class ThirdPartyLicenseServiceTests(unittest.TestCase):
         self.assertEqual("MIT-CMU", pillow.license_text)
         self.assertEqual("Runtime color management backend based on ImageCms.", pillow.notes)
 
+    def test_load_third_party_licenses_reports_modern_pillow_image_plugins(self) -> None:
+        metadata_by_package = {
+            "pillow-heif": self._message({"License-Expression": "BSD-3-Clause"}),
+            "pillow-avif-plugin": self._message({"License-Expression": "MIT"}),
+        }
+
+        licenses = self._load_with_metadata(metadata_by_package)
+
+        heif = self._find_license(licenses, "pillow-heif")
+        avif = self._find_license(licenses, "pillow-avif-plugin")
+        self.assertEqual("pillow-heif", heif.display_name)
+        self.assertEqual("BSD-3-Clause", heif.license_text)
+        self.assertEqual("HEIF/HEIC image support through Pillow.", heif.notes)
+        self.assertEqual("pillow-avif-plugin", avif.display_name)
+        self.assertEqual("MIT", avif.license_text)
+        self.assertEqual("AVIF image support through Pillow.", avif.notes)
+
     def test_optional_rawpy_missing_is_reported_without_failing(self) -> None:
         def fake_version(package_name: str) -> str:
             if package_name == "rawpy":

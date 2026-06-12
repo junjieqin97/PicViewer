@@ -42,6 +42,8 @@ class PackagingConfigurationTests(unittest.TestCase):
 
         self.assertIn('"pyexiv2>=2.15.5,<3"', runtime_dependencies)
         self.assertIn('"Pillow>=10.0"', runtime_dependencies)
+        self.assertIn('"pillow-heif>=1,<2"', runtime_dependencies)
+        self.assertIn('"pillow-avif-plugin>=1.5,<2"', runtime_dependencies)
         self.assertNotIn('"Pillow>=10.0"', packaging_extra)
 
     def test_manifest_includes_runtime_resources_and_release_files(self) -> None:
@@ -129,7 +131,16 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("RUNTIME_METADATA_PACKAGES", spec)
         metadata_packages = spec.split("RUNTIME_METADATA_PACKAGES = (", maxsplit=1)[1].split(")", maxsplit=1)[0]
         self.assertNotIn('"picviewer"', metadata_packages)
-        for package_name in ("PySide6", "opencv-python", "numpy", "pyexiv2", "Pillow", "rawpy"):
+        for package_name in (
+            "PySide6",
+            "opencv-python",
+            "numpy",
+            "pyexiv2",
+            "Pillow",
+            "pillow-heif",
+            "pillow-avif-plugin",
+            "rawpy",
+        ):
             self.assertIn(f'"{package_name}"', spec)
         self.assertNotIn('"PySide2"', spec)
         self.assertIn("_collect_runtime_metadata(RUNTIME_METADATA_PACKAGES)", spec)
@@ -139,6 +150,14 @@ class PackagingConfigurationTests(unittest.TestCase):
 
         self.assertIn('"PIL.ImageCms"', spec)
         self.assertIn('"PIL._imagingcms"', spec)
+
+    def test_pyinstaller_spec_collects_modern_pillow_image_plugins(self) -> None:
+        spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")
+
+        self.assertIn('collect_dynamic_libs("pillow_heif")', spec)
+        self.assertIn('collect_submodules("pillow_heif")', spec)
+        self.assertIn('collect_dynamic_libs("pillow_avif")', spec)
+        self.assertIn('collect_submodules("pillow_avif")', spec)
 
     def test_pyinstaller_spec_generates_picviewer_metadata_from_pyproject(self) -> None:
         spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")

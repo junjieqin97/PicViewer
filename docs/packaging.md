@@ -33,11 +33,13 @@ Packaging tools are installed through optional dependencies:
 pip install ".[packaging]"
 ```
 
-PicViewer uses `pyexiv2` as the runtime metadata backend and Pillow ImageCms
-as the runtime color management backend. Both are installed with the base
-package. `pyexiv2` includes native Exiv2 runtime files in its wheels, while
-Pillow provides the ImageCms bindings used for ICC profile transforms.
-Packaging builds must keep those native files bundled with the application.
+PicViewer uses `pyexiv2` as the runtime metadata backend, Pillow ImageCms
+as the runtime color management backend, and Pillow image plugins for
+AVIF/HEIF decoding. These are installed with the base package. `pyexiv2`
+includes native Exiv2 runtime files in its wheels, while Pillow provides the
+ImageCms bindings used for ICC profile transforms and the plugin interface used
+by `pillow-heif` and `pillow-avif-plugin`. Packaging builds must keep those
+native files bundled with the application.
 On macOS, if importing `pyexiv2` reports a missing `libINIReader.0.dylib`,
 install the native dependency with `brew install inih` before building.
 
@@ -135,7 +137,10 @@ The script performs the following steps:
 - Output native platform artifacts to `dist/`.
 
 PyInstaller uses `onedir` mode. The Windows artifact is `dist/PicViewer/`, and the macOS artifact is `dist/PicViewer.app`. Windows uses `packaging/icons/picviewer.ico` as the application icon, and macOS uses `packaging/icons/picviewer.icns`. The app version installs and collects `rawpy` through the `packaging` extra by default, providing RAW support for ordinary users.
-The spec also collects `pyexiv2` submodules, `pyexiv2` dynamic libraries, Pillow ImageCms hidden imports, and macOS Homebrew `inih` dynamic libraries so Exiv2 metadata reading and ICC color conversion work in packaged apps.
+The spec also collects `pyexiv2` submodules, `pyexiv2` dynamic libraries,
+Pillow ImageCms hidden imports, Pillow HEIF/AVIF plugin modules and dynamic
+libraries, and macOS Homebrew `inih` dynamic libraries so Exiv2 metadata
+reading, ICC color conversion, and modern image decoding work in packaged apps.
 The spec generates PicViewer's own package metadata for the About dialog from `pyproject.toml` and sets the macOS bundle version from the same source.
 
 The PyInstaller spec prunes unused PySide6 runtime entries after dependency
@@ -145,7 +150,8 @@ information plugins, TLS plugins, non-native platform plugins on macOS and
 Windows, non-SVG image format plugins, and unused Qt translation files. Linux
 platform plugins are not pruned so X11 and Wayland compatibility remains
 controlled by the Qt runtime. The pruning only applies to Qt runtime entries;
-OpenCV, rawpy, pyexiv2, and PicViewer resources are left unchanged.
+OpenCV, rawpy, pyexiv2, Pillow image plugins, and PicViewer resources are left
+unchanged.
 
 After building, inspect the packaged Qt runtime with platform-specific file
 listing tools. On macOS, for example:
