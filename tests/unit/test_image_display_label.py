@@ -162,6 +162,31 @@ class ImageDisplayLabelTests(QtWidgetTestCase):
 
         self.assertEqual(styles.AppearanceTheme.LIGHT, label.color_readout_theme())
 
+    def test_color_readout_text_runs_use_channel_values_and_colors(self) -> None:
+        label = ImageDisplayLabel()
+        self.addCleanup(label.deleteLater)
+        readout = ColorReadout(
+            readout_id=1,
+            x=0,
+            y=0,
+            sample=PixelSample(red=10, green=20, blue=30, luma=40),
+        )
+
+        self.assertEqual(
+            (("10", "red"), ("20", "green"), ("30", "blue"), ("40", "luma")),
+            label.color_readout_text_runs(readout),
+        )
+
+        dark_colors = label.color_readout_text_colors()
+        self.assertEqual(QtGui.QColor(255, 77, 77), dark_colors["red"])
+        self.assertEqual(QtGui.QColor(72, 199, 116), dark_colors["green"])
+        self.assertEqual(QtGui.QColor(77, 163, 255), dark_colors["blue"])
+        self.assertEqual(QtGui.QColor(255, 255, 255), dark_colors["luma"])
+
+        label.set_color_readout_theme(styles.AppearanceTheme.LIGHT)
+        light_colors = label.color_readout_text_colors()
+        self.assertEqual(QtGui.QColor(0, 0, 0), light_colors["luma"])
+
     def _has_light_pixel(self, image: QtGui.QImage, rect: QtCore.QRect) -> bool:
         for y in range(rect.top(), rect.bottom() + 1):
             for x in range(rect.left(), rect.right() + 1):

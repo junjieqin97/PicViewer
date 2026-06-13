@@ -27,15 +27,20 @@ class ColorReadout:
     y: int
     sample: PixelSample
 
-    def display_text(self) -> str:
-        """Return the fixed user-visible RGB/luma readout text."""
+    def display_values(self) -> tuple[str, str, str, str]:
+        """Return RGB and luma values as four display-ready numbers."""
 
         return (
-            f"R: {self.sample.red}  "
-            f"G: {self.sample.green}  "
-            f"B: {self.sample.blue}  "
-            f"Luma: {self.sample.luma}"
+            str(self.sample.red),
+            str(self.sample.green),
+            str(self.sample.blue),
+            str(self.sample.luma),
         )
+
+    def display_text(self) -> str:
+        """Return the fixed user-visible numeric readout text."""
+
+        return "  ".join(self.display_values())
 
 
 INVALID_PIXEL_SAMPLE = PixelSample(red=-1, green=-1, blue=-1, luma=-1)

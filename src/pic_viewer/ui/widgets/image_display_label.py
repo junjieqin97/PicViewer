@@ -24,6 +24,7 @@ class ImageDisplayLabel(QtWidgets.QLabel):
     _COLOR_READOUT_MARGIN = 6
     _COLOR_READOUT_RADIUS = 4
     _COLOR_READOUT_MARKER_RADIUS = 5
+    _COLOR_READOUT_VALUE_GAP = 8
 
     def __init__(
         self,
@@ -215,21 +216,50 @@ class ImageDisplayLabel(QtWidgets.QLabel):
             painter.setPen(QtGui.QPen(colors["border"], 1))
             painter.setBrush(colors["background"])
             painter.drawRoundedRect(text_rect, self._COLOR_READOUT_RADIUS, self._COLOR_READOUT_RADIUS)
-            painter.setPen(colors["text"])
-            painter.drawText(
-                text_rect.adjusted(
-                    self._COLOR_READOUT_PADDING_X,
-                    self._COLOR_READOUT_PADDING_Y,
-                    -self._COLOR_READOUT_PADDING_X,
-                    -self._COLOR_READOUT_PADDING_Y,
-                ),
-                QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter,
-                readout.display_text(),
-            )
+            self._draw_color_readout_values(painter, readout, text_rect, colors)
             painter.setBrush(colors["marker"])
             painter.setPen(QtGui.QPen(colors["border"], 1))
             painter.drawEllipse(anchor, self._COLOR_READOUT_MARKER_RADIUS, self._COLOR_READOUT_MARKER_RADIUS)
         painter.end()
+
+    def _draw_color_readout_values(
+        self,
+        painter: QtGui.QPainter,
+        readout: ColorReadout,
+        text_rect: QtCore.QRect,
+        colors: dict[str, QtGui.QColor],
+    ) -> None:
+        metrics = painter.fontMetrics()
+        left = text_rect.left() + self._COLOR_READOUT_PADDING_X
+        baseline = text_rect.top() + self._COLOR_READOUT_PADDING_Y + metrics.ascent()
+        for text, color_name in self.color_readout_text_runs(readout):
+            painter.setPen(colors[color_name])
+            painter.drawText(left, baseline, text)
+            left += metrics.horizontalAdvance(text) + self._COLOR_READOUT_VALUE_GAP
+
+    def color_readout_text_runs(self, readout: ColorReadout) -> tuple[tuple[str, str], ...]:
+        """Return display values with their color keys in visual order."""
+
+        red, green, blue, luma = readout.display_values()
+        return (
+            (red, "red"),
+            (green, "green"),
+            (blue, "blue"),
+            (luma, "luma"),
+        )
+
+    def color_readout_text_colors(self) -> dict[str, QtGui.QColor]:
+        """Return channel colors for readout text in the active theme."""
+
+        luma = QtGui.QColor(0, 0, 0)
+        if self._color_readout_theme == styles.AppearanceTheme.DARK:
+            luma = QtGui.QColor(255, 255, 255)
+        return {
+            "red": QtGui.QColor(255, 77, 77),
+            "green": QtGui.QColor(72, 199, 116),
+            "blue": QtGui.QColor(77, 163, 255),
+            "luma": luma,
+        }
 
     def _color_readout_label_rect(
         self,
@@ -238,8 +268,15 @@ class ImageDisplayLabel(QtWidgets.QLabel):
         pixmap_rect: QtCore.QRect,
     ) -> QtCore.QRect:
         metrics = self.fontMetrics()
-        text = readout.display_text()
-        width = metrics.horizontalAdvance(text) + self._COLOR_READOUT_PADDING_X * 2
+        value_widths = [
+            metrics.horizontalAdvance(text)
+            for text, _color_name in self.color_readout_text_runs(readout)
+        ]
+        width = (
+            sum(value_widths)
+            + self._COLOR_READOUT_VALUE_GAP * (len(value_widths) - 1)
+            + self._COLOR_READOUT_PADDING_X * 2
+        )
         height = metrics.height() + self._COLOR_READOUT_PADDING_Y * 2
         left = anchor.x() + self._COLOR_READOUT_MARGIN
         top = anchor.y() - height - self._COLOR_READOUT_MARGIN
@@ -274,14 +311,14 @@ class ImageDisplayLabel(QtWidgets.QLabel):
             return {
                 "background": QtGui.QColor(255, 255, 255, 235),
                 "border": QtGui.QColor(77, 143, 211),
-                "text": QtGui.QColor(31, 37, 45),
                 "marker": QtGui.QColor(77, 143, 211),
+                **self.color_readout_text_colors(),
             }
         return {
             "background": QtGui.QColor(43, 48, 54, 235),
             "border": QtGui.QColor(142, 180, 223),
-            "text": QtGui.QColor(237, 241, 245),
             "marker": QtGui.QColor(142, 180, 223),
+            **self.color_readout_text_colors(),
         }
 
     def _normalize_image_size(
