@@ -90,6 +90,29 @@ class MainWindowShortcutTests(QtWidgetTestCase):
         self.assertTrue(all(action.isCheckable() for action in actions))
         self.assertFalse(any(action.isChecked() for action in actions))
 
+    def test_tools_menu_contains_color_readouts_submenu(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        self.assertEqual("menuColorReadouts", ui.menuColorReadouts.objectName())
+        self.assertEqual("Color Readouts", ui.menuColorReadouts.title())
+        self.assertIn(ui.menuColorReadouts.menuAction(), ui.menuTools.actions())
+
+        actions = (ui.actAddColorReadout, ui.actDeleteColorReadout)
+        self.assertEqual(
+            ["Add Color Readout", "Delete Color Readout"],
+            [action.text() for action in actions],
+        )
+        self.assertEqual(
+            ["actAddColorReadout", "actDeleteColorReadout"],
+            [action.objectName() for action in actions],
+        )
+        self.assertTrue(all(action.isCheckable() for action in actions))
+        self.assertTrue(all(action.shortcut().isEmpty() for action in actions))
+        self.assertFalse(any(action.isChecked() for action in actions))
+
     def test_help_menu_contains_about_and_third_party_license_actions(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()

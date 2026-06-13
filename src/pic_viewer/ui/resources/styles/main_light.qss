@@ -187,6 +187,14 @@ QLabel#lblImage {
     color: #263241;
 }
 
+QLabel#labelColorReadout {
+    background: #ffffff;
+    color: #1f252d;
+    border: 1px solid #4d8fd3;
+    border-radius: 4px;
+    padding: 4px 6px;
+}
+
 QScrollArea#scrollImage QScrollBar:horizontal {
     background: #eef2f6;
     border: none;

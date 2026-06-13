@@ -16,6 +16,8 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.domain.rules.reference_lines import ReferenceLineSettings  # noqa: E402
+from pic_viewer.domain.rules.pixel_sample import ColorReadout, PixelSample  # noqa: E402
+from pic_viewer.ui.resources import styles  # noqa: E402
 from pic_viewer.ui.widgets.image_display_label import ImageDisplayLabel  # noqa: E402
 
 
@@ -123,6 +125,42 @@ class ImageDisplayLabelTests(QtWidgetTestCase):
         self.assertIsNone(label.image_pixel_position_at(QtCore.QPoint(9, 10), (4, 8)))
         self.assertIsNone(label.image_pixel_position_at(QtCore.QPoint(90, 49), (4, 8)))
         self.assertIsNone(label.image_pixel_position_at(QtCore.QPoint(10, 50), (4, 8)))
+
+    def test_color_readouts_can_be_set_and_hit_tested(self) -> None:
+        label = ImageDisplayLabel()
+        self.addCleanup(label.deleteLater)
+        label.resize(100, 60)
+        pixmap = QtGui.QPixmap(80, 40)
+        pixmap.fill(QtGui.QColor(0, 0, 0))
+        label.setPixmap(pixmap)
+        readouts = (
+            ColorReadout(
+                readout_id=1,
+                x=4,
+                y=2,
+                sample=PixelSample(red=10, green=20, blue=30, luma=21),
+            ),
+            ColorReadout(
+                readout_id=2,
+                x=7,
+                y=3,
+                sample=PixelSample(red=40, green=50, blue=60, luma=51),
+            ),
+        )
+
+        label.set_color_readouts(readouts)
+
+        self.assertEqual(readouts, label.color_readouts())
+        self.assertEqual(1, label.color_readout_id_at(QtCore.QPoint(50, 30)))
+        self.assertIsNone(label.color_readout_id_at(QtCore.QPoint(10, 10)))
+
+    def test_color_readout_theme_can_be_applied(self) -> None:
+        label = ImageDisplayLabel()
+        self.addCleanup(label.deleteLater)
+
+        label.set_color_readout_theme(styles.AppearanceTheme.LIGHT)
+
+        self.assertEqual(styles.AppearanceTheme.LIGHT, label.color_readout_theme())
 
     def _has_light_pixel(self, image: QtGui.QImage, rect: QtCore.QRect) -> bool:
         for y in range(rect.top(), rect.bottom() + 1):

@@ -30,6 +30,7 @@ The main window uses a typical four-area structure:
   - Tools: Histogram/Waveform options + pseudo color options + reference line options
     - Pseudo Color: Show Underexposed (checkable), Show Overexposed (checkable), Show Peaking (High/Medium/Low, checkable, three levels are mutually exclusive and clicking the current level turns it off)
     - Reference Lines: Crosshair Reference Line, Diagonal Reference Line, Rule-of-Thirds Grid Reference Line (all checkable; can be toggled independently and displayed as overlays together)
+    - Color Readouts: Add Color Readout, Delete Color Readout (checkable tool modes; activating one deactivates the other, and clicking the active tool again exits the mode)
   - Help: About, Third-Party Library License Information
 - In the `Third-Party Library License Information` dialog, recognizable license names must be displayed as hyperlinks; clicking a license name opens a read-only dialog showing the original English text of that license.
 - Requirement: create and name each menu item with `QAction` (see "Component Checklist").
@@ -61,9 +62,11 @@ The main window uses a typical four-area structure:
   - Show Underexposed, Show Overexposed
   - Show Peaking High/Medium/Low
   - Crosshair Reference Line, Diagonal Reference Line, Rule-of-Thirds Grid Reference Line
+  - Add Color Readout, Delete Color Readout
   - Show Metadata Overlay
 - The Show Metadata Overlay button is pinned to the far right side of the toolbar. The centered analysis button group must remain visually centered by reserving equal space on the left side.
 - The Show Metadata Overlay button is enabled by default. When enabled, the current image shows up to three metadata lines at the upper-left corner of the actual displayed image: camera/lens, exposure settings, and resolution. The camera name combines camera maker and camera model when both are available. Missing metadata fields are omitted instead of shown as placeholders. The text is drawn in semi-transparent white.
+- The Add Color Readout and Delete Color Readout buttons reuse the corresponding `Tools > Color Readouts` actions. Add mode uses a plus-style cursor over the analyzed image and can add multiple persistent labels. Delete mode uses a minus-style cursor and removes a readout only when the user clicks an existing readout label. Labels use the active light/dark appearance style.
 
 ## 3. Upper Content Area: Image Tabs + Right Info Area (QSplitter)
 
@@ -199,6 +202,8 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `buttonToolbarCrossReferenceLine: QToolButton`
 - `buttonToolbarDiagonalReferenceLine: QToolButton`
 - `buttonToolbarThirdsReferenceLine: QToolButton`
+- `buttonToolbarAddColorReadout: QToolButton`
+- `buttonToolbarDeleteColorReadout: QToolButton`
 - `buttonToolbarMetadataOverlay: QToolButton`
 - `tabsInfo: DetachableTabWidget`
 - `tabAnalysis: QWidget`
@@ -228,6 +233,7 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 
 Top-level menus: `menuFile` `menuView` `menuTools` `menuHelp`
 Submenus: `menuAppearance`
+Tools submenus: `menuColorReadouts`
 Actions (names must be consistent; copy may mix Chinese and English, but consistency is recommended):
 
 - `actOpenFile`: Open Image...
@@ -252,6 +258,8 @@ Actions (names must be consistent; copy may mix Chinese and English, but consist
 - `actToggleCrossReferenceLine`: Crosshair Reference Line (checkable)
 - `actToggleDiagonalReferenceLine`: Diagonal Reference Line (checkable)
 - `actToggleThirdsReferenceLine`: Rule-of-Thirds Grid Reference Line (checkable)
+- `actAddColorReadout`: Add Color Readout (checkable)
+- `actDeleteColorReadout`: Delete Color Readout (checkable)
 - `actAbout`: About
 - `actThirdPartyLicenses`: Third-Party Library License Information
 
@@ -328,3 +336,4 @@ Do not write business logic inside UI files; TODO/placeholder implementations ar
 - Image file names are displayed in full in the `tab title`, `bottom filmstrip`, and hidden-filmstrip status summary.
 - When the mouse pointer is at the boundary between the `image display area` and the `right info area`, the pointer `style` must automatically change to a `double arrow` (that is, a `move arrow`).
 - Hovering the mouse over the `image display area` should immediately change the pointer to a `hand`, and holding the mouse button should allow dragging to pan a zoomed image.
+- When Add Color Readout is active, hovering over a loaded analyzed image uses a plus-style cursor, and left-clicking a displayed image pixel adds a persistent readout label for that image. When Delete Color Readout is active, hovering uses a minus-style cursor, and left-clicking a readout label deletes only that label. If the current image is not fully loaded, both actions are disabled. If the current image has no readouts, Delete Color Readout is disabled and its mode is cleared.

@@ -145,6 +145,20 @@ class UiStylesTests(QtWidgetTestCase):
                 self.assertIn("color: #4da3ff", blue_rule)
                 self.assertIn(f"color: {expected_luma_color}", luma_rule)
 
+    def test_color_readout_label_styles_match_theme(self) -> None:
+        dark_style = styles.load_stylesheet(styles.AppearanceTheme.DARK)
+        light_style = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
+
+        dark_rule = self._style_block(dark_style, "QLabel#labelColorReadout")
+        light_rule = self._style_block(light_style, "QLabel#labelColorReadout")
+
+        self.assertIn("background: #2b3036", dark_rule)
+        self.assertIn("color: #edf1f5", dark_rule)
+        self.assertIn("border: 1px solid #8eb4df", dark_rule)
+        self.assertIn("background: #ffffff", light_rule)
+        self.assertIn("color: #1f252d", light_rule)
+        self.assertIn("border: 1px solid #4d8fd3", light_rule)
+
     def test_analysis_combo_popup_views_use_theme_contrast(self) -> None:
         dark_style = styles.load_stylesheet(styles.AppearanceTheme.DARK)
         light_style = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)

@@ -18,6 +18,26 @@ class PixelSample:
     luma: int
 
 
+@dataclass(frozen=True)
+class ColorReadout:
+    """Persistent RGB/luma readout anchored to one analysis-space pixel."""
+
+    readout_id: int
+    x: int
+    y: int
+    sample: PixelSample
+
+    def display_text(self) -> str:
+        """Return the fixed user-visible RGB/luma readout text."""
+
+        return (
+            f"R: {self.sample.red}  "
+            f"G: {self.sample.green}  "
+            f"B: {self.sample.blue}  "
+            f"Luma: {self.sample.luma}"
+        )
+
+
 INVALID_PIXEL_SAMPLE = PixelSample(red=-1, green=-1, blue=-1, luma=-1)
 
 

@@ -483,6 +483,8 @@ class MainControllerAnalysisMixin:
             self._set_info_placeholders()
             self._clear_metadata_tables()
             self._last_metadata_path = None
+            if hasattr(self, "_sync_color_readout_actions"):
+                self._sync_color_readout_actions()
             return
 
         data = self._images_by_path.get(str(image_path))
@@ -510,6 +512,8 @@ class MainControllerAnalysisMixin:
             return
 
         self._reset_pixel_sample_if_analysis_changed(image_path, data.analysis)
+        if hasattr(self, "_refresh_color_readouts_for_path"):
+            self._refresh_color_readouts_for_path(image_path, data.analysis.analysis_bgr)
         self._sync_specified_image_color_space_enabled(data.analysis.source_color_profile)
         self._set_image_color_space_value(
             self._format_source_color_profile_info(data.analysis.source_color_profile)
@@ -574,6 +578,8 @@ class MainControllerAnalysisMixin:
     def _set_info_placeholders(self) -> None:
         self._current_analysis_render_key = None
         self._reset_pixel_sample_display()
+        if hasattr(self, "_sync_color_readout_actions"):
+            self._sync_color_readout_actions()
         self._set_specified_image_color_space_enabled(True)
         self._set_image_color_space_value(self._tr("Not Loaded"))
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
@@ -584,6 +590,8 @@ class MainControllerAnalysisMixin:
     def _set_info_loading_placeholders(self) -> None:
         self._current_analysis_render_key = None
         self._reset_pixel_sample_display()
+        if hasattr(self, "_sync_color_readout_actions"):
+            self._sync_color_readout_actions()
         self._set_specified_image_color_space_enabled(True)
         self._set_image_color_space_value(self._tr("Loading"))
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
@@ -594,6 +602,8 @@ class MainControllerAnalysisMixin:
     def _set_info_error_placeholders(self) -> None:
         self._current_analysis_render_key = None
         self._reset_pixel_sample_display()
+        if hasattr(self, "_sync_color_readout_actions"):
+            self._sync_color_readout_actions()
         self._set_specified_image_color_space_enabled(True)
         self._set_image_color_space_value(self._tr("Unavailable"))
         message = self._tr("Image failed to load. Analysis is unavailable.")
@@ -743,6 +753,8 @@ class MainControllerAnalysisMixin:
         self._tab_preview_render_key_by_path[path_key] = render_key
         if hasattr(self, "_sync_metadata_overlay_for_path"):
             self._sync_metadata_overlay_for_path(path)
+        if hasattr(self, "_sync_color_readouts_for_path"):
+            self._sync_color_readouts_for_path(path)
 
     def _target_pixmap_size(self, path: Path, base_size: QtCore.QSize) -> QtCore.QSize:
         """Calculate the target pixmap size based on zoom settings."""

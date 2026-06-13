@@ -55,77 +55,77 @@
             <translation>Unable to load ICC profile</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="576" />
+            <location filename="main_controller_analysis_mixin.py" line="584" />
             <source>Not Loaded</source>
             <translation>Not Loaded</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="579" />
+            <location filename="main_controller_analysis_mixin.py" line="587" />
             <source>Histogram Placeholder</source>
             <translation>Histogram Placeholder</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="580" />
+            <location filename="main_controller_analysis_mixin.py" line="588" />
             <source>Waveform Placeholder</source>
             <translation>Waveform Placeholder</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="585" />
+            <location filename="main_controller_analysis_mixin.py" line="596" />
             <source>Loading</source>
             <translation>Loading</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="588" />
+            <location filename="main_controller_analysis_mixin.py" line="599" />
             <source>Generating histogram...</source>
             <translation>Generating histogram...</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="589" />
+            <location filename="main_controller_analysis_mixin.py" line="600" />
             <source>Generating waveform...</source>
             <translation>Generating waveform...</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="594" />
+            <location filename="main_controller_analysis_mixin.py" line="608" />
             <source>Unavailable</source>
             <translation>Unavailable</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="595" />
+            <location filename="main_controller_analysis_mixin.py" line="609" />
             <source>Image failed to load. Analysis is unavailable.</source>
             <translation>Image failed to load. Analysis is unavailable.</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="633" />
+            <location filename="main_controller_analysis_mixin.py" line="657" />
             <source>{name} (embedded ICC)</source>
             <translation>{name} (embedded ICC)</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="638" />
+            <location filename="main_controller_analysis_mixin.py" line="662" />
             <source>{name} (specified, unreadable ICC)</source>
             <translation>{name} (specified, unreadable ICC)</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="639" />
+            <location filename="main_controller_analysis_mixin.py" line="663" />
             <source>sRGB (default, unreadable ICC)</source>
             <translation>sRGB (default, unreadable ICC)</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="642" />
+            <location filename="main_controller_analysis_mixin.py" line="666" />
             <source>{name} (specified fallback, ICC conversion failed)</source>
             <translation>{name} (specified fallback, ICC conversion failed)</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="645" />
+            <location filename="main_controller_analysis_mixin.py" line="669" />
             <source>sRGB (fallback, ICC conversion failed)</source>
             <translation>sRGB (fallback, ICC conversion failed)</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="647" />
+            <location filename="main_controller_analysis_mixin.py" line="671" />
             <source>{name} (specified, no embedded ICC)</source>
             <translation>{name} (specified, no embedded ICC)</translation>
         </message>
         <message>
-            <location filename="main_controller_analysis_mixin.py" line="648" />
+            <location filename="main_controller_analysis_mixin.py" line="672" />
             <source>sRGB (default, no embedded ICC)</source>
             <translation>sRGB (default, no embedded ICC)</translation>
         </message>
@@ -133,43 +133,43 @@
     <context>
         <name>MainControllerInteractionMixin</name>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="122" />
+            <location filename="main_controller_interaction_mixin.py" line="131" />
             <source>Warning</source>
             <translation>Warning</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="123" />
+            <location filename="main_controller_interaction_mixin.py" line="132" />
             <source>Unable to open the image folder.</source>
             <translation>Unable to open the image folder.</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="247" />
-            <location filename="main_controller_interaction_mixin.py" line="409" />
+            <location filename="main_controller_interaction_mixin.py" line="259" />
+            <location filename="main_controller_interaction_mixin.py" line="733" />
             <source>Info</source>
             <translation>Info</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="248" />
+            <location filename="main_controller_interaction_mixin.py" line="260" />
             <source>No supported image files were found in the dropped files.</source>
             <translation>No supported image files were found in the dropped files.</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="257" />
+            <location filename="main_controller_interaction_mixin.py" line="269" />
             <source>Skipped {count} unsupported file(s).</source>
             <translation>Skipped {count} unsupported file(s).</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="410" />
+            <location filename="main_controller_interaction_mixin.py" line="734" />
             <source>This feature is not implemented yet (TODO).</source>
             <translation>This feature is not implemented yet (TODO).</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="416" />
+            <location filename="main_controller_interaction_mixin.py" line="740" />
             <source>About</source>
             <translation>About</translation>
         </message>
         <message>
-            <location filename="main_controller_interaction_mixin.py" line="429" />
+            <location filename="main_controller_interaction_mixin.py" line="753" />
             <source>&lt;div style="font-size: 12pt;"&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;Version {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class="about-light" style="font-weight: 300;"&gt;A desktop photo viewer for common image formats and camera RAW files.&lt;/p&gt;&lt;p class="about-light" style="font-weight: 300;"&gt;Copyright (c) {years} {owner}. All rights reserved.&lt;/p&gt;&lt;/div&gt;</source>
             <translation>&lt;div style="font-size: 12pt;"&gt;&lt;p&gt;&lt;strong&gt;{name}&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;Version {version}&lt;/strong&gt;&lt;/p&gt;&lt;p class="about-light" style="font-weight: 300;"&gt;A desktop photo viewer for common image formats and camera RAW files.&lt;/p&gt;&lt;p class="about-light" style="font-weight: 300;"&gt;Copyright (c) {years} {owner}. All rights reserved.&lt;/p&gt;&lt;/div&gt;</translation>
         </message>
@@ -352,57 +352,57 @@
             <location filename="main_controller_tabs_mixin.py" line="90" />
             <location filename="main_controller_tabs_mixin.py" line="106" />
             <location filename="main_controller_tabs_mixin.py" line="127" />
-            <location filename="main_controller_tabs_mixin.py" line="299" />
+            <location filename="main_controller_tabs_mixin.py" line="305" />
             <source>Loading...</source>
             <translation>Loading...</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="320" />
+            <location filename="main_controller_tabs_mixin.py" line="326" />
             <source>Unable to Open Image</source>
             <translation>Unable to Open Image</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="322" />
+            <location filename="main_controller_tabs_mixin.py" line="328" />
             <source>File: {name}</source>
             <translation>File: {name}</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="323" />
+            <location filename="main_controller_tabs_mixin.py" line="329" />
             <source>Retry</source>
             <translation>Retry</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="433" />
+            <location filename="main_controller_tabs_mixin.py" line="439" />
             <source>Start Browsing Photos</source>
             <translation>Start Browsing Photos</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="442" />
+            <location filename="main_controller_tabs_mixin.py" line="448" />
             <source>Open an image or choose a folder to start previewing.</source>
             <translation>Open an image or choose a folder to start previewing.</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="448" />
+            <location filename="main_controller_tabs_mixin.py" line="454" />
             <source>Drop files here to open them</source>
             <translation>Drop files here to open them</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="501" />
+            <location filename="main_controller_tabs_mixin.py" line="507" />
             <source>Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, WEBP, AVIF, HEIF/HEIC, DNG, NEF, CR2, ARW, RAF</source>
             <translation>Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, WEBP, AVIF, HEIF/HEIC, DNG, NEF, CR2, ARW, RAF</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="536" />
+            <location filename="main_controller_tabs_mixin.py" line="542" />
             <source>Shortcut: {shortcut}</source>
             <translation>Shortcut: {shortcut}</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="810" />
+            <location filename="main_controller_tabs_mixin.py" line="818" />
             <source>Filmstrip hidden. Current file: {path}</source>
             <translation>Filmstrip hidden. Current file: {path}</translation>
         </message>
         <message>
-            <location filename="main_controller_tabs_mixin.py" line="817" />
+            <location filename="main_controller_tabs_mixin.py" line="825" />
             <source>Current: {name} ({index}/{total})</source>
             <translation>Current: {name} ({index}/{total})</translation>
         </message>
@@ -410,319 +410,334 @@
     <context>
         <name>MainWindowUI</name>
         <message>
-            <location filename="main_window.py" line="515" />
-            <location filename="main_window.py" line="567" />
-            <location filename="main_window.py" line="870" />
+            <location filename="main_window.py" line="546" />
+            <location filename="main_window.py" line="598" />
+            <location filename="main_window.py" line="935" />
             <source>Choose a local ICC...</source>
             <translation>Choose a local ICC...</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="806" />
+            <location filename="main_window.py" line="868" />
             <source>PicViewer</source>
             <translation>PicViewer</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="808" />
+            <location filename="main_window.py" line="870" />
             <source>Open Image...</source>
             <translation>Open Image...</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="809" />
+            <location filename="main_window.py" line="871" />
             <source>Open Folder...</source>
             <translation>Open Folder...</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="810" />
+            <location filename="main_window.py" line="872" />
             <source>Close Current Tab</source>
             <translation>Close Current Tab</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="811" />
+            <location filename="main_window.py" line="873" />
             <source>Exit</source>
             <translation>Exit</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="812" />
+            <location filename="main_window.py" line="874" />
             <source>Zoom In</source>
             <translation>Zoom In</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="813" />
+            <location filename="main_window.py" line="875" />
             <source>Zoom Out</source>
             <translation>Zoom Out</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="814" />
+            <location filename="main_window.py" line="876" />
             <source>Fit to Window</source>
             <translation>Fit to Window</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="815" />
+            <location filename="main_window.py" line="877" />
             <source>Show in Folder</source>
             <translation>Show in Folder</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="816" />
+            <location filename="main_window.py" line="878" />
             <source>Light</source>
             <translation>Light</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="817" />
+            <location filename="main_window.py" line="879" />
             <source>Dark</source>
             <translation>Dark</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="818" />
+            <location filename="main_window.py" line="880" />
             <source>Info Panel</source>
             <translation>Info Panel</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="819" />
+            <location filename="main_window.py" line="881" />
             <source>Analysis Toolbar</source>
             <translation>Analysis Toolbar</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="820" />
+            <location filename="main_window.py" line="882" />
             <source>Filmstrip</source>
             <translation>Filmstrip</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="821" />
+            <location filename="main_window.py" line="883" />
             <source>Show Metadata Overlay</source>
             <translation>Show Metadata Overlay</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="822" />
+            <location filename="main_window.py" line="884" />
             <source>Cross Reference Line</source>
             <translation>Cross Reference Line</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="823" />
+            <location filename="main_window.py" line="885" />
             <source>Diagonal Reference Line</source>
             <translation>Diagonal Reference Line</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="824" />
+            <location filename="main_window.py" line="886" />
             <source>Rule of Thirds Reference Line</source>
             <translation>Rule of Thirds Reference Line</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="825" />
+            <location filename="main_window.py" line="887" />
+            <source>Add Color Readout</source>
+            <translation>Add Color Readout</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="888" />
+            <source>Delete Color Readout</source>
+            <translation>Delete Color Readout</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="889" />
             <source>About</source>
             <translation>About</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="826" />
+            <location filename="main_window.py" line="890" />
             <source>Third-Party License Information</source>
             <translation>Third-Party License Information</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="827" />
+            <location filename="main_window.py" line="891" />
             <source>Luma Mode</source>
             <translation>Luma Mode</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="828" />
+            <location filename="main_window.py" line="892" />
             <source>RGB Mode</source>
             <translation>RGB Mode</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="829" />
+            <location filename="main_window.py" line="893" />
             <source>All RGB Channels</source>
             <translation>All RGB Channels</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="830" />
+            <location filename="main_window.py" line="894" />
             <source>Red Channel Only</source>
             <translation>Red Channel Only</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="831" />
+            <location filename="main_window.py" line="895" />
             <source>Green Channel Only</source>
             <translation>Green Channel Only</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="832" />
+            <location filename="main_window.py" line="896" />
             <source>Blue Channel Only</source>
             <translation>Blue Channel Only</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="833" />
+            <location filename="main_window.py" line="897" />
             <source>Show Underexposed</source>
             <translation>Show Underexposed</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="834" />
+            <location filename="main_window.py" line="898" />
             <source>Show Overexposed</source>
             <translation>Show Overexposed</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="835" />
+            <location filename="main_window.py" line="899" />
             <source>High</source>
             <translation>High</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="836" />
+            <location filename="main_window.py" line="900" />
             <source>Medium</source>
             <translation>Medium</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="837" />
+            <location filename="main_window.py" line="901" />
             <source>Low</source>
             <translation>Low</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="840" />
+            <location filename="main_window.py" line="904" />
             <source>File</source>
             <translation>File</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="841" />
+            <location filename="main_window.py" line="905" />
             <source>View</source>
             <translation>View</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="842" />
+            <location filename="main_window.py" line="906" />
             <source>Appearance</source>
             <translation>Appearance</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="843" />
+            <location filename="main_window.py" line="907" />
             <source>Reference Lines</source>
             <translation>Reference Lines</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="844" />
+            <location filename="main_window.py" line="908" />
             <source>Tools</source>
             <translation>Tools</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="845" />
+            <location filename="main_window.py" line="909" />
             <source>Histogram/Waveform Mode</source>
             <translation>Histogram/Waveform Mode</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="846" />
+            <location filename="main_window.py" line="910" />
             <source>RGB Channels</source>
             <translation>RGB Channels</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="847" />
+            <location filename="main_window.py" line="911" />
             <source>Pseudo Color</source>
             <translation>Pseudo Color</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="848" />
+            <location filename="main_window.py" line="912" />
             <source>Show Peaks</source>
             <translation>Show Peaks</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="849" />
+            <location filename="main_window.py" line="913" />
+            <source>Color Readouts</source>
+            <translation>Color Readouts</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="914" />
             <source>Help</source>
             <translation>Help</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="851" />
+            <location filename="main_window.py" line="916" />
             <source>Analysis</source>
             <translation>Analysis</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="852" />
+            <location filename="main_window.py" line="917" />
             <source>Metadata</source>
             <translation>Metadata</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="854" />
+            <location filename="main_window.py" line="919" />
             <source>General</source>
             <translation>General</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="855" />
+            <location filename="main_window.py" line="920" />
             <source>Exif</source>
             <translation>Exif</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="856" />
+            <location filename="main_window.py" line="921" />
             <source>IPTC</source>
             <translation>IPTC</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="857" />
+            <location filename="main_window.py" line="922" />
             <source>TIFF</source>
             <translation>TIFF</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="859" />
+            <location filename="main_window.py" line="924" />
             <source>Image Color Space</source>
             <translation>Image Color Space</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="860" />
+            <location filename="main_window.py" line="925" />
             <source>Not Loaded</source>
             <translation>Not Loaded</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="861" />
+            <location filename="main_window.py" line="926" />
             <source>Specify Image Color Space</source>
             <translation>Specify Image Color Space</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="862" />
+            <location filename="main_window.py" line="927" />
             <source>Rendering Intent</source>
             <translation>Rendering Intent</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="863" />
+            <location filename="main_window.py" line="928" />
             <source>Display Color Space</source>
             <translation>Display Color Space</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="877" />
+            <location filename="main_window.py" line="942" />
             <source>Histogram Placeholder</source>
             <translation>Histogram Placeholder</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="879" />
+            <location filename="main_window.py" line="944" />
             <source>Show/Hide Underexposed Areas</source>
             <translation>Show/Hide Underexposed Areas</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="880" />
+            <location filename="main_window.py" line="945" />
             <source>Show/Hide Overexposed Areas</source>
             <translation>Show/Hide Overexposed Areas</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="882" />
+            <location filename="main_window.py" line="947" />
             <source>Waveform Placeholder</source>
             <translation>Waveform Placeholder</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="907" />
+            <location filename="main_window.py" line="977" />
             <source>Perceptual</source>
             <translation>Perceptual</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="908" />
+            <location filename="main_window.py" line="978" />
             <source>Relative Colorimetric</source>
             <translation>Relative Colorimetric</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="909" />
+            <location filename="main_window.py" line="979" />
             <source>Saturation</source>
             <translation>Saturation</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="910" />
+            <location filename="main_window.py" line="980" />
             <source>Absolute Colorimetric</source>
             <translation>Absolute Colorimetric</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="915" />
+            <location filename="main_window.py" line="985" />
             <source>Key</source>
             <translation>Key</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="915" />
+            <location filename="main_window.py" line="985" />
             <source>Value</source>
             <translation>Value</translation>
         </message>
@@ -730,7 +745,7 @@
     <context>
         <name>MainWindow</name>
         <message>
-            <location filename="main_window.py" line="933" />
+            <location filename="main_window.py" line="1003" />
             <source>Ready</source>
             <translation>Ready</translation>
         </message>

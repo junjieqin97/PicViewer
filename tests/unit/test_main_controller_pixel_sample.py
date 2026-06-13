@@ -72,6 +72,74 @@ class MainControllerPixelSampleTests(QtWidgetTestCase):
         self.assertEqual("-1", ui.labelPixelLumaValue.text())
         self.assertEqual(-1, ui.widgetHistogram.luma_marker_value())
 
+    def test_add_color_readout_mode_clicks_add_multiple_readouts(self) -> None:
+        window, _ui, controller, path, label, bgr = self._build_loaded_image_controller()
+        self.addCleanup(window.deleteLater)
+        self._set_large_display_pixmap(label)
+
+        MainController._on_add_color_readout_triggered(controller, True)
+        MainController.eventFilter(controller, label, self._mouse_press_at(50, 15))
+        MainController.eventFilter(controller, label, self._mouse_press_at(30, 15))
+
+        readouts = controller._color_readouts_by_path[str(path)]
+        self.assertEqual(2, len(readouts))
+        self.assertEqual((2, 1), (readouts[0].x, readouts[0].y))
+        self.assertEqual(30, readouts[0].sample.red)
+        self.assertEqual(20, readouts[0].sample.green)
+        self.assertEqual(10, readouts[0].sample.blue)
+        self.assertEqual(int(cv2.cvtColor(bgr[1:2, 2:3], cv2.COLOR_BGR2GRAY)[0, 0]), readouts[0].sample.luma)
+        self.assertEqual(tuple(readouts), label.color_readouts())
+
+    def test_delete_color_readout_mode_removes_hit_label_only(self) -> None:
+        window, ui, controller, path, label, _bgr = self._build_loaded_image_controller()
+        self.addCleanup(window.deleteLater)
+        self._set_large_display_pixmap(label)
+
+        MainController._on_add_color_readout_triggered(controller, True)
+        MainController.eventFilter(controller, label, self._mouse_press_at(50, 15))
+        MainController._on_delete_color_readout_triggered(controller, True)
+        MainController.eventFilter(controller, label, self._mouse_press_at(5, 5))
+        self.assertEqual(1, len(controller._color_readouts_by_path[str(path)]))
+
+        MainController.eventFilter(controller, label, self._mouse_press_at(50, 15))
+
+        self.assertEqual([], controller._color_readouts_by_path.get(str(path), []))
+        self.assertEqual(tuple(), label.color_readouts())
+        self.assertFalse(ui.actDeleteColorReadout.isChecked())
+        self.assertFalse(ui.actDeleteColorReadout.isEnabled())
+
+    def test_refresh_color_readouts_resamples_existing_coordinates(self) -> None:
+        window, _ui, controller, path, label, bgr = self._build_loaded_image_controller()
+        self.addCleanup(window.deleteLater)
+        self._set_large_display_pixmap(label)
+
+        MainController._on_add_color_readout_triggered(controller, True)
+        MainController.eventFilter(controller, label, self._mouse_press_at(50, 15))
+        bgr[1, 2] = [70, 80, 90]
+
+        MainController._refresh_color_readouts_for_path(controller, path, bgr)
+
+        readout = controller._color_readouts_by_path[str(path)][0]
+        self.assertEqual(90, readout.sample.red)
+        self.assertEqual(80, readout.sample.green)
+        self.assertEqual(70, readout.sample.blue)
+        self.assertEqual(tuple(controller._color_readouts_by_path[str(path)]), label.color_readouts())
+
+    def _mouse_press_at(self, x: int, y: int) -> QtGui.QMouseEvent:
+        return QtGui.QMouseEvent(
+            QtCore.QEvent.Type.MouseButtonPress,
+            QtCore.QPointF(x, y),
+            QtCore.Qt.MouseButton.LeftButton,
+            QtCore.Qt.MouseButton.LeftButton,
+            QtCore.Qt.KeyboardModifier.NoModifier,
+        )
+
+    def _set_large_display_pixmap(self, label: QtWidgets.QLabel) -> None:
+        label.resize(80, 40)
+        pixmap = QtGui.QPixmap(80, 40)
+        pixmap.fill(QtGui.QColor(0, 0, 0))
+        label.setPixmap(pixmap)
+
     def _build_loaded_image_controller(
         self,
     ) -> tuple[QtWidgets.QMainWindow, MainWindowUI, MainController, Path, QtWidgets.QLabel, np.ndarray]:
@@ -98,6 +166,9 @@ class MainControllerPixelSampleTests(QtWidgetTestCase):
         controller._image_drag_start_scroll = None
         controller._image_drag_scroll_area = None
         controller._image_context_menu = ui.menuImageContext
+        controller._color_readout_mode = None
+        controller._color_readouts_by_path = {}
+        controller._next_color_readout_id = 1
         controller._refresh_actions_state = MagicMock()  # type: ignore[method-assign]
         controller._ensure_full_load = MagicMock()  # type: ignore[method-assign]
         controller._sync_filmstrip_summary = MagicMock()  # type: ignore[method-assign]

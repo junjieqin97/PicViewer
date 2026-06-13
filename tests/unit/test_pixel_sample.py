@@ -71,6 +71,18 @@ class PixelSampleTests(unittest.TestCase):
             module.sample_analysis_pixel(np.zeros((2, 2, 4), dtype=np.uint8), 0, 0),
         )
 
+    def test_color_readout_formats_rgb_and_luma_values(self) -> None:
+        module = self._pixel_sample_module()
+
+        readout = module.ColorReadout(
+            readout_id=7,
+            x=12,
+            y=34,
+            sample=module.PixelSample(red=11, green=22, blue=33, luma=44),
+        )
+
+        self.assertEqual("R: 11  G: 22  B: 33  Luma: 44", readout.display_text())
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -24,6 +24,7 @@ from pic_viewer.domain.models.color_space import (
 )
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
+from pic_viewer.domain.rules.pixel_sample import ColorReadout
 from pic_viewer.domain.rules.reference_lines import ReferenceLineSettings
 from pic_viewer.ui.workers.image_worker import ImageLoadTask, PreviewLoadTask
 
@@ -106,6 +107,9 @@ class MainController(
         self._focus_peak_level: FocusPeakLevel | None = None
         self._show_metadata_overlay = self._ui.actToggleMetadataOverlay.isChecked()
         self._reference_line_settings = ReferenceLineSettings()
+        self._color_readout_mode: Optional[str] = None
+        self._color_readouts_by_path: Dict[str, list[ColorReadout]] = {}
+        self._next_color_readout_id = 1
         self._zoom_step = 1.25
         self._zoom_min = 0.1
         self._zoom_max = 6.0
@@ -126,6 +130,7 @@ class MainController(
         self._sync_histogram_overlay_state()
         self._sync_reference_line_actions()
         self._sync_reference_line_widgets()
+        self._sync_color_readout_actions()
         self._refresh_actions_state()
         self.update_info_for_image(None)
         self._ensure_empty_image_placeholder()
@@ -149,6 +154,8 @@ class MainController(
         self._ui.actZoomOut.triggered.connect(self._zoom_out)
         self._ui.actFitToWindow.triggered.connect(self._fit_to_window)
         self._ui.actShowInFolder.triggered.connect(self._show_current_image_in_folder)
+        self._ui.actAppearanceLight.triggered.connect(self._sync_color_readout_themes_for_all_labels)
+        self._ui.actAppearanceDark.triggered.connect(self._sync_color_readout_themes_for_all_labels)
 
         self._ui.actToggleInfoPanel.toggled.connect(self._toggle_info_panel)
         self._ui.actToggleAnalysisToolbar.toggled.connect(self._toggle_analysis_toolbar)
@@ -188,6 +195,10 @@ class MainController(
             self._ui.actToggleThirdsReferenceLine.toggled.connect(self._on_thirds_reference_line_toggled)
         if hasattr(self._ui, "actToggleMetadataOverlay"):
             self._ui.actToggleMetadataOverlay.toggled.connect(self._on_metadata_overlay_toggled)
+        if hasattr(self._ui, "actAddColorReadout"):
+            self._ui.actAddColorReadout.triggered.connect(self._on_add_color_readout_triggered)
+        if hasattr(self._ui, "actDeleteColorReadout"):
+            self._ui.actDeleteColorReadout.triggered.connect(self._on_delete_color_readout_triggered)
 
         self._ui.tabsImages.currentChanged.connect(self._on_tab_changed)
         self._ui.tabsImages.tabCloseRequested.connect(self.close_tab)

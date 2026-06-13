@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from pic_viewer.domain.rules.pixel_sample import ColorReadout
 from pic_viewer.domain.rules.reference_lines import (
     ReferenceLineSettings,
     build_reference_line_segments,
 )
+from pic_viewer.ui.resources import styles
 
 
 class ImageDisplayLabel(QtWidgets.QLabel):
@@ -17,6 +19,11 @@ class ImageDisplayLabel(QtWidgets.QLabel):
     _REFERENCE_LINE_WIDTH = 3
     _METADATA_OVERLAY_COLOR = QtGui.QColor(255, 255, 255, 185)
     _METADATA_OVERLAY_MARGIN = 8
+    _COLOR_READOUT_PADDING_X = 6
+    _COLOR_READOUT_PADDING_Y = 4
+    _COLOR_READOUT_MARGIN = 6
+    _COLOR_READOUT_RADIUS = 4
+    _COLOR_READOUT_MARKER_RADIUS = 5
 
     def __init__(
         self,
@@ -30,6 +37,9 @@ class ImageDisplayLabel(QtWidgets.QLabel):
         self._reference_line_settings = ReferenceLineSettings()
         self._metadata_overlay_lines: tuple[str, ...] = tuple()
         self._metadata_overlay_visible = False
+        self._color_readouts: tuple[ColorReadout, ...] = tuple()
+        self._color_readout_image_size: tuple[int, int] | None = None
+        self._color_readout_theme = styles.AppearanceTheme.DARK
 
     def set_reference_line_settings(self, settings: ReferenceLineSettings) -> None:
         """Apply reference line settings and repaint without changing the pixmap."""
@@ -64,10 +74,71 @@ class ImageDisplayLabel(QtWidgets.QLabel):
 
         return self._metadata_overlay_visible
 
+    def set_color_readouts(
+        self,
+        readouts: tuple[ColorReadout, ...],
+        image_size: tuple[int, int] | None = None,
+    ) -> None:
+        """Apply persistent color readout overlays for this image label."""
+
+        normalized = tuple(readouts)
+        normalized_size = self._normalize_image_size(image_size, normalized)
+        if self._color_readouts == normalized and self._color_readout_image_size == normalized_size:
+            return
+        self._color_readouts = normalized
+        self._color_readout_image_size = normalized_size
+        self.update()
+
+    def color_readouts(self) -> tuple[ColorReadout, ...]:
+        """Return the currently configured persistent color readouts."""
+
+        return self._color_readouts
+
+    def set_color_readout_theme(self, theme: styles.AppearanceTheme) -> None:
+        """Apply the theme used to paint persistent color readout labels."""
+
+        if self._color_readout_theme == theme:
+            return
+        self._color_readout_theme = theme
+        self.update()
+
+    def color_readout_theme(self) -> styles.AppearanceTheme:
+        """Return the theme used for persistent color readout labels."""
+
+        return self._color_readout_theme
+
+    def color_readout_id_at(self, pos: QtCore.QPoint) -> int | None:
+        """Return the topmost color readout id at a widget-local position."""
+
+        pixmap = self.pixmap()
+        if pixmap is None or pixmap.isNull():
+            return None
+        pixmap_rect = self._pixmap_logical_rect(pixmap)
+        for readout in reversed(self._color_readouts):
+            anchor = self._color_readout_anchor(readout, pixmap_rect)
+            if anchor is None:
+                continue
+            marker_rect = QtCore.QRect(
+                anchor.x() - self._COLOR_READOUT_MARKER_RADIUS,
+                anchor.y() - self._COLOR_READOUT_MARKER_RADIUS,
+                self._COLOR_READOUT_MARKER_RADIUS * 2 + 1,
+                self._COLOR_READOUT_MARKER_RADIUS * 2 + 1,
+            )
+            if marker_rect.contains(pos):
+                return readout.readout_id
+        for readout in reversed(self._color_readouts):
+            anchor = self._color_readout_anchor(readout, pixmap_rect)
+            if anchor is None:
+                continue
+            if self._color_readout_label_rect(readout, anchor, pixmap_rect).contains(pos):
+                return readout.readout_id
+        return None
+
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:  # type: ignore[override]
         super().paintEvent(event)
         self._paint_reference_lines()
         self._paint_metadata_overlay()
+        self._paint_color_readouts()
 
     def _paint_reference_lines(self) -> None:
         pixmap = self.pixmap()
@@ -123,6 +194,111 @@ class ImageDisplayLabel(QtWidgets.QLabel):
             painter.drawText(left, baseline, text)
             baseline += font_metrics.lineSpacing()
         painter.end()
+
+    def _paint_color_readouts(self) -> None:
+        if not self._color_readouts:
+            return
+        pixmap = self.pixmap()
+        if pixmap is None or pixmap.isNull():
+            return
+
+        pixmap_rect = self._pixmap_logical_rect(pixmap)
+        colors = self._color_readout_colors()
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.TextAntialiasing, True)
+        for readout in self._color_readouts:
+            anchor = self._color_readout_anchor(readout, pixmap_rect)
+            if anchor is None:
+                continue
+            text_rect = self._color_readout_label_rect(readout, anchor, pixmap_rect)
+            painter.setPen(QtGui.QPen(colors["border"], 1))
+            painter.setBrush(colors["background"])
+            painter.drawRoundedRect(text_rect, self._COLOR_READOUT_RADIUS, self._COLOR_READOUT_RADIUS)
+            painter.setPen(colors["text"])
+            painter.drawText(
+                text_rect.adjusted(
+                    self._COLOR_READOUT_PADDING_X,
+                    self._COLOR_READOUT_PADDING_Y,
+                    -self._COLOR_READOUT_PADDING_X,
+                    -self._COLOR_READOUT_PADDING_Y,
+                ),
+                QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter,
+                readout.display_text(),
+            )
+            painter.setBrush(colors["marker"])
+            painter.setPen(QtGui.QPen(colors["border"], 1))
+            painter.drawEllipse(anchor, self._COLOR_READOUT_MARKER_RADIUS, self._COLOR_READOUT_MARKER_RADIUS)
+        painter.end()
+
+    def _color_readout_label_rect(
+        self,
+        readout: ColorReadout,
+        anchor: QtCore.QPoint,
+        pixmap_rect: QtCore.QRect,
+    ) -> QtCore.QRect:
+        metrics = self.fontMetrics()
+        text = readout.display_text()
+        width = metrics.horizontalAdvance(text) + self._COLOR_READOUT_PADDING_X * 2
+        height = metrics.height() + self._COLOR_READOUT_PADDING_Y * 2
+        left = anchor.x() + self._COLOR_READOUT_MARGIN
+        top = anchor.y() - height - self._COLOR_READOUT_MARGIN
+        if left + width > pixmap_rect.right():
+            left = anchor.x() - width - self._COLOR_READOUT_MARGIN
+        if top < pixmap_rect.top():
+            top = anchor.y() + self._COLOR_READOUT_MARGIN
+        left = min(max(pixmap_rect.left(), left), max(pixmap_rect.left(), pixmap_rect.right() - width + 1))
+        top = min(max(pixmap_rect.top(), top), max(pixmap_rect.top(), pixmap_rect.bottom() - height + 1))
+        return QtCore.QRect(left, top, width, height)
+
+    def _color_readout_anchor(
+        self,
+        readout: ColorReadout,
+        pixmap_rect: QtCore.QRect,
+    ) -> QtCore.QPoint | None:
+        image_size = self._color_readout_image_size
+        if image_size is None:
+            return None
+        image_height, image_width = image_size
+        if image_height <= 0 or image_width <= 0:
+            return None
+        x = pixmap_rect.left() + int(round((readout.x + 0.5) * pixmap_rect.width() / image_width))
+        y = pixmap_rect.top() + int(round((readout.y + 0.5) * pixmap_rect.height() / image_height))
+        return QtCore.QPoint(
+            min(pixmap_rect.right(), max(pixmap_rect.left(), x)),
+            min(pixmap_rect.bottom(), max(pixmap_rect.top(), y)),
+        )
+
+    def _color_readout_colors(self) -> dict[str, QtGui.QColor]:
+        if self._color_readout_theme == styles.AppearanceTheme.LIGHT:
+            return {
+                "background": QtGui.QColor(255, 255, 255, 235),
+                "border": QtGui.QColor(77, 143, 211),
+                "text": QtGui.QColor(31, 37, 45),
+                "marker": QtGui.QColor(77, 143, 211),
+            }
+        return {
+            "background": QtGui.QColor(43, 48, 54, 235),
+            "border": QtGui.QColor(142, 180, 223),
+            "text": QtGui.QColor(237, 241, 245),
+            "marker": QtGui.QColor(142, 180, 223),
+        }
+
+    def _normalize_image_size(
+        self,
+        image_size: tuple[int, int] | None,
+        readouts: tuple[ColorReadout, ...],
+    ) -> tuple[int, int] | None:
+        if image_size is not None:
+            height, width = image_size
+            if height > 0 and width > 0:
+                return (int(height), int(width))
+            return None
+        if not readouts:
+            return None
+        max_x = max(readout.x for readout in readouts)
+        max_y = max(readout.y for readout in readouts)
+        return (max_y + 1, max_x + 1)
 
     def image_pixel_position_at(
         self,
