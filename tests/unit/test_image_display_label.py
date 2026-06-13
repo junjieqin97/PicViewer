@@ -187,6 +187,17 @@ class ImageDisplayLabelTests(QtWidgetTestCase):
         light_colors = label.color_readout_text_colors()
         self.assertEqual(QtGui.QColor(0, 0, 0), light_colors["luma"])
 
+    def test_color_readout_background_is_nearly_transparent(self) -> None:
+        label = ImageDisplayLabel()
+        self.addCleanup(label.deleteLater)
+
+        dark_colors = label._color_readout_colors()
+        self.assertEqual(24, dark_colors["background"].alpha())
+
+        label.set_color_readout_theme(styles.AppearanceTheme.LIGHT)
+        light_colors = label._color_readout_colors()
+        self.assertEqual(24, light_colors["background"].alpha())
+
     def _has_light_pixel(self, image: QtGui.QImage, rect: QtCore.QRect) -> bool:
         for y in range(rect.top(), rect.bottom() + 1):
             for x in range(rect.left(), rect.right() + 1):

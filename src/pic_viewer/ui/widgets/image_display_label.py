@@ -25,6 +25,7 @@ class ImageDisplayLabel(QtWidgets.QLabel):
     _COLOR_READOUT_RADIUS = 4
     _COLOR_READOUT_MARKER_RADIUS = 5
     _COLOR_READOUT_VALUE_GAP = 8
+    _COLOR_READOUT_BACKGROUND_ALPHA = 24
 
     def __init__(
         self,
@@ -309,13 +310,13 @@ class ImageDisplayLabel(QtWidgets.QLabel):
     def _color_readout_colors(self) -> dict[str, QtGui.QColor]:
         if self._color_readout_theme == styles.AppearanceTheme.LIGHT:
             return {
-                "background": QtGui.QColor(255, 255, 255, 235),
+                "background": QtGui.QColor(255, 255, 255, self._COLOR_READOUT_BACKGROUND_ALPHA),
                 "border": QtGui.QColor(77, 143, 211),
                 "marker": QtGui.QColor(77, 143, 211),
                 **self.color_readout_text_colors(),
             }
         return {
-            "background": QtGui.QColor(43, 48, 54, 235),
+            "background": QtGui.QColor(43, 48, 54, self._COLOR_READOUT_BACKGROUND_ALPHA),
             "border": QtGui.QColor(142, 180, 223),
             "marker": QtGui.QColor(142, 180, 223),
             **self.color_readout_text_colors(),
