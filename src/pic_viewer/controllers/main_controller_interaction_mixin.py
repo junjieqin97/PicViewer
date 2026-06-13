@@ -280,6 +280,27 @@ class MainControllerInteractionMixin:
 
         self._set_color_readout_mode("delete" if checked else None)
 
+    def _on_delete_all_color_readouts_triggered(self, _checked: bool = False) -> None:
+        """Remove all persistent color readouts from the current image."""
+
+        current_path = self._current_image_path()
+        if current_path is None:
+            self._sync_color_readout_actions()
+            return
+        readouts_by_path = getattr(self, "_color_readouts_by_path", None)
+        if readouts_by_path is None:
+            self._color_readouts_by_path = {}
+            self._sync_color_readout_actions()
+            return
+        key = str(current_path)
+        if not readouts_by_path.get(key):
+            self._sync_color_readout_actions()
+            return
+        readouts_by_path[key] = []
+        self._sync_color_readouts_for_path(current_path)
+        self._sync_color_readout_actions()
+        self._sync_color_readout_cursors()
+
     def _set_color_readout_mode(self, mode: str | None) -> None:
         if mode not in (None, "add", "delete"):
             return
@@ -445,6 +466,7 @@ class MainControllerInteractionMixin:
         action_state = (
             ("actAddColorReadout", can_add, mode == "add"),
             ("actDeleteColorReadout", can_delete, mode == "delete"),
+            ("actDeleteAllColorReadouts", can_delete, False),
         )
         for action_name, enabled, checked in action_state:
             action = getattr(self._ui, action_name, None)
@@ -452,7 +474,8 @@ class MainControllerInteractionMixin:
                 continue
             with block_signals(action):
                 action.setEnabled(enabled)
-                action.setChecked(checked)
+                if action.isCheckable():
+                    action.setChecked(checked)
 
     def _sync_color_readout_cursors(self) -> None:
         """Update image-area cursors for the active color readout mode."""

@@ -199,6 +199,8 @@ class MainController(
             self._ui.actAddColorReadout.triggered.connect(self._on_add_color_readout_triggered)
         if hasattr(self._ui, "actDeleteColorReadout"):
             self._ui.actDeleteColorReadout.triggered.connect(self._on_delete_color_readout_triggered)
+        if hasattr(self._ui, "actDeleteAllColorReadouts"):
+            self._ui.actDeleteAllColorReadouts.triggered.connect(self._on_delete_all_color_readouts_triggered)
 
         self._ui.tabsImages.currentChanged.connect(self._on_tab_changed)
         self._ui.tabsImages.tabCloseRequested.connect(self.close_tab)

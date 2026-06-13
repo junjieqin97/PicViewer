@@ -115,6 +115,8 @@ class MainWindowUI:
         self.actDeleteColorReadout = QtGui.QAction(self._main_window)
         self.actDeleteColorReadout.setObjectName("actDeleteColorReadout")
         self.actDeleteColorReadout.setCheckable(True)
+        self.actDeleteAllColorReadouts = QtGui.QAction(self._main_window)
+        self.actDeleteAllColorReadouts.setObjectName("actDeleteAllColorReadouts")
 
         self.actAbout = QtGui.QAction(self._main_window)
         self.actAbout.setObjectName("actAbout")
@@ -227,6 +229,10 @@ class MainWindowUI:
                 "color-readout-delete.svg",
                 "color-readout-delete-on-light.svg",
             ),
+            self.actDeleteAllColorReadouts: themed_icon_name(
+                "color-readout-delete-all.svg",
+                "color-readout-delete-all-on-light.svg",
+            ),
             self.actToggleMetadataOverlay: themed_icon_name(
                 "metadata-info.svg",
                 "metadata-info-on-light.svg",
@@ -324,6 +330,7 @@ class MainWindowUI:
         self.menuColorReadouts.setObjectName("menuColorReadouts")
         self.menuColorReadouts.addAction(self.actAddColorReadout)
         self.menuColorReadouts.addAction(self.actDeleteColorReadout)
+        self.menuColorReadouts.addAction(self.actDeleteAllColorReadouts)
 
         self.menuHelp = menu_bar.addMenu("")
         self.menuHelp.setObjectName("menuHelp")
@@ -434,6 +441,10 @@ class MainWindowUI:
             "buttonToolbarDeleteColorReadout",
             self.actDeleteColorReadout,
         )
+        self.buttonToolbarDeleteAllColorReadouts = self._create_analysis_toolbar_button(
+            "buttonToolbarDeleteAllColorReadouts",
+            self.actDeleteAllColorReadouts,
+        )
         self.buttonToolbarMetadataOverlay = self._create_analysis_toolbar_button(
             "buttonToolbarMetadataOverlay",
             self.actToggleMetadataOverlay,
@@ -470,6 +481,7 @@ class MainWindowUI:
         self._add_analysis_toolbar_separator(toolbar_layout)
         toolbar_layout.addWidget(self.buttonToolbarAddColorReadout)
         toolbar_layout.addWidget(self.buttonToolbarDeleteColorReadout)
+        toolbar_layout.addWidget(self.buttonToolbarDeleteAllColorReadouts)
         toolbar_layout.addStretch(1)
         toolbar_layout.addWidget(self.buttonToolbarMetadataOverlay)
 
@@ -886,6 +898,7 @@ class MainWindowUI:
         self.actToggleThirdsReferenceLine.setText(self._tr("Rule of Thirds Reference Line"))
         self.actAddColorReadout.setText(self._tr("Add Color Readout"))
         self.actDeleteColorReadout.setText(self._tr("Delete Color Readout"))
+        self.actDeleteAllColorReadouts.setText(self._tr("Delete All Readouts"))
         self.actAbout.setText(self._tr("About"))
         self.actThirdPartyLicenses.setText(self._tr("Third-Party License Information"))
         self.actModeLuma.setText(self._tr("Luma Mode"))
@@ -967,6 +980,7 @@ class MainWindowUI:
             self.actToggleThirdsReferenceLine,
             self.actAddColorReadout,
             self.actDeleteColorReadout,
+            self.actDeleteAllColorReadouts,
             self.actToggleMetadataOverlay,
         )
         for action in actions:

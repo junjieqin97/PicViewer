@@ -70,6 +70,7 @@ class AnalysisToolbarTests(QtWidgetTestCase):
             ui.buttonToolbarThirdsReferenceLine: ui.actToggleThirdsReferenceLine,
             ui.buttonToolbarAddColorReadout: ui.actAddColorReadout,
             ui.buttonToolbarDeleteColorReadout: ui.actDeleteColorReadout,
+            ui.buttonToolbarDeleteAllColorReadouts: ui.actDeleteAllColorReadouts,
             ui.buttonToolbarMetadataOverlay: ui.actToggleMetadataOverlay,
         }
 
@@ -102,7 +103,8 @@ class AnalysisToolbarTests(QtWidgetTestCase):
         self.assertIsNotNone(layout.itemAt(1).spacerItem())
         self.assertIsNotNone(layout.itemAt(layout.count() - 2).spacerItem())
         self.assertIs(ui.buttonToolbarModeLuma, layout.itemAt(2).widget())
-        self.assertIs(ui.buttonToolbarDeleteColorReadout, layout.itemAt(layout.count() - 3).widget())
+        self.assertIs(ui.buttonToolbarDeleteColorReadout, layout.itemAt(layout.count() - 4).widget())
+        self.assertIs(ui.buttonToolbarDeleteAllColorReadouts, layout.itemAt(layout.count() - 3).widget())
         self.assertIs(ui.buttonToolbarMetadataOverlay, layout.itemAt(layout.count() - 1).widget())
 
     def test_controller_toggle_analysis_toolbar_changes_toolbar_visibility(self) -> None:

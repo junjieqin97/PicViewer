@@ -21,6 +21,7 @@ if str(SRC_ROOT) not in sys.path:
 from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult  # noqa: E402
 from pic_viewer.app.dto.metadata import ImageMetadata  # noqa: E402
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
+from pic_viewer.domain.rules.pixel_sample import ColorReadout, PixelSample  # noqa: E402
 from pic_viewer.domain.rules.reference_lines import ReferenceLineSettings  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 
@@ -107,6 +108,33 @@ class MainControllerPixelSampleTests(QtWidgetTestCase):
         self.assertEqual(tuple(), label.color_readouts())
         self.assertFalse(ui.actDeleteColorReadout.isChecked())
         self.assertFalse(ui.actDeleteColorReadout.isEnabled())
+
+    def test_delete_all_color_readouts_clears_only_current_image(self) -> None:
+        window, ui, controller, path, label, _bgr = self._build_loaded_image_controller()
+        self.addCleanup(window.deleteLater)
+        self._set_large_display_pixmap(label)
+
+        MainController._on_add_color_readout_triggered(controller, True)
+        MainController.eventFilter(controller, label, self._mouse_press_at(50, 15))
+        MainController.eventFilter(controller, label, self._mouse_press_at(30, 15))
+        other_path = Path("/tmp/other-pixel-sample.jpg")
+        other_readout = ColorReadout(
+            readout_id=99,
+            x=1,
+            y=1,
+            sample=PixelSample(red=1, green=2, blue=3, luma=2),
+        )
+        controller._color_readouts_by_path[str(other_path)] = [other_readout]
+
+        MainController._on_delete_all_color_readouts_triggered(controller)
+
+        self.assertEqual([], controller._color_readouts_by_path.get(str(path), []))
+        self.assertEqual([other_readout], controller._color_readouts_by_path[str(other_path)])
+        self.assertEqual(tuple(), label.color_readouts())
+        self.assertTrue(ui.actAddColorReadout.isEnabled())
+        self.assertFalse(ui.actDeleteColorReadout.isEnabled())
+        self.assertFalse(ui.actDeleteColorReadout.isChecked())
+        self.assertFalse(ui.actDeleteAllColorReadouts.isEnabled())
 
     def test_refresh_color_readouts_resamples_existing_coordinates(self) -> None:
         window, _ui, controller, path, label, bgr = self._build_loaded_image_controller()

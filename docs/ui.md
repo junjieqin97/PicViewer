@@ -30,7 +30,7 @@ The main window uses a typical four-area structure:
   - Tools: Histogram/Waveform options + pseudo color options + reference line options
     - Pseudo Color: Show Underexposed (checkable), Show Overexposed (checkable), Show Peaking (High/Medium/Low, checkable, three levels are mutually exclusive and clicking the current level turns it off)
     - Reference Lines: Crosshair Reference Line, Diagonal Reference Line, Rule-of-Thirds Grid Reference Line (all checkable; can be toggled independently and displayed as overlays together)
-    - Color Readouts: Add Color Readout, Delete Color Readout (checkable tool modes; activating one deactivates the other, and clicking the active tool again exits the mode)
+    - Color Readouts: Add Color Readout, Delete Color Readout (checkable tool modes; activating one deactivates the other, and clicking the active tool again exits the mode), Delete All Readouts (clears all readouts from the current image only)
   - Help: About, Third-Party Library License Information
 - In the `Third-Party Library License Information` dialog, recognizable license names must be displayed as hyperlinks; clicking a license name opens a read-only dialog showing the original English text of that license.
 - Requirement: create and name each menu item with `QAction` (see "Component Checklist").
@@ -62,11 +62,11 @@ The main window uses a typical four-area structure:
   - Show Underexposed, Show Overexposed
   - Show Peaking High/Medium/Low
   - Crosshair Reference Line, Diagonal Reference Line, Rule-of-Thirds Grid Reference Line
-  - Add Color Readout, Delete Color Readout
+  - Add Color Readout, Delete Color Readout, Delete All Readouts
   - Show Metadata Overlay
 - The Show Metadata Overlay button is pinned to the far right side of the toolbar. The centered analysis button group must remain visually centered by reserving equal space on the left side.
 - The Show Metadata Overlay button is enabled by default. When enabled, the current image shows up to three metadata lines at the upper-left corner of the actual displayed image: camera/lens, exposure settings, and resolution. The camera name combines camera maker and camera model when both are available. Missing metadata fields are omitted instead of shown as placeholders. The text is drawn in semi-transparent white.
-- The Add Color Readout and Delete Color Readout buttons reuse the corresponding `Tools > Color Readouts` actions. Add mode uses a plus-style cursor over the analyzed image and can add multiple persistent labels. Delete mode uses a minus-style cursor and removes a readout only when the user clicks an existing readout label. Labels use the active light/dark appearance style with a nearly transparent background and display only four numeric values: red, green, blue, and luma. The red, green, and blue numbers use matching channel text colors; luma uses black text in light mode and white text in dark mode.
+- The Add Color Readout, Delete Color Readout, and Delete All Readouts buttons reuse the corresponding `Tools > Color Readouts` actions. Add mode uses a plus-style cursor over the analyzed image and can add multiple persistent labels. Delete mode uses a minus-style cursor and removes a readout only when the user clicks an existing readout label. Delete All Readouts is a one-shot action that clears all readouts from the current image only. Labels use the active light/dark appearance style with a nearly transparent background and display only four numeric values: red, green, blue, and luma. The red, green, and blue numbers use matching channel text colors; luma uses black text in light mode and white text in dark mode.
 
 ## 3. Upper Content Area: Image Tabs + Right Info Area (QSplitter)
 
@@ -204,6 +204,7 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `buttonToolbarThirdsReferenceLine: QToolButton`
 - `buttonToolbarAddColorReadout: QToolButton`
 - `buttonToolbarDeleteColorReadout: QToolButton`
+- `buttonToolbarDeleteAllColorReadouts: QToolButton`
 - `buttonToolbarMetadataOverlay: QToolButton`
 - `tabsInfo: DetachableTabWidget`
 - `tabAnalysis: QWidget`
@@ -260,6 +261,7 @@ Actions (names must be consistent; copy may mix Chinese and English, but consist
 - `actToggleThirdsReferenceLine`: Rule-of-Thirds Grid Reference Line (checkable)
 - `actAddColorReadout`: Add Color Readout (checkable)
 - `actDeleteColorReadout`: Delete Color Readout (checkable)
+- `actDeleteAllColorReadouts`: Delete All Readouts
 - `actAbout`: About
 - `actThirdPartyLicenses`: Third-Party Library License Information
 
@@ -336,4 +338,4 @@ Do not write business logic inside UI files; TODO/placeholder implementations ar
 - Image file names are displayed in full in the `tab title`, `bottom filmstrip`, and hidden-filmstrip status summary.
 - When the mouse pointer is at the boundary between the `image display area` and the `right info area`, the pointer `style` must automatically change to a `double arrow` (that is, a `move arrow`).
 - Hovering the mouse over the `image display area` should immediately change the pointer to a `hand`, and holding the mouse button should allow dragging to pan a zoomed image.
-- When Add Color Readout is active, hovering over a loaded analyzed image uses a plus-style cursor, and left-clicking a displayed image pixel adds a persistent readout label for that image. When Delete Color Readout is active, hovering uses a minus-style cursor, and left-clicking a readout label deletes only that label. If the current image is not fully loaded, both actions are disabled. If the current image has no readouts, Delete Color Readout is disabled and its mode is cleared.
+- When Add Color Readout is active, hovering over a loaded analyzed image uses a plus-style cursor, and left-clicking a displayed image pixel adds a persistent readout label for that image. When Delete Color Readout is active, hovering uses a minus-style cursor, and left-clicking a readout label deletes only that label. Delete All Readouts clears every readout for the current image only and leaves other images' readouts unchanged. If the current image is not fully loaded, all Color Readouts actions are disabled. If the current image has no readouts, Delete Color Readout and Delete All Readouts are disabled, and Delete Color Readout mode is cleared.
