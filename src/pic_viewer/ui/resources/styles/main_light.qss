@@ -187,6 +187,14 @@ QLabel#lblImage {
     color: #263241;
 }
 
+QLabel#labelColorReadout {
+    background: #ffffff;
+    color: #1f252d;
+    border: 1px solid #4d8fd3;
+    border-radius: 4px;
+    padding: 4px 6px;
+}
+
 QScrollArea#scrollImage QScrollBar:horizontal {
     background: #eef2f6;
     border: none;
@@ -327,6 +335,30 @@ QWidget#tabAnalysis QComboBox#comboSpecifiedImageColorSpace:disabled {
 
 QLabel#labelImageColorSpaceValue {
     color: #1f252d;
+}
+
+QWidget#widgetPixelSampleValues {
+    background: transparent;
+}
+
+QLabel#labelPixelRedValue {
+    color: #ff4d4d;
+    font-weight: 600;
+}
+
+QLabel#labelPixelGreenValue {
+    color: #48c774;
+    font-weight: 600;
+}
+
+QLabel#labelPixelBlueValue {
+    color: #4da3ff;
+    font-weight: 600;
+}
+
+QLabel#labelPixelLumaValue {
+    color: #000000;
+    font-weight: 600;
 }
 
 QFrame#frameHistogramAnalysis,

@@ -16,6 +16,8 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.domain.rules.reference_lines import ReferenceLineSettings  # noqa: E402
+from pic_viewer.domain.rules.pixel_sample import ColorReadout, PixelSample  # noqa: E402
+from pic_viewer.ui.resources import styles  # noqa: E402
 from pic_viewer.ui.widgets.image_display_label import ImageDisplayLabel  # noqa: E402
 
 
@@ -97,6 +99,104 @@ class ImageDisplayLabelTests(QtWidgetTestCase):
 
         self.assertFalse(self._has_light_pixel(image, QtCore.QRect(0, 0, 18, 18)))
         self.assertTrue(self._has_light_pixel(image, QtCore.QRect(20, 20, 80, 32)))
+
+    def test_image_pixel_position_maps_label_position_to_image_pixel(self) -> None:
+        label = ImageDisplayLabel()
+        self.addCleanup(label.deleteLater)
+        label.resize(100, 60)
+        pixmap = QtGui.QPixmap(80, 40)
+        pixmap.fill(QtGui.QColor(0, 0, 0))
+        label.setPixmap(pixmap)
+
+        self.assertTrue(hasattr(label, "image_pixel_position_at"))
+        self.assertEqual((0, 0), label.image_pixel_position_at(QtCore.QPoint(10, 10), (4, 8)))
+        self.assertEqual((4, 2), label.image_pixel_position_at(QtCore.QPoint(50, 30), (4, 8)))
+        self.assertEqual((7, 3), label.image_pixel_position_at(QtCore.QPoint(89, 49), (4, 8)))
+
+    def test_image_pixel_position_returns_none_outside_pixmap(self) -> None:
+        label = ImageDisplayLabel()
+        self.addCleanup(label.deleteLater)
+        label.resize(100, 60)
+        pixmap = QtGui.QPixmap(80, 40)
+        pixmap.fill(QtGui.QColor(0, 0, 0))
+        label.setPixmap(pixmap)
+
+        self.assertTrue(hasattr(label, "image_pixel_position_at"))
+        self.assertIsNone(label.image_pixel_position_at(QtCore.QPoint(9, 10), (4, 8)))
+        self.assertIsNone(label.image_pixel_position_at(QtCore.QPoint(90, 49), (4, 8)))
+        self.assertIsNone(label.image_pixel_position_at(QtCore.QPoint(10, 50), (4, 8)))
+
+    def test_color_readouts_can_be_set_and_hit_tested(self) -> None:
+        label = ImageDisplayLabel()
+        self.addCleanup(label.deleteLater)
+        label.resize(100, 60)
+        pixmap = QtGui.QPixmap(80, 40)
+        pixmap.fill(QtGui.QColor(0, 0, 0))
+        label.setPixmap(pixmap)
+        readouts = (
+            ColorReadout(
+                readout_id=1,
+                x=4,
+                y=2,
+                sample=PixelSample(red=10, green=20, blue=30, luma=21),
+            ),
+            ColorReadout(
+                readout_id=2,
+                x=7,
+                y=3,
+                sample=PixelSample(red=40, green=50, blue=60, luma=51),
+            ),
+        )
+
+        label.set_color_readouts(readouts)
+
+        self.assertEqual(readouts, label.color_readouts())
+        self.assertEqual(1, label.color_readout_id_at(QtCore.QPoint(50, 30)))
+        self.assertIsNone(label.color_readout_id_at(QtCore.QPoint(10, 10)))
+
+    def test_color_readout_theme_can_be_applied(self) -> None:
+        label = ImageDisplayLabel()
+        self.addCleanup(label.deleteLater)
+
+        label.set_color_readout_theme(styles.AppearanceTheme.LIGHT)
+
+        self.assertEqual(styles.AppearanceTheme.LIGHT, label.color_readout_theme())
+
+    def test_color_readout_text_runs_use_channel_values_and_colors(self) -> None:
+        label = ImageDisplayLabel()
+        self.addCleanup(label.deleteLater)
+        readout = ColorReadout(
+            readout_id=1,
+            x=0,
+            y=0,
+            sample=PixelSample(red=10, green=20, blue=30, luma=40),
+        )
+
+        self.assertEqual(
+            (("10", "red"), ("20", "green"), ("30", "blue"), ("40", "luma")),
+            label.color_readout_text_runs(readout),
+        )
+
+        dark_colors = label.color_readout_text_colors()
+        self.assertEqual(QtGui.QColor(255, 77, 77), dark_colors["red"])
+        self.assertEqual(QtGui.QColor(72, 199, 116), dark_colors["green"])
+        self.assertEqual(QtGui.QColor(77, 163, 255), dark_colors["blue"])
+        self.assertEqual(QtGui.QColor(255, 255, 255), dark_colors["luma"])
+
+        label.set_color_readout_theme(styles.AppearanceTheme.LIGHT)
+        light_colors = label.color_readout_text_colors()
+        self.assertEqual(QtGui.QColor(0, 0, 0), light_colors["luma"])
+
+    def test_color_readout_background_is_nearly_transparent(self) -> None:
+        label = ImageDisplayLabel()
+        self.addCleanup(label.deleteLater)
+
+        dark_colors = label._color_readout_colors()
+        self.assertEqual(24, dark_colors["background"].alpha())
+
+        label.set_color_readout_theme(styles.AppearanceTheme.LIGHT)
+        light_colors = label._color_readout_colors()
+        self.assertEqual(24, light_colors["background"].alpha())
 
     def _has_light_pixel(self, image: QtGui.QImage, rect: QtCore.QRect) -> bool:
         for y in range(rect.top(), rect.bottom() + 1):

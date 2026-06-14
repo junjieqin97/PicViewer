@@ -155,6 +155,11 @@ class InfoPanelLoadStateTests(QtWidgetTestCase):
         self.assertEqual("Generating waveform...", ui.widgetWaveform.text())
         self.assertEqual("Reading metadata...", ui.tableMetadataGeneral.item(0, 0).text())
         self.assertEqual("Loading", ui.labelImageColorSpaceValue.text())
+        self.assertEqual("-1", ui.labelPixelRedValue.text())
+        self.assertEqual("-1", ui.labelPixelGreenValue.text())
+        self.assertEqual("-1", ui.labelPixelBlueValue.text())
+        self.assertEqual("-1", ui.labelPixelLumaValue.text())
+        self.assertEqual(-1, ui.widgetHistogram.luma_marker_value())
 
     def test_failed_image_shows_analysis_failure_and_reason(self) -> None:
         window, ui, controller = self._build_controller()
@@ -169,6 +174,11 @@ class InfoPanelLoadStateTests(QtWidgetTestCase):
         self.assertEqual("Failure Reason", ui.tableMetadataGeneral.item(1, 0).text())
         self.assertEqual("Unable to read this image file", ui.tableMetadataGeneral.item(1, 1).text())
         self.assertEqual("Unavailable", ui.labelImageColorSpaceValue.text())
+        self.assertEqual("-1", ui.labelPixelRedValue.text())
+        self.assertEqual("-1", ui.labelPixelGreenValue.text())
+        self.assertEqual("-1", ui.labelPixelBlueValue.text())
+        self.assertEqual("-1", ui.labelPixelLumaValue.text())
+        self.assertEqual(-1, ui.widgetHistogram.luma_marker_value())
 
     def test_no_current_image_shows_not_loaded_color_space_info(self) -> None:
         window, ui, controller = self._build_controller()
@@ -179,6 +189,11 @@ class InfoPanelLoadStateTests(QtWidgetTestCase):
 
         self.assertEqual("Not Loaded", ui.labelImageColorSpaceValue.text())
         self.assertTrue(ui.comboSpecifiedImageColorSpace.isEnabled())
+        self.assertEqual("-1", ui.labelPixelRedValue.text())
+        self.assertEqual("-1", ui.labelPixelGreenValue.text())
+        self.assertEqual("-1", ui.labelPixelBlueValue.text())
+        self.assertEqual("-1", ui.labelPixelLumaValue.text())
+        self.assertEqual(-1, ui.widgetHistogram.luma_marker_value())
 
     def test_preview_payload_updates_color_space_info_before_full_load(self) -> None:
         window, ui, controller = self._build_controller()

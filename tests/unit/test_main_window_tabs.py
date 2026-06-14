@@ -201,6 +201,15 @@ class MainWindowTabsTests(QtWidgetTestCase):
         self.assertIs(ui.tabMetadata, ui.tabsInfo.widget(1))
         self.assertEqual(ui.info_panel_histogram_size, ui.widgetHistogram.size())
         self.assertEqual(ui.info_panel_waveform_size, ui.widgetWaveform.size())
+        self.assertEqual("widgetPixelSampleValues", ui.widgetPixelSampleValues.objectName())
+        self.assertEqual("labelPixelRedValue", ui.labelPixelRedValue.objectName())
+        self.assertEqual("labelPixelGreenValue", ui.labelPixelGreenValue.objectName())
+        self.assertEqual("labelPixelBlueValue", ui.labelPixelBlueValue.objectName())
+        self.assertEqual("labelPixelLumaValue", ui.labelPixelLumaValue.objectName())
+        self.assertEqual("-1", ui.labelPixelRedValue.text())
+        self.assertEqual("-1", ui.labelPixelGreenValue.text())
+        self.assertEqual("-1", ui.labelPixelBlueValue.text())
+        self.assertEqual("-1", ui.labelPixelLumaValue.text())
 
         histogram_frame = ui.frameHistogramAnalysis
         waveform_frame = ui.frameWaveformAnalysis
@@ -209,7 +218,7 @@ class MainWindowTabsTests(QtWidgetTestCase):
         self.assertEqual(QtWidgets.QSizePolicy.Policy.Fixed, waveform_frame.sizePolicy().horizontalPolicy())
         self.assertEqual(QtWidgets.QSizePolicy.Policy.Fixed, waveform_frame.sizePolicy().verticalPolicy())
 
-        max_histogram_height = ui.info_panel_histogram_size.height() + 24
+        max_histogram_height = ui.info_panel_histogram_size.height() + 48
         max_waveform_height = ui.info_panel_waveform_size.height() + 24
         self.assertLessEqual(histogram_frame.height(), max_histogram_height)
         self.assertLessEqual(waveform_frame.height(), max_waveform_height)
@@ -221,6 +230,8 @@ class MainWindowTabsTests(QtWidgetTestCase):
         self.assertIs(ui.widgetDisplayColorSpace, analysis_layout.itemAt(3).widget())
         self.assertIs(histogram_frame, analysis_layout.itemAt(4).widget())
         self.assertIs(waveform_frame, analysis_layout.itemAt(5).widget())
+        self.assertIs(ui.widgetPixelSampleValues, histogram_frame.layout().itemAt(0).widget())
+        self.assertIs(ui.widgetHistogram, histogram_frame.layout().itemAt(1).widget())
         expected_alignment = QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignTop
         self.assertEqual(expected_alignment, analysis_layout.itemAt(4).alignment())
         self.assertEqual(expected_alignment, analysis_layout.itemAt(5).alignment())

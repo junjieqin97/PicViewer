@@ -183,6 +183,10 @@ class MainControllerTabsMixin:
         self._fit_to_window_by_path.pop(key, None)
         self._analysis_render_key_by_path.pop(key, None)
         self._tab_preview_render_key_by_path.pop(key, None)
+        if hasattr(self, "_color_readouts_by_path"):
+            self._color_readouts_by_path.pop(key, None)
+        if hasattr(self, "_sync_color_readout_actions"):
+            self._sync_color_readout_actions()
 
     def _close_detached_image_tab(self, path: Path) -> None:
         """Close a floating image tab and remove its related application state."""
@@ -246,6 +250,8 @@ class MainControllerTabsMixin:
         lbl_image.setProperty("_image_zoom_area", True)
         if hasattr(self, "_apply_reference_line_settings_to_label"):
             self._apply_reference_line_settings_to_label(lbl_image)
+        if hasattr(self, "_apply_color_readouts_to_label"):
+            self._apply_color_readouts_to_label(lbl_image)
         scroll_area.setWidget(lbl_image)
         scroll_area.viewport().setObjectName("viewportImageCanvas")
         scroll_area.viewport().setCursor(QtCore.Qt.CursorShape.OpenHandCursor)
@@ -768,6 +774,8 @@ class MainControllerTabsMixin:
         self._ui.actZoomOut.setEnabled(has_image_tab)
         self._ui.actFitToWindow.setEnabled(has_image_tab)
         self._ui.actShowInFolder.setEnabled(can_show_in_folder)
+        if hasattr(self, "_sync_color_readout_actions"):
+            self._sync_color_readout_actions()
 
     def _update_tab_title(self, tab_index: int, path: Path) -> None:
         if tab_index < 0 or tab_index >= self._ui.tabsImages.count():
