@@ -10,7 +10,7 @@ from __future__ import annotations
 # - Pillow>=10.0
 # - pillow-heif>=1,<2
 # - pillow-avif-plugin>=1.5,<2
-# - rawpy>=0.17 (optional, for RAW formats)
+# - rawpy>=0.27.0 (optional, for RAW formats)
 
 import argparse
 import logging

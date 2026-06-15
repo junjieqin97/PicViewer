@@ -21,13 +21,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-raw = ["rawpy>=0.17"]
+raw = ["rawpy>=0.27.0"]
 packaging = [
   "build>=1.2",
   "twine>=5.0",
   "pyinstaller>=6.0",
   "tomli>=2.0; python_version < \"3.11\"",
-  "rawpy>=0.17",
+  "rawpy>=0.27.0",
 ]
 
 [project.scripts]
