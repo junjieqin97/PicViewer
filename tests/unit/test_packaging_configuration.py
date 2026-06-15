@@ -38,10 +38,16 @@ class PackagingConfigurationTests(unittest.TestCase):
             "]\n\n[project.optional-dependencies]",
             maxsplit=1,
         )[0]
+        raw_extra = pyproject.split('raw = [', maxsplit=1)[1].split("]\n", maxsplit=1)[0]
         packaging_extra = pyproject.split("packaging = [", maxsplit=1)[1].split("]\n", maxsplit=1)[0]
 
         self.assertIn('"pyexiv2>=2.15.5,<3"', runtime_dependencies)
         self.assertIn('"Pillow>=10.0"', runtime_dependencies)
+        self.assertIn('"pillow-heif>=1,<2"', runtime_dependencies)
+        self.assertIn('"pillow-avif-plugin>=1.5,<2"', runtime_dependencies)
+        self.assertIn('"rawpy>=0.27.0"', raw_extra)
+        self.assertIn('"rawpy>=0.27.0"', packaging_extra)
+        self.assertNotIn('"rawpy>=0.17"', pyproject)
         self.assertNotIn('"Pillow>=10.0"', packaging_extra)
 
     def test_manifest_includes_runtime_resources_and_release_files(self) -> None:
@@ -129,7 +135,16 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("RUNTIME_METADATA_PACKAGES", spec)
         metadata_packages = spec.split("RUNTIME_METADATA_PACKAGES = (", maxsplit=1)[1].split(")", maxsplit=1)[0]
         self.assertNotIn('"picviewer"', metadata_packages)
-        for package_name in ("PySide6", "opencv-python", "numpy", "pyexiv2", "Pillow", "rawpy"):
+        for package_name in (
+            "PySide6",
+            "opencv-python",
+            "numpy",
+            "pyexiv2",
+            "Pillow",
+            "pillow-heif",
+            "pillow-avif-plugin",
+            "rawpy",
+        ):
             self.assertIn(f'"{package_name}"', spec)
         self.assertNotIn('"PySide2"', spec)
         self.assertIn("_collect_runtime_metadata(RUNTIME_METADATA_PACKAGES)", spec)
@@ -139,6 +154,14 @@ class PackagingConfigurationTests(unittest.TestCase):
 
         self.assertIn('"PIL.ImageCms"', spec)
         self.assertIn('"PIL._imagingcms"', spec)
+
+    def test_pyinstaller_spec_collects_modern_pillow_image_plugins(self) -> None:
+        spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")
+
+        self.assertIn('collect_dynamic_libs("pillow_heif")', spec)
+        self.assertIn('collect_submodules("pillow_heif")', spec)
+        self.assertIn('collect_dynamic_libs("pillow_avif")', spec)
+        self.assertIn('collect_submodules("pillow_avif")', spec)
 
     def test_pyinstaller_spec_generates_picviewer_metadata_from_pyproject(self) -> None:
         spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")
@@ -205,6 +228,7 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("python-version: \"3.10\"", workflow)
         self.assertIn("brew install inih", workflow)
         self.assertIn("QT_RUNTIME_VERSION: \"6.9.2\"", workflow)
+        self.assertIn("RAWPY_VERSION: \"0.27.0\"", workflow)
         self.assertIn(
             'conda install -y -c conda-forge "pyside6=$QT_RUNTIME_VERSION" "qt6-main=$QT_RUNTIME_VERSION"',
             workflow,
@@ -213,6 +237,8 @@ class PackagingConfigurationTests(unittest.TestCase):
             'conda install -y -c conda-forge "pyside6=$env:QT_RUNTIME_VERSION" "qt6-main=$env:QT_RUNTIME_VERSION"',
             workflow,
         )
+        self.assertIn('python -m pip install -e ".[packaging]" "rawpy==$RAWPY_VERSION"', workflow)
+        self.assertIn('python -m pip install -e ".[packaging]" "rawpy==$env:RAWPY_VERSION"', workflow)
         self.assertIn("$CONDA_PREFIX/lib/qt6/bin", workflow)
         self.assertIn("$env:CONDA_PREFIX", workflow)
         self.assertIn("Library\\bin", workflow)
@@ -251,6 +277,8 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("arm64", ci_doc)
         self.assertIn("Qt/PySide6", ci_doc)
         self.assertIn("6.9.2", ci_doc)
+        self.assertIn("rawpy", ci_doc)
+        self.assertIn("0.27.0", ci_doc)
         self.assertIn("Windows", ci_doc)
         self.assertIn("MSI", ci_doc)
         self.assertIn("WiX", ci_doc)

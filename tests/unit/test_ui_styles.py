@@ -124,6 +124,41 @@ class UiStylesTests(QtWidgetTestCase):
                 self.assertIn("min-width: 144px", rule)
                 self.assertIn("max-width: 144px", rule)
 
+    def test_pixel_sample_value_labels_use_channel_colors(self) -> None:
+        for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
+            with self.subTest(theme=theme):
+                style_sheet = styles.load_stylesheet(theme)
+
+                self.assertIn("QLabel#labelPixelRedValue", style_sheet)
+                self.assertIn("QLabel#labelPixelGreenValue", style_sheet)
+                self.assertIn("QLabel#labelPixelBlueValue", style_sheet)
+                self.assertIn("QLabel#labelPixelLumaValue", style_sheet)
+
+                red_rule = self._style_block(style_sheet, "QLabel#labelPixelRedValue")
+                green_rule = self._style_block(style_sheet, "QLabel#labelPixelGreenValue")
+                blue_rule = self._style_block(style_sheet, "QLabel#labelPixelBlueValue")
+                luma_rule = self._style_block(style_sheet, "QLabel#labelPixelLumaValue")
+                expected_luma_color = "#ffffff" if theme == styles.AppearanceTheme.DARK else "#000000"
+
+                self.assertIn("color: #ff4d4d", red_rule)
+                self.assertIn("color: #48c774", green_rule)
+                self.assertIn("color: #4da3ff", blue_rule)
+                self.assertIn(f"color: {expected_luma_color}", luma_rule)
+
+    def test_color_readout_label_styles_match_theme(self) -> None:
+        dark_style = styles.load_stylesheet(styles.AppearanceTheme.DARK)
+        light_style = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
+
+        dark_rule = self._style_block(dark_style, "QLabel#labelColorReadout")
+        light_rule = self._style_block(light_style, "QLabel#labelColorReadout")
+
+        self.assertIn("background: #2b3036", dark_rule)
+        self.assertIn("color: #edf1f5", dark_rule)
+        self.assertIn("border: 1px solid #8eb4df", dark_rule)
+        self.assertIn("background: #ffffff", light_rule)
+        self.assertIn("color: #1f252d", light_rule)
+        self.assertIn("border: 1px solid #4d8fd3", light_rule)
+
     def test_analysis_combo_popup_views_use_theme_contrast(self) -> None:
         dark_style = styles.load_stylesheet(styles.AppearanceTheme.DARK)
         light_style = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)

@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 import cv2
 import numpy as np
+from PIL import Image
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -219,6 +220,38 @@ class ImageReaderPreviewTests(unittest.TestCase):
             source_profile_spec,
             RenderingIntent.RELATIVE_COLORIMETRIC,
         )
+
+    def test_read_preview_uses_pillow_fallback_when_opencv_cannot_decode(self) -> None:
+        reader = ImageReader(allow_raw=False)
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = Path(tmp_dir) / "phone.HEIC"
+            Image.new("RGB", (2, 1), (10, 20, 30)).save(path, format="PNG")
+
+            with patch("pic_viewer.infra.adapters.image_reader.cv2.imread", return_value=None):
+                image = reader.read_preview(path, max_edge=2000)
+
+        self.assertEqual((1, 2, 3), image.shape)
+        self.assertEqual(np.uint8, image.dtype)
+        np.testing.assert_array_equal(image[0, 0], np.array([30, 20, 10], dtype=np.uint8))
+
+    def test_read_preview_pillow_fallback_resizes_to_max_edge_before_conversion(self) -> None:
+        converted = np.full((1, 2, 3), 127, dtype=np.uint8)
+        converter = unittest.mock.MagicMock()
+        converter.convert_file_bgr_to_display_space.return_value = converted
+        reader = ImageReader(allow_raw=False, color_converter=converter)
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = Path(tmp_dir) / "sample.avif"
+            Image.new("RGB", (8, 4), (1, 2, 3)).save(path, format="PNG")
+
+            with patch("pic_viewer.infra.adapters.image_reader.cv2.imread", return_value=None):
+                image = reader.read_preview(path, max_edge=2)
+
+        np.testing.assert_array_equal(image, converted)
+        resized = converter.convert_file_bgr_to_display_space.call_args.args[1]
+        self.assertEqual((1, 2, 3), resized.shape)
+        np.testing.assert_array_equal(resized[0, 0], np.array([3, 2, 1], dtype=np.uint8))
 
     def test_read_preview_raises_for_unsupported_format_when_raw_disabled(self) -> None:
         reader = ImageReader(allow_raw=False)

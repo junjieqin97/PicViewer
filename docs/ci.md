@@ -45,9 +45,11 @@ bundle, DMG, and MSI. The workflow only orchestrates those scripts in GitHub
 Actions.
 
 The release jobs pin Qt/PySide6 to `6.9.2` through `QT_RUNTIME_VERSION` before
-installing packaging dependencies. Keeping the native Qt runtime stable across
-GitHub runner image updates reduces release-only failures in headless unit tests
-and PyInstaller packaging.
+installing packaging dependencies. They also pin `rawpy` to `0.27.0` through
+`RAWPY_VERSION` while `pyproject.toml` keeps the user-facing lower bound at
+`rawpy>=0.27.0`. Keeping the native Qt runtime and packaged RAW backend stable
+across GitHub runner image updates reduces release-only failures in headless
+unit tests and PyInstaller packaging.
 
 ## Windows WiX EULA Handling
 

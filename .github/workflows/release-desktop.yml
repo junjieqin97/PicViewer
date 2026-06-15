@@ -12,6 +12,7 @@ permissions:
 
 env:
   QT_RUNTIME_VERSION: "6.9.2"
+  RAWPY_VERSION: "0.27.0"
 
 jobs:
   release-metadata:
@@ -94,7 +95,7 @@ jobs:
             export PATH="$CONDA_PREFIX/lib/qt6/bin:$PATH"
           fi
           python -m pip install --upgrade pip
-          python -m pip install -e ".[packaging]"
+          python -m pip install -e ".[packaging]" "rawpy==$RAWPY_VERSION"
 
       - name: Run unit tests
         run: python -m unittest discover -s tests/unit
@@ -169,7 +170,7 @@ jobs:
             }
           }
           python -m pip install --upgrade pip
-          python -m pip install -e ".[packaging]"
+          python -m pip install -e ".[packaging]" "rawpy==$env:RAWPY_VERSION"
 
       - name: Run unit tests
         run: |

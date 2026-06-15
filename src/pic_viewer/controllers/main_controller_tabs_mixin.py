@@ -28,7 +28,8 @@ class MainControllerTabsMixin:
         image_filter_label = self._tr("Image Files")
         all_files_label = self._tr("All Files")
         filter_text = (
-            f"{image_filter_label} (*.jpg *.jpeg *.png *.tif *.tiff *.bmp *.dng *.nef *.cr2 *.arw *.raf);;"
+            f"{image_filter_label} (*.jpg *.jpeg *.png *.tif *.tiff *.bmp *.webp *.avif "
+            "*.heif *.heic *.dng *.nef *.cr2 *.arw *.raf);;"
             f"{all_files_label} (*)"
         )
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
@@ -182,6 +183,10 @@ class MainControllerTabsMixin:
         self._fit_to_window_by_path.pop(key, None)
         self._analysis_render_key_by_path.pop(key, None)
         self._tab_preview_render_key_by_path.pop(key, None)
+        if hasattr(self, "_color_readouts_by_path"):
+            self._color_readouts_by_path.pop(key, None)
+        if hasattr(self, "_sync_color_readout_actions"):
+            self._sync_color_readout_actions()
 
     def _close_detached_image_tab(self, path: Path) -> None:
         """Close a floating image tab and remove its related application state."""
@@ -245,6 +250,8 @@ class MainControllerTabsMixin:
         lbl_image.setProperty("_image_zoom_area", True)
         if hasattr(self, "_apply_reference_line_settings_to_label"):
             self._apply_reference_line_settings_to_label(lbl_image)
+        if hasattr(self, "_apply_color_readouts_to_label"):
+            self._apply_color_readouts_to_label(lbl_image)
         scroll_area.setWidget(lbl_image)
         scroll_area.viewport().setObjectName("viewportImageCanvas")
         scroll_area.viewport().setCursor(QtCore.Qt.CursorShape.OpenHandCursor)
@@ -497,7 +504,10 @@ class MainControllerTabsMixin:
         content_layout.addWidget(actions_container, 0, QtCore.Qt.AlignmentFlag.AlignHCenter)
 
         label_formats = QtWidgets.QLabel(
-            self._tr("Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, DNG, NEF, CR2, ARW, RAF"),
+            self._tr(
+                "Supported formats: JPG/JPEG, PNG, TIFF/TIF, BMP, WEBP, AVIF, HEIF/HEIC, "
+                "DNG, NEF, CR2, ARW, RAF"
+            ),
             content,
         )
         label_formats.setObjectName("labelEmptyFormats")
@@ -764,6 +774,8 @@ class MainControllerTabsMixin:
         self._ui.actZoomOut.setEnabled(has_image_tab)
         self._ui.actFitToWindow.setEnabled(has_image_tab)
         self._ui.actShowInFolder.setEnabled(can_show_in_folder)
+        if hasattr(self, "_sync_color_readout_actions"):
+            self._sync_color_readout_actions()
 
     def _update_tab_title(self, tab_index: int, path: Path) -> None:
         if tab_index < 0 or tab_index >= self._ui.tabsImages.count():

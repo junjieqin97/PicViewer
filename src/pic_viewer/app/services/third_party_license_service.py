@@ -84,6 +84,18 @@ _RUNTIME_DEPENDENCIES: tuple[_DependencyLicenseSpec, ...] = (
         notes="Runtime color management backend based on ImageCms.",
     ),
     _DependencyLicenseSpec(
+        display_name="pillow-heif",
+        package_name="pillow-heif",
+        fallback_license="BSD-3-Clause",
+        notes="HEIF/HEIC image support through Pillow.",
+    ),
+    _DependencyLicenseSpec(
+        display_name="pillow-avif-plugin",
+        package_name="pillow-avif-plugin",
+        fallback_license="MIT",
+        notes="AVIF image support through Pillow.",
+    ),
+    _DependencyLicenseSpec(
         display_name="rawpy",
         package_name="rawpy",
         fallback_license="MIT",
