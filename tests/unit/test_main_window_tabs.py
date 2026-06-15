@@ -5,7 +5,7 @@ import sys
 import tempfile
 from pathlib import Path
 import unittest
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -201,6 +201,15 @@ class MainWindowTabsTests(QtWidgetTestCase):
         self.assertIs(ui.tabMetadata, ui.tabsInfo.widget(1))
         self.assertEqual(ui.info_panel_histogram_size, ui.widgetHistogram.size())
         self.assertEqual(ui.info_panel_waveform_size, ui.widgetWaveform.size())
+        self.assertEqual("widgetPixelSampleValues", ui.widgetPixelSampleValues.objectName())
+        self.assertEqual("labelPixelRedValue", ui.labelPixelRedValue.objectName())
+        self.assertEqual("labelPixelGreenValue", ui.labelPixelGreenValue.objectName())
+        self.assertEqual("labelPixelBlueValue", ui.labelPixelBlueValue.objectName())
+        self.assertEqual("labelPixelLumaValue", ui.labelPixelLumaValue.objectName())
+        self.assertEqual("-1", ui.labelPixelRedValue.text())
+        self.assertEqual("-1", ui.labelPixelGreenValue.text())
+        self.assertEqual("-1", ui.labelPixelBlueValue.text())
+        self.assertEqual("-1", ui.labelPixelLumaValue.text())
 
         histogram_frame = ui.frameHistogramAnalysis
         waveform_frame = ui.frameWaveformAnalysis
@@ -209,7 +218,7 @@ class MainWindowTabsTests(QtWidgetTestCase):
         self.assertEqual(QtWidgets.QSizePolicy.Policy.Fixed, waveform_frame.sizePolicy().horizontalPolicy())
         self.assertEqual(QtWidgets.QSizePolicy.Policy.Fixed, waveform_frame.sizePolicy().verticalPolicy())
 
-        max_histogram_height = ui.info_panel_histogram_size.height() + 24
+        max_histogram_height = ui.info_panel_histogram_size.height() + 48
         max_waveform_height = ui.info_panel_waveform_size.height() + 24
         self.assertLessEqual(histogram_frame.height(), max_histogram_height)
         self.assertLessEqual(waveform_frame.height(), max_waveform_height)
@@ -221,6 +230,8 @@ class MainWindowTabsTests(QtWidgetTestCase):
         self.assertIs(ui.widgetDisplayColorSpace, analysis_layout.itemAt(3).widget())
         self.assertIs(histogram_frame, analysis_layout.itemAt(4).widget())
         self.assertIs(waveform_frame, analysis_layout.itemAt(5).widget())
+        self.assertIs(ui.widgetPixelSampleValues, histogram_frame.layout().itemAt(0).widget())
+        self.assertIs(ui.widgetHistogram, histogram_frame.layout().itemAt(1).widget())
         expected_alignment = QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignTop
         self.assertEqual(expected_alignment, analysis_layout.itemAt(4).alignment())
         self.assertEqual(expected_alignment, analysis_layout.itemAt(5).alignment())
@@ -626,11 +637,30 @@ class MainWindowTabsTests(QtWidgetTestCase):
         self.assertIn("JPG", format_label.text())
         self.assertIn("PNG", format_label.text())
         self.assertIn("TIFF", format_label.text())
+        self.assertIn("WEBP", format_label.text())
+        self.assertIn("AVIF", format_label.text())
+        self.assertIn("HEIF/HEIC", format_label.text())
         self.assertIn("DNG", format_label.text())
         open_file_shortcut = controller._shortcut_text(ui.actOpenFile)
         open_folder_shortcut = controller._shortcut_text(ui.actOpenFolder)
         self.assertTrue(any(open_file_shortcut in text for text in label_texts))
         self.assertTrue(any(open_folder_shortcut in text for text in label_texts))
+
+    def test_open_file_dialog_filter_includes_modern_image_formats(self) -> None:
+        window, _ui, controller = self._build_tabs_controller()
+        self.addCleanup(window.deleteLater)
+        controller.open_image = MagicMock()  # type: ignore[method-assign]
+
+        with patch(
+            "pic_viewer.controllers.main_controller_tabs_mixin.QtWidgets.QFileDialog.getOpenFileName",
+            return_value=("/tmp/phone.HEIC", ""),
+        ) as dialog:
+            controller._open_file()
+
+        filter_text = dialog.call_args.args[3]
+        for suffix in ("*.webp", "*.avif", "*.heif", "*.heic"):
+            self.assertIn(suffix, filter_text)
+        controller.open_image.assert_called_once_with(Path("/tmp/phone.HEIC"))
 
     def test_empty_image_placeholder_shows_drop_hint(self) -> None:
         window, ui, controller = self._build_tabs_controller()

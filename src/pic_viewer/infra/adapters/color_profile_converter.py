@@ -20,6 +20,7 @@ from pic_viewer.domain.models.color_space import (
     ColorSpacePreset,
 )
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
+from pic_viewer.infra.adapters.pillow_image_plugins import register_optional_pillow_image_plugins
 
 logger = logging.getLogger(__name__)
 
@@ -293,6 +294,7 @@ class ColorProfileConverter:
         return re.sub(r"\s+", " ", text).strip()
 
     def _read_embedded_icc_profile(self, path: Path) -> bytes | None:
+        register_optional_pillow_image_plugins()
         try:
             with Image.open(path) as image:
                 profile = image.info.get("icc_profile")

@@ -126,6 +126,22 @@ class ColorProfileConverterTests(unittest.TestCase):
         self.assertTrue(info.uses_srgb_fallback)
         self.assertEqual(ColorSpacePreset.SRGB, info.assumed_color_space)
 
+    def test_embedded_profile_reader_registers_optional_pillow_plugins(self) -> None:
+        converter = ColorProfileConverter()
+
+        with (
+            TemporaryDirectory() as tmp_dir,
+            patch(
+                "pic_viewer.infra.adapters.color_profile_converter.register_optional_pillow_image_plugins"
+            ) as register_plugins,
+        ):
+            path = Path(tmp_dir) / "sample.heic"
+            Image.new("RGB", (1, 1)).save(path, format="PNG")
+
+            converter._read_embedded_icc_profile(path)
+
+        register_plugins.assert_called_once_with()
+
     def test_missing_embedded_profile_uses_specified_source_color_space(self) -> None:
         converter = ColorProfileConverter()
         bgr = np.zeros((1, 1, 3), dtype=np.uint8)

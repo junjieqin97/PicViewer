@@ -22,6 +22,7 @@ from pic_viewer.ui.resources.icons import icon_path
 from pic_viewer.ui.widgets.combo_popup_delegate import ComboPopupItemDelegate
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel
 from pic_viewer.ui.widgets.detachable_tabs import DetachableTabWidget
+from pic_viewer.ui.widgets.image_display_label import ImageDisplayLabel
 
 
 class MainWindowUI:
@@ -108,6 +109,14 @@ class MainWindowUI:
         self.actToggleThirdsReferenceLine = QtGui.QAction(self._main_window)
         self.actToggleThirdsReferenceLine.setObjectName("actToggleThirdsReferenceLine")
         self.actToggleThirdsReferenceLine.setCheckable(True)
+        self.actAddColorReadout = QtGui.QAction(self._main_window)
+        self.actAddColorReadout.setObjectName("actAddColorReadout")
+        self.actAddColorReadout.setCheckable(True)
+        self.actDeleteColorReadout = QtGui.QAction(self._main_window)
+        self.actDeleteColorReadout.setObjectName("actDeleteColorReadout")
+        self.actDeleteColorReadout.setCheckable(True)
+        self.actDeleteAllColorReadouts = QtGui.QAction(self._main_window)
+        self.actDeleteAllColorReadouts.setObjectName("actDeleteAllColorReadouts")
 
         self.actAbout = QtGui.QAction(self._main_window)
         self.actAbout.setObjectName("actAbout")
@@ -212,6 +221,18 @@ class MainWindowUI:
                 "reference-line-thirds.svg",
                 "reference-line-thirds-on-light.svg",
             ),
+            self.actAddColorReadout: themed_icon_name(
+                "color-readout-add.svg",
+                "color-readout-add-on-light.svg",
+            ),
+            self.actDeleteColorReadout: themed_icon_name(
+                "color-readout-delete.svg",
+                "color-readout-delete-on-light.svg",
+            ),
+            self.actDeleteAllColorReadouts: themed_icon_name(
+                "color-readout-delete-all.svg",
+                "color-readout-delete-all-on-light.svg",
+            ),
             self.actToggleMetadataOverlay: themed_icon_name(
                 "metadata-info.svg",
                 "metadata-info-on-light.svg",
@@ -304,6 +325,12 @@ class MainWindowUI:
         self.menuReferenceLines.addAction(self.actToggleCrossReferenceLine)
         self.menuReferenceLines.addAction(self.actToggleDiagonalReferenceLine)
         self.menuReferenceLines.addAction(self.actToggleThirdsReferenceLine)
+
+        self.menuColorReadouts = self.menuTools.addMenu("")
+        self.menuColorReadouts.setObjectName("menuColorReadouts")
+        self.menuColorReadouts.addAction(self.actAddColorReadout)
+        self.menuColorReadouts.addAction(self.actDeleteColorReadout)
+        self.menuColorReadouts.addAction(self.actDeleteAllColorReadouts)
 
         self.menuHelp = menu_bar.addMenu("")
         self.menuHelp.setObjectName("menuHelp")
@@ -406,6 +433,18 @@ class MainWindowUI:
             "buttonToolbarThirdsReferenceLine",
             self.actToggleThirdsReferenceLine,
         )
+        self.buttonToolbarAddColorReadout = self._create_analysis_toolbar_button(
+            "buttonToolbarAddColorReadout",
+            self.actAddColorReadout,
+        )
+        self.buttonToolbarDeleteColorReadout = self._create_analysis_toolbar_button(
+            "buttonToolbarDeleteColorReadout",
+            self.actDeleteColorReadout,
+        )
+        self.buttonToolbarDeleteAllColorReadouts = self._create_analysis_toolbar_button(
+            "buttonToolbarDeleteAllColorReadouts",
+            self.actDeleteAllColorReadouts,
+        )
         self.buttonToolbarMetadataOverlay = self._create_analysis_toolbar_button(
             "buttonToolbarMetadataOverlay",
             self.actToggleMetadataOverlay,
@@ -439,6 +478,10 @@ class MainWindowUI:
         toolbar_layout.addWidget(self.buttonToolbarCrossReferenceLine)
         toolbar_layout.addWidget(self.buttonToolbarDiagonalReferenceLine)
         toolbar_layout.addWidget(self.buttonToolbarThirdsReferenceLine)
+        self._add_analysis_toolbar_separator(toolbar_layout)
+        toolbar_layout.addWidget(self.buttonToolbarAddColorReadout)
+        toolbar_layout.addWidget(self.buttonToolbarDeleteColorReadout)
+        toolbar_layout.addWidget(self.buttonToolbarDeleteAllColorReadouts)
         toolbar_layout.addStretch(1)
         toolbar_layout.addWidget(self.buttonToolbarMetadataOverlay)
 
@@ -584,7 +627,36 @@ class MainWindowUI:
         )
         hist_frame_layout = QtWidgets.QVBoxLayout(self.frameHistogramAnalysis)
         hist_frame_layout.setContentsMargins(8, 8, 8, 8)
-        hist_frame_layout.setSpacing(0)
+        hist_frame_layout.setSpacing(4)
+        self.widgetPixelSampleValues = QtWidgets.QWidget(self.frameHistogramAnalysis)
+        self.widgetPixelSampleValues.setObjectName("widgetPixelSampleValues")
+        self.widgetPixelSampleValues.setFixedWidth(self.info_panel_histogram_size.width())
+        self.widgetPixelSampleValues.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Fixed,
+            QtWidgets.QSizePolicy.Policy.Fixed,
+        )
+        pixel_sample_layout = QtWidgets.QHBoxLayout(self.widgetPixelSampleValues)
+        pixel_sample_layout.setObjectName("layoutPixelSampleValues")
+        pixel_sample_layout.setContentsMargins(0, 0, 0, 0)
+        pixel_sample_layout.setSpacing(0)
+        self.labelPixelRedValue = QtWidgets.QLabel("-1", self.widgetPixelSampleValues)
+        self.labelPixelRedValue.setObjectName("labelPixelRedValue")
+        self.labelPixelGreenValue = QtWidgets.QLabel("-1", self.widgetPixelSampleValues)
+        self.labelPixelGreenValue.setObjectName("labelPixelGreenValue")
+        self.labelPixelBlueValue = QtWidgets.QLabel("-1", self.widgetPixelSampleValues)
+        self.labelPixelBlueValue.setObjectName("labelPixelBlueValue")
+        self.labelPixelLumaValue = QtWidgets.QLabel("-1", self.widgetPixelSampleValues)
+        self.labelPixelLumaValue.setObjectName("labelPixelLumaValue")
+        for label in (
+            self.labelPixelRedValue,
+            self.labelPixelGreenValue,
+            self.labelPixelBlueValue,
+            self.labelPixelLumaValue,
+        ):
+            label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            label.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+            pixel_sample_layout.addWidget(label, 1)
+        hist_frame_layout.addWidget(self.widgetPixelSampleValues)
         self.widgetHistogram = HistogramClippingLabel("", self.frameHistogramAnalysis)
         self.widgetHistogram.setObjectName("widgetHistogram")
         self.widgetHistogram.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
@@ -767,6 +839,8 @@ class MainWindowUI:
         self._appearance_theme = applied_theme
         self._apply_analysis_action_icons(applied_theme)
         self._sync_appearance_actions(applied_theme)
+        for label in self._main_window.findChildren(ImageDisplayLabel, "lblImage"):
+            label.set_color_readout_theme(applied_theme)
         for tabs in (getattr(self, "tabsImages", None), getattr(self, "tabsInfo", None)):
             if hasattr(tabs, "apply_floating_stylesheet"):
                 tabs.apply_floating_stylesheet(self._main_window.styleSheet())
@@ -822,6 +896,9 @@ class MainWindowUI:
         self.actToggleCrossReferenceLine.setText(self._tr("Cross Reference Line"))
         self.actToggleDiagonalReferenceLine.setText(self._tr("Diagonal Reference Line"))
         self.actToggleThirdsReferenceLine.setText(self._tr("Rule of Thirds Reference Line"))
+        self.actAddColorReadout.setText(self._tr("Add Color Readout"))
+        self.actDeleteColorReadout.setText(self._tr("Delete Color Readout"))
+        self.actDeleteAllColorReadouts.setText(self._tr("Delete All Readouts"))
         self.actAbout.setText(self._tr("About"))
         self.actThirdPartyLicenses.setText(self._tr("Third-Party License Information"))
         self.actModeLuma.setText(self._tr("Luma Mode"))
@@ -846,6 +923,7 @@ class MainWindowUI:
         self.menuChannel.setTitle(self._tr("RGB Channels"))
         self.menuPseudoColor.setTitle(self._tr("Pseudo Color"))
         self.menuFocusPeaking.setTitle(self._tr("Show Peaks"))
+        self.menuColorReadouts.setTitle(self._tr("Color Readouts"))
         self.menuHelp.setTitle(self._tr("Help"))
 
         self.tabsInfo.setTabText(self.tabsInfo.indexOf(self.tabAnalysis), self._tr("Analysis"))
@@ -897,6 +975,12 @@ class MainWindowUI:
             self.actPeakHigh,
             self.actPeakMedium,
             self.actPeakLow,
+            self.actToggleCrossReferenceLine,
+            self.actToggleDiagonalReferenceLine,
+            self.actToggleThirdsReferenceLine,
+            self.actAddColorReadout,
+            self.actDeleteColorReadout,
+            self.actDeleteAllColorReadouts,
             self.actToggleMetadataOverlay,
         )
         for action in actions:

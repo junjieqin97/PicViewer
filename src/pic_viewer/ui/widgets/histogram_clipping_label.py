@@ -24,6 +24,7 @@ class HistogramClippingLabel(QtWidgets.QLabel):
         self._triangle_margin = 6
         self._underexposed_tooltip = ""
         self._overexposed_tooltip = ""
+        self._luma_marker_value = -1
         self.setMouseTracking(True)
 
     def set_clipping_state(self, underexposed: bool, overexposed: bool) -> None:
@@ -55,12 +56,32 @@ class HistogramClippingLabel(QtWidgets.QLabel):
         self._underexposed_tooltip = underexposed
         self._overexposed_tooltip = overexposed
 
+    def set_luma_marker_value(self, value: int) -> None:
+        """Set the luma marker value, or -1 to hide it."""
+
+        try:
+            next_value = int(value)
+        except (TypeError, ValueError):
+            next_value = -1
+        if next_value < 0 or next_value > 255:
+            next_value = -1
+        if self._luma_marker_value == next_value:
+            return
+        self._luma_marker_value = next_value
+        self.update()
+
+    def luma_marker_value(self) -> int:
+        """Return the current luma marker value, or -1 when hidden."""
+
+        return self._luma_marker_value
+
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:  # type: ignore[override]
         """Draw base label and clipping indicator triangles."""
 
         super().paintEvent(event)
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
+        self._paint_luma_marker(painter)
         self._paint_triangle(
             painter,
             self._left_triangle(),
@@ -76,6 +97,16 @@ class HistogramClippingLabel(QtWidgets.QLabel):
             semantic_color=QtGui.QColor(224, 68, 68),
         )
         painter.end()
+
+    def _paint_luma_marker(self, painter: QtGui.QPainter) -> None:
+        """Draw a vertical luma marker line when a sampled luma is available."""
+
+        if self._luma_marker_value < 0:
+            return
+        if self.width() <= 0 or self.height() <= 0:
+            return
+        x = int(round((self._luma_marker_value / 255.0) * max(0, self.width() - 1)))
+        painter.fillRect(QtCore.QRect(x, 0, 1, self.height()), QtGui.QColor(0, 0, 0))
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:  # type: ignore[override]
         """Toggle clipping marker state when a triangle is clicked."""

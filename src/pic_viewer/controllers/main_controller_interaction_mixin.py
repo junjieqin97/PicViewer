@@ -12,7 +12,16 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from pic_viewer.app.services.app_metadata_service import AppMetadata, load_app_metadata
 from pic_viewer.app.services.image_file_policy import filter_supported_image_paths
 from pic_viewer.app.services.third_party_license_service import load_third_party_licenses
+from pic_viewer.domain.rules.pixel_sample import (
+    ColorReadout,
+    INVALID_PIXEL_SAMPLE,
+    PixelSample,
+    sample_analysis_pixel,
+)
+from pic_viewer.ui.resources import styles
 from pic_viewer.ui.resources.icons import load_app_icon
+from pic_viewer.ui.utils.signal_blocker import block_signals
+from pic_viewer.ui.widgets.image_display_label import ImageDisplayLabel
 from pic_viewer.ui.windows.third_party_license_dialog import ThirdPartyLicenseDialog
 
 logger = logging.getLogger(__name__)
@@ -136,10 +145,13 @@ class MainControllerInteractionMixin:
             return False
         if self._handle_file_drop_event(watched, event):
             return True
+        if self._handle_color_readout_event(watched, event):
+            return True
         if self._handle_image_wheel_zoom_event(watched, event):
             return True
         if self._handle_image_drag_event(watched, event):
             return True
+        self._handle_pixel_sample_event(watched, event)
         if event.type() in (QtCore.QEvent.Type.MouseMove, QtCore.QEvent.Type.Enter, QtCore.QEvent.Type.Leave):
             self._refresh_image_cursor(watched, event)
         try:
@@ -258,6 +270,253 @@ class MainControllerInteractionMixin:
             5000,
         )
 
+    def _on_add_color_readout_triggered(self, checked: bool = False) -> None:
+        """Toggle the persistent color readout add interaction mode."""
+
+        self._set_color_readout_mode("add" if checked else None)
+
+    def _on_delete_color_readout_triggered(self, checked: bool = False) -> None:
+        """Toggle the persistent color readout delete interaction mode."""
+
+        self._set_color_readout_mode("delete" if checked else None)
+
+    def _on_delete_all_color_readouts_triggered(self, _checked: bool = False) -> None:
+        """Remove all persistent color readouts from the current image."""
+
+        current_path = self._current_image_path()
+        if current_path is None:
+            self._sync_color_readout_actions()
+            return
+        readouts_by_path = getattr(self, "_color_readouts_by_path", None)
+        if readouts_by_path is None:
+            self._color_readouts_by_path = {}
+            self._sync_color_readout_actions()
+            return
+        key = str(current_path)
+        if not readouts_by_path.get(key):
+            self._sync_color_readout_actions()
+            return
+        readouts_by_path[key] = []
+        self._sync_color_readouts_for_path(current_path)
+        self._sync_color_readout_actions()
+        self._sync_color_readout_cursors()
+
+    def _set_color_readout_mode(self, mode: str | None) -> None:
+        if mode not in (None, "add", "delete"):
+            return
+        self._color_readout_mode = mode
+        self._sync_color_readout_actions()
+        self._sync_color_readout_cursors()
+
+    def _handle_color_readout_event(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        """Add or delete fixed color readouts in the active readout mode."""
+
+        mode = getattr(self, "_color_readout_mode", None)
+        if mode is None:
+            return False
+        if event.type() != QtCore.QEvent.Type.MouseButtonPress:
+            return False
+        if not isinstance(event, QtGui.QMouseEvent):
+            return False
+        if event.button() != QtCore.Qt.MouseButton.LeftButton:
+            return False
+        if not isinstance(watched, QtWidgets.QWidget):
+            return False
+
+        label = self._image_label_for_widget(watched)
+        if label is None:
+            return False
+        path = self._image_path_for_widget(label)
+        current_path = self._current_image_path()
+        if path is None or current_path is None or path != current_path:
+            return True
+        data = self._images_by_path.get(str(path))
+        if data is None:
+            return True
+
+        label_pos = label.mapFrom(watched, event.position().toPoint())
+        if mode == "add":
+            self._add_color_readout_at(label, path, data.analysis.analysis_bgr, label_pos)
+            return True
+        if mode == "delete":
+            self._delete_color_readout_at(label, path, label_pos)
+            return True
+        return False
+
+    def _add_color_readout_at(
+        self,
+        label: ImageDisplayLabel,
+        path: Path,
+        analysis_bgr,
+        label_pos: QtCore.QPoint,
+    ) -> None:
+        pixel_pos = label.image_pixel_position_at(label_pos, analysis_bgr.shape[:2])
+        if pixel_pos is None:
+            return
+        x, y = pixel_pos
+        sample = sample_analysis_pixel(analysis_bgr, x, y)
+        if sample == INVALID_PIXEL_SAMPLE:
+            return
+        readout = ColorReadout(
+            readout_id=self._next_color_readout_id,
+            x=x,
+            y=y,
+            sample=sample,
+        )
+        self._next_color_readout_id += 1
+        key = str(path)
+        self._color_readouts_by_path.setdefault(key, []).append(readout)
+        self._sync_color_readouts_for_path(path)
+        self._sync_color_readout_actions()
+
+    def _delete_color_readout_at(
+        self,
+        label: ImageDisplayLabel,
+        path: Path,
+        label_pos: QtCore.QPoint,
+    ) -> None:
+        readout_id = label.color_readout_id_at(label_pos)
+        if readout_id is None:
+            return
+        key = str(path)
+        current = self._color_readouts_by_path.get(key, [])
+        self._color_readouts_by_path[key] = [readout for readout in current if readout.readout_id != readout_id]
+        self._sync_color_readouts_for_path(path)
+        self._sync_color_readout_actions()
+        self._sync_color_readout_cursors()
+
+    def _refresh_color_readouts_for_path(self, path: Path, analysis_bgr) -> None:
+        """Resample stored color readouts when analysis data changes."""
+
+        key = str(path)
+        readouts_by_path = getattr(self, "_color_readouts_by_path", None)
+        if readouts_by_path is None:
+            self._color_readouts_by_path = {}
+            readouts_by_path = self._color_readouts_by_path
+        current = readouts_by_path.get(key)
+        if not current:
+            self._sync_color_readouts_for_path(path)
+            self._sync_color_readout_actions()
+            return
+        if not hasattr(analysis_bgr, "shape") or len(analysis_bgr.shape) < 2:
+            return
+        height, width = analysis_bgr.shape[:2]
+        if height <= 0 or width <= 0:
+            return
+        refreshed: list[ColorReadout] = []
+        for readout in current:
+            x = min(width - 1, max(0, readout.x))
+            y = min(height - 1, max(0, readout.y))
+            refreshed.append(
+                ColorReadout(
+                    readout_id=readout.readout_id,
+                    x=x,
+                    y=y,
+                    sample=sample_analysis_pixel(analysis_bgr, x, y),
+                )
+            )
+        readouts_by_path[key] = refreshed
+        self._sync_color_readouts_for_path(path)
+        self._sync_color_readout_actions()
+
+    def _sync_color_readouts_for_path(self, path: Path) -> None:
+        """Apply one image path's readout list to every matching image label."""
+
+        key = str(path)
+        readouts = tuple(getattr(self, "_color_readouts_by_path", {}).get(key, []))
+        data = getattr(self, "_images_by_path", {}).get(key)
+        image_size = data.analysis.analysis_bgr.shape[:2] if data is not None else None
+        theme = getattr(self._ui, "_appearance_theme", styles.AppearanceTheme.DARK)
+        for tab in self._all_image_tab_widgets():
+            if self._tab_path(tab) != path:
+                continue
+            for label in tab.findChildren(ImageDisplayLabel, "lblImage"):
+                label.set_color_readout_theme(theme)
+                label.set_color_readouts(readouts, image_size)
+
+    def _apply_color_readouts_to_label(self, label: QtWidgets.QLabel) -> None:
+        """Apply current color readouts to a newly created image label."""
+
+        if not isinstance(label, ImageDisplayLabel):
+            return
+        path = self._image_path_for_widget(label)
+        if path is None:
+            return
+        key = str(path)
+        data = getattr(self, "_images_by_path", {}).get(key)
+        image_size = data.analysis.analysis_bgr.shape[:2] if data is not None else None
+        theme = getattr(self._ui, "_appearance_theme", styles.AppearanceTheme.DARK)
+        label.set_color_readout_theme(theme)
+        label.set_color_readouts(tuple(getattr(self, "_color_readouts_by_path", {}).get(key, [])), image_size)
+
+    def _sync_color_readout_actions(self) -> None:
+        """Keep color readout tool actions enabled and checked consistently."""
+
+        current_path = self._current_image_path()
+        readouts_by_path = getattr(self, "_color_readouts_by_path", {})
+        can_add = current_path is not None and str(current_path) in getattr(self, "_images_by_path", {})
+        can_delete = can_add and bool(readouts_by_path.get(str(current_path)))
+        mode = getattr(self, "_color_readout_mode", None)
+        if mode == "add" and not can_add:
+            mode = None
+        if mode == "delete" and not can_delete:
+            mode = None
+        self._color_readout_mode = mode
+
+        action_state = (
+            ("actAddColorReadout", can_add, mode == "add"),
+            ("actDeleteColorReadout", can_delete, mode == "delete"),
+            ("actDeleteAllColorReadouts", can_delete, False),
+        )
+        for action_name, enabled, checked in action_state:
+            action = getattr(self._ui, action_name, None)
+            if action is None:
+                continue
+            with block_signals(action):
+                action.setEnabled(enabled)
+                if action.isCheckable():
+                    action.setChecked(checked)
+
+    def _sync_color_readout_cursors(self) -> None:
+        """Update image-area cursors for the active color readout mode."""
+
+        mode = getattr(self, "_color_readout_mode", None)
+        if mode == "add":
+            cursor = QtGui.QCursor(QtCore.Qt.CursorShape.CrossCursor)
+        elif mode == "delete":
+            cursor = self._delete_color_readout_cursor()
+        else:
+            cursor = QtGui.QCursor(QtCore.Qt.CursorShape.OpenHandCursor)
+        for tab in self._all_image_tab_widgets():
+            for scroll_area in tab.findChildren(QtWidgets.QScrollArea, "scrollImage"):
+                scroll_area.setCursor(cursor)
+                scroll_area.viewport().setCursor(cursor)
+                widget = scroll_area.widget()
+                if widget is not None:
+                    widget.setCursor(cursor)
+
+    def _sync_color_readout_themes_for_all_labels(self) -> None:
+        """Apply the current appearance theme to all existing readout labels."""
+
+        theme = getattr(self._ui, "_appearance_theme", styles.AppearanceTheme.DARK)
+        for tab in self._all_image_tab_widgets():
+            for label in tab.findChildren(ImageDisplayLabel, "lblImage"):
+                label.set_color_readout_theme(theme)
+        self._sync_color_readout_cursors()
+
+    def _delete_color_readout_cursor(self) -> QtGui.QCursor:
+        size = 24
+        pixmap = QtGui.QPixmap(size, size)
+        pixmap.fill(QtCore.Qt.GlobalColor.transparent)
+        painter = QtGui.QPainter(pixmap)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
+        theme = getattr(self._ui, "_appearance_theme", styles.AppearanceTheme.DARK)
+        color = QtGui.QColor(31, 37, 45) if theme == styles.AppearanceTheme.LIGHT else QtGui.QColor(237, 241, 245)
+        painter.setPen(QtGui.QPen(color, 3, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap))
+        painter.drawLine(QtCore.QPointF(7, 12), QtCore.QPointF(17, 12))
+        painter.end()
+        return QtGui.QCursor(pixmap, 12, 12)
+
     def _handle_image_wheel_zoom_event(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
         """Convert mouse-wheel events in the image preview area into zoom actions."""
 
@@ -344,10 +603,111 @@ class MainControllerInteractionMixin:
 
         return False
 
+    def _handle_pixel_sample_event(self, watched: QtCore.QObject, event: QtCore.QEvent) -> None:
+        """Update RGB/luma sample readouts for image hover events."""
+
+        if event.type() == QtCore.QEvent.Type.Leave:
+            if isinstance(watched, QtWidgets.QWidget) and self._image_label_for_widget(watched) is not None:
+                self._reset_pixel_sample_display()
+            return
+        if event.type() != QtCore.QEvent.Type.MouseMove:
+            return
+        if not isinstance(event, QtGui.QMouseEvent):
+            return
+        if not isinstance(watched, QtWidgets.QWidget):
+            return
+
+        label = self._image_label_for_widget(watched)
+        if label is None:
+            return
+        path = self._image_path_for_widget(label)
+        current_path = self._current_image_path()
+        if path is None or current_path is None or path != current_path:
+            self._reset_pixel_sample_display()
+            return
+
+        data = self._images_by_path.get(str(path))
+        if data is None:
+            self._reset_pixel_sample_display()
+            return
+
+        analysis_bgr = data.analysis.analysis_bgr
+        if not hasattr(label, "image_pixel_position_at"):
+            self._reset_pixel_sample_display()
+            return
+
+        label_pos = label.mapFrom(watched, event.position().toPoint())
+        pixel_pos = label.image_pixel_position_at(label_pos, analysis_bgr.shape[:2])
+        if pixel_pos is None:
+            self._reset_pixel_sample_display()
+            return
+
+        x, y = pixel_pos
+        sample = sample_analysis_pixel(analysis_bgr, x, y)
+        self._set_pixel_sample_display(sample, str(path), id(analysis_bgr))
+
+    def _image_label_for_widget(self, widget: QtWidgets.QWidget) -> ImageDisplayLabel | None:
+        """Resolve the image display label from an image widget or viewport."""
+
+        if isinstance(widget, ImageDisplayLabel) and widget.objectName() == "lblImage":
+            return widget
+        scroll_area = self._resolve_image_scroll_area(widget)
+        if scroll_area is None:
+            return None
+        label = scroll_area.widget()
+        if isinstance(label, ImageDisplayLabel):
+            return label
+        return None
+
+    def _image_path_for_widget(self, widget: QtWidgets.QWidget) -> Optional[Path]:
+        """Return the image path associated with a widget's tab container."""
+
+        current: Optional[QtWidgets.QWidget] = widget
+        while current is not None:
+            raw = current.property("image_path")
+            if raw:
+                return Path(str(raw))
+            current = current.parentWidget()
+        return None
+
+    def _set_pixel_sample_display(
+        self,
+        sample: PixelSample,
+        path_key: str | None = None,
+        analysis_id: int | None = None,
+    ) -> None:
+        """Show one pixel sample in the analysis panel."""
+
+        for attr, value in (
+            ("labelPixelRedValue", sample.red),
+            ("labelPixelGreenValue", sample.green),
+            ("labelPixelBlueValue", sample.blue),
+            ("labelPixelLumaValue", sample.luma),
+        ):
+            label = getattr(self._ui, attr, None)
+            if isinstance(label, QtWidgets.QLabel):
+                label.setText(str(value))
+
+        histogram = getattr(self._ui, "widgetHistogram", None)
+        if hasattr(histogram, "set_luma_marker_value"):
+            histogram.set_luma_marker_value(sample.luma)
+        if sample == INVALID_PIXEL_SAMPLE:
+            self._pixel_sample_analysis_key = None
+        elif path_key is not None and analysis_id is not None:
+            self._pixel_sample_analysis_key = (path_key, analysis_id)
+
+    def _reset_pixel_sample_display(self) -> None:
+        """Reset analysis pixel readouts and hide the histogram marker."""
+
+        self._set_pixel_sample_display(INVALID_PIXEL_SAMPLE)
+
     def _refresh_image_cursor(self, watched: QtCore.QObject, event: QtCore.QEvent) -> None:
         """Ensure the hand cursor appears over the image area."""
 
         if self._image_dragging:
+            return
+        if getattr(self, "_color_readout_mode", None) is not None:
+            self._sync_color_readout_cursors()
             return
         if self._cursor_override_target is not None:
             return
