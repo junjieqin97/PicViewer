@@ -32,6 +32,7 @@ RUNTIME_METADATA_PACKAGES = (
     "opencv-python",
     "numpy",
     "pyexiv2",
+    "pyvips",
     "Pillow",
     "pillow-heif",
     "pillow-avif-plugin",
@@ -121,6 +122,12 @@ except Exception:
     hiddenimports.append("pyexiv2")
 
 try:
+    binaries += collect_dynamic_libs("pyvips")
+    hiddenimports += collect_submodules("pyvips")
+except Exception:
+    hiddenimports.append("pyvips")
+
+try:
     hiddenimports += collect_submodules("rawpy")
 except Exception:
     hiddenimports.append("rawpy")
@@ -136,11 +143,6 @@ try:
     hiddenimports += collect_submodules("pillow_avif")
 except Exception:
     hiddenimports.append("pillow_avif")
-
-hiddenimports += [
-    "PIL.ImageCms",
-    "PIL._imagingcms",
-]
 
 a = Analysis(
     [str(SRC_ROOT / "pic_viewer" / "main.py")],

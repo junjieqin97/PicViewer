@@ -73,6 +73,7 @@ class ComboPopupItemDelegateTests(QtWidgetTestCase):
         self.addCleanup(window.deleteLater)
 
         for combo in (
+            ui.comboAnalysisSamplePrecision,
             ui.comboSpecifiedImageColorSpace,
             ui.comboRenderingIntent,
             ui.comboDisplayColorSpace,

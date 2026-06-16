@@ -27,6 +27,16 @@ def blend_rgb(source: tuple[int, int, int], color: tuple[int, int, int], alpha: 
     return int(mixed[0]), int(mixed[1]), int(mixed[2])
 
 
+def blend_rgb16(source: tuple[int, int, int], color: tuple[int, int, int], alpha: float) -> tuple[int, int, int]:
+    """Blend 16-bit RGB tuples with scaled overlay colors."""
+
+    src = np.asarray(source, dtype=np.float32)
+    dst = np.asarray(color, dtype=np.float32)
+    mixed = np.rint((1.0 - alpha) * src + alpha * dst)
+    mixed = np.clip(mixed, 0, 65535).astype(np.uint16)
+    return int(mixed[0]), int(mixed[1]), int(mixed[2])
+
+
 class ExposureOverlayTests(unittest.TestCase):
     """Validate under/over exposure pseudo-color overlay behavior."""
 
@@ -91,6 +101,25 @@ class ExposureOverlayTests(unittest.TestCase):
         self.assertTupleEqual(expected_under, tuple(int(v) for v in result[0, 0]))
         self.assertTupleEqual((6, 6, 6), tuple(int(v) for v in result[0, 1]))
         self.assertTupleEqual((249, 249, 249), tuple(int(v) for v in result[0, 2]))
+        self.assertTupleEqual(expected_over, tuple(int(v) for v in result[0, 3]))
+
+    def test_sixteen_bit_overlay_scales_default_thresholds_and_preserves_dtype(self) -> None:
+        image = np.array(
+            [
+                [[1285, 1285, 1285], [1542, 1542, 1542], [64249, 64249, 64249], [64507, 64507, 64507]],
+            ],
+            dtype=np.uint16,
+        )
+        options = ExposureOverlayOptions(show_underexposed=True, show_overexposed=True)
+
+        result = apply_exposure_overlay(image, options)
+
+        self.assertEqual(np.uint16, result.dtype)
+        expected_under = blend_rgb16((1285, 1285, 1285), (0, 65535, 0), 0.65)
+        expected_over = blend_rgb16((64507, 64507, 64507), (65535, 0, 0), 0.65)
+        self.assertTupleEqual(expected_under, tuple(int(v) for v in result[0, 0]))
+        self.assertTupleEqual((1542, 1542, 1542), tuple(int(v) for v in result[0, 1]))
+        self.assertTupleEqual((64249, 64249, 64249), tuple(int(v) for v in result[0, 2]))
         self.assertTupleEqual(expected_over, tuple(int(v) for v in result[0, 3]))
 
     def test_invalid_shape_raises_value_error(self) -> None:

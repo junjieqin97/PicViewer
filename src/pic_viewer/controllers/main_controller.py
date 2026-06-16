@@ -22,6 +22,7 @@ from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     DEFAULT_DISPLAY_COLOR_SPACE,
 )
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
 from pic_viewer.domain.rules.pixel_sample import ColorReadout
@@ -81,6 +82,7 @@ class MainController(
         self._display_color_space = DEFAULT_DISPLAY_COLOR_SPACE
         self._assumed_source_color_space = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
         self._rendering_intent = DEFAULT_RENDERING_INTENT
+        self._analysis_bit_depth = ChannelBitDepth.EIGHT
         self._last_splitter_sizes: Optional[list[int]] = None
         self._last_metadata_path: Optional[str] = None
         self._cursor_boundary_margin = 4
@@ -171,6 +173,10 @@ class MainController(
         )
         self._ui.comboRenderingIntent.currentIndexChanged.connect(self._on_rendering_intent_changed)
         self._ui.comboDisplayColorSpace.currentIndexChanged.connect(self._on_display_color_space_changed)
+        if hasattr(self._ui, "comboAnalysisSamplePrecision"):
+            self._ui.comboAnalysisSamplePrecision.currentIndexChanged.connect(
+                self._on_analysis_sample_precision_changed
+            )
         if hasattr(self._ui, "actToggleUnderexposed"):
             self._ui.actToggleUnderexposed.toggled.connect(self._on_underexposed_toggled)
         if hasattr(self._ui, "actToggleOverexposed"):

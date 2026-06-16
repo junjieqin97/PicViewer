@@ -5,7 +5,17 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Iterable
 
-SUPPORTED_IMAGE_SUFFIXES = frozenset(
+RAW_IMAGE_SUFFIXES = frozenset(
+    {
+        ".dng",
+        ".nef",
+        ".cr2",
+        ".arw",
+        ".raf",
+    }
+)
+
+RASTER_IMAGE_SUFFIXES = frozenset(
     {
         ".jpg",
         ".jpeg",
@@ -17,13 +27,10 @@ SUPPORTED_IMAGE_SUFFIXES = frozenset(
         ".avif",
         ".heif",
         ".heic",
-        ".dng",
-        ".nef",
-        ".cr2",
-        ".arw",
-        ".raf",
     }
 )
+
+SUPPORTED_IMAGE_SUFFIXES = RASTER_IMAGE_SUFFIXES | RAW_IMAGE_SUFFIXES
 
 
 def is_supported_image_path(path: Path) -> bool:

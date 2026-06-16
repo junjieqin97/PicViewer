@@ -18,6 +18,7 @@ from pic_viewer.domain.rules.pixel_sample import (
     PixelSample,
     sample_analysis_pixel,
 )
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth
 from pic_viewer.ui.resources import styles
 from pic_viewer.ui.resources.icons import load_app_icon
 from pic_viewer.ui.utils.signal_blocker import block_signals
@@ -690,7 +691,12 @@ class MainControllerInteractionMixin:
 
         histogram = getattr(self._ui, "widgetHistogram", None)
         if hasattr(histogram, "set_luma_marker_value"):
-            histogram.set_luma_marker_value(sample.luma)
+            max_value = ChannelBitDepth.EIGHT.max_value
+            if path_key is not None:
+                loaded = self._images_by_path.get(path_key)
+                if loaded is not None:
+                    max_value = loaded.analysis.analysis_bit_depth.max_value
+            histogram.set_luma_marker_value(sample.luma, max_value=max_value)
         if sample == INVALID_PIXEL_SAMPLE:
             self._pixel_sample_analysis_key = None
         elif path_key is not None and analysis_id is not None:

@@ -81,7 +81,19 @@ _RUNTIME_DEPENDENCIES: tuple[_DependencyLicenseSpec, ...] = (
         display_name="Pillow",
         package_name="Pillow",
         fallback_license="MIT-CMU",
-        notes="Runtime color management backend based on ImageCms.",
+        notes="Fallback image decoder and plugin host.",
+    ),
+    _DependencyLicenseSpec(
+        display_name="pyvips",
+        package_name="pyvips",
+        fallback_license="MIT",
+        notes="Python bindings for libvips ICC color management.",
+    ),
+    _DependencyLicenseSpec(
+        display_name="libvips",
+        package_name="libvips",
+        fallback_license="LGPL-2.1-or-later",
+        notes="Native image processing library used for ICC transforms through LittleCMS.",
     ),
     _DependencyLicenseSpec(
         display_name="pillow-heif",

@@ -8,6 +8,8 @@ from enum import Enum
 import cv2
 import numpy as np
 
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth
+
 
 class FocusPeakLevel(Enum):
     """Sensitivity levels for focus peaking overlays."""
@@ -75,7 +77,8 @@ def build_focus_peak_mask(rgb: np.ndarray, options: FocusPeakingOptions) -> np.n
 
     luma = _compute_luma(rgb)
     edge_strength = _compute_edge_strength(luma)
-    threshold = _EDGE_THRESHOLDS_BY_LEVEL[options.level]
+    max_value = ChannelBitDepth.from_dtype(rgb.dtype).max_value
+    threshold = _EDGE_THRESHOLDS_BY_LEVEL[options.level] * (max_value / 255.0)
     return edge_strength >= threshold
 
 
@@ -84,6 +87,8 @@ def _validate_image(rgb: np.ndarray) -> None:
 
     if rgb.ndim != 3 or rgb.shape[2] != 3:
         raise ValueError("rgb must have shape (H, W, 3)")
+    if rgb.dtype not in (np.dtype(np.uint8), np.dtype(np.uint16)):
+        raise ValueError("rgb must use uint8 or uint16 channels")
 
 
 def _validate_options(options: FocusPeakingOptions) -> None:
@@ -121,7 +126,9 @@ def _blend_mask(
     if not np.any(mask):
         return
 
-    color = np.asarray(color_rgb, dtype=np.float32)
+    max_value = ChannelBitDepth.from_dtype(output.dtype).max_value
+    scale = max_value / 255.0
+    color = np.asarray(color_rgb, dtype=np.float32) * scale
     source = output[mask].astype(np.float32)
     blended = np.rint((1.0 - alpha) * source + (alpha * color))
-    output[mask] = np.clip(blended, 0, 255).astype(np.uint8)
+    output[mask] = np.clip(blended, 0, max_value).astype(output.dtype)

@@ -6,6 +6,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.analysis_view_service import AnalysisViewService
 from pic_viewer.app.services.image_service import ImageService
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     DEFAULT_DISPLAY_COLOR_SPACE,
@@ -538,6 +539,36 @@ class MainWindowUI:
         image_space_layout.addWidget(self.labelImageColorSpaceValue, 1)
         analysis_layout.addWidget(self.widgetImageColorSpace)
 
+        self.widgetAnalysisSamplePrecision = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetAnalysisSamplePrecision.setObjectName("widgetAnalysisSamplePrecision")
+        sample_precision_layout = QtWidgets.QHBoxLayout(self.widgetAnalysisSamplePrecision)
+        sample_precision_layout.setObjectName("layoutAnalysisSamplePrecision")
+        sample_precision_layout.setContentsMargins(0, 0, 0, 0)
+        sample_precision_layout.setSpacing(8)
+        self.labelAnalysisSamplePrecisionTitle = QtWidgets.QLabel(self.widgetAnalysisSamplePrecision)
+        self.labelAnalysisSamplePrecisionTitle.setObjectName("labelAnalysisSamplePrecisionTitle")
+        self.comboAnalysisSamplePrecision = QtWidgets.QComboBox(self.widgetAnalysisSamplePrecision)
+        self.comboAnalysisSamplePrecision.setObjectName("comboAnalysisSamplePrecision")
+        self.comboAnalysisSamplePrecision.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Fixed,
+        )
+        self.comboAnalysisSamplePrecision.addItem(
+            ChannelBitDepth.EIGHT.display_name,
+            ChannelBitDepth.EIGHT,
+        )
+        self.comboAnalysisSamplePrecision.addItem(
+            self._tr("16-bit/channel (if available)"),
+            ChannelBitDepth.SIXTEEN,
+        )
+        sample_precision_index = self.comboAnalysisSamplePrecision.findData(ChannelBitDepth.EIGHT)
+        if sample_precision_index >= 0:
+            self.comboAnalysisSamplePrecision.setCurrentIndex(sample_precision_index)
+        self._apply_combo_popup_delegate(self.comboAnalysisSamplePrecision)
+        sample_precision_layout.addWidget(self.labelAnalysisSamplePrecisionTitle)
+        sample_precision_layout.addWidget(self.comboAnalysisSamplePrecision, 1)
+        analysis_layout.addWidget(self.widgetAnalysisSamplePrecision)
+
         self.widgetSpecifiedImageColorSpace = QtWidgets.QWidget(self.tabAnalysis)
         self.widgetSpecifiedImageColorSpace.setObjectName("widgetSpecifiedImageColorSpace")
         specified_space_layout = QtWidgets.QHBoxLayout(self.widgetSpecifiedImageColorSpace)
@@ -936,6 +967,9 @@ class MainWindowUI:
 
         self.labelImageColorSpaceTitle.setText(self._tr("Image Color Space"))
         self.labelImageColorSpaceValue.setText(self._tr("Not Loaded"))
+        self.labelAnalysisSamplePrecisionTitle.setText(self._tr("Analysis Sample Precision"))
+        self.comboAnalysisSamplePrecision.setItemText(0, self._tr(ChannelBitDepth.EIGHT.display_name))
+        self.comboAnalysisSamplePrecision.setItemText(1, self._tr("16-bit/channel (if available)"))
         self.labelSpecifiedImageColorSpaceTitle.setText(self._tr("Specify Image Color Space"))
         self.labelRenderingIntentTitle.setText(self._tr("Rendering Intent"))
         self.labelDisplayColorSpaceTitle.setText(self._tr("Display Color Space"))

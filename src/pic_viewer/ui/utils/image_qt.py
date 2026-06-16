@@ -41,9 +41,10 @@ def to_qpixmap(
     if target_size.width() <= 0 or target_size.height() <= 0:
         return QtGui.QPixmap()
 
-    h, w, _ = rgb.shape
+    rgb8 = _to_rgb888(rgb)
+    h, w, _ = rgb8.shape
     bytes_per_line = w * 3
-    image = QtGui.QImage(rgb.data, w, h, bytes_per_line, QtGui.QImage.Format.Format_RGB888)
+    image = QtGui.QImage(rgb8.data, w, h, bytes_per_line, QtGui.QImage.Format.Format_RGB888)
     qt_color_space = _to_qt_color_space(color_space)
     if qt_color_space is not None and qt_color_space.isValid():
         image.setColorSpace(qt_color_space)
@@ -61,6 +62,16 @@ def to_qpixmap(
     )
     scaled.setDevicePixelRatio(dpr)
     return scaled
+
+
+def _to_rgb888(rgb: np.ndarray) -> np.ndarray:
+    """Return a contiguous uint8 RGB buffer suitable for QImage."""
+
+    if rgb.dtype == np.dtype(np.uint8):
+        return np.ascontiguousarray(rgb)
+    if rgb.dtype == np.dtype(np.uint16):
+        return np.ascontiguousarray((rgb.astype(np.uint32) >> 8).astype(np.uint8))
+    return np.ascontiguousarray(np.clip(rgb, 0, 255).astype(np.uint8))
 
 
 def _to_qt_color_space(color_space: QColorSpaceInput | None) -> QtGui.QColorSpace | None:
