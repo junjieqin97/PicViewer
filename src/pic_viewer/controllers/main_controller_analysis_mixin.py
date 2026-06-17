@@ -11,6 +11,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from pic_viewer.app.dto.analysis_view import AnalysisViewSettings, LumaRgbMode, RgbChannel
 from pic_viewer.app.dto.image_analysis import ImageAnalysis
 from pic_viewer.common.errors import ColorProfileLoadError
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
@@ -302,6 +303,25 @@ class MainControllerAnalysisMixin:
         self._current_analysis_render_key = None
         self._reload_open_images_for_color_settings()
 
+    def _on_analysis_sample_precision_changed(self, index: int) -> None:
+        """Reload full analysis when the analysis sampling precision changes."""
+
+        combo = self._ui.comboAnalysisSamplePrecision
+        selected = combo.itemData(index)
+        if isinstance(selected, int):
+            try:
+                selected = ChannelBitDepth(selected)
+            except ValueError:
+                return
+        if not isinstance(selected, ChannelBitDepth):
+            return
+        if selected == self._analysis_bit_depth:
+            return
+
+        self._analysis_bit_depth = selected
+        self._current_analysis_render_key = None
+        self._reload_open_images_for_color_settings()
+
     def _reload_open_images_for_display_color_space(self) -> None:
         """Clear image caches and restart loads for the selected display space."""
 
@@ -536,6 +556,8 @@ class MainControllerAnalysisMixin:
             self._color_profile_key(data.analysis.display_color_space),
             self._color_profile_key(data.analysis.assumed_source_color_space),
             data.analysis.rendering_intent.value,
+            data.analysis.cms_bit_depth.value,
+            data.analysis.analysis_bit_depth.value,
         )
         path_key = str(image_path)
         current_render_key = (path_key, render_key)
@@ -725,6 +747,7 @@ class MainControllerAnalysisMixin:
                 getattr(self, "_assumed_source_color_space", DEFAULT_ASSUMED_IMAGE_COLOR_SPACE)
             ),
             getattr(self, "_rendering_intent", DEFAULT_RENDERING_INTENT).value,
+            getattr(self, "_analysis_bit_depth", ChannelBitDepth.EIGHT).value,
             id(preview_rgb),
         )
         if (

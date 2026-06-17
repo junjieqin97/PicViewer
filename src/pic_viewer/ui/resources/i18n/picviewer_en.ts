@@ -683,6 +683,21 @@
         </message>
         <message>
             <location filename="main_window.py" line="939" />
+            <source>Analysis Sample Precision</source>
+            <translation>Analysis Sample Precision</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="940" />
+            <source>8-bit/channel</source>
+            <translation>8-bit/channel</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="941" />
+            <source>16-bit/channel (if available)</source>
+            <translation>16-bit/channel (if available)</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="939" />
             <source>Specify Image Color Space</source>
             <translation>Specify Image Color Space</translation>
         </message>

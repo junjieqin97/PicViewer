@@ -20,6 +20,7 @@ if str(SRC_ROOT) not in sys.path:
 from pic_viewer.app.dto.image_analysis import ImageLoadResult, PreviewLoadResult  # noqa: E402
 from pic_viewer.common.errors import ColorProfileLoadError  # noqa: E402
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import LocalColorProfile, ColorSpacePreset  # noqa: E402
 from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
@@ -74,6 +75,7 @@ class DisplayColorSpaceControllerTests(QtWidgetTestCase):
             ColorSpacePreset.PROPHOTO_RGB,
             ColorSpacePreset.DISPLAY_P3,
             RenderingIntent.ABSOLUTE_COLORIMETRIC,
+            ChannelBitDepth.EIGHT,
         )
 
     def test_worker_tasks_pass_local_color_profiles_to_service(self) -> None:
@@ -115,6 +117,7 @@ class DisplayColorSpaceControllerTests(QtWidgetTestCase):
             display_profile,
             source_profile,
             RenderingIntent.RELATIVE_COLORIMETRIC,
+            ChannelBitDepth.EIGHT,
         )
 
     def test_worker_tasks_default_to_app_display_color_space(self) -> None:
@@ -139,6 +142,7 @@ class DisplayColorSpaceControllerTests(QtWidgetTestCase):
             ColorSpacePreset.SRGB,
             ColorSpacePreset.SRGB,
             RenderingIntent.PERCEPTUAL,
+            ChannelBitDepth.EIGHT,
         )
 
     def test_switching_display_color_space_clears_image_caches_and_reloads_open_tabs(self) -> None:
@@ -231,6 +235,40 @@ class DisplayColorSpaceControllerTests(QtWidgetTestCase):
         MainController._on_rendering_intent_changed(controller, index)
 
         self.assertEqual(RenderingIntent.RELATIVE_COLORIMETRIC, controller._rendering_intent)
+        self.assertNotIn(key, controller._images_by_path)
+        self.assertNotIn(key, controller._preview_by_path)
+        self.assertNotIn(key, controller._load_error_by_path)
+        self.assertNotIn(key, controller._preview_tasks_by_path)
+        self.assertNotIn(key, controller._load_tasks_by_path)
+        self.assertNotIn(key, controller._analysis_render_key_by_path)
+        self.assertNotIn(key, controller._tab_preview_render_key_by_path)
+        self.assertEqual(2.0, controller._zoom_by_path[key])
+        controller._ensure_preview_load.assert_called_once_with(path, 1)
+        controller._ensure_full_load.assert_called_once_with(path, 1)
+        controller.update_info_for_image.assert_called_once_with(path)
+
+    def test_switching_analysis_sample_precision_clears_image_caches_and_reloads_open_tabs(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        path = Path("/tmp/sample.jpg")
+        tab = QtWidgets.QWidget()
+        tab.setProperty("image_path", str(path))
+        ui.tabsImages.addTab(tab, path.name)
+        ui.tabsImages.setCurrentIndex(0)
+        key = str(path)
+        controller._images_by_path[key] = object()
+        controller._preview_by_path[key] = object()
+        controller._load_error_by_path[key] = "old error"
+        controller._preview_tasks_by_path[key] = object()
+        controller._load_tasks_by_path[key] = object()
+        controller._analysis_render_key_by_path[key] = object()
+        controller._tab_preview_render_key_by_path[key] = object()
+        controller._zoom_by_path[key] = 2.0
+
+        index = ui.comboAnalysisSamplePrecision.findData(ChannelBitDepth.SIXTEEN)
+        MainController._on_analysis_sample_precision_changed(controller, index)
+
+        self.assertEqual(ChannelBitDepth.SIXTEEN, controller._analysis_bit_depth)
         self.assertNotIn(key, controller._images_by_path)
         self.assertNotIn(key, controller._preview_by_path)
         self.assertNotIn(key, controller._load_error_by_path)
@@ -537,6 +575,7 @@ class DisplayColorSpaceControllerTests(QtWidgetTestCase):
         controller._display_color_space = ColorSpacePreset.SRGB
         controller._assumed_source_color_space = ColorSpacePreset.SRGB
         controller._rendering_intent = RenderingIntent.PERCEPTUAL
+        controller._analysis_bit_depth = ChannelBitDepth.EIGHT
         controller._images_by_path = {}
         controller._preview_by_path = {}
         controller._preview_tasks_by_path = {}

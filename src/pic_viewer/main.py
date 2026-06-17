@@ -7,6 +7,7 @@ from __future__ import annotations
 # - opencv-python>=4.7
 # - numpy>=1.23
 # - pyexiv2>=2.15.5,<3
+# - pyvips>=3,<4
 # - Pillow>=10.0
 # - pillow-heif>=1,<2
 # - pillow-avif-plugin>=1.5,<2

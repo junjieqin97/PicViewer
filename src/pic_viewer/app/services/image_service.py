@@ -11,6 +11,7 @@ from pic_viewer.app.dto.analysis_view import AnalysisView, AnalysisViewSettings,
 from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult, PreviewLoadResult
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
 from pic_viewer.common.errors import ImageLoadError
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     DEFAULT_DISPLAY_COLOR_SPACE,
@@ -53,6 +54,7 @@ class ImageService:
         display_color_space: ColorProfileSpec = DEFAULT_DISPLAY_COLOR_SPACE,
         assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
+        analysis_bit_depth: ChannelBitDepth = ChannelBitDepth.EIGHT,
     ) -> ImageLoadResult:
         """Load an image, compute analysis artifacts, and read metadata.
 
@@ -71,7 +73,7 @@ class ImageService:
         """
 
         try:
-            bgr, source_color_profile = self._reader.read_with_color_profile_info(
+            read_result = self._reader.read_with_profile_and_depth(
                 path,
                 display_color_space=display_color_space,
                 assumed_source_color_space=assumed_source_color_space,
@@ -83,7 +85,10 @@ class ImageService:
             logger.exception("Failed to read image: %s", path)
             raise ImageLoadError("Unable to read this image file") from exc
 
-        result = self._analyzer.analyze(bgr)
+        result = self._analyzer.analyze(
+            read_result.bgr,
+            analysis_bit_depth=analysis_bit_depth,
+        )
         analysis = ImageAnalysis(
             analysis_bgr=result.analysis_bgr,
             preview_rgb=result.preview_rgb,
@@ -101,7 +106,9 @@ class ImageService:
             display_color_space=display_color_space,
             assumed_source_color_space=assumed_source_color_space,
             rendering_intent=rendering_intent,
-            source_color_profile=source_color_profile,
+            source_color_profile=read_result.source_color_profile,
+            cms_bit_depth=read_result.cms_bit_depth,
+            analysis_bit_depth=result.analysis_bit_depth,
         )
 
         raw_metadata = self._metadata_reader.read(path)
@@ -135,7 +142,7 @@ class ImageService:
         """Load a lightweight preview without metadata or analysis plots."""
 
         try:
-            preview_bgr, source_color_profile = self._reader.read_preview_with_color_profile_info(
+            read_result = self._reader.read_preview_with_profile_and_depth(
                 path,
                 display_color_space=display_color_space,
                 assumed_source_color_space=assumed_source_color_space,
@@ -147,13 +154,14 @@ class ImageService:
             logger.exception("Failed to read preview: %s", path)
             raise ImageLoadError("Unable to read this image file") from exc
 
-        preview_rgb = self._analyzer.build_preview_rgb(preview_bgr)
+        preview_rgb = self._analyzer.build_preview_rgb(read_result.bgr)
         return PreviewLoadResult(
             preview_rgb=preview_rgb,
             display_color_space=display_color_space,
             assumed_source_color_space=assumed_source_color_space,
             rendering_intent=rendering_intent,
-            source_color_profile=source_color_profile,
+            source_color_profile=read_result.source_color_profile,
+            cms_bit_depth=read_result.cms_bit_depth,
         )
 
     def render_analysis_view(

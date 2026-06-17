@@ -15,6 +15,7 @@ dependencies = [
   "opencv-python>=4.7",
   "numpy>=1.23",
   "pyexiv2>=2.15.5,<3",
+  "pyvips>=3,<4",
   "Pillow>=10.0",
   "pillow-heif>=1,<2",
   "pillow-avif-plugin>=1.5,<2",
@@ -28,6 +29,7 @@ packaging = [
   "pyinstaller>=6.0",
   "tomli>=2.0; python_version < \"3.11\"",
   "rawpy>=0.27.0",
+  "pyvips>=3,<4",
 ]
 
 [project.scripts]

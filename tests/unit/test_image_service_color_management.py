@@ -15,10 +15,12 @@ if str(SRC_ROOT) not in sys.path:
 
 from pic_viewer.app.dto.metadata import ImageMetadata  # noqa: E402
 from pic_viewer.app.services.image_service import ImageService  # noqa: E402
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import LocalColorProfile, ColorSpacePreset  # noqa: E402
 from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.domain.rules.analysis import AnalysisResult  # noqa: E402
+from pic_viewer.infra.adapters.image_reader import ImageReadResult  # noqa: E402
 
 
 class ImageServiceColorManagementTests(unittest.TestCase):
@@ -79,7 +81,7 @@ class ImageServiceColorManagementTests(unittest.TestCase):
             uses_srgb_fallback=False,
         )
         analysis_result = self._analysis_result(display_bgr, analysis_preview_rgb)
-        reader.read_with_color_profile_info.return_value = (display_bgr, source_profile)
+        reader.read_with_profile_and_depth.return_value = self._read_result(display_bgr, source_profile)
         analyzer.analyze.return_value = analysis_result
         metadata_reader.read.return_value = ImageMetadata(general=tuple(), exif=tuple(), iptc=tuple(), tiff=tuple())
 
@@ -88,13 +90,13 @@ class ImageServiceColorManagementTests(unittest.TestCase):
             path.write_bytes(b"stub")
         result = service.load_and_analyze(path, ColorSpacePreset.PROPHOTO_RGB)
 
-        reader.read_with_color_profile_info.assert_called_once_with(
+        reader.read_with_profile_and_depth.assert_called_once_with(
             path,
             display_color_space=ColorSpacePreset.PROPHOTO_RGB,
             assumed_source_color_space=ColorSpacePreset.SRGB,
             rendering_intent=RenderingIntent.PERCEPTUAL,
         )
-        analyzer.analyze.assert_called_once_with(display_bgr)
+        analyzer.analyze.assert_called_once_with(display_bgr, analysis_bit_depth=ChannelBitDepth.EIGHT)
         self.assertEqual([], color_converter.method_calls)
         self.assertEqual(ColorSpacePreset.PROPHOTO_RGB, result.analysis.display_color_space)
         self.assertEqual(ColorSpacePreset.SRGB, result.analysis.assumed_source_color_space)
@@ -121,7 +123,7 @@ class ImageServiceColorManagementTests(unittest.TestCase):
             status=ImageColorProfileStatus.MISSING,
             uses_srgb_fallback=True,
         )
-        reader.read_with_color_profile_info.return_value = (display_bgr, source_profile)
+        reader.read_with_profile_and_depth.return_value = self._read_result(display_bgr, source_profile)
         analyzer.analyze.return_value = self._analysis_result(display_bgr, analysis_preview_rgb)
         metadata_reader.read.return_value = ImageMetadata(general=tuple(), exif=tuple(), iptc=tuple(), tiff=tuple())
 
@@ -130,7 +132,7 @@ class ImageServiceColorManagementTests(unittest.TestCase):
             path.write_bytes(b"stub")
             result = service.load_and_analyze(path)
 
-        reader.read_with_color_profile_info.assert_called_once_with(
+        reader.read_with_profile_and_depth.assert_called_once_with(
             path,
             display_color_space=ColorSpacePreset.SRGB,
             assumed_source_color_space=ColorSpacePreset.SRGB,
@@ -157,7 +159,7 @@ class ImageServiceColorManagementTests(unittest.TestCase):
             status=ImageColorProfileStatus.MISSING,
             uses_srgb_fallback=True,
         )
-        reader.read_with_color_profile_info.return_value = (display_bgr, source_profile)
+        reader.read_with_profile_and_depth.return_value = self._read_result(display_bgr, source_profile)
         analyzer.analyze.return_value = self._analysis_result(display_bgr, analysis_preview_rgb)
         metadata_reader.read.return_value = ImageMetadata(general=tuple(), exif=tuple(), iptc=tuple(), tiff=tuple())
 
@@ -171,7 +173,7 @@ class ImageServiceColorManagementTests(unittest.TestCase):
             RenderingIntent.RELATIVE_COLORIMETRIC,
         )
 
-        reader.read_with_color_profile_info.assert_called_once_with(
+        reader.read_with_profile_and_depth.assert_called_once_with(
             path,
             display_color_space=ColorSpacePreset.PROPHOTO_RGB,
             assumed_source_color_space=ColorSpacePreset.DISPLAY_P3,
@@ -203,7 +205,7 @@ class ImageServiceColorManagementTests(unittest.TestCase):
             uses_srgb_fallback=True,
             assumed_color_space=source_profile_spec,
         )
-        reader.read_with_color_profile_info.return_value = (display_bgr, source_profile)
+        reader.read_with_profile_and_depth.return_value = self._read_result(display_bgr, source_profile)
         analyzer.analyze.return_value = self._analysis_result(display_bgr, analysis_preview_rgb)
         metadata_reader.read.return_value = ImageMetadata(general=tuple(), exif=tuple(), iptc=tuple(), tiff=tuple())
 
@@ -217,7 +219,7 @@ class ImageServiceColorManagementTests(unittest.TestCase):
                 RenderingIntent.RELATIVE_COLORIMETRIC,
             )
 
-        reader.read_with_color_profile_info.assert_called_once_with(
+        reader.read_with_profile_and_depth.assert_called_once_with(
             path,
             display_color_space=display_profile,
             assumed_source_color_space=source_profile_spec,
@@ -250,6 +252,20 @@ class ImageServiceColorManagementTests(unittest.TestCase):
             waveform_r=plot,
             waveform_g=plot,
             waveform_b=plot,
+        )
+
+    def _read_result(
+        self,
+        bgr: np.ndarray,
+        source_profile: ImageColorProfileInfo,
+        bit_depth: ChannelBitDepth = ChannelBitDepth.EIGHT,
+    ) -> ImageReadResult:
+        return ImageReadResult(
+            bgr=bgr,
+            source_color_profile=source_profile,
+            source_bit_depth=bit_depth,
+            cms_bit_depth=bit_depth,
+            is_raw=False,
         )
 
 

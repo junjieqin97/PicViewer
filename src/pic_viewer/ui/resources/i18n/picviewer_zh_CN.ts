@@ -683,6 +683,21 @@
         </message>
         <message>
             <location filename="main_window.py" line="939" />
+            <source>Analysis Sample Precision</source>
+            <translation>分析采样精度</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="940" />
+            <source>8-bit/channel</source>
+            <translation>8 位/通道</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="941" />
+            <source>16-bit/channel (if available)</source>
+            <translation>16 位/通道（如果可用）</translation>
+        </message>
+        <message>
+            <location filename="main_window.py" line="939" />
             <source>Specify Image Color Space</source>
             <translation>指定图片色彩空间</translation>
         </message>

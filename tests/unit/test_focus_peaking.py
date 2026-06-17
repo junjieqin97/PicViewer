@@ -29,6 +29,16 @@ def blend_rgb(source: tuple[int, int, int], color: tuple[int, int, int], alpha: 
     return int(mixed[0]), int(mixed[1]), int(mixed[2])
 
 
+def blend_rgb16(source: tuple[int, int, int], color: tuple[int, int, int], alpha: float) -> tuple[int, int, int]:
+    """Blend 16-bit RGB tuples with scaled overlay colors."""
+
+    src = np.asarray(source, dtype=np.float32)
+    dst = np.asarray(color, dtype=np.float32)
+    mixed = np.rint((1.0 - alpha) * src + alpha * dst)
+    mixed = np.clip(mixed, 0, 65535).astype(np.uint16)
+    return int(mixed[0]), int(mixed[1]), int(mixed[2])
+
+
 class FocusPeakingTests(unittest.TestCase):
     """Validate focus peaking pseudo-color overlay behavior."""
 
@@ -58,6 +68,23 @@ class FocusPeakingTests(unittest.TestCase):
         expected = blend_rgb(
             tuple(int(v) for v in image[y, x]),
             options.peak_color_rgb,
+            options.overlay_alpha,
+        )
+        self.assertTupleEqual(expected, tuple(int(v) for v in result[y, x]))
+
+    def test_sixteen_bit_peak_threshold_scales_and_overlay_preserves_dtype(self) -> None:
+        image = np.zeros((12, 12, 3), dtype=np.uint16)
+        image[:, 6:] = 65535
+        options = FocusPeakingOptions(level=FocusPeakLevel.LOW)
+
+        result = apply_focus_peaking_overlay(image, options)
+        mask = build_focus_peak_mask(image, options)
+        y, x = np.argwhere(mask)[0]
+
+        self.assertEqual(np.uint16, result.dtype)
+        expected = blend_rgb16(
+            tuple(int(v) for v in image[y, x]),
+            (0, 0, 65535),
             options.overlay_alpha,
         )
         self.assertTupleEqual(expected, tuple(int(v) for v in result[y, x]))
