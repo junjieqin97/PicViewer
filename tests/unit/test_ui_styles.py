@@ -124,8 +124,8 @@ class UiStylesTests(QtWidgetTestCase):
                 self.assertIn("min-width: 144px", rule)
                 self.assertIn("max-width: 144px", rule)
 
-    def test_filmstrip_filter_selectors_match_analysis_combo_styles(self) -> None:
-        paired_selectors = (
+    def test_filmstrip_filter_selectors_reuse_analysis_combo_style_blocks(self) -> None:
+        shared_selector_pairs = (
             ("QWidget#tabAnalysis QComboBox", "QWidget#widgetFilmstripFilterToolbar QComboBox"),
             (
                 "QWidget#tabAnalysis QComboBox QAbstractItemView",
@@ -156,15 +156,14 @@ class UiStylesTests(QtWidgetTestCase):
         for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
             style_sheet = styles.load_stylesheet(theme)
             with self.subTest(theme=theme):
-                for analysis_selector, filmstrip_selector in paired_selectors:
-                    self.assertEqual(
-                        self._style_block(style_sheet, analysis_selector),
-                        self._style_block(style_sheet, filmstrip_selector).replace(
-                            filmstrip_selector,
-                            analysis_selector,
-                            1,
-                        ),
-                    )
+                for analysis_selector, filmstrip_selector in shared_selector_pairs:
+                    analysis_block = self._style_block(style_sheet, analysis_selector)
+                    filmstrip_block = self._style_block(style_sheet, filmstrip_selector)
+                    block_selectors = self._style_block_selectors(analysis_block)
+
+                    self.assertEqual(analysis_block, filmstrip_block)
+                    self.assertIn(analysis_selector, block_selectors)
+                    self.assertIn(filmstrip_selector, block_selectors)
 
     def test_pixel_sample_value_labels_use_channel_colors(self) -> None:
         for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
@@ -442,9 +441,23 @@ class UiStylesTests(QtWidgetTestCase):
 
     @staticmethod
     def _style_block(style_sheet: str, selector: str) -> str:
-        block_start = style_sheet.index(f"{selector} {{")
-        block_end = style_sheet.index("}", block_start)
-        return style_sheet[block_start:block_end]
+        search_start = 0
+
+        while True:
+            block_start = style_sheet.index("{", search_start)
+            selector_start = style_sheet.rfind("}", 0, block_start) + 1
+            block_end = style_sheet.index("}", block_start)
+            style_block = style_sheet[selector_start:block_end]
+
+            if selector in UiStylesTests._style_block_selectors(style_block):
+                return style_block
+
+            search_start = block_end + 1
+
+    @staticmethod
+    def _style_block_selectors(style_block: str) -> tuple[str, ...]:
+        selector_text = style_block.split("{", maxsplit=1)[0]
+        return tuple(selector.strip() for selector in selector_text.split(","))
 
     @staticmethod
     def _style_property(style_block: str, property_name: str) -> str:

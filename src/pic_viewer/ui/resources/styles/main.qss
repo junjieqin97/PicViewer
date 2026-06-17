@@ -282,7 +282,8 @@ QLabel#labelDisplayColorSpaceTitle {
     color: #9aa4af;
 }
 
-QWidget#tabAnalysis QComboBox {
+QWidget#tabAnalysis QComboBox,
+QWidget#widgetFilmstripFilterToolbar QComboBox {
     color: #edf1f5;
     background: #171a1e;
     border: 1px solid #424a54;
@@ -292,7 +293,8 @@ QWidget#tabAnalysis QComboBox {
     max-width: 144px;
 }
 
-QWidget#tabAnalysis QComboBox QAbstractItemView {
+QWidget#tabAnalysis QComboBox QAbstractItemView,
+QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView {
     color: #edf1f5;
     background: #171a1e;
     border: 1px solid #424a54;
@@ -301,27 +303,32 @@ QWidget#tabAnalysis QComboBox QAbstractItemView {
     outline: none;
 }
 
-QWidget#tabAnalysis QComboBox QAbstractItemView::item {
+QWidget#tabAnalysis QComboBox QAbstractItemView::item,
+QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item {
     padding: 4px 8px;
     min-height: 20px;
 }
 
-QWidget#tabAnalysis QComboBox QAbstractItemView::item:hover {
+QWidget#tabAnalysis QComboBox QAbstractItemView::item:hover,
+QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item:hover {
     background: #345f8d;
     color: #ffffff;
 }
 
-QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected {
+QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected,
+QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item:selected {
     background: #3d6fa3;
     color: #ffffff;
 }
 
-QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:active {
+QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:active,
+QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item:selected:active {
     background: #3d6fa3;
     color: #ffffff;
 }
 
-QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:!active {
+QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:!active,
+QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item:selected:!active {
     background: #3d6fa3;
     color: #ffffff;
 }
@@ -389,50 +396,6 @@ QFrame#frameFilmstrip {
 
 QWidget#widgetFilmstripFilterToolbar {
     background: transparent;
-}
-
-QWidget#widgetFilmstripFilterToolbar QComboBox {
-    color: #edf1f5;
-    background: #171a1e;
-    border: 1px solid #424a54;
-    border-radius: 4px;
-    padding: 3px 6px;
-    min-width: 144px;
-    max-width: 144px;
-}
-
-QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView {
-    color: #edf1f5;
-    background: #171a1e;
-    border: 1px solid #424a54;
-    selection-background-color: #3d6fa3;
-    selection-color: #ffffff;
-    outline: none;
-}
-
-QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item {
-    padding: 4px 8px;
-    min-height: 20px;
-}
-
-QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item:hover {
-    background: #345f8d;
-    color: #ffffff;
-}
-
-QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item:selected {
-    background: #3d6fa3;
-    color: #ffffff;
-}
-
-QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item:selected:active {
-    background: #3d6fa3;
-    color: #ffffff;
-}
-
-QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item:selected:!active {
-    background: #3d6fa3;
-    color: #ffffff;
 }
 
 QListWidget#listFilmstrip {
