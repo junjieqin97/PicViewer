@@ -855,7 +855,7 @@ class MainWindowUI:
     def _create_filmstrip_filter_combo(self, object_name: str) -> QtWidgets.QComboBox:
         combo = QtWidgets.QComboBox(self.widgetFilmstripFilterToolbar)
         combo.setObjectName(object_name)
-        combo.setMinimumWidth(132)
+        combo.setMinimumWidth(144)
         combo.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         combo.addItem("", None)
         self._apply_combo_popup_delegate(combo)

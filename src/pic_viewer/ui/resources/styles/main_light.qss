@@ -393,11 +393,47 @@ QWidget#widgetFilmstripFilterToolbar {
 }
 
 QWidget#widgetFilmstripFilterToolbar QComboBox {
+    color: #1f252d;
     background: #ffffff;
-    color: #334155;
     border: 1px solid #cbd6e3;
-    border-radius: 3px;
-    padding: 2px 6px;
+    border-radius: 4px;
+    padding: 3px 6px;
+    min-width: 144px;
+    max-width: 144px;
+}
+
+QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView {
+    color: #1f252d;
+    background: #ffffff;
+    border: 1px solid #cbd6e3;
+    selection-background-color: #b9d7f3;
+    selection-color: #0f172a;
+    outline: none;
+}
+
+QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item {
+    padding: 4px 8px;
+    min-height: 20px;
+}
+
+QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item:hover {
+    background: #cfe5fb;
+    color: #0f172a;
+}
+
+QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item:selected {
+    background: #b9d7f3;
+    color: #0f172a;
+}
+
+QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item:selected:active {
+    background: #b9d7f3;
+    color: #0f172a;
+}
+
+QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item:selected:!active {
+    background: #b9d7f3;
+    color: #0f172a;
 }
 
 QListWidget#listFilmstrip {

@@ -124,6 +124,48 @@ class UiStylesTests(QtWidgetTestCase):
                 self.assertIn("min-width: 144px", rule)
                 self.assertIn("max-width: 144px", rule)
 
+    def test_filmstrip_filter_selectors_match_analysis_combo_styles(self) -> None:
+        paired_selectors = (
+            ("QWidget#tabAnalysis QComboBox", "QWidget#widgetFilmstripFilterToolbar QComboBox"),
+            (
+                "QWidget#tabAnalysis QComboBox QAbstractItemView",
+                "QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView",
+            ),
+            (
+                "QWidget#tabAnalysis QComboBox QAbstractItemView::item",
+                "QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item",
+            ),
+            (
+                "QWidget#tabAnalysis QComboBox QAbstractItemView::item:hover",
+                "QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item:hover",
+            ),
+            (
+                "QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected",
+                "QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item:selected",
+            ),
+            (
+                "QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:active",
+                "QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item:selected:active",
+            ),
+            (
+                "QWidget#tabAnalysis QComboBox QAbstractItemView::item:selected:!active",
+                "QWidget#widgetFilmstripFilterToolbar QComboBox QAbstractItemView::item:selected:!active",
+            ),
+        )
+
+        for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
+            style_sheet = styles.load_stylesheet(theme)
+            with self.subTest(theme=theme):
+                for analysis_selector, filmstrip_selector in paired_selectors:
+                    self.assertEqual(
+                        self._style_block(style_sheet, analysis_selector),
+                        self._style_block(style_sheet, filmstrip_selector).replace(
+                            filmstrip_selector,
+                            analysis_selector,
+                            1,
+                        ),
+                    )
+
     def test_pixel_sample_value_labels_use_channel_colors(self) -> None:
         for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
             with self.subTest(theme=theme):
