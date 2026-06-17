@@ -9,6 +9,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import numpy as np
+from PIL import Image
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -20,6 +21,7 @@ from pic_viewer.domain.models.bit_depth import ChannelBitDepth  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import LocalColorProfile, ColorSpacePreset  # noqa: E402
 from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
+from pic_viewer.infra.adapters import color_profile_converter as converter_module  # noqa: E402
 from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConverter  # noqa: E402
 
 
@@ -190,6 +192,65 @@ class ColorProfileConverterTests(unittest.TestCase):
                     bgr,
                     ColorSpacePreset.DISPLAY_P3,
                 )
+
+    @unittest.skipUnless(converter_module.pyvips is not None, "pyvips/libvips is not available")
+    def test_actual_pyvips_conversion_preserves_eight_and_sixteen_bit_depth(self) -> None:
+        converter = ColorProfileConverter()
+
+        with TemporaryDirectory() as tmp_dir:
+            image_path = Path(tmp_dir) / "sample.png"
+
+            Image.new("RGB", (2, 1), (20, 80, 140)).save(image_path)
+            cases = (
+                (
+                    np.array([[[20, 80, 140], [180, 120, 60]]], dtype=np.uint8),
+                    ChannelBitDepth.EIGHT,
+                ),
+                (
+                    np.array([[[20, 80, 140], [180, 120, 60]]], dtype=np.uint16) * np.uint16(257),
+                    ChannelBitDepth.SIXTEEN,
+                ),
+            )
+
+            for bgr, bit_depth in cases:
+                with self.subTest(bit_depth=bit_depth):
+                    result, info, cms_depth = converter.convert_file_bgr_to_display_space_with_depth(
+                        image_path,
+                        bgr,
+                        ColorSpacePreset.DISPLAY_P3,
+                        bit_depth=bit_depth,
+                    )
+
+                    self.assertEqual(bit_depth.dtype, result.dtype)
+                    self.assertEqual(bgr.shape, result.shape)
+                    self.assertEqual(bit_depth, cms_depth)
+                    self.assertEqual(ImageColorProfileStatus.MISSING, info.status)
+
+    @unittest.skipUnless(converter_module.pyvips is not None, "pyvips/libvips is not available")
+    def test_actual_pyvips_conversion_uses_embedded_icc_profile(self) -> None:
+        converter = ColorProfileConverter()
+        bgr = np.array([[[20, 80, 140], [180, 120, 60]]], dtype=np.uint16) * np.uint16(257)
+
+        with TemporaryDirectory() as tmp_dir:
+            image_path = Path(tmp_dir) / "embedded.png"
+
+            Image.new("RGB", (2, 1), (20, 80, 140)).save(
+                image_path,
+                icc_profile=converter.profile_bytes_for(ColorSpacePreset.SRGB),
+            )
+
+            result, info, cms_depth = converter.convert_file_bgr_to_display_space_with_depth(
+                image_path,
+                bgr,
+                ColorSpacePreset.DISPLAY_P3,
+                bit_depth=ChannelBitDepth.SIXTEEN,
+            )
+
+        self.assertEqual(np.uint16, result.dtype)
+        self.assertEqual(bgr.shape, result.shape)
+        self.assertEqual(ChannelBitDepth.SIXTEEN, cms_depth)
+        self.assertEqual(ImageColorProfileStatus.EMBEDDED, info.status)
+        self.assertFalse(info.uses_srgb_fallback)
 
 
 if __name__ == "__main__":

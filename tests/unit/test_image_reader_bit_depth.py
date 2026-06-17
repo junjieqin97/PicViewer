@@ -7,6 +7,7 @@ import types
 import unittest
 from unittest.mock import MagicMock, patch
 
+import cv2
 import numpy as np
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -17,6 +18,7 @@ if str(SRC_ROOT) not in sys.path:
 from pic_viewer.domain.models.bit_depth import ChannelBitDepth  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import ColorSpacePreset  # noqa: E402
+from pic_viewer.infra.adapters import image_reader as image_reader_module  # noqa: E402
 from pic_viewer.infra.adapters.image_reader import ImageReader  # noqa: E402
 
 
@@ -86,6 +88,21 @@ class ImageReaderBitDepthTests(unittest.TestCase):
         self.assertEqual(ChannelBitDepth.SIXTEEN, result.cms_bit_depth)
         self.assertFalse(result.is_raw)
         converter.convert_file_bgr_to_display_space_with_depth.assert_called_once()
+
+    @unittest.skipUnless(image_reader_module.pyvips is not None, "pyvips/libvips is not available")
+    def test_actual_pyvips_decoder_preserves_sixteen_bit_png(self) -> None:
+        source = np.array([[[1000, 2000, 3000], [60000, 32000, 12000]]], dtype=np.uint16)
+        reader = ImageReader(allow_raw=False)
+
+        with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
+            path = Path(tmp.name)
+            self.assertTrue(cv2.imwrite(str(path), source))
+
+            decoded = reader._read_pyvips_non_raw(path)
+
+        self.assertIsNotNone(decoded)
+        self.assertEqual(np.uint16, decoded.dtype)
+        np.testing.assert_array_equal(source, decoded)
 
 
 if __name__ == "__main__":
