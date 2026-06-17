@@ -554,7 +554,7 @@ class MainWindowUI:
             QtWidgets.QSizePolicy.Policy.Fixed,
         )
         self.comboAnalysisSamplePrecision.addItem(
-            ChannelBitDepth.EIGHT.display_name,
+            "8-bit/channel",
             ChannelBitDepth.EIGHT,
         )
         self.comboAnalysisSamplePrecision.addItem(
@@ -766,6 +766,30 @@ class MainWindowUI:
         self.frameFilmstrip.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         film_layout = QtWidgets.QVBoxLayout(self.frameFilmstrip)
         film_layout.setContentsMargins(8, 6, 8, 6)
+        film_layout.setSpacing(4)
+
+        self.widgetFilmstripFilterToolbar = QtWidgets.QWidget(self.frameFilmstrip)
+        self.widgetFilmstripFilterToolbar.setObjectName("widgetFilmstripFilterToolbar")
+        filter_layout = QtWidgets.QHBoxLayout(self.widgetFilmstripFilterToolbar)
+        filter_layout.setObjectName("layoutFilmstripFilterToolbar")
+        filter_layout.setContentsMargins(0, 0, 0, 0)
+        filter_layout.setSpacing(6)
+
+        self.comboFilmstripExtensionFilter = self._create_filmstrip_filter_combo(
+            "comboFilmstripExtensionFilter"
+        )
+        self.comboFilmstripCameraFilter = self._create_filmstrip_filter_combo(
+            "comboFilmstripCameraFilter"
+        )
+        self.comboFilmstripLensFilter = self._create_filmstrip_filter_combo(
+            "comboFilmstripLensFilter"
+        )
+        filter_layout.addStretch(1)
+        filter_layout.addWidget(self.comboFilmstripExtensionFilter)
+        filter_layout.addWidget(self.comboFilmstripCameraFilter)
+        filter_layout.addWidget(self.comboFilmstripLensFilter)
+        filter_layout.addStretch(1)
+        film_layout.addWidget(self.widgetFilmstripFilterToolbar)
 
         self.listFilmstrip = QtWidgets.QListWidget(self.frameFilmstrip)
         self.listFilmstrip.setObjectName("listFilmstrip")
@@ -827,6 +851,15 @@ class MainWindowUI:
         separator.setFrameShape(QtWidgets.QFrame.Shape.VLine)
         separator.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
         layout.addWidget(separator)
+
+    def _create_filmstrip_filter_combo(self, object_name: str) -> QtWidgets.QComboBox:
+        combo = QtWidgets.QComboBox(self.widgetFilmstripFilterToolbar)
+        combo.setObjectName(object_name)
+        combo.setMinimumWidth(132)
+        combo.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
+        combo.addItem("", None)
+        self._apply_combo_popup_delegate(combo)
+        return combo
 
     @staticmethod
     def _apply_combo_popup_delegate(combo: QtWidgets.QComboBox) -> None:
@@ -945,6 +978,13 @@ class MainWindowUI:
         self.actPeakLow.setText(self._tr("Low"))
         self._sync_analysis_action_tooltips()
 
+        self.comboFilmstripExtensionFilter.setItemText(0, self._tr("All Extensions"))
+        self.comboFilmstripCameraFilter.setItemText(0, self._tr("All Cameras"))
+        self.comboFilmstripLensFilter.setItemText(0, self._tr("All Lenses"))
+        self.comboFilmstripExtensionFilter.setToolTip(self._tr("Filter Filmstrip by file extension"))
+        self.comboFilmstripCameraFilter.setToolTip(self._tr("Filter Filmstrip by camera model"))
+        self.comboFilmstripLensFilter.setToolTip(self._tr("Filter Filmstrip by lens model"))
+
         self.menuFile.setTitle(self._tr("File"))
         self.menuView.setTitle(self._tr("View"))
         self.menuAppearance.setTitle(self._tr("Appearance"))
@@ -968,7 +1008,7 @@ class MainWindowUI:
         self.labelImageColorSpaceTitle.setText(self._tr("Image Color Space"))
         self.labelImageColorSpaceValue.setText(self._tr("Not Loaded"))
         self.labelAnalysisSamplePrecisionTitle.setText(self._tr("Analysis Sample Precision"))
-        self.comboAnalysisSamplePrecision.setItemText(0, self._tr(ChannelBitDepth.EIGHT.display_name))
+        self.comboAnalysisSamplePrecision.setItemText(0, self._tr("8-bit/channel"))
         self.comboAnalysisSamplePrecision.setItemText(1, self._tr("16-bit/channel (if available)"))
         self.labelSpecifiedImageColorSpaceTitle.setText(self._tr("Specify Image Color Space"))
         self.labelRenderingIntentTitle.setText(self._tr("Rendering Intent"))

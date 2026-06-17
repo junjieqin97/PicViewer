@@ -25,6 +25,8 @@ from pic_viewer.controllers.main_controller_interaction_mixin import (  # noqa: 
 from pic_viewer.controllers.main_controller_filmstrip_mixin import (  # noqa: E402
     MainControllerFilmstripMixin,
 )
+from pic_viewer.app.dto.filmstrip_filter import FilmstripFilterCriteria  # noqa: E402
+from pic_viewer.app.dto.metadata import ImageMetadata  # noqa: E402
 from pic_viewer.domain.models.bit_depth import ChannelBitDepth  # noqa: E402
 from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
@@ -292,6 +294,24 @@ class MainWindowTabsTests(QtWidgetTestCase):
         self.assertEqual(ui.FILMSTRIP_HEIGHT, ui.frameFilmstrip.maximumHeight())
         self.assertEqual(QtWidgets.QSizePolicy.Policy.Fixed, ui.frameFilmstrip.sizePolicy().verticalPolicy())
 
+    def test_filmstrip_filter_toolbar_sits_above_thumbnail_list(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        film_layout = ui.frameFilmstrip.layout()
+
+        self.assertIs(ui.widgetFilmstripFilterToolbar, film_layout.itemAt(0).widget())
+        self.assertIs(ui.listFilmstrip, film_layout.itemAt(1).widget())
+        self.assertEqual("widgetFilmstripFilterToolbar", ui.widgetFilmstripFilterToolbar.objectName())
+        self.assertEqual("comboFilmstripExtensionFilter", ui.comboFilmstripExtensionFilter.objectName())
+        self.assertEqual("comboFilmstripCameraFilter", ui.comboFilmstripCameraFilter.objectName())
+        self.assertEqual("comboFilmstripLensFilter", ui.comboFilmstripLensFilter.objectName())
+        self.assertEqual("All Extensions", ui.comboFilmstripExtensionFilter.currentText())
+        self.assertEqual("All Cameras", ui.comboFilmstripCameraFilter.currentText())
+        self.assertEqual("All Lenses", ui.comboFilmstripLensFilter.currentText())
+
     def test_status_bar_has_hidden_filmstrip_summary_label(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
@@ -321,6 +341,26 @@ class MainWindowTabsTests(QtWidgetTestCase):
             f"Filmstrip hidden. Current file: {Path('/tmp/second.jpg')}",
             ui.labelFilmstripSummary.toolTip(),
         )
+
+    def test_hidden_filmstrip_summary_counts_only_visible_filtered_items(self) -> None:
+        window, ui, controller = self._build_filmstrip_summary_controller()
+        self.addCleanup(window.deleteLater)
+        first = Path("/tmp/first.jpg")
+        second = Path("/tmp/second.png")
+        self._add_summary_image(ui, controller, first)
+        self._add_summary_image(ui, controller, second)
+        MainController._configure_filmstrip_filtering(controller)
+        MainController._register_filmstrip_filter_path(controller, first)
+        MainController._register_filmstrip_filter_path(controller, second)
+        controller._filmstrip_filter_criteria = FilmstripFilterCriteria(extension=".jpg")
+        MainController._apply_filmstrip_filter(controller)
+        ui.tabsImages.setCurrentIndex(0)
+        ui.listFilmstrip.setCurrentRow(0)
+
+        MainController._toggle_filmstrip(controller, False)
+
+        self.assertFalse(ui.labelFilmstripSummary.isHidden())
+        self.assertEqual("Current: first.jpg (1/1)", ui.labelFilmstripSummary.text())
 
     def test_hidden_filmstrip_summary_uses_full_long_file_name(self) -> None:
         window, ui, controller = self._build_filmstrip_summary_controller()
@@ -441,6 +481,44 @@ class MainWindowTabsTests(QtWidgetTestCase):
         self.assertTrue(ui.labelFilmstripSummary.isHidden())
         self.assertEqual("", ui.labelFilmstripSummary.text())
         self.assertEqual("", ui.labelFilmstripSummary.toolTip())
+
+    def test_filmstrip_filter_hides_non_matching_items_and_switches_to_first_visible(self) -> None:
+        window, ui, controller = self._build_filmstrip_summary_controller()
+        self.addCleanup(window.deleteLater)
+        first = Path("/tmp/first.jpg")
+        second = Path("/tmp/second.png")
+        self._add_summary_image(ui, controller, first)
+        self._add_summary_image(ui, controller, second)
+        controller._active_image_path = second
+        controller._activate_existing_path = MagicMock()  # type: ignore[method-assign]
+        MainController._configure_filmstrip_filtering(controller)
+        MainController._register_filmstrip_filter_path(controller, first)
+        MainController._register_filmstrip_filter_path(controller, second)
+
+        index = ui.comboFilmstripExtensionFilter.findData(".jpg")
+        ui.comboFilmstripExtensionFilter.setCurrentIndex(index)
+        MainController._on_filmstrip_filter_changed(controller)
+
+        self.assertFalse(ui.listFilmstrip.item(0).isHidden())
+        self.assertTrue(ui.listFilmstrip.item(1).isHidden())
+        self.assertEqual(0, ui.listFilmstrip.currentRow())
+        controller._activate_existing_path.assert_called_once_with(first)
+
+    def test_filmstrip_filter_with_no_matches_clears_selection_but_keeps_current_image(self) -> None:
+        window, ui, controller = self._build_filmstrip_summary_controller()
+        self.addCleanup(window.deleteLater)
+        first = Path("/tmp/first.jpg")
+        self._add_summary_image(ui, controller, first)
+        controller._active_image_path = first
+        MainController._configure_filmstrip_filtering(controller)
+        MainController._register_filmstrip_filter_path(controller, first)
+        controller._filmstrip_filter_criteria = FilmstripFilterCriteria(camera="No Such Camera")
+
+        MainController._apply_filmstrip_filter(controller)
+
+        self.assertTrue(ui.listFilmstrip.item(0).isHidden())
+        self.assertEqual(-1, ui.listFilmstrip.currentRow())
+        self.assertEqual(first, controller._current_image_path())
 
     def test_closing_last_image_hides_filmstrip_summary(self) -> None:
         window, ui, controller = self._build_filmstrip_summary_controller()

@@ -387,6 +387,18 @@ QFrame#frameFilmstrip {
     border: 1px solid #343b44;
 }
 
+QWidget#widgetFilmstripFilterToolbar {
+    background: transparent;
+}
+
+QWidget#widgetFilmstripFilterToolbar QComboBox {
+    background: #181b20;
+    color: #cbd2da;
+    border: 1px solid #303741;
+    border-radius: 3px;
+    padding: 2px 6px;
+}
+
 QListWidget#listFilmstrip {
     background: #181b20;
     color: #cbd2da;

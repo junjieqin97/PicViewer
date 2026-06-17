@@ -158,6 +158,11 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 
 - Container: `frameFilmstrip: QFrame` (or `QWidget`)
 - Fixed height: `h=140`; height adjustment by vertical dragging is not supported.
+- Lightweight filter toolbar: `widgetFilmstripFilterToolbar` sits above the thumbnail list and contains three single-select combo boxes:
+  - `comboFilmstripExtensionFilter`: filters by file extension case-insensitively; suffixes are displayed in normalized lowercase form such as `.jpg`.
+  - `comboFilmstripCameraFilter`: filters by camera model.
+  - `comboFilmstripLensFilter`: filters by lens model.
+  Each combo has an all-inclusive first item: `All Extensions`, `All Cameras`, and `All Lenses`.
 - Internal control: choose one of the following two implementations (1 is recommended):
   1. `listFilmstrip: QListWidget` (horizontal layout)
      - `setFlow(QListView.LeftToRight)`
@@ -173,8 +178,11 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - If the corresponding image tab exists: switch to that tab.
 - If it does not exist (theoretically should not happen): ignore or TODO.
 - When switching tabs: synchronize the selected item in the filmstrip.
+- Filmstrip filters combine with AND semantics and only hide/show Filmstrip items. They must not close image tabs, cancel image loads, or remove cached image data.
+- Camera and lens filter candidates are populated from metadata-only background scans and from full image load metadata. Missing or unreadable camera/lens metadata is grouped as `Unknown Camera` or `Unknown Lens`.
+- If the current image is excluded by a newly selected filter and at least one image still matches, the current image switches to the first matching Filmstrip item. If no image matches, the Filmstrip selection is cleared and the current image view remains open.
 - When the filmstrip pane is hidden, the right side of the status bar must display a current file summary in the format `Current: {name} ({index}/{total})`;
-  `name` is the full file name, and the tooltip displays the full path. When the filmstrip pane is shown again or there is no current image, this summary must be hidden.
+  `name` is the full file name, `index` and `total` count only currently visible filtered Filmstrip items, and the tooltip displays the full path. When the filmstrip pane is shown again or there is no current visible image, this summary must be hidden.
 - Selected state requirement: clearly visible (system default selection style may be used first).
 
 ## 5. Component Checklist (Must Be Created One by One and Named Consistently)
@@ -228,6 +236,10 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `labelPixelBlueValue: QLabel`
 - `labelPixelLumaValue: QLabel`
 - `frameFilmstrip: QFrame`
+- `widgetFilmstripFilterToolbar: QWidget`
+- `comboFilmstripExtensionFilter: QComboBox`
+- `comboFilmstripCameraFilter: QComboBox`
+- `comboFilmstripLensFilter: QComboBox`
 - `listFilmstrip: QListWidget`
 - `labelFilmstripSummary: QLabel` (right side of the status bar; displays the current file summary when the filmstrip pane is hidden)
 

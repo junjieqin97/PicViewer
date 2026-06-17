@@ -132,6 +132,11 @@ class ImageService:
 
         self._metadata_reader.warm_up()
 
+    def read_metadata(self, path: Path) -> ImageMetadata:
+        """Read structured image metadata without decoding or analyzing pixels."""
+
+        return self._metadata_reader.read(path)
+
     def load_preview(
         self,
         path: Path,

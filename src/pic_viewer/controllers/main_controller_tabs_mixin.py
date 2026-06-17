@@ -76,6 +76,8 @@ class MainControllerTabsMixin:
 
         if last_path is not None:
             self._activate_existing_path(last_path)
+            if hasattr(self, "_apply_filmstrip_filter"):
+                self._apply_filmstrip_filter()
 
     def open_image(self, path: Path, activate: bool = True) -> None:
         """打开图片：新增Tab + 新增胶卷Item；可选激活该Tab。"""
@@ -91,8 +93,12 @@ class MainControllerTabsMixin:
                     "",
                 )
             self._update_filmstrip_text(path)
+            if hasattr(self, "_register_filmstrip_filter_path"):
+                self._register_filmstrip_filter_path(path)
             if activate:
                 self._activate_detached_image_window(path)
+                if hasattr(self, "_apply_filmstrip_filter"):
+                    self._apply_filmstrip_filter()
             self._ensure_preview_load(path)
             if activate:
                 self._ensure_full_load(path)
@@ -108,8 +114,12 @@ class MainControllerTabsMixin:
                 )
             self._update_tab_title(existing_tab, path)
             self._update_filmstrip_text(path)
+            if hasattr(self, "_register_filmstrip_filter_path"):
+                self._register_filmstrip_filter_path(path)
             if activate:
                 self._ui.tabsImages.setCurrentIndex(existing_tab)
+                if hasattr(self, "_apply_filmstrip_filter"):
+                    self._apply_filmstrip_filter()
             self._ensure_preview_load(path)
             if activate:
                 self._ensure_full_load(path)
@@ -129,11 +139,15 @@ class MainControllerTabsMixin:
         )
 
         self._add_filmstrip_placeholder_item(path)
+        if hasattr(self, "_register_filmstrip_filter_path"):
+            self._register_filmstrip_filter_path(path)
         session = self._start_path_session(path)
         self._ensure_preview_load(path, session)
         if activate:
             self._ui.tabsImages.setCurrentIndex(tab_index)
             self._ui.listFilmstrip.setCurrentRow(self._ui.listFilmstrip.count() - 1)
+            if hasattr(self, "_apply_filmstrip_filter"):
+                self._apply_filmstrip_filter()
             self._ensure_full_load(path, session)
         self._refresh_actions_state()
         self._sync_filmstrip_summary()
@@ -172,6 +186,8 @@ class MainControllerTabsMixin:
 
         key = str(path)
         self._remove_filmstrip_item(path)
+        if hasattr(self, "_remove_filmstrip_filter_path"):
+            self._remove_filmstrip_filter_path(path)
         self._detached_image_windows.pop(key, None)
         if getattr(self, "_active_image_path", None) == path:
             self._active_image_path = None
@@ -381,6 +397,8 @@ class MainControllerTabsMixin:
             return
         item = self._ui.listFilmstrip.item(row)
         if item is None:
+            return
+        if item.isHidden():
             return
         path_str = item.data(QtCore.Qt.ItemDataRole.UserRole)
         if not path_str:
@@ -806,14 +824,16 @@ class MainControllerTabsMixin:
 
         path = self._current_image_path()
         row = self._find_filmstrip_row_by_path(path) if path is not None else None
-        total = self._ui.listFilmstrip.count()
-        if not self._ui.frameFilmstrip.isHidden() or path is None or row is None or total <= 0:
+        visible_rows = self._visible_filmstrip_rows() if hasattr(self, "_visible_filmstrip_rows") else []
+        if not visible_rows:
+            visible_rows = list(range(self._ui.listFilmstrip.count()))
+        if not self._ui.frameFilmstrip.isHidden() or path is None or row is None or row not in visible_rows:
             label.clear()
             label.setToolTip("")
             label.setVisible(False)
             return
 
-        label.setText(self._format_filmstrip_summary(path, row + 1, total))
+        label.setText(self._format_filmstrip_summary(path, visible_rows.index(row) + 1, len(visible_rows)))
         label.setToolTip(
             self._tr("Filmstrip hidden. Current file: {path}").format(path=str(path))
         )

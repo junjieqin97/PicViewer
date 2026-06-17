@@ -8,8 +8,10 @@ from typing import TYPE_CHECKING, Dict, Optional
 from PySide6 import QtCore, QtWidgets
 
 from pic_viewer.app.dto.analysis_view import AnalysisViewSettings, LumaRgbMode, RgbChannel
+from pic_viewer.app.dto.filmstrip_filter import FilmstripFilterCriteria, FilmstripFilterItem
 from pic_viewer.app.dto.image_analysis import ImageLoadResult, PreviewLoadResult
 from pic_viewer.app.services.analysis_view_service import AnalysisViewService
+from pic_viewer.app.services.filmstrip_filter_service import FilmstripFilterService
 from pic_viewer.app.services.image_service import ImageService
 from pic_viewer.controllers.main_controller_analysis_mixin import MainControllerAnalysisMixin
 from pic_viewer.controllers.main_controller_filmstrip_mixin import MainControllerFilmstripMixin
@@ -28,6 +30,7 @@ from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
 from pic_viewer.domain.rules.pixel_sample import ColorReadout
 from pic_viewer.domain.rules.reference_lines import ReferenceLineSettings
 from pic_viewer.ui.workers.image_worker import ImageLoadTask, PreviewLoadTask
+from pic_viewer.ui.workers.metadata_worker import MetadataLoadTask
 
 MAX_IMAGE_LOAD_CONCURRENCY = 8
 TRANSLATION_CONTEXTS = (
@@ -36,6 +39,7 @@ TRANSLATION_CONTEXTS = (
     "MainControllerInteractionMixin",
     "MainControllerLoadingMixin",
     "MainControllerMetadataMixin",
+    "MainControllerFilmstripMixin",
     "MainControllerTabsMixin",
 )
 
@@ -70,6 +74,11 @@ class MainController(
         self._preview_tasks_by_path: Dict[str, PreviewLoadTask] = {}
         self._load_tasks_by_path: Dict[str, ImageLoadTask] = {}
         self._load_error_by_path: Dict[str, str] = {}
+        self._filmstrip_filter_service = FilmstripFilterService()
+        self._filmstrip_filter_items_by_path: Dict[str, FilmstripFilterItem] = {}
+        self._filmstrip_filter_criteria = FilmstripFilterCriteria()
+        self._filmstrip_metadata_tasks_by_path: Dict[str, MetadataLoadTask] = {}
+        self._updating_filmstrip_filter_combos = False
         self._active_session_by_path: Dict[str, int] = {}
         self._session_counter_by_path: Dict[str, int] = {}
         self._thread_pool = QtCore.QThreadPool(self._main_window)
@@ -126,6 +135,7 @@ class MainController(
         self._install_cursor_tracking()
         self._install_file_drop_handling()
         self._configure_filmstrip_resize()
+        self._configure_filmstrip_filtering()
         self._configure_analysis_refresh()
         self._apply_initial_visibility()
         self._sync_view_actions()
@@ -176,6 +186,18 @@ class MainController(
         if hasattr(self._ui, "comboAnalysisSamplePrecision"):
             self._ui.comboAnalysisSamplePrecision.currentIndexChanged.connect(
                 self._on_analysis_sample_precision_changed
+            )
+        if hasattr(self._ui, "comboFilmstripExtensionFilter"):
+            self._ui.comboFilmstripExtensionFilter.currentIndexChanged.connect(
+                self._on_filmstrip_filter_changed
+            )
+        if hasattr(self._ui, "comboFilmstripCameraFilter"):
+            self._ui.comboFilmstripCameraFilter.currentIndexChanged.connect(
+                self._on_filmstrip_filter_changed
+            )
+        if hasattr(self._ui, "comboFilmstripLensFilter"):
+            self._ui.comboFilmstripLensFilter.currentIndexChanged.connect(
+                self._on_filmstrip_filter_changed
             )
         if hasattr(self._ui, "actToggleUnderexposed"):
             self._ui.actToggleUnderexposed.toggled.connect(self._on_underexposed_toggled)
