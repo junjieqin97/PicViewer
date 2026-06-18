@@ -178,6 +178,8 @@ class MainControllerLoadingMixin:
             result.analysis.preview_rgb,
             result.analysis.display_color_space,
         )
+        if hasattr(self, "_update_filmstrip_filter_metadata"):
+            self._update_filmstrip_filter_metadata(path, result.metadata)
 
         if self._current_image_path() == path:
             self.update_info_for_image(path)

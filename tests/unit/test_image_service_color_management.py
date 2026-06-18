@@ -62,6 +62,33 @@ class ImageServiceColorManagementTests(unittest.TestCase):
 
         metadata_reader.warm_up.assert_called_once_with()
 
+    def test_read_metadata_delegates_to_metadata_reader_without_image_loading(self) -> None:
+        reader = MagicMock()
+        analyzer = MagicMock()
+        metadata_reader = MagicMock()
+        color_converter = MagicMock()
+        service = ImageService(
+            reader=reader,
+            analyzer=analyzer,
+            metadata_reader=metadata_reader,
+            color_converter=color_converter,
+        )
+        expected = ImageMetadata(
+            general=tuple(),
+            exif=(("Model", "X-T5"),),
+            iptc=tuple(),
+            tiff=tuple(),
+        )
+        metadata_reader.read.return_value = expected
+        path = Path("/tmp/sample.jpg")
+
+        result = service.read_metadata(path)
+
+        self.assertEqual(expected, result)
+        metadata_reader.read.assert_called_once_with(path)
+        reader.read_with_profile_and_depth.assert_not_called()
+        analyzer.analyze.assert_not_called()
+
     def test_full_load_analyzes_display_space_pixels_and_uses_display_space_preview(self) -> None:
         reader = MagicMock()
         analyzer = MagicMock()

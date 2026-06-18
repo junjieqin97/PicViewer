@@ -10,6 +10,10 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.app.dto.metadata import ImageMetadata  # noqa: E402
+from pic_viewer.app.services.metadata_summary_service import (  # noqa: E402
+    camera_display_name,
+    lens_display_name,
+)
 from pic_viewer.app.services.metadata_overlay_service import (  # noqa: E402
     build_metadata_overlay_lines,
 )
@@ -42,6 +46,27 @@ class MetadataOverlayServiceTests(unittest.TestCase):
                 "6000 x 4000",
             ),
             lines,
+        )
+
+    def test_camera_and_lens_overlay_reuse_shared_metadata_summary(self) -> None:
+        metadata = ImageMetadata(
+            general=tuple(),
+            exif=(
+                ("Make", "Sony"),
+                ("Model", "Sony A7R V"),
+                ("LensModel", "FE 24-70mm F2.8 GM II"),
+            ),
+            iptc=tuple(),
+            tiff=tuple(),
+        )
+
+        lines = build_metadata_overlay_lines(metadata, source_size=None)
+
+        self.assertEqual("Sony A7R V", camera_display_name(metadata))
+        self.assertEqual("FE 24-70mm F2.8 GM II", lens_display_name(metadata))
+        self.assertEqual(
+            f"{camera_display_name(metadata)} {lens_display_name(metadata)}",
+            lines[0],
         )
 
     def test_missing_metadata_is_omitted_and_resolution_fallback_remains(self) -> None:
