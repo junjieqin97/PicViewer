@@ -134,7 +134,9 @@ class ImageService:
         profiles: list[LocalColorProfile] = []
         for path in discover_system_color_profile_paths():
             try:
-                profiles.append(self._color_converter.load_local_profile(path))
+                profile = self._color_converter.load_local_profile(path)
+                profiles.append(profile)
+                logger.info("%s loaded successfully", profile.path.resolve())
             except ColorProfileLoadError:
                 logger.info("Skipping unavailable system ICC profile: path=%s", path, exc_info=True)
             except Exception:

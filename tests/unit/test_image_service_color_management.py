@@ -69,13 +69,19 @@ class ImageServiceColorManagementTests(unittest.TestCase):
             second_profile,
         ]
 
-        with patch(
-            "pic_viewer.app.services.image_service.discover_system_color_profile_paths",
-            return_value=[first_path, invalid_path, second_path],
+        with (
+            patch(
+                "pic_viewer.app.services.image_service.discover_system_color_profile_paths",
+                return_value=[first_path, invalid_path, second_path],
+            ),
+            self.assertLogs("pic_viewer.app.services.image_service", level="INFO") as logs,
         ):
             result = service.load_system_color_profiles()
 
         self.assertEqual([first_profile, second_profile], result)
+        log_output = "\n".join(logs.output)
+        self.assertIn(f"{first_path.resolve()} loaded successfully", log_output)
+        self.assertIn(f"{second_path.resolve()} loaded successfully", log_output)
         self.assertEqual(
             [
                 unittest.mock.call(first_path),
