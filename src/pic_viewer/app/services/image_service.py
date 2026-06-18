@@ -10,7 +10,7 @@ import numpy as np
 from pic_viewer.app.dto.analysis_view import AnalysisView, AnalysisViewSettings, LumaRgbMode, RgbChannel
 from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult, PreviewLoadResult
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
-from pic_viewer.common.errors import ImageLoadError
+from pic_viewer.common.errors import ColorProfileLoadError, ImageLoadError
 from pic_viewer.domain.models.bit_depth import ChannelBitDepth
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
@@ -29,6 +29,7 @@ from pic_viewer.domain.rules.focus_peaking import (
 from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConverter
 from pic_viewer.infra.adapters.image_reader import ImageReader
 from pic_viewer.infra.adapters.metadata_reader import MetadataReader
+from pic_viewer.infra.system.color_profiles import discover_system_color_profile_paths
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +127,19 @@ class ImageService:
         """Load and validate a user-selected local ICC profile."""
 
         return self._color_converter.load_local_profile(path)
+
+    def load_system_color_profiles(self) -> list[LocalColorProfile]:
+        """Load valid ICC profiles from the operating system profile directory."""
+
+        profiles: list[LocalColorProfile] = []
+        for path in discover_system_color_profile_paths():
+            try:
+                profiles.append(self._color_converter.load_local_profile(path))
+            except ColorProfileLoadError:
+                logger.info("Skipping unavailable system ICC profile: path=%s", path, exc_info=True)
+            except Exception:
+                logger.exception("Unexpected error while loading system ICC profile: path=%s", path)
+        return profiles
 
     def warm_up_optional_backends(self) -> None:
         """Prepare optional native backends before background image loads start."""

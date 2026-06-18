@@ -233,12 +233,25 @@ class MainControllerAnalysisMixin:
         combo: QtWidgets.QComboBox,
         profile: LocalColorProfile,
     ) -> None:
-        """Insert or replace the session-local ICC item before the chooser."""
+        """Insert or select a session-local ICC item before the chooser."""
 
         with block_signals(combo):
-            for item_index in range(combo.count() - 1, -1, -1):
-                if isinstance(combo.itemData(item_index), LocalColorProfile):
-                    combo.removeItem(item_index)
+            for item_index in range(combo.count()):
+                existing = combo.itemData(item_index)
+                if not isinstance(existing, LocalColorProfile):
+                    continue
+                if existing.stable_key != profile.stable_key:
+                    continue
+                combo.setItemText(item_index, profile.display_name)
+                combo.setItemData(item_index, profile)
+                combo.setItemData(
+                    item_index,
+                    str(profile.path),
+                    QtCore.Qt.ItemDataRole.ToolTipRole,
+                )
+                combo.setCurrentIndex(item_index)
+                return
+
             choose_index = combo.findData(LOCAL_COLOR_PROFILE_CHOICE_DATA)
             insert_index = choose_index if choose_index >= 0 else combo.count()
             combo.insertItem(insert_index, profile.display_name, profile)

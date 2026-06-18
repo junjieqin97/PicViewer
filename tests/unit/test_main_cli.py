@@ -55,7 +55,7 @@ class MainCliTests(unittest.TestCase):
         self.assertIn("--developer-mode", result.stdout)
         self.assertNotIn("QApplication", result.stderr)
 
-    def test_main_warms_optional_backends_before_showing_window(self) -> None:
+    def test_main_loads_system_color_profiles_before_showing_window(self) -> None:
         events: list[str] = []
 
         class FakeApp:
@@ -72,10 +72,13 @@ class MainCliTests(unittest.TestCase):
             def show(self) -> None:
                 events.append("show")
 
-        service = SimpleNamespace(warm_up_optional_backends=lambda: events.append("warm"))
+        service = SimpleNamespace(
+            warm_up_optional_backends=lambda: events.append("warm"),
+            load_system_color_profiles=lambda: events.append("profiles") or ["profile"],
+        )
 
-        def build_window(*_args: object, **_kwargs: object) -> FakeWindow:
-            events.append("window")
+        def build_window(*_args: object, **kwargs: object) -> FakeWindow:
+            events.append(f"window:{len(kwargs.get('system_color_profiles', []))}")
             return FakeWindow()
 
         with (
@@ -93,7 +96,7 @@ class MainCliTests(unittest.TestCase):
                 main_module.main(["picviewer"])
 
         self.assertEqual(0, exit_context.exception.code)
-        self.assertEqual(["warm", "window", "show"], events)
+        self.assertEqual(["warm", "profiles", "window:1", "show"], events)
 
 
 if __name__ == "__main__":
