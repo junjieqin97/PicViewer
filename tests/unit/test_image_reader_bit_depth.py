@@ -25,20 +25,23 @@ from pic_viewer.infra.adapters.image_reader import ImageReader  # noqa: E402
 class ImageReaderBitDepthTests(unittest.TestCase):
     """Validate decode and CMS bit-depth selection."""
 
-    def test_raw_suffix_uses_rawpy_before_opencv_and_requests_sixteen_bit_output(self) -> None:
+    def test_raw_suffix_uses_rawpy_before_opencv_and_requests_sixteen_bit_prophoto_output(self) -> None:
         raw_rgb = np.array([[[1, 2, 3]]], dtype=np.uint16)
         fake_raw = MagicMock()
         fake_raw.__enter__.return_value = fake_raw
         fake_raw.__exit__.return_value = None
         fake_raw.postprocess.return_value = raw_rgb
+        srgb_color = object()
+        prophoto_color = object()
         fake_rawpy = types.SimpleNamespace(
-            ColorSpace=types.SimpleNamespace(sRGB=object()),
+            ColorSpace=types.SimpleNamespace(sRGB=srgb_color, ProPhoto=prophoto_color),
             imread=MagicMock(return_value=fake_raw),
         )
         profile_info = ImageColorProfileInfo(
-            display_name="sRGB",
-            status=ImageColorProfileStatus.MISSING,
-            uses_srgb_fallback=True,
+            display_name="ProPhoto RGB",
+            status=ImageColorProfileStatus.RAW_DECODED,
+            uses_srgb_fallback=False,
+            assumed_color_space=ColorSpacePreset.PROPHOTO_RGB,
         )
         converter = MagicMock()
         converter.convert_file_bgr_to_display_space_with_depth.return_value = (
@@ -59,9 +62,17 @@ class ImageReaderBitDepthTests(unittest.TestCase):
         imread.assert_not_called()
         fake_raw.postprocess.assert_called_once()
         self.assertEqual(16, fake_raw.postprocess.call_args.kwargs["output_bps"])
+        self.assertIs(prophoto_color, fake_raw.postprocess.call_args.kwargs["output_color"])
         self.assertEqual(ChannelBitDepth.SIXTEEN, result.source_bit_depth)
         self.assertEqual(ChannelBitDepth.SIXTEEN, result.cms_bit_depth)
+        self.assertEqual(profile_info, result.source_color_profile)
         self.assertTrue(result.is_raw)
+        converter.convert_file_bgr_to_display_space_with_depth.assert_called_once()
+        raw_source_info = converter.convert_file_bgr_to_display_space_with_depth.call_args.kwargs[
+            "source_color_profile_override"
+        ]
+        self.assertEqual(ImageColorProfileStatus.RAW_DECODED, raw_source_info.status)
+        self.assertEqual(ColorSpacePreset.PROPHOTO_RGB, raw_source_info.assumed_color_space)
 
     def test_non_raw_sixteen_bit_decode_preserves_sixteen_bit_cms_depth(self) -> None:
         source = np.array([[[1000, 2000, 3000]]], dtype=np.uint16)

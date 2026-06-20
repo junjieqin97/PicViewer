@@ -241,6 +241,31 @@ class InfoPanelLoadStateTests(QtWidgetTestCase):
         self.assertFalse(ui.comboSpecifiedImageColorSpace.isEnabled())
         self.assertEqual("", ui.comboSpecifiedImageColorSpace.currentText())
 
+    def test_preview_raw_payload_locks_specified_image_color_space_selector_to_prophoto(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        display_p3_index = ui.comboSpecifiedImageColorSpace.findData(ColorSpacePreset.DISPLAY_P3)
+        ui.comboSpecifiedImageColorSpace.setCurrentIndex(display_p3_index)
+        controller._assumed_source_color_space = ColorSpacePreset.DISPLAY_P3
+        path = Path("/tmp/raw-preview.dng")
+        self._add_image_tab(controller, path)
+        controller._preview_by_path[str(path)] = PreviewLoadResult(
+            preview_rgb=np.zeros((8, 8, 3), dtype=np.uint8),
+            source_color_profile=ImageColorProfileInfo(
+                display_name="ProPhoto RGB",
+                status=ImageColorProfileStatus.RAW_DECODED,
+                uses_srgb_fallback=False,
+                assumed_color_space=ColorSpacePreset.PROPHOTO_RGB,
+            ),
+        )
+
+        MainController.update_info_for_image(controller, path)
+
+        self.assertEqual("ProPhoto RGB (RAW output)", ui.labelImageColorSpaceValue.text())
+        self.assertFalse(ui.comboSpecifiedImageColorSpace.isEnabled())
+        self.assertEqual("ProPhoto RGB", ui.comboSpecifiedImageColorSpace.currentText())
+        self.assertEqual(ColorSpacePreset.DISPLAY_P3, controller._assumed_source_color_space)
+
     def test_full_load_updates_color_space_info_from_analysis_payload(self) -> None:
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
@@ -282,6 +307,43 @@ class InfoPanelLoadStateTests(QtWidgetTestCase):
         MainController.update_info_for_image(controller, path)
 
         self.assertEqual("Display P3 (specified, no embedded ICC)", ui.labelImageColorSpaceValue.text())
+        self.assertTrue(ui.comboSpecifiedImageColorSpace.isEnabled())
+        self.assertEqual("Display P3", ui.comboSpecifiedImageColorSpace.currentText())
+
+    def test_specified_image_color_space_selector_restores_selection_after_raw_output(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        self._configure_analysis_rendering(controller)
+        display_p3_index = ui.comboSpecifiedImageColorSpace.findData(ColorSpacePreset.DISPLAY_P3)
+        ui.comboSpecifiedImageColorSpace.setCurrentIndex(display_p3_index)
+        controller._assumed_source_color_space = ColorSpacePreset.DISPLAY_P3
+        raw_path = Path("/tmp/raw.dng")
+        fallback_path = Path("/tmp/no-profile.jpg")
+        controller._images_by_path[str(raw_path)] = self._image_result(
+            (255, 0, 0),
+            source_color_profile=ImageColorProfileInfo(
+                display_name="ProPhoto RGB",
+                status=ImageColorProfileStatus.RAW_DECODED,
+                uses_srgb_fallback=False,
+                assumed_color_space=ColorSpacePreset.PROPHOTO_RGB,
+            ),
+        )
+        controller._images_by_path[str(fallback_path)] = self._image_result(
+            (0, 255, 0),
+            source_color_profile=ImageColorProfileInfo(
+                display_name="Display P3",
+                status=ImageColorProfileStatus.MISSING,
+                uses_srgb_fallback=True,
+                assumed_color_space=ColorSpacePreset.DISPLAY_P3,
+            ),
+        )
+
+        MainController.update_info_for_image(controller, raw_path)
+        self.assertFalse(ui.comboSpecifiedImageColorSpace.isEnabled())
+        self.assertEqual("ProPhoto RGB", ui.comboSpecifiedImageColorSpace.currentText())
+
+        MainController.update_info_for_image(controller, fallback_path)
+
         self.assertTrue(ui.comboSpecifiedImageColorSpace.isEnabled())
         self.assertEqual("Display P3", ui.comboSpecifiedImageColorSpace.currentText())
 

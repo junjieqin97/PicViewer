@@ -664,25 +664,39 @@ class MainControllerAnalysisMixin:
             self._reset_pixel_sample_display()
 
     def _sync_specified_image_color_space_enabled(self, info: ImageColorProfileInfo) -> None:
+        if info.status == ImageColorProfileStatus.RAW_DECODED:
+            self._set_specified_image_color_space_enabled(
+                False,
+                locked_color_space=ColorSpacePreset.PROPHOTO_RGB,
+            )
+            return
         enabled = info.status != ImageColorProfileStatus.EMBEDDED
         self._set_specified_image_color_space_enabled(enabled)
 
-    def _set_specified_image_color_space_enabled(self, enabled: bool) -> None:
+    def _set_specified_image_color_space_enabled(
+        self,
+        enabled: bool,
+        locked_color_space: ColorProfileSpec | None = None,
+    ) -> None:
         if not hasattr(self._ui, "comboSpecifiedImageColorSpace"):
             return
         combo = self._ui.comboSpecifiedImageColorSpace
         with block_signals(combo):
             if enabled:
                 combo.setEnabled(True)
-                if combo.currentIndex() < 0:
-                    selected = getattr(
-                        self,
-                        "_assumed_source_color_space",
-                        DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
-                    )
-                    index = combo.findData(selected)
-                    if index >= 0:
-                        combo.setCurrentIndex(index)
+                selected = getattr(
+                    self,
+                    "_assumed_source_color_space",
+                    DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+                )
+                index = combo.findData(selected)
+                if index >= 0 and combo.currentData() != selected:
+                    combo.setCurrentIndex(index)
+                return
+            if locked_color_space is not None:
+                locked_index = combo.findData(locked_color_space)
+                combo.setCurrentIndex(locked_index if locked_index >= 0 else -1)
+                combo.setEnabled(False)
                 return
             combo.setCurrentIndex(-1)
             combo.setEnabled(False)
@@ -690,6 +704,8 @@ class MainControllerAnalysisMixin:
     def _format_source_color_profile_info(self, info: ImageColorProfileInfo) -> str:
         if info.status == ImageColorProfileStatus.EMBEDDED:
             return self._tr("{name} (embedded ICC)").format(name=info.display_name)
+        if info.status == ImageColorProfileStatus.RAW_DECODED:
+            return self._tr("{name} (RAW output)").format(name=info.display_name)
         assumed = getattr(info, "assumed_color_space", None)
         has_specified_fallback = assumed is not None and assumed != DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
         if info.status == ImageColorProfileStatus.INVALID:

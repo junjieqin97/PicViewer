@@ -186,34 +186,53 @@ class ColorProfileConverter:
         assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
         bit_depth: ChannelBitDepth | None = None,
+        *,
+        source_color_profile_override: ImageColorProfileInfo | None = None,
     ) -> tuple[np.ndarray, ImageColorProfileInfo, ChannelBitDepth]:
         """Convert BGR pixels and return source ICC status plus CMS bit depth."""
 
         cms_bit_depth = bit_depth or ChannelBitDepth.from_dtype(bgr.dtype)
-        source_info, embedded_profile_bytes = self._source_profile_info_for_path(
-            path,
-            assumed_source_color_space,
-        )
+        if source_color_profile_override is None:
+            source_info, embedded_profile_bytes = self._source_profile_info_for_path(
+                path,
+                assumed_source_color_space,
+            )
+        else:
+            source_info = source_color_profile_override
+            embedded_profile_bytes = None
         if self._is_empty_image(bgr):
             return bgr, source_info, cms_bit_depth
 
         if source_info.uses_srgb_fallback and self._fallback_source_space(source_info) == display_color_space:
             return np.ascontiguousarray(bgr.copy()), source_info, cms_bit_depth
+        if (
+            source_color_profile_override is not None
+            and source_info.assumed_color_space is not None
+            and source_info.assumed_color_space == display_color_space
+        ):
+            return np.ascontiguousarray(bgr.copy()), source_info, cms_bit_depth
 
         target_profile = self.profile_for(display_color_space)
         rgb = self._bgr_to_rgb(bgr)
+        source_profile = self._source_profile_for_conversion(
+            source_info,
+            assumed_source_color_space,
+            source_color_profile_override is not None,
+        )
         converted_rgb = self._convert_rgb(
             rgb,
             target_profile=target_profile,
             rendering_intent=rendering_intent,
             cms_bit_depth=cms_bit_depth,
             embedded_profile_bytes=embedded_profile_bytes if not source_info.uses_srgb_fallback else None,
-            source_profile=None if not source_info.uses_srgb_fallback else self.profile_for(assumed_source_color_space),
+            source_profile=source_profile,
             source_path=path,
             target_label=self._profile_label(display_color_space),
         )
 
-        if converted_rgb is None and not source_info.uses_srgb_fallback:
+        if converted_rgb is None and source_color_profile_override is not None:
+            converted_rgb = rgb.copy()
+        elif converted_rgb is None and not source_info.uses_srgb_fallback:
             source_info = self._fallback_profile_info(
                 ImageColorProfileStatus.CONVERSION_FAILED,
                 assumed_source_color_space,
@@ -278,6 +297,18 @@ class ColorProfileConverter:
 
     def _fallback_source_space(self, info: ImageColorProfileInfo) -> ColorProfileSpec:
         return info.assumed_color_space or ColorSpacePreset.SRGB
+
+    def _source_profile_for_conversion(
+        self,
+        info: ImageColorProfileInfo,
+        assumed_source_color_space: ColorProfileSpec,
+        has_profile_override: bool,
+    ) -> Path | None:
+        if has_profile_override:
+            return self.profile_for(info.assumed_color_space or assumed_source_color_space)
+        if info.uses_srgb_fallback:
+            return self.profile_for(assumed_source_color_space)
+        return None
 
     def _profile_display_label(self, color_space: ColorProfileSpec) -> str:
         return color_space.display_name

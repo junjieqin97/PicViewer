@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 import tempfile
+import types
 import unittest
 from unittest.mock import patch
 
@@ -16,6 +17,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.common.errors import ImageLoadError  # noqa: E402
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import LocalColorProfile, ColorSpacePreset  # noqa: E402
 from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
@@ -220,6 +222,57 @@ class ImageReaderPreviewTests(unittest.TestCase):
             source_profile_spec,
             RenderingIntent.RELATIVE_COLORIMETRIC,
         )
+
+    def test_raw_preview_requests_prophoto_output_and_source_override(self) -> None:
+        raw_rgb = np.array([[[1, 2, 3], [4, 5, 6]]], dtype=np.uint16)
+        fake_raw = unittest.mock.MagicMock()
+        fake_raw.__enter__.return_value = fake_raw
+        fake_raw.__exit__.return_value = None
+        fake_raw.postprocess.return_value = raw_rgb
+        srgb_color = object()
+        prophoto_color = object()
+        fake_rawpy = types.SimpleNamespace(
+            ColorSpace=types.SimpleNamespace(sRGB=srgb_color, ProPhoto=prophoto_color),
+            imread=unittest.mock.MagicMock(return_value=fake_raw),
+        )
+        profile_info = ImageColorProfileInfo(
+            display_name="ProPhoto RGB",
+            status=ImageColorProfileStatus.RAW_DECODED,
+            uses_srgb_fallback=False,
+            assumed_color_space=ColorSpacePreset.PROPHOTO_RGB,
+        )
+        converter = unittest.mock.MagicMock()
+        converter.convert_file_bgr_to_display_space_with_depth.return_value = (
+            raw_rgb[:, :, ::-1],
+            profile_info,
+            ChannelBitDepth.SIXTEEN,
+        )
+        reader = ImageReader(allow_raw=True, color_converter=converter)
+
+        with tempfile.NamedTemporaryFile(suffix=".nef") as tmp:
+            path = Path(tmp.name)
+            with patch.dict(sys.modules, {"rawpy": fake_rawpy}):
+                result = reader.read_preview_with_profile_and_depth(
+                    path,
+                    max_edge=2000,
+                    display_color_space=ColorSpacePreset.DISPLAY_P3,
+                    assumed_source_color_space=ColorSpacePreset.ADOBE_RGB_1998,
+                    rendering_intent=RenderingIntent.SATURATION,
+                )
+
+        fake_raw.postprocess.assert_called_once()
+        self.assertTrue(fake_raw.postprocess.call_args.kwargs["half_size"])
+        self.assertEqual(16, fake_raw.postprocess.call_args.kwargs["output_bps"])
+        self.assertIs(prophoto_color, fake_raw.postprocess.call_args.kwargs["output_color"])
+        self.assertEqual(profile_info, result.source_color_profile)
+        converter.convert_file_bgr_to_display_space_with_depth.assert_called_once()
+        call = converter.convert_file_bgr_to_display_space_with_depth.call_args
+        self.assertEqual(ColorSpacePreset.DISPLAY_P3, call.args[2])
+        self.assertEqual(ColorSpacePreset.PROPHOTO_RGB, call.args[3])
+        self.assertEqual(RenderingIntent.SATURATION, call.args[4])
+        raw_source_info = call.kwargs["source_color_profile_override"]
+        self.assertEqual(ImageColorProfileStatus.RAW_DECODED, raw_source_info.status)
+        self.assertEqual(ColorSpacePreset.PROPHOTO_RGB, raw_source_info.assumed_color_space)
 
     def test_read_preview_uses_pillow_fallback_when_opencv_cannot_decode(self) -> None:
         reader = ImageReader(allow_raw=False)
