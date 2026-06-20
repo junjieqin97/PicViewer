@@ -405,6 +405,7 @@ class PackagingScriptsTests(unittest.TestCase):
             project_root=PROJECT_ROOT,
             env={"CONDA_DEFAULT_ENV": "PicViewer"},
             runner=fake_runner,
+            platform="linux",
         )
 
         self.assertIn(
@@ -438,12 +439,73 @@ class PackagingScriptsTests(unittest.TestCase):
             project_root=PROJECT_ROOT,
             env={"CONDA_DEFAULT_ENV": "PicViewer"},
             runner=fake_runner,
+            platform="linux",
         )
 
         self.assertEqual(
             str(PROJECT_ROOT / "build" / "pyinstaller-cache"),
             pyinstaller_envs[0]["PYINSTALLER_CONFIG_DIR"],
         )
+
+    def test_normalize_macos_libvips_runtime_dylibs_replaces_cv2_symlinks(self) -> None:
+        build_app = load_script("scripts/packaging/build_app.py")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            conda_prefix = root / "env"
+            conda_lib = conda_prefix / "lib"
+            conda_lib.mkdir(parents=True)
+            app_path = root / "dist" / "PicViewer.app"
+            frameworks = app_path / "Contents" / "Frameworks"
+            cv2_libs = frameworks / "cv2" / ".dylibs"
+            cv2_libs.mkdir(parents=True)
+            for name in ("libglib-2.0.0.dylib", "libintl.8.dylib", "libpcre2-8.0.dylib"):
+                (conda_lib / name).write_bytes(f"conda {name}".encode("utf-8"))
+                (cv2_libs / name).write_bytes(f"cv2 {name}".encode("utf-8"))
+                (frameworks / name).symlink_to(Path("cv2") / ".dylibs" / name)
+
+            changed = build_app.normalize_macos_libvips_runtime_dylibs(
+                app_path,
+                conda_prefix,
+                platform="darwin",
+            )
+
+            self.assertTrue(changed)
+            for name in ("libglib-2.0.0.dylib", "libintl.8.dylib", "libpcre2-8.0.dylib"):
+                target = frameworks / name
+                self.assertFalse(target.is_symlink())
+                self.assertEqual((conda_lib / name).read_bytes(), target.read_bytes())
+
+    def test_build_app_resigns_macos_bundle_after_libvips_runtime_normalization(self) -> None:
+        build_app = load_script("scripts/packaging/build_app.py")
+        commands: list[list[str]] = []
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            conda_prefix = root / "env"
+            conda_lib = conda_prefix / "lib"
+            conda_lib.mkdir(parents=True)
+            app_path = root / "dist" / "PicViewer.app"
+            frameworks = app_path / "Contents" / "Frameworks"
+            cv2_libs = frameworks / "cv2" / ".dylibs"
+            cv2_libs.mkdir(parents=True)
+            (conda_lib / "libglib-2.0.0.dylib").write_bytes(b"conda glib")
+            (cv2_libs / "libglib-2.0.0.dylib").write_bytes(b"cv2 glib")
+            (frameworks / "libglib-2.0.0.dylib").symlink_to(
+                Path("cv2") / ".dylibs" / "libglib-2.0.0.dylib"
+            )
+
+            def fake_runner(command: list[str], **_: object) -> None:
+                commands.append(command)
+
+            build_app.build_app(
+                project_root=root,
+                env={"CONDA_DEFAULT_ENV": "PicViewer", "CONDA_PREFIX": str(conda_prefix)},
+                runner=fake_runner,
+                platform="darwin",
+            )
+
+        self.assertIn(["codesign", "--force", "--sign", "-", "--deep", str(app_path)], commands)
 
     def test_build_dmg_creates_compressed_image_from_existing_app(self) -> None:
         build_dmg = load_script("scripts/packaging/build_dmg.py")

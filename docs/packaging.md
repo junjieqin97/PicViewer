@@ -151,9 +151,14 @@ uses Qt widgets and SVG toolbar icons. It removes QtNetwork, Qt network
 information plugins, TLS plugins, non-native platform plugins on macOS and
 Windows, non-SVG image format plugins, and unused Qt translation files. Linux
 platform plugins are not pruned so X11 and Wayland compatibility remains
-controlled by the Qt runtime. The pruning only applies to Qt runtime entries;
-OpenCV, rawpy, pyexiv2, pyvips/libvips, Pillow image plugins, and PicViewer resources are left
-unchanged.
+controlled by the Qt runtime. On macOS, `build_app.py` post-processes the
+generated app bundle by replacing top-level GLib runtime dylibs used by
+pyvips/libvips with the active conda environment's `lib/` copies, then re-signs
+the bundle. This prevents PyInstaller from leaving top-level `libglib`,
+`libintl`, or `libpcre2` symlinks to OpenCV's private bundled copies, which can
+be older than the libvips runtime and break ICC conversion. Other pruning only
+applies to Qt runtime entries; OpenCV, rawpy, pyexiv2, pyvips/libvips, Pillow
+image plugins, and PicViewer resources are left unchanged.
 
 After building, inspect the packaged Qt runtime with platform-specific file
 listing tools. On macOS, for example:
