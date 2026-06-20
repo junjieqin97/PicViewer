@@ -25,6 +25,7 @@ class HistogramClippingLabel(QtWidgets.QLabel):
         self._underexposed_tooltip = ""
         self._overexposed_tooltip = ""
         self._luma_marker_value = -1
+        self._luma_marker_max_value = 255
         self.setMouseTracking(True)
 
     def set_clipping_state(self, underexposed: bool, overexposed: bool) -> None:
@@ -56,18 +57,20 @@ class HistogramClippingLabel(QtWidgets.QLabel):
         self._underexposed_tooltip = underexposed
         self._overexposed_tooltip = overexposed
 
-    def set_luma_marker_value(self, value: int) -> None:
+    def set_luma_marker_value(self, value: int, max_value: int = 255) -> None:
         """Set the luma marker value, or -1 to hide it."""
 
         try:
             next_value = int(value)
         except (TypeError, ValueError):
             next_value = -1
-        if next_value < 0 or next_value > 255:
+        marker_max_value = max(1, int(max_value))
+        if next_value < 0 or next_value > marker_max_value:
             next_value = -1
-        if self._luma_marker_value == next_value:
+        if self._luma_marker_value == next_value and self._luma_marker_max_value == marker_max_value:
             return
         self._luma_marker_value = next_value
+        self._luma_marker_max_value = marker_max_value
         self.update()
 
     def luma_marker_value(self) -> int:
@@ -105,7 +108,12 @@ class HistogramClippingLabel(QtWidgets.QLabel):
             return
         if self.width() <= 0 or self.height() <= 0:
             return
-        x = int(round((self._luma_marker_value / 255.0) * max(0, self.width() - 1)))
+        x = int(
+            round(
+                (self._luma_marker_value / float(self._luma_marker_max_value))
+                * max(0, self.width() - 1)
+            )
+        )
         painter.fillRect(QtCore.QRect(x, 0, 1, self.height()), QtGui.QColor(0, 0, 0))
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:  # type: ignore[override]

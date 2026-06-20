@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+from typing import Sequence
+
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.analysis_view_service import AnalysisViewService
 from pic_viewer.app.services.image_service import ImageService
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     DEFAULT_DISPLAY_COLOR_SPACE,
     LOCAL_COLOR_PROFILE_CHOICE_DATA,
     COLOR_SPACE_PRESET_ORDER,
+    LocalColorProfile,
 )
 from pic_viewer.domain.models.rendering_intent import (
     DEFAULT_RENDERING_INTENT,
@@ -41,6 +45,9 @@ class MainWindowUI:
     FILMSTRIP_HEIGHT = 140
     ANALYSIS_TOOLBAR_HEIGHT = 26
     ANALYSIS_TOOLBAR_ICON_SIZE = QtCore.QSize(16, 16)
+
+    def __init__(self, system_color_profiles: Sequence[LocalColorProfile] = ()) -> None:
+        self._system_color_profiles = tuple(system_color_profiles)
 
     def setup_ui(self, main_window: QtWidgets.QMainWindow) -> None:
         self._main_window = main_window
@@ -538,6 +545,36 @@ class MainWindowUI:
         image_space_layout.addWidget(self.labelImageColorSpaceValue, 1)
         analysis_layout.addWidget(self.widgetImageColorSpace)
 
+        self.widgetAnalysisSamplePrecision = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetAnalysisSamplePrecision.setObjectName("widgetAnalysisSamplePrecision")
+        sample_precision_layout = QtWidgets.QHBoxLayout(self.widgetAnalysisSamplePrecision)
+        sample_precision_layout.setObjectName("layoutAnalysisSamplePrecision")
+        sample_precision_layout.setContentsMargins(0, 0, 0, 0)
+        sample_precision_layout.setSpacing(8)
+        self.labelAnalysisSamplePrecisionTitle = QtWidgets.QLabel(self.widgetAnalysisSamplePrecision)
+        self.labelAnalysisSamplePrecisionTitle.setObjectName("labelAnalysisSamplePrecisionTitle")
+        self.comboAnalysisSamplePrecision = QtWidgets.QComboBox(self.widgetAnalysisSamplePrecision)
+        self.comboAnalysisSamplePrecision.setObjectName("comboAnalysisSamplePrecision")
+        self.comboAnalysisSamplePrecision.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Fixed,
+        )
+        self.comboAnalysisSamplePrecision.addItem(
+            "8-bit/channel",
+            ChannelBitDepth.EIGHT,
+        )
+        self.comboAnalysisSamplePrecision.addItem(
+            self._tr("16-bit/channel (if available)"),
+            ChannelBitDepth.SIXTEEN,
+        )
+        sample_precision_index = self.comboAnalysisSamplePrecision.findData(ChannelBitDepth.EIGHT)
+        if sample_precision_index >= 0:
+            self.comboAnalysisSamplePrecision.setCurrentIndex(sample_precision_index)
+        self._apply_combo_popup_delegate(self.comboAnalysisSamplePrecision)
+        sample_precision_layout.addWidget(self.labelAnalysisSamplePrecisionTitle)
+        sample_precision_layout.addWidget(self.comboAnalysisSamplePrecision, 1)
+        analysis_layout.addWidget(self.widgetAnalysisSamplePrecision)
+
         self.widgetSpecifiedImageColorSpace = QtWidgets.QWidget(self.tabAnalysis)
         self.widgetSpecifiedImageColorSpace.setObjectName("widgetSpecifiedImageColorSpace")
         specified_space_layout = QtWidgets.QHBoxLayout(self.widgetSpecifiedImageColorSpace)
@@ -552,8 +589,7 @@ class MainWindowUI:
             QtWidgets.QSizePolicy.Policy.Expanding,
             QtWidgets.QSizePolicy.Policy.Fixed,
         )
-        for color_space in COLOR_SPACE_PRESET_ORDER:
-            self.comboSpecifiedImageColorSpace.addItem(color_space.display_name, color_space)
+        self._populate_color_profile_combo(self.comboSpecifiedImageColorSpace)
         self.comboSpecifiedImageColorSpace.addItem(
             self._tr("Choose a local ICC..."),
             LOCAL_COLOR_PROFILE_CHOICE_DATA,
@@ -604,8 +640,7 @@ class MainWindowUI:
             QtWidgets.QSizePolicy.Policy.Expanding,
             QtWidgets.QSizePolicy.Policy.Fixed,
         )
-        for color_space in COLOR_SPACE_PRESET_ORDER:
-            self.comboDisplayColorSpace.addItem(color_space.display_name, color_space)
+        self._populate_color_profile_combo(self.comboDisplayColorSpace)
         self.comboDisplayColorSpace.addItem(
             self._tr("Choose a local ICC..."),
             LOCAL_COLOR_PROFILE_CHOICE_DATA,
@@ -735,6 +770,30 @@ class MainWindowUI:
         self.frameFilmstrip.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         film_layout = QtWidgets.QVBoxLayout(self.frameFilmstrip)
         film_layout.setContentsMargins(8, 6, 8, 6)
+        film_layout.setSpacing(4)
+
+        self.widgetFilmstripFilterToolbar = QtWidgets.QWidget(self.frameFilmstrip)
+        self.widgetFilmstripFilterToolbar.setObjectName("widgetFilmstripFilterToolbar")
+        filter_layout = QtWidgets.QHBoxLayout(self.widgetFilmstripFilterToolbar)
+        filter_layout.setObjectName("layoutFilmstripFilterToolbar")
+        filter_layout.setContentsMargins(0, 0, 0, 0)
+        filter_layout.setSpacing(6)
+
+        self.comboFilmstripExtensionFilter = self._create_filmstrip_filter_combo(
+            "comboFilmstripExtensionFilter"
+        )
+        self.comboFilmstripCameraFilter = self._create_filmstrip_filter_combo(
+            "comboFilmstripCameraFilter"
+        )
+        self.comboFilmstripLensFilter = self._create_filmstrip_filter_combo(
+            "comboFilmstripLensFilter"
+        )
+        filter_layout.addStretch(1)
+        filter_layout.addWidget(self.comboFilmstripExtensionFilter)
+        filter_layout.addWidget(self.comboFilmstripCameraFilter)
+        filter_layout.addWidget(self.comboFilmstripLensFilter)
+        filter_layout.addStretch(1)
+        film_layout.addWidget(self.widgetFilmstripFilterToolbar)
 
         self.listFilmstrip = QtWidgets.QListWidget(self.frameFilmstrip)
         self.listFilmstrip.setObjectName("listFilmstrip")
@@ -761,6 +820,19 @@ class MainWindowUI:
         )
         self.labelFilmstripSummary.setVisible(False)
         self._main_window.statusBar().addPermanentWidget(self.labelFilmstripSummary)
+
+    def _populate_color_profile_combo(self, combo: QtWidgets.QComboBox) -> None:
+        """Add built-in and system ICC color profiles to a selector."""
+
+        for color_space in COLOR_SPACE_PRESET_ORDER:
+            combo.addItem(color_space.display_name, color_space)
+        for profile in self._system_color_profiles:
+            combo.addItem(profile.display_name, profile)
+            combo.setItemData(
+                combo.count() - 1,
+                str(profile.path),
+                QtCore.Qt.ItemDataRole.ToolTipRole,
+            )
 
     def filmstrip_item_size(self, icon_side: int | None = None, text: str = "") -> QtCore.QSize:
         """Return the filmstrip item size needed to display the full file name."""
@@ -796,6 +868,15 @@ class MainWindowUI:
         separator.setFrameShape(QtWidgets.QFrame.Shape.VLine)
         separator.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
         layout.addWidget(separator)
+
+    def _create_filmstrip_filter_combo(self, object_name: str) -> QtWidgets.QComboBox:
+        combo = QtWidgets.QComboBox(self.widgetFilmstripFilterToolbar)
+        combo.setObjectName(object_name)
+        combo.setMinimumWidth(144)
+        combo.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
+        combo.addItem("", None)
+        self._apply_combo_popup_delegate(combo)
+        return combo
 
     @staticmethod
     def _apply_combo_popup_delegate(combo: QtWidgets.QComboBox) -> None:
@@ -914,6 +995,13 @@ class MainWindowUI:
         self.actPeakLow.setText(self._tr("Low"))
         self._sync_analysis_action_tooltips()
 
+        self.comboFilmstripExtensionFilter.setItemText(0, self._tr("All Extensions"))
+        self.comboFilmstripCameraFilter.setItemText(0, self._tr("All Cameras"))
+        self.comboFilmstripLensFilter.setItemText(0, self._tr("All Lenses"))
+        self.comboFilmstripExtensionFilter.setToolTip(self._tr("Filter Filmstrip by file extension"))
+        self.comboFilmstripCameraFilter.setToolTip(self._tr("Filter Filmstrip by camera model"))
+        self.comboFilmstripLensFilter.setToolTip(self._tr("Filter Filmstrip by lens model"))
+
         self.menuFile.setTitle(self._tr("File"))
         self.menuView.setTitle(self._tr("View"))
         self.menuAppearance.setTitle(self._tr("Appearance"))
@@ -936,6 +1024,9 @@ class MainWindowUI:
 
         self.labelImageColorSpaceTitle.setText(self._tr("Image Color Space"))
         self.labelImageColorSpaceValue.setText(self._tr("Not Loaded"))
+        self.labelAnalysisSamplePrecisionTitle.setText(self._tr("Analysis Sample Precision"))
+        self.comboAnalysisSamplePrecision.setItemText(0, self._tr("8-bit/channel"))
+        self.comboAnalysisSamplePrecision.setItemText(1, self._tr("16-bit/channel (if available)"))
         self.labelSpecifiedImageColorSpaceTitle.setText(self._tr("Specify Image Color Space"))
         self.labelRenderingIntentTitle.setText(self._tr("Rendering Intent"))
         self.labelDisplayColorSpaceTitle.setText(self._tr("Display Color Space"))
@@ -1006,9 +1097,14 @@ class MainWindowUI:
 class MainWindow(QtWidgets.QMainWindow):
     """主窗口：装配 UI + Controller（避免在UI回调里写业务逻辑）。"""
 
-    def __init__(self, image_service: ImageService, view_service: AnalysisViewService) -> None:
+    def __init__(
+        self,
+        image_service: ImageService,
+        view_service: AnalysisViewService,
+        system_color_profiles: Sequence[LocalColorProfile] = (),
+    ) -> None:
         super().__init__()
-        self.ui = MainWindowUI()
+        self.ui = MainWindowUI(system_color_profiles=system_color_profiles)
         self.ui.setup_ui(self)
 
         from pic_viewer.controllers.main_controller import MainController

@@ -150,7 +150,7 @@ class ThirdPartyLicenseServiceTests(unittest.TestCase):
         self.assertEqual("GPL-3.0-only", pyexiv2.license_text)
         self.assertEqual("Runtime metadata backend based on Exiv2.", pyexiv2.notes)
 
-    def test_load_third_party_licenses_reports_pillow_imagecms_backend(self) -> None:
+    def test_load_third_party_licenses_reports_pillow_decoder_backend(self) -> None:
         metadata_by_package = {
             "Pillow": self._message({"License-Expression": "MIT-CMU"}),
         }
@@ -161,7 +161,23 @@ class ThirdPartyLicenseServiceTests(unittest.TestCase):
         self.assertEqual("Pillow", pillow.display_name)
         self.assertEqual("1.2.3", pillow.version)
         self.assertEqual("MIT-CMU", pillow.license_text)
-        self.assertEqual("Runtime color management backend based on ImageCms.", pillow.notes)
+        self.assertEqual("Fallback image decoder and plugin host.", pillow.notes)
+
+    def test_load_third_party_licenses_reports_pyvips_cms_backend(self) -> None:
+        metadata_by_package = {
+            "pyvips": self._message({"License-Expression": "MIT"}),
+            "libvips": self._message({"License-Expression": "LGPL-2.1-or-later"}),
+        }
+
+        licenses = self._load_with_metadata(metadata_by_package)
+
+        pyvips = self._find_license(licenses, "pyvips")
+        libvips = self._find_license(licenses, "libvips")
+        self.assertEqual("pyvips", pyvips.display_name)
+        self.assertEqual("MIT", pyvips.license_text)
+        self.assertEqual("Python bindings for libvips ICC color management.", pyvips.notes)
+        self.assertEqual("libvips", libvips.display_name)
+        self.assertEqual("LGPL-2.1-or-later", libvips.license_text)
 
     def test_load_third_party_licenses_reports_modern_pillow_image_plugins(self) -> None:
         metadata_by_package = {

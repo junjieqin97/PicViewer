@@ -96,6 +96,7 @@ class MainControllerLoadingMixin:
             self._display_color_space,
             self._assumed_source_color_space,
             self._rendering_intent,
+            self._analysis_bit_depth,
         )
         task.signals.finished.connect(lambda result, p=path, s=session: self._on_loaded(p, s, result))
         task.signals.error.connect(lambda message, p=path, s=session: self._on_error(p, s, message))
@@ -163,6 +164,8 @@ class MainControllerLoadingMixin:
             return
         if result.analysis.rendering_intent != self._rendering_intent:
             return
+        if not self._is_expected_analysis_bit_depth(result.analysis):
+            return
 
         self._load_error_by_path.pop(key, None)
         self._images_by_path[key] = result
@@ -175,6 +178,8 @@ class MainControllerLoadingMixin:
             result.analysis.preview_rgb,
             result.analysis.display_color_space,
         )
+        if hasattr(self, "_update_filmstrip_filter_metadata"):
+            self._update_filmstrip_filter_metadata(path, result.metadata)
 
         if self._current_image_path() == path:
             self.update_info_for_image(path)
@@ -199,6 +204,18 @@ class MainControllerLoadingMixin:
 
         if self._current_image_path() == path:
             self.update_info_for_image(path)
+
+    def _is_expected_analysis_bit_depth(self, analysis) -> bool:
+        requested = getattr(self, "_analysis_bit_depth", None)
+        if requested is None:
+            return True
+        if analysis.analysis_bit_depth == requested:
+            return True
+        return (
+            requested.value == 16
+            and analysis.cms_bit_depth.value == 8
+            and analysis.analysis_bit_depth.value == 8
+        )
 
     def _is_path_loading(self, path: Path) -> bool:
         key = str(path)

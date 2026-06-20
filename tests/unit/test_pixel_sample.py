@@ -47,6 +47,18 @@ class PixelSampleTests(unittest.TestCase):
         self.assertEqual(70, sample.blue)
         self.assertEqual(expected_luma, sample.luma)
 
+    def test_sample_analysis_pixel_preserves_sixteen_bit_channel_values(self) -> None:
+        module = self._pixel_sample_module()
+        bgr = np.array([[[1000, 32000, 65000]]], dtype=np.uint16)
+        expected_luma = int(cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)[0, 0])
+
+        sample = module.sample_analysis_pixel(bgr, 0, 0)
+
+        self.assertEqual(65000, sample.red)
+        self.assertEqual(32000, sample.green)
+        self.assertEqual(1000, sample.blue)
+        self.assertEqual(expected_luma, sample.luma)
+
     def test_sample_analysis_pixel_returns_invalid_for_out_of_bounds(self) -> None:
         module = self._pixel_sample_module()
         bgr = np.zeros((2, 2, 3), dtype=np.uint8)

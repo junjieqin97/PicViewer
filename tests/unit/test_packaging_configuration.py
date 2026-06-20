@@ -42,11 +42,13 @@ class PackagingConfigurationTests(unittest.TestCase):
         packaging_extra = pyproject.split("packaging = [", maxsplit=1)[1].split("]\n", maxsplit=1)[0]
 
         self.assertIn('"pyexiv2>=2.15.5,<3"', runtime_dependencies)
+        self.assertIn('"pyvips>=3,<4"', runtime_dependencies)
         self.assertIn('"Pillow>=10.0"', runtime_dependencies)
         self.assertIn('"pillow-heif>=1,<2"', runtime_dependencies)
         self.assertIn('"pillow-avif-plugin>=1.5,<2"', runtime_dependencies)
         self.assertIn('"rawpy>=0.27.0"', raw_extra)
         self.assertIn('"rawpy>=0.27.0"', packaging_extra)
+        self.assertIn('"pyvips>=3,<4"', packaging_extra)
         self.assertNotIn('"rawpy>=0.17"', pyproject)
         self.assertNotIn('"Pillow>=10.0"', packaging_extra)
 
@@ -77,6 +79,11 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("<source>Rendering Intent</source>", en_ts)
         self.assertIn("<source>Rendering Intent</source>", zh_ts)
         self.assertIn("<translation>渲染意图</translation>", zh_ts)
+        self.assertIn("<source>Analysis Sample Precision</source>", en_ts)
+        self.assertIn("<source>Analysis Sample Precision</source>", zh_ts)
+        self.assertIn("<translation>分析采样精度</translation>", zh_ts)
+        self.assertIn("<source>8-bit/channel</source>", en_ts)
+        self.assertIn("<source>16-bit/channel (if available)</source>", en_ts)
         self.assertIn("<source>Choose a local ICC...</source>", en_ts)
         self.assertIn("<source>Choose a local ICC...</source>", zh_ts)
         self.assertIn("<translation>选择本地 ICC...</translation>", zh_ts)
@@ -140,6 +147,7 @@ class PackagingConfigurationTests(unittest.TestCase):
             "opencv-python",
             "numpy",
             "pyexiv2",
+            "pyvips",
             "Pillow",
             "pillow-heif",
             "pillow-avif-plugin",
@@ -149,11 +157,13 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertNotIn('"PySide2"', spec)
         self.assertIn("_collect_runtime_metadata(RUNTIME_METADATA_PACKAGES)", spec)
 
-    def test_pyinstaller_spec_collects_pillow_imagecms_runtime(self) -> None:
+    def test_pyinstaller_spec_collects_pyvips_runtime_and_excludes_pillow_imagecms(self) -> None:
         spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")
 
-        self.assertIn('"PIL.ImageCms"', spec)
-        self.assertIn('"PIL._imagingcms"', spec)
+        self.assertIn('collect_dynamic_libs("pyvips")', spec)
+        self.assertIn('collect_submodules("pyvips")', spec)
+        self.assertNotIn('"PIL.ImageCms"', spec)
+        self.assertNotIn('"PIL._imagingcms"', spec)
 
     def test_pyinstaller_spec_collects_modern_pillow_image_plugins(self) -> None:
         spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")

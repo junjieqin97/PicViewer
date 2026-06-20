@@ -1,17 +1,20 @@
-"""ICC profile conversion adapter backed by Pillow ImageCms."""
+"""ICC profile conversion adapter backed by pyvips/libvips."""
 
 from __future__ import annotations
 
-import io
+import hashlib
 import logging
 from pathlib import Path
 import re
+import tempfile
+from typing import Any
 
 import numpy as np
-from PIL import Image, ImageCms, UnidentifiedImageError
+from PIL import Image, UnidentifiedImageError
 from PySide6 import QtGui
 
 from pic_viewer.common.errors import ColorProfileLoadError
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
@@ -21,6 +24,11 @@ from pic_viewer.domain.models.color_space import (
 )
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
 from pic_viewer.infra.adapters.pillow_image_plugins import register_optional_pillow_image_plugins
+
+try:  # pragma: no cover - exercised in environments with pyvips installed
+    import pyvips
+except Exception:  # pragma: no cover - dependency availability is environment-specific
+    pyvips = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -34,36 +42,44 @@ class ColorProfileConverter:
         ColorSpacePreset.ADOBE_RGB_1998: QtGui.QColorSpace.NamedColorSpace.AdobeRgb,
         ColorSpacePreset.PROPHOTO_RGB: QtGui.QColorSpace.NamedColorSpace.ProPhotoRgb,
     }
-    _PILLOW_RENDERING_INTENTS: dict[RenderingIntent, ImageCms.Intent] = {
-        RenderingIntent.PERCEPTUAL: ImageCms.Intent.PERCEPTUAL,
-        RenderingIntent.RELATIVE_COLORIMETRIC: ImageCms.Intent.RELATIVE_COLORIMETRIC,
-        RenderingIntent.SATURATION: ImageCms.Intent.SATURATION,
-        RenderingIntent.ABSOLUTE_COLORIMETRIC: ImageCms.Intent.ABSOLUTE_COLORIMETRIC,
+    _PYVIPS_RENDERING_INTENTS: dict[RenderingIntent, str] = {
+        RenderingIntent.PERCEPTUAL: "perceptual",
+        RenderingIntent.RELATIVE_COLORIMETRIC: "relative",
+        RenderingIntent.SATURATION: "saturation",
+        RenderingIntent.ABSOLUTE_COLORIMETRIC: "absolute",
     }
 
     def __init__(self) -> None:
         self._profile_bytes_by_space: dict[ColorSpacePreset, bytes] = {}
-        self._profiles_by_space: dict[ColorSpacePreset, ImageCms.ImageCmsProfile] = {}
-        self._profiles_by_local_key: dict[str, ImageCms.ImageCmsProfile] = {}
+        self._profile_path_by_key: dict[str, Path] = {}
+        self._profile_temp_dir = tempfile.TemporaryDirectory(prefix="picviewer-icc-")
 
-    def profile_for(self, color_space: ColorProfileSpec) -> ImageCms.ImageCmsProfile:
-        """Return a Pillow-open ICC profile for a supported color profile."""
+    def __del__(self) -> None:
+        try:
+            self._profile_temp_dir.cleanup()
+        except Exception:
+            pass
+
+    def profile_for(self, color_space: ColorProfileSpec) -> Path:
+        """Return an ICC profile file path for a supported color profile."""
 
         if isinstance(color_space, LocalColorProfile):
-            cached_local = self._profiles_by_local_key.get(color_space.stable_key)
-            if cached_local is not None:
-                return cached_local
-            local_profile = self._profile_from_bytes(color_space.profile_bytes)
-            self._profiles_by_local_key[color_space.stable_key] = local_profile
-            return local_profile
+            key = color_space.stable_key
+            profile_bytes = color_space.profile_bytes
+        else:
+            key = color_space.value
+            profile_bytes = self.profile_bytes_for(color_space)
 
-        cached = self._profiles_by_space.get(color_space)
-        if cached is not None:
+        cached = self._profile_path_by_key.get(key)
+        if cached is not None and cached.exists():
             return cached
 
-        profile = self._profile_from_bytes(self.profile_bytes_for(color_space))
-        self._profiles_by_space[color_space] = profile
-        return profile
+        digest = hashlib.sha256(profile_bytes).hexdigest()[:16]
+        safe_key = re.sub(r"[^A-Za-z0-9_.-]+", "_", key)
+        profile_path = Path(self._profile_temp_dir.name) / f"{safe_key}-{digest}.icc"
+        profile_path.write_bytes(profile_bytes)
+        self._profile_path_by_key[key] = profile_path
+        return profile_path
 
     def profile_bytes_for(self, color_space: ColorSpacePreset) -> bytes:
         """Return ICC profile bytes for a supported display color space."""
@@ -82,17 +98,7 @@ class ColorProfileConverter:
         return profile_bytes
 
     def qt_color_space_for(self, color_space: ColorProfileSpec) -> QtGui.QColorSpace:
-        """Return a Qt color space for tagging display preview images.
-
-        Args:
-            color_space: Built-in preset or session-local ICC profile.
-
-        Returns:
-            QColorSpace: Valid Qt color space for QImage metadata.
-
-        Raises:
-            RuntimeError: If Qt cannot construct a color space from the ICC profile.
-        """
+        """Return a Qt color space for tagging display preview images."""
 
         if isinstance(color_space, LocalColorProfile):
             qt_color_space = QtGui.QColorSpace.fromIccProfile(color_space.profile_bytes)
@@ -105,17 +111,7 @@ class ColorProfileConverter:
         return qt_color_space
 
     def load_local_profile(self, path: Path) -> LocalColorProfile:
-        """Load and validate a user-selected local ICC or ICM profile.
-
-        Args:
-            path: Path to the local ICC profile file.
-
-        Returns:
-            LocalColorProfile: Session-scoped local profile model.
-
-        Raises:
-            ColorProfileLoadError: If the path is not a readable ICC/ICM profile.
-        """
+        """Load and validate a user-selected local ICC or ICM profile."""
 
         profile_path = Path(path).expanduser()
         if profile_path.suffix.lower() not in {".icc", ".icm"}:
@@ -130,8 +126,8 @@ class ColorProfileConverter:
         if not profile_bytes:
             raise ColorProfileLoadError("ICC profile file is empty")
         try:
-            self._profile_from_bytes(profile_bytes)
-        except (ImageCms.PyCMSError, OSError, ValueError) as exc:
+            self._validate_profile_bytes(profile_bytes)
+        except Exception as exc:
             logger.warning("Invalid local ICC profile: path=%s", profile_path)
             raise ColorProfileLoadError("Unable to load ICC profile") from exc
         return LocalColorProfile(
@@ -147,27 +143,17 @@ class ColorProfileConverter:
         display_color_space: ColorProfileSpec,
         assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
+        bit_depth: ChannelBitDepth | None = None,
     ) -> np.ndarray:
-        """Convert decoded BGR pixels from embedded ICC profile to display space.
+        """Convert decoded BGR pixels from source ICC profile to display space."""
 
-        Args:
-            path: Source file path used only for ICC profile extraction.
-            bgr: Decoded BGR image pixels.
-            display_color_space: Target RGB display color space.
-            assumed_source_color_space: Source color space to use when ICC is unavailable.
-            rendering_intent: ICC rendering intent used for gamut mapping.
-
-        Returns:
-            A BGR uint8 array in the selected display color space. If profile
-            extraction or conversion fails, the source is treated as sRGB.
-        """
-
-        converted_bgr, _profile_info = self.convert_file_bgr_to_display_space_with_info(
+        converted_bgr, _profile_info, _cms_bit_depth = self.convert_file_bgr_to_display_space_with_depth(
             path,
             bgr,
             display_color_space,
             assumed_source_color_space,
             rendering_intent,
+            bit_depth=bit_depth,
         )
         return converted_bgr
 
@@ -178,27 +164,75 @@ class ColorProfileConverter:
         display_color_space: ColorProfileSpec,
         assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
+        bit_depth: ChannelBitDepth | None = None,
     ) -> tuple[np.ndarray, ImageColorProfileInfo]:
         """Convert decoded BGR pixels and return source ICC status."""
 
-        source_profile, source_info = self._source_profile_for_path(path, assumed_source_color_space)
+        converted_bgr, source_info, _cms_bit_depth = self.convert_file_bgr_to_display_space_with_depth(
+            path,
+            bgr,
+            display_color_space,
+            assumed_source_color_space,
+            rendering_intent,
+            bit_depth=bit_depth,
+        )
+        return converted_bgr, source_info
+
+    def convert_file_bgr_to_display_space_with_depth(
+        self,
+        path: Path,
+        bgr: np.ndarray,
+        display_color_space: ColorProfileSpec,
+        assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+        rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
+        bit_depth: ChannelBitDepth | None = None,
+        *,
+        source_color_profile_override: ImageColorProfileInfo | None = None,
+    ) -> tuple[np.ndarray, ImageColorProfileInfo, ChannelBitDepth]:
+        """Convert BGR pixels and return source ICC status plus CMS bit depth."""
+
+        cms_bit_depth = bit_depth or ChannelBitDepth.from_dtype(bgr.dtype)
+        if source_color_profile_override is None:
+            source_info, embedded_profile_bytes = self._source_profile_info_for_path(
+                path,
+                assumed_source_color_space,
+            )
+        else:
+            source_info = source_color_profile_override
+            embedded_profile_bytes = None
         if self._is_empty_image(bgr):
-            return bgr, source_info
+            return bgr, source_info, cms_bit_depth
 
         if source_info.uses_srgb_fallback and self._fallback_source_space(source_info) == display_color_space:
-            return bgr.copy(), source_info
+            return np.ascontiguousarray(bgr.copy()), source_info, cms_bit_depth
+        if (
+            source_color_profile_override is not None
+            and source_info.assumed_color_space is not None
+            and source_info.assumed_color_space == display_color_space
+        ):
+            return np.ascontiguousarray(bgr.copy()), source_info, cms_bit_depth
 
         target_profile = self.profile_for(display_color_space)
         rgb = self._bgr_to_rgb(bgr)
-        converted_rgb = self._convert_rgb_with_profiles(
+        source_profile = self._source_profile_for_conversion(
+            source_info,
+            assumed_source_color_space,
+            source_color_profile_override is not None,
+        )
+        converted_rgb = self._convert_rgb(
             rgb,
-            source_profile,
-            target_profile,
+            target_profile=target_profile,
+            rendering_intent=rendering_intent,
+            cms_bit_depth=cms_bit_depth,
+            embedded_profile_bytes=embedded_profile_bytes if not source_info.uses_srgb_fallback else None,
+            source_profile=source_profile,
             source_path=path,
             target_label=self._profile_label(display_color_space),
-            rendering_intent=rendering_intent,
         )
-        if converted_rgb is None and not source_info.uses_srgb_fallback:
+
+        if converted_rgb is None and source_color_profile_override is not None:
+            converted_rgb = rgb.copy()
+        elif converted_rgb is None and not source_info.uses_srgb_fallback:
             source_info = self._fallback_profile_info(
                 ImageColorProfileStatus.CONVERSION_FAILED,
                 assumed_source_color_space,
@@ -206,46 +240,48 @@ class ColorProfileConverter:
             if assumed_source_color_space == display_color_space:
                 converted_rgb = rgb.copy()
             else:
-                converted_rgb = self._convert_rgb_with_profiles(
+                converted_rgb = self._convert_rgb(
                     rgb,
-                    self.profile_for(assumed_source_color_space),
-                    target_profile,
+                    target_profile=target_profile,
+                    rendering_intent=rendering_intent,
+                    cms_bit_depth=cms_bit_depth,
+                    source_profile=self.profile_for(assumed_source_color_space),
+                    embedded_profile_bytes=None,
                     source_path=path,
                     target_label=self._profile_label(display_color_space),
-                    rendering_intent=rendering_intent,
                 )
         if converted_rgb is None:
             converted_rgb = rgb.copy()
-        return self._rgb_to_bgr(converted_rgb), source_info
+        return self._rgb_to_bgr(converted_rgb), source_info, cms_bit_depth
 
-    def _source_profile_for_path(
+    def _source_profile_info_for_path(
         self,
         path: Path,
         assumed_source_color_space: ColorProfileSpec,
-    ) -> tuple[ImageCms.ImageCmsProfile, ImageColorProfileInfo]:
+    ) -> tuple[ImageColorProfileInfo, bytes | None]:
         profile_bytes = self._read_embedded_icc_profile(path)
         if profile_bytes:
             try:
-                profile = self._profile_from_bytes(profile_bytes)
-                return profile, ImageColorProfileInfo(
-                    display_name=self._profile_display_name(profile),
+                self._validate_profile_bytes(profile_bytes)
+                return ImageColorProfileInfo(
+                    display_name=self._profile_display_name(profile_bytes),
                     status=ImageColorProfileStatus.EMBEDDED,
                     uses_srgb_fallback=False,
-                )
-            except (ImageCms.PyCMSError, OSError, ValueError):
+                ), profile_bytes
+            except Exception:
                 logger.warning(
                     "Invalid embedded ICC profile, using assumed source color space: path=%s color_space=%s",
                     path,
                     self._profile_label(assumed_source_color_space),
                 )
-                return self.profile_for(assumed_source_color_space), self._fallback_profile_info(
+                return self._fallback_profile_info(
                     ImageColorProfileStatus.INVALID,
                     assumed_source_color_space,
-                )
-        return self.profile_for(assumed_source_color_space), self._fallback_profile_info(
+                ), None
+        return self._fallback_profile_info(
             ImageColorProfileStatus.MISSING,
             assumed_source_color_space,
-        )
+        ), None
 
     def _fallback_profile_info(
         self,
@@ -262,18 +298,17 @@ class ColorProfileConverter:
     def _fallback_source_space(self, info: ImageColorProfileInfo) -> ColorProfileSpec:
         return info.assumed_color_space or ColorSpacePreset.SRGB
 
-    def _profile_from_bytes(self, profile_bytes: bytes) -> ImageCms.ImageCmsProfile:
-        return ImageCms.getOpenProfile(io.BytesIO(profile_bytes))
-
-    def _profile_display_name(self, profile: ImageCms.ImageCmsProfile) -> str:
-        for reader in (ImageCms.getProfileName, ImageCms.getProfileDescription):
-            try:
-                cleaned = self._clean_profile_name(reader(profile))
-            except (ImageCms.PyCMSError, OSError, ValueError, TypeError):
-                continue
-            if cleaned:
-                return cleaned
-        return "Embedded ICC"
+    def _source_profile_for_conversion(
+        self,
+        info: ImageColorProfileInfo,
+        assumed_source_color_space: ColorProfileSpec,
+        has_profile_override: bool,
+    ) -> Path | None:
+        if has_profile_override:
+            return self.profile_for(info.assumed_color_space or assumed_source_color_space)
+        if info.uses_srgb_fallback:
+            return self.profile_for(assumed_source_color_space)
+        return None
 
     def _profile_display_label(self, color_space: ColorProfileSpec) -> str:
         return color_space.display_name
@@ -282,6 +317,100 @@ class ColorProfileConverter:
         if isinstance(color_space, ColorSpacePreset):
             return color_space.value
         return color_space.stable_key
+
+    def _read_embedded_icc_profile(self, path: Path) -> bytes | None:
+        register_optional_pillow_image_plugins()
+        try:
+            with Image.open(path) as image:
+                profile = image.info.get("icc_profile")
+        except (FileNotFoundError, OSError, UnidentifiedImageError, ValueError):
+            logger.info("Unable to read embedded ICC profile, using fallback source space: %s", path)
+            return None
+
+        if isinstance(profile, bytes) and profile:
+            return profile
+        return None
+
+    def _validate_profile_bytes(self, profile_bytes: bytes) -> None:
+        self._require_pyvips()
+        profile_path = self._profile_path_for_bytes("validate", profile_bytes)
+        srgb_profile = self.profile_for(ColorSpacePreset.SRGB)
+        test_rgb = np.zeros((1, 1, 3), dtype=np.uint8)
+        test_image = self._new_vips_image_from_rgb(test_rgb, ChannelBitDepth.EIGHT)
+        test_image.icc_transform(
+            str(srgb_profile),
+            input_profile=str(profile_path),
+            intent="perceptual",
+            depth=8,
+        )
+
+    def _profile_path_for_bytes(self, key_prefix: str, profile_bytes: bytes) -> Path:
+        digest = hashlib.sha256(profile_bytes).hexdigest()
+        key = f"{key_prefix}:{digest}"
+        cached = self._profile_path_by_key.get(key)
+        if cached is not None and cached.exists():
+            return cached
+        profile_path = Path(self._profile_temp_dir.name) / f"{key_prefix}-{digest[:16]}.icc"
+        profile_path.write_bytes(profile_bytes)
+        self._profile_path_by_key[key] = profile_path
+        return profile_path
+
+    def _profile_display_name(self, profile_bytes: bytes) -> str:
+        for tag in (b"desc", b"mluc"):
+            text = self._read_icc_text_tag(profile_bytes, tag)
+            if text:
+                return text
+        return "Embedded ICC"
+
+    def _read_icc_text_tag(self, profile_bytes: bytes, tag_signature: bytes) -> str:
+        if len(profile_bytes) < 132:
+            return ""
+        try:
+            tag_count = int.from_bytes(profile_bytes[128:132], "big")
+            for index in range(tag_count):
+                record_start = 132 + index * 12
+                record_end = record_start + 12
+                if record_end > len(profile_bytes):
+                    return ""
+                signature = profile_bytes[record_start : record_start + 4]
+                if signature != tag_signature:
+                    continue
+                offset = int.from_bytes(profile_bytes[record_start + 4 : record_start + 8], "big")
+                size = int.from_bytes(profile_bytes[record_start + 8 : record_start + 12], "big")
+                tag_data = profile_bytes[offset : offset + size]
+                if signature == b"desc":
+                    return self._read_desc_tag(tag_data)
+                if signature == b"mluc":
+                    return self._read_mluc_tag(tag_data)
+        except (IndexError, ValueError):
+            return ""
+        return ""
+
+    def _read_desc_tag(self, tag_data: bytes) -> str:
+        if len(tag_data) < 12 or tag_data[:4] != b"desc":
+            return ""
+        text_len = int.from_bytes(tag_data[8:12], "big")
+        if text_len <= 0:
+            return ""
+        return self._clean_profile_name(tag_data[12 : 12 + max(0, text_len - 1)])
+
+    def _read_mluc_tag(self, tag_data: bytes) -> str:
+        if len(tag_data) < 28 or tag_data[:4] != b"mluc":
+            return ""
+        record_count = int.from_bytes(tag_data[8:12], "big")
+        record_size = int.from_bytes(tag_data[12:16], "big")
+        if record_count <= 0 or record_size < 12:
+            return ""
+        first_record = tag_data[16 : 16 + record_size]
+        if len(first_record) < 12:
+            return ""
+        text_len = int.from_bytes(first_record[4:8], "big")
+        text_offset = int.from_bytes(first_record[8:12], "big")
+        text = tag_data[text_offset : text_offset + text_len]
+        try:
+            return self._clean_profile_name(text.decode("utf-16-be", errors="ignore"))
+        except (AttributeError, UnicodeError):
+            return ""
 
     def _clean_profile_name(self, profile_name: str | bytes | None) -> str:
         if profile_name is None:
@@ -293,45 +422,67 @@ class ColorProfileConverter:
         text = text.replace("\x00", " ")
         return re.sub(r"\s+", " ", text).strip()
 
-    def _read_embedded_icc_profile(self, path: Path) -> bytes | None:
-        register_optional_pillow_image_plugins()
-        try:
-            with Image.open(path) as image:
-                profile = image.info.get("icc_profile")
-        except (FileNotFoundError, OSError, UnidentifiedImageError, ValueError):
-            logger.info("Unable to read embedded ICC profile, using sRGB: %s", path)
-            return None
-
-        if isinstance(profile, bytes) and profile:
-            return profile
-        return None
-
-    def _convert_rgb_with_profiles(
+    def _convert_rgb(
         self,
         rgb: np.ndarray,
-        source_profile: ImageCms.ImageCmsProfile,
-        target_profile: ImageCms.ImageCmsProfile,
+        target_profile: Path,
+        rendering_intent: RenderingIntent,
+        cms_bit_depth: ChannelBitDepth,
+        source_profile: Path | None,
+        embedded_profile_bytes: bytes | None,
         source_path: Path | None,
         target_label: str,
-        rendering_intent: RenderingIntent,
     ) -> np.ndarray | None:
-        image = Image.fromarray(np.ascontiguousarray(rgb))
+        vips_image = self._new_vips_image_from_rgb(rgb, cms_bit_depth)
+        kwargs: dict[str, Any] = {
+            "intent": self._PYVIPS_RENDERING_INTENTS[rendering_intent],
+            "depth": cms_bit_depth.value,
+        }
+        if embedded_profile_bytes is not None:
+            self._attach_embedded_profile(vips_image, embedded_profile_bytes)
+            kwargs["embedded"] = True
+        elif source_profile is not None:
+            kwargs["input_profile"] = str(source_profile)
+        else:
+            kwargs["input_profile"] = str(self.profile_for(DEFAULT_ASSUMED_IMAGE_COLOR_SPACE))
+
         try:
-            converted = ImageCms.profileToProfile(
-                image,
-                source_profile,
-                target_profile,
-                renderingIntent=self._PILLOW_RENDERING_INTENTS[rendering_intent],
-                outputMode="RGB",
-            )
-        except (ImageCms.PyCMSError, OSError, ValueError):
+            converted = vips_image.icc_transform(str(target_profile), **kwargs)
+        except Exception:
             logger.warning(
                 "ICC conversion attempt failed: path=%s target=%s",
                 source_path,
                 target_label,
+                exc_info=True,
             )
             return None
-        return np.asarray(converted.convert("RGB"), dtype=np.uint8).copy()
+        return self._rgb_from_vips_image(converted, rgb.shape, cms_bit_depth)
+
+    def _new_vips_image_from_rgb(self, rgb: np.ndarray, bit_depth: ChannelBitDepth):
+        self._require_pyvips()
+        contiguous = np.ascontiguousarray(rgb.astype(bit_depth.dtype, copy=False))
+        height, width, bands = contiguous.shape
+        format_name = "ushort" if bit_depth is ChannelBitDepth.SIXTEEN else "uchar"
+        return pyvips.Image.new_from_memory(contiguous.tobytes(), width, height, bands, format_name)
+
+    def _attach_embedded_profile(self, image: Any, profile_bytes: bytes) -> None:
+        if pyvips is None or not hasattr(image, "set_type"):
+            return
+        try:
+            image.set_type(pyvips.GValue.blob_type, "icc-profile-data", profile_bytes)
+        except Exception:
+            logger.info("Unable to attach embedded ICC bytes to pyvips image", exc_info=True)
+
+    def _rgb_from_vips_image(
+        self,
+        image: Any,
+        shape: tuple[int, int, int],
+        bit_depth: ChannelBitDepth,
+    ) -> np.ndarray:
+        height, width, bands = shape
+        memory = image.write_to_memory()
+        rgb = np.frombuffer(memory, dtype=bit_depth.dtype).reshape((height, width, bands))
+        return np.ascontiguousarray(rgb.copy())
 
     def _bgr_to_rgb(self, bgr: np.ndarray) -> np.ndarray:
         return np.ascontiguousarray(bgr[:, :, ::-1])
@@ -341,3 +492,7 @@ class ColorProfileConverter:
 
     def _is_empty_image(self, image: np.ndarray) -> bool:
         return getattr(image, "size", 0) == 0
+
+    def _require_pyvips(self) -> None:
+        if pyvips is None:
+            raise RuntimeError("pyvips/libvips is required for ICC color conversion")

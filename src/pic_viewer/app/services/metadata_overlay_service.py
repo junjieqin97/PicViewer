@@ -5,7 +5,14 @@ from __future__ import annotations
 from fractions import Fraction
 from typing import Optional
 
-from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
+from pic_viewer.app.dto.metadata import ImageMetadata
+from pic_viewer.app.services.metadata_summary_service import (
+    camera_display_name,
+    first_metadata_value,
+    join_metadata_parts,
+    lens_display_name,
+    metadata_section_dict,
+)
 
 def build_metadata_overlay_lines(
     metadata: ImageMetadata,
@@ -23,13 +30,13 @@ def build_metadata_overlay_lines(
         Missing metadata fields are omitted instead of shown as placeholders.
     """
 
-    general = _section_dict(metadata.general)
-    exif = _section_dict(metadata.exif)
-    camera_name = _camera_name(exif)
-    lens_model = _first_value(exif, ("LensModel", "Lens", "LensInfo"))
-    aperture = _format_aperture(_first_value(exif, ("FNumber", "ApertureValue")))
-    exposure = _format_exposure_time(_first_value(exif, ("ExposureTime", "ShutterSpeedValue")))
-    iso = _first_value(
+    general = metadata_section_dict(metadata.general)
+    exif = metadata_section_dict(metadata.exif)
+    camera_name = camera_display_name(metadata)
+    lens_model = lens_display_name(metadata)
+    aperture = _format_aperture(first_metadata_value(exif, ("FNumber", "ApertureValue")))
+    exposure = _format_exposure_time(first_metadata_value(exif, ("ExposureTime", "ShutterSpeedValue")))
+    iso = first_metadata_value(
         exif,
         (
             "ISOSpeedRatings",
@@ -40,31 +47,15 @@ def build_metadata_overlay_lines(
     )
     resolution = _resolution_text(general, source_size)
     lines = (
-        _join_parts(camera_name, lens_model),
-        _join_parts(_prefix_value("f/", aperture), _suffix_value(exposure, "s"), _prefix_value("ISO ", iso)),
+        join_metadata_parts(camera_name, lens_model),
+        join_metadata_parts(
+            _prefix_value("f/", aperture),
+            _suffix_value(exposure, "s"),
+            _prefix_value("ISO ", iso),
+        ),
         resolution,
     )
     return tuple(line for line in lines if line)
-
-
-def _section_dict(entries: MetadataSection) -> dict[str, str]:
-    return {key: value for key, value in entries}
-
-
-def _first_value(entries: dict[str, str], keys: tuple[str, ...]) -> str:
-    for key in keys:
-        value = entries.get(key)
-        if value:
-            return value.strip()
-    return ""
-
-
-def _camera_name(exif: dict[str, str]) -> str:
-    make = _first_value(exif, ("Make", "Camera Make"))
-    model = _first_value(exif, ("Model", "Camera Model Name"))
-    if make and model.lower().startswith(make.lower()):
-        return model
-    return _join_parts(make, model)
 
 
 def _format_aperture(value: str) -> str:
@@ -125,10 +116,6 @@ def _resolution_text(general: dict[str, str], source_size: Optional[tuple[int, i
     except (TypeError, ValueError):
         return ""
     return f"{width} x {height}"
-
-
-def _join_parts(*parts: str) -> str:
-    return " ".join(part.strip() for part in parts if part and part.strip())
 
 
 def _prefix_value(prefix: str, value: str) -> str:

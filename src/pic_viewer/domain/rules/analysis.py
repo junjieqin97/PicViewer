@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 
 from pic_viewer.common.errors import ImageProcessError
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +72,7 @@ class AnalysisResult:
     waveform_r: np.ndarray
     waveform_g: np.ndarray
     waveform_b: np.ndarray
+    analysis_bit_depth: ChannelBitDepth = ChannelBitDepth.EIGHT
 
 
 @dataclass(frozen=True)
@@ -133,7 +135,11 @@ class ImageAnalyzer:
         self._wave_axis_text_x_base = WAVE_AXIS_TEXT_X
         self._analysis_bg_color_bgr = ANALYSIS_BG_COLOR_BGR
 
-    def analyze(self, bgr: np.ndarray) -> AnalysisResult:
+    def analyze(
+        self,
+        bgr: np.ndarray,
+        analysis_bit_depth: ChannelBitDepth = ChannelBitDepth.EIGHT,
+    ) -> AnalysisResult:
         """Generate analysis artifacts from BGR input.
 
         Args:
@@ -148,9 +154,12 @@ class ImageAnalyzer:
 
         try:
             source_size = (int(bgr.shape[0]), int(bgr.shape[1]))
+            preview_rgb = self._build_preview_rgb(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
             analysis_bgr = self._build_analysis_source_bgr(bgr)
-            analysis_rgb = cv2.cvtColor(analysis_bgr, cv2.COLOR_BGR2RGB)
-            preview_rgb = self._build_preview_rgb(analysis_rgb)
+            analysis_bgr, actual_analysis_bit_depth = self._quantize_analysis_bgr(
+                analysis_bgr,
+                analysis_bit_depth,
+            )
             histogram_rgb = self.render_histogram_channels(analysis_bgr, [0, 1, 2])
             histogram_luma = self.render_histogram_luma(analysis_bgr)
             histogram_b = self.render_histogram_channels(analysis_bgr, [0])
@@ -179,6 +188,7 @@ class ImageAnalyzer:
             waveform_r=waveform_r,
             waveform_g=waveform_g,
             waveform_b=waveform_b,
+            analysis_bit_depth=actual_analysis_bit_depth,
         )
 
     def build_preview_rgb(self, bgr: np.ndarray) -> np.ndarray:
@@ -198,6 +208,20 @@ class ImageAnalyzer:
         scale = self._max_analysis_edge / float(max_edge)
         new_size = (max(1, int(round(width * scale))), max(1, int(round(height * scale))))
         return cv2.resize(bgr, new_size, interpolation=cv2.INTER_AREA)
+
+    def _quantize_analysis_bgr(
+        self,
+        bgr: np.ndarray,
+        requested_bit_depth: ChannelBitDepth,
+    ) -> tuple[np.ndarray, ChannelBitDepth]:
+        """Apply the user-selected analysis sampling precision."""
+
+        source_bit_depth = ChannelBitDepth.from_dtype(bgr.dtype)
+        if requested_bit_depth is ChannelBitDepth.SIXTEEN and source_bit_depth is ChannelBitDepth.SIXTEEN:
+            return bgr, ChannelBitDepth.SIXTEEN
+        if source_bit_depth is ChannelBitDepth.EIGHT:
+            return bgr, ChannelBitDepth.EIGHT
+        return np.ascontiguousarray((bgr.astype(np.uint32) >> 8).astype(np.uint8)), ChannelBitDepth.EIGHT
 
     def _build_preview_rgb(self, rgb: np.ndarray) -> np.ndarray:
         """Downscale large images to a UI-friendly size."""
@@ -275,7 +299,14 @@ class ImageAnalyzer:
     ) -> None:
         """Draw a histogram curve on the given canvas."""
 
-        hist = cv2.calcHist([values], [0], None, [geometry.width], [0, 256])
+        bit_depth = ChannelBitDepth.from_dtype(values.dtype)
+        hist = cv2.calcHist(
+            [values],
+            [0],
+            None,
+            [geometry.width],
+            [0, bit_depth.max_value + 1],
+        )
         cv2.normalize(hist, hist, 0, geometry.height - 1, cv2.NORM_MINMAX)
         hist = hist.flatten().astype(np.int32)
         for x in range(1, geometry.width):
@@ -303,9 +334,10 @@ class ImageAnalyzer:
         resized = self._resize_for_waveform(bgr, geometry.plot_width)
         wave = np.zeros((geometry.height, geometry.width, 3), dtype=np.float32)
         xs = np.repeat(np.arange(geometry.plot_width), resized.shape[0]) + geometry.axis_margin
+        max_value = ChannelBitDepth.from_dtype(resized.dtype).max_value
         for channel in channels:
             values = resized[:, :, channel].astype(np.int32)
-            ys = geometry.height - 1 - (values * (geometry.height - 1) // 255)
+            ys = geometry.height - 1 - (values * (geometry.height - 1) // max_value)
             ys_flat = ys.T.reshape(-1)
             np.add.at(wave[:, :, channel], (ys_flat, xs), 1.0)
         return self._normalize_waveform_color(wave, geometry)
@@ -324,7 +356,8 @@ class ImageAnalyzer:
         wave = np.zeros((geometry.height, geometry.width), dtype=np.float32)
         xs = np.repeat(np.arange(geometry.plot_width), resized.shape[0]) + geometry.axis_margin
         values = resized.astype(np.int32)
-        ys = geometry.height - 1 - (values * (geometry.height - 1) // 255)
+        max_value = ChannelBitDepth.from_dtype(resized.dtype).max_value
+        ys = geometry.height - 1 - (values * (geometry.height - 1) // max_value)
         ys_flat = ys.T.reshape(-1)
         np.add.at(wave, (ys_flat, xs), 1.0)
         return self._normalize_waveform_gray(wave, geometry)

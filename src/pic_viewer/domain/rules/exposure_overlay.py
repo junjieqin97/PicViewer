@@ -6,6 +6,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth
+
 
 @dataclass(frozen=True)
 class ExposureOverlayOptions:
@@ -55,9 +57,12 @@ def apply_exposure_overlay(rgb: np.ndarray, options: ExposureOverlayOptions) -> 
 
     output = rgb.copy()
     luma = _compute_luma(rgb)
+    bit_depth = ChannelBitDepth.from_dtype(rgb.dtype)
+    max_value = bit_depth.max_value
 
     if options.show_underexposed:
-        under_mask = luma <= int(options.underexposed_threshold)
+        under_threshold = _scale_threshold(options.underexposed_threshold, max_value)
+        under_mask = luma <= under_threshold
         _blend_mask(
             output,
             under_mask,
@@ -66,7 +71,8 @@ def apply_exposure_overlay(rgb: np.ndarray, options: ExposureOverlayOptions) -> 
         )
 
     if options.show_overexposed:
-        over_mask = luma >= int(options.overexposed_threshold)
+        over_threshold = _scale_threshold(options.overexposed_threshold, max_value)
+        over_mask = luma >= over_threshold
         _blend_mask(
             output,
             over_mask,
@@ -82,6 +88,8 @@ def _validate_image(rgb: np.ndarray) -> None:
 
     if rgb.ndim != 3 or rgb.shape[2] != 3:
         raise ValueError("rgb must have shape (H, W, 3)")
+    if rgb.dtype not in (np.dtype(np.uint8), np.dtype(np.uint16)):
+        raise ValueError("rgb must use uint8 or uint16 channels")
 
 
 def _validate_options(options: ExposureOverlayOptions) -> None:
@@ -99,6 +107,12 @@ def _compute_luma(rgb: np.ndarray) -> np.ndarray:
     return (0.299 * rgb32[:, :, 0]) + (0.587 * rgb32[:, :, 1]) + (0.114 * rgb32[:, :, 2])
 
 
+def _scale_threshold(threshold: int, max_value: int) -> int:
+    """Scale an 8-bit threshold to the image channel range."""
+
+    return int(round((int(threshold) / 255.0) * max_value))
+
+
 def _blend_mask(
     output: np.ndarray,
     mask: np.ndarray,
@@ -110,7 +124,9 @@ def _blend_mask(
     if not np.any(mask):
         return
 
-    color = np.asarray(color_rgb, dtype=np.float32)
+    max_value = ChannelBitDepth.from_dtype(output.dtype).max_value
+    scale = max_value / 255.0
+    color = np.asarray(color_rgb, dtype=np.float32) * scale
     source = output[mask].astype(np.float32)
     blended = np.rint((1.0 - alpha) * source + (alpha * color))
-    output[mask] = np.clip(blended, 0, 255).astype(np.uint8)
+    output[mask] = np.clip(blended, 0, max_value).astype(output.dtype)

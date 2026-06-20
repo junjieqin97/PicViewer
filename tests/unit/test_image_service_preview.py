@@ -14,10 +14,12 @@ if str(SRC_ROOT) not in sys.path:
 
 from pic_viewer.app.services.image_service import ImageService  # noqa: E402
 from pic_viewer.common.errors import ImageLoadError  # noqa: E402
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import LocalColorProfile, ColorSpacePreset  # noqa: E402
 from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel  # noqa: E402
+from pic_viewer.infra.adapters.image_reader import ImageReadResult  # noqa: E402
 
 
 class ImageServicePreviewTests(unittest.TestCase):
@@ -44,12 +46,12 @@ class ImageServicePreviewTests(unittest.TestCase):
             status=ImageColorProfileStatus.MISSING,
             uses_srgb_fallback=True,
         )
-        self.reader.read_preview_with_color_profile_info.return_value = (preview_bgr, source_profile)
+        self.reader.read_preview_with_profile_and_depth.return_value = self._read_result(preview_bgr, source_profile)
         self.analyzer.build_preview_rgb.return_value = preview_rgb
 
         result = self.service.load_preview(self.path, ColorSpacePreset.DISPLAY_P3)
 
-        self.reader.read_preview_with_color_profile_info.assert_called_once_with(
+        self.reader.read_preview_with_profile_and_depth.assert_called_once_with(
             self.path,
             display_color_space=ColorSpacePreset.DISPLAY_P3,
             assumed_source_color_space=ColorSpacePreset.SRGB,
@@ -71,12 +73,12 @@ class ImageServicePreviewTests(unittest.TestCase):
             status=ImageColorProfileStatus.MISSING,
             uses_srgb_fallback=True,
         )
-        self.reader.read_preview_with_color_profile_info.return_value = (preview_bgr, source_profile)
+        self.reader.read_preview_with_profile_and_depth.return_value = self._read_result(preview_bgr, source_profile)
         self.analyzer.build_preview_rgb.return_value = preview_rgb
 
         result = self.service.load_preview(self.path)
 
-        self.reader.read_preview_with_color_profile_info.assert_called_once_with(
+        self.reader.read_preview_with_profile_and_depth.assert_called_once_with(
             self.path,
             display_color_space=ColorSpacePreset.SRGB,
             assumed_source_color_space=ColorSpacePreset.SRGB,
@@ -93,7 +95,7 @@ class ImageServicePreviewTests(unittest.TestCase):
             status=ImageColorProfileStatus.MISSING,
             uses_srgb_fallback=True,
         )
-        self.reader.read_preview_with_color_profile_info.return_value = (preview_bgr, source_profile)
+        self.reader.read_preview_with_profile_and_depth.return_value = self._read_result(preview_bgr, source_profile)
         self.analyzer.build_preview_rgb.return_value = preview_rgb
 
         result = self.service.load_preview(
@@ -103,7 +105,7 @@ class ImageServicePreviewTests(unittest.TestCase):
             RenderingIntent.ABSOLUTE_COLORIMETRIC,
         )
 
-        self.reader.read_preview_with_color_profile_info.assert_called_once_with(
+        self.reader.read_preview_with_profile_and_depth.assert_called_once_with(
             self.path,
             display_color_space=ColorSpacePreset.PROPHOTO_RGB,
             assumed_source_color_space=ColorSpacePreset.DISPLAY_P3,
@@ -125,7 +127,7 @@ class ImageServicePreviewTests(unittest.TestCase):
             uses_srgb_fallback=True,
             assumed_color_space=source_profile_spec,
         )
-        self.reader.read_preview_with_color_profile_info.return_value = (preview_bgr, source_profile)
+        self.reader.read_preview_with_profile_and_depth.return_value = self._read_result(preview_bgr, source_profile)
         self.analyzer.build_preview_rgb.return_value = preview_rgb
 
         result = self.service.load_preview(
@@ -135,7 +137,7 @@ class ImageServicePreviewTests(unittest.TestCase):
             RenderingIntent.RELATIVE_COLORIMETRIC,
         )
 
-        self.reader.read_preview_with_color_profile_info.assert_called_once_with(
+        self.reader.read_preview_with_profile_and_depth.assert_called_once_with(
             self.path,
             display_color_space=display_profile,
             assumed_source_color_space=source_profile_spec,
@@ -146,13 +148,13 @@ class ImageServicePreviewTests(unittest.TestCase):
         self.assertEqual(source_profile_spec, result.assumed_source_color_space)
 
     def test_load_preview_propagates_image_load_error(self) -> None:
-        self.reader.read_preview_with_color_profile_info.side_effect = ImageLoadError("bad image")
+        self.reader.read_preview_with_profile_and_depth.side_effect = ImageLoadError("bad image")
 
         with self.assertRaises(ImageLoadError):
             self.service.load_preview(self.path)
 
     def test_load_preview_wraps_unexpected_exception(self) -> None:
-        self.reader.read_preview_with_color_profile_info.side_effect = RuntimeError("boom")
+        self.reader.read_preview_with_profile_and_depth.side_effect = RuntimeError("boom")
 
         with self.assertRaises(ImageLoadError) as ctx:
             self.service.load_preview(self.path)
@@ -192,6 +194,20 @@ class ImageServicePreviewTests(unittest.TestCase):
             display_name=name,
             path=Path("/tmp") / file_name,
             profile_bytes=b"fake-profile-bytes",
+        )
+
+    def _read_result(
+        self,
+        bgr: np.ndarray,
+        source_profile: ImageColorProfileInfo,
+        bit_depth: ChannelBitDepth = ChannelBitDepth.EIGHT,
+    ) -> ImageReadResult:
+        return ImageReadResult(
+            bgr=bgr,
+            source_color_profile=source_profile,
+            source_bit_depth=bit_depth,
+            cms_bit_depth=bit_depth,
+            is_raw=False,
         )
 
 

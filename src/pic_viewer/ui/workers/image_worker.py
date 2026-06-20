@@ -9,6 +9,7 @@ from PySide6 import QtCore
 
 from pic_viewer.app.services.image_service import ImageService
 from pic_viewer.common.errors import ImageLoadError, ImageProcessError
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     DEFAULT_DISPLAY_COLOR_SPACE,
@@ -78,6 +79,7 @@ class ImageLoadTask(QtCore.QRunnable):
         display_color_space: ColorProfileSpec = DEFAULT_DISPLAY_COLOR_SPACE,
         assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
+        analysis_bit_depth: ChannelBitDepth = ChannelBitDepth.EIGHT,
     ) -> None:
         super().__init__()
         self._service = service
@@ -85,6 +87,7 @@ class ImageLoadTask(QtCore.QRunnable):
         self._display_color_space = display_color_space
         self._assumed_source_color_space = assumed_source_color_space
         self._rendering_intent = rendering_intent
+        self._analysis_bit_depth = analysis_bit_depth
         self.signals = ImageTaskSignals()
         self.setAutoDelete(True)
 
@@ -98,6 +101,7 @@ class ImageLoadTask(QtCore.QRunnable):
                 self._display_color_space,
                 self._assumed_source_color_space,
                 self._rendering_intent,
+                self._analysis_bit_depth,
             )
         except (ImageLoadError, ImageProcessError) as exc:
             self.signals.error.emit(str(exc))
