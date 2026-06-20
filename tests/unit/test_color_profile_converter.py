@@ -18,7 +18,7 @@ if str(SRC_ROOT) not in sys.path:
 
 from pic_viewer.common.errors import ColorProfileLoadError  # noqa: E402
 from pic_viewer.domain.models.bit_depth import ChannelBitDepth  # noqa: E402
-from pic_viewer.domain.models.color_profile import ImageColorProfileStatus  # noqa: E402
+from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import LocalColorProfile, ColorSpacePreset  # noqa: E402
 from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.infra.adapters import color_profile_converter as converter_module  # noqa: E402
@@ -146,6 +146,40 @@ class ColorProfileConverterTests(unittest.TestCase):
         self.assertEqual(ChannelBitDepth.EIGHT, depth)
         self.assertTrue(fake_image.icc_calls[0]["embedded"])
         self.assertNotIn("input_profile", fake_image.icc_calls[0])
+
+    def test_source_profile_override_skips_embedded_icc_and_uses_override_profile(self) -> None:
+        converter = ColorProfileConverter()
+        bgr = np.array([[[1, 2, 3]]], dtype=np.uint16)
+        fake_image = _FakeVipsImage(bgr[:, :, ::-1])
+        source_info = ImageColorProfileInfo(
+            display_name="ProPhoto RGB",
+            status=ImageColorProfileStatus.RAW_DECODED,
+            uses_srgb_fallback=False,
+            assumed_color_space=ColorSpacePreset.PROPHOTO_RGB,
+        )
+
+        with (
+            patch.object(converter, "_read_embedded_icc_profile") as read_embedded,
+            patch.object(converter, "_new_vips_image_from_rgb", return_value=fake_image),
+        ):
+            _result, info, depth = converter.convert_file_bgr_to_display_space_with_depth(
+                Path("/tmp/camera.dng"),
+                bgr,
+                ColorSpacePreset.DISPLAY_P3,
+                assumed_source_color_space=ColorSpacePreset.SRGB,
+                rendering_intent=RenderingIntent.PERCEPTUAL,
+                bit_depth=ChannelBitDepth.SIXTEEN,
+                source_color_profile_override=source_info,
+            )
+
+        read_embedded.assert_not_called()
+        self.assertEqual(source_info, info)
+        self.assertEqual(ChannelBitDepth.SIXTEEN, depth)
+        self.assertEqual(
+            str(converter.profile_for(ColorSpacePreset.PROPHOTO_RGB)),
+            fake_image.icc_calls[0]["input_profile"],
+        )
+        self.assertNotIn("embedded", fake_image.icc_calls[0])
 
     def test_embedded_transform_failure_retries_with_assumed_source_profile(self) -> None:
         converter = ColorProfileConverter()

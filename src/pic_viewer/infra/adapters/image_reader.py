@@ -19,6 +19,7 @@ from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     DEFAULT_DISPLAY_COLOR_SPACE,
     ColorProfileSpec,
+    ColorSpacePreset,
 )
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT, RenderingIntent
 from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConverter
@@ -30,6 +31,13 @@ except Exception:  # pragma: no cover - dependency availability is environment-s
     pyvips = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
+RAW_SOURCE_COLOR_SPACE = ColorSpacePreset.PROPHOTO_RGB
+RAW_SOURCE_COLOR_PROFILE = ImageColorProfileInfo(
+    display_name=RAW_SOURCE_COLOR_SPACE.display_name,
+    status=ImageColorProfileStatus.RAW_DECODED,
+    uses_srgb_fallback=False,
+    assumed_color_space=RAW_SOURCE_COLOR_SPACE,
+)
 
 
 @dataclass(frozen=True)
@@ -104,9 +112,10 @@ class ImageReader:
                 path,
                 raw_image,
                 display_color_space,
-                DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+                RAW_SOURCE_COLOR_SPACE,
                 rendering_intent,
                 is_raw=True,
+                source_color_profile_override=RAW_SOURCE_COLOR_PROFILE,
             )
 
         image = self._read_pyvips_non_raw(path)
@@ -187,9 +196,10 @@ class ImageReader:
                 path,
                 preview,
                 display_color_space,
-                DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+                RAW_SOURCE_COLOR_SPACE,
                 rendering_intent,
                 is_raw=True,
+                source_color_profile_override=RAW_SOURCE_COLOR_PROFILE,
             )
 
         image = self._read_reduced_opencv_preview(path, max_edge)
@@ -315,6 +325,7 @@ class ImageReader:
         assumed_source_color_space: ColorProfileSpec,
         rendering_intent: RenderingIntent,
         is_raw: bool,
+        source_color_profile_override: ImageColorProfileInfo | None = None,
     ) -> ImageReadResult:
         source_bit_depth = ChannelBitDepth.SIXTEEN if is_raw else ChannelBitDepth.from_dtype(bgr.dtype)
         bgr = np.ascontiguousarray(bgr.astype(source_bit_depth.dtype, copy=False))
@@ -325,6 +336,7 @@ class ImageReader:
             assumed_source_color_space,
             rendering_intent,
             source_bit_depth,
+            source_color_profile_override,
         )
         converted = np.ascontiguousarray(converted.astype(cms_bit_depth.dtype, copy=False))
         return ImageReadResult(
@@ -343,16 +355,20 @@ class ImageReader:
         assumed_source_color_space: ColorProfileSpec,
         rendering_intent: RenderingIntent,
         source_bit_depth: ChannelBitDepth,
+        source_color_profile_override: ImageColorProfileInfo | None = None,
     ) -> tuple[np.ndarray, ImageColorProfileInfo, ChannelBitDepth]:
         new_method = getattr(self._color_converter, "convert_file_bgr_to_display_space_with_depth", None)
         if new_method is not None:
+            kwargs = {"bit_depth": source_bit_depth}
+            if source_color_profile_override is not None:
+                kwargs["source_color_profile_override"] = source_color_profile_override
             converted = new_method(
                 path,
                 bgr,
                 display_color_space,
                 assumed_source_color_space,
                 rendering_intent,
-                bit_depth=source_bit_depth,
+                **kwargs,
             )
             if isinstance(converted, tuple) and len(converted) == 3:
                 return converted
@@ -401,12 +417,12 @@ class ImageReader:
                     rgb = raw.postprocess(
                         half_size=True,
                         output_bps=16,
-                        output_color=rawpy.ColorSpace.sRGB,
+                        output_color=rawpy.ColorSpace.ProPhoto,
                     )
                 else:
                     rgb = raw.postprocess(
                         output_bps=16,
-                        output_color=rawpy.ColorSpace.sRGB,
+                        output_color=rawpy.ColorSpace.ProPhoto,
                     )
             return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
         except Exception:

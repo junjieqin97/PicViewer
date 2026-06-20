@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Sequence
+
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from pic_viewer.app.services.analysis_view_service import AnalysisViewService
@@ -12,6 +14,7 @@ from pic_viewer.domain.models.color_space import (
     DEFAULT_DISPLAY_COLOR_SPACE,
     LOCAL_COLOR_PROFILE_CHOICE_DATA,
     COLOR_SPACE_PRESET_ORDER,
+    LocalColorProfile,
 )
 from pic_viewer.domain.models.rendering_intent import (
     DEFAULT_RENDERING_INTENT,
@@ -42,6 +45,9 @@ class MainWindowUI:
     FILMSTRIP_HEIGHT = 140
     ANALYSIS_TOOLBAR_HEIGHT = 26
     ANALYSIS_TOOLBAR_ICON_SIZE = QtCore.QSize(16, 16)
+
+    def __init__(self, system_color_profiles: Sequence[LocalColorProfile] = ()) -> None:
+        self._system_color_profiles = tuple(system_color_profiles)
 
     def setup_ui(self, main_window: QtWidgets.QMainWindow) -> None:
         self._main_window = main_window
@@ -583,8 +589,7 @@ class MainWindowUI:
             QtWidgets.QSizePolicy.Policy.Expanding,
             QtWidgets.QSizePolicy.Policy.Fixed,
         )
-        for color_space in COLOR_SPACE_PRESET_ORDER:
-            self.comboSpecifiedImageColorSpace.addItem(color_space.display_name, color_space)
+        self._populate_color_profile_combo(self.comboSpecifiedImageColorSpace)
         self.comboSpecifiedImageColorSpace.addItem(
             self._tr("Choose a local ICC..."),
             LOCAL_COLOR_PROFILE_CHOICE_DATA,
@@ -635,8 +640,7 @@ class MainWindowUI:
             QtWidgets.QSizePolicy.Policy.Expanding,
             QtWidgets.QSizePolicy.Policy.Fixed,
         )
-        for color_space in COLOR_SPACE_PRESET_ORDER:
-            self.comboDisplayColorSpace.addItem(color_space.display_name, color_space)
+        self._populate_color_profile_combo(self.comboDisplayColorSpace)
         self.comboDisplayColorSpace.addItem(
             self._tr("Choose a local ICC..."),
             LOCAL_COLOR_PROFILE_CHOICE_DATA,
@@ -816,6 +820,19 @@ class MainWindowUI:
         )
         self.labelFilmstripSummary.setVisible(False)
         self._main_window.statusBar().addPermanentWidget(self.labelFilmstripSummary)
+
+    def _populate_color_profile_combo(self, combo: QtWidgets.QComboBox) -> None:
+        """Add built-in and system ICC color profiles to a selector."""
+
+        for color_space in COLOR_SPACE_PRESET_ORDER:
+            combo.addItem(color_space.display_name, color_space)
+        for profile in self._system_color_profiles:
+            combo.addItem(profile.display_name, profile)
+            combo.setItemData(
+                combo.count() - 1,
+                str(profile.path),
+                QtCore.Qt.ItemDataRole.ToolTipRole,
+            )
 
     def filmstrip_item_size(self, icon_side: int | None = None, text: str = "") -> QtCore.QSize:
         """Return the filmstrip item size needed to display the full file name."""
@@ -1080,9 +1097,14 @@ class MainWindowUI:
 class MainWindow(QtWidgets.QMainWindow):
     """主窗口：装配 UI + Controller（避免在UI回调里写业务逻辑）。"""
 
-    def __init__(self, image_service: ImageService, view_service: AnalysisViewService) -> None:
+    def __init__(
+        self,
+        image_service: ImageService,
+        view_service: AnalysisViewService,
+        system_color_profiles: Sequence[LocalColorProfile] = (),
+    ) -> None:
         super().__init__()
-        self.ui = MainWindowUI()
+        self.ui = MainWindowUI(system_color_profiles=system_color_profiles)
         self.ui.setup_ui(self)
 
         from pic_viewer.controllers.main_controller import MainController

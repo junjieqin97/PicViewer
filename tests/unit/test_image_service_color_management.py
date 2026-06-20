@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 
@@ -15,6 +15,7 @@ if str(SRC_ROOT) not in sys.path:
 
 from pic_viewer.app.dto.metadata import ImageMetadata  # noqa: E402
 from pic_viewer.app.services.image_service import ImageService  # noqa: E402
+from pic_viewer.common.errors import ColorProfileLoadError  # noqa: E402
 from pic_viewer.domain.models.bit_depth import ChannelBitDepth  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import LocalColorProfile, ColorSpacePreset  # noqa: E402
@@ -45,6 +46,50 @@ class ImageServiceColorManagementTests(unittest.TestCase):
 
         color_converter.load_local_profile.assert_called_once_with(path)
         self.assertEqual(local_profile, result)
+
+    def test_load_system_color_profiles_skips_invalid_profiles(self) -> None:
+        reader = MagicMock()
+        analyzer = MagicMock()
+        metadata_reader = MagicMock()
+        color_converter = MagicMock()
+        service = ImageService(
+            reader=reader,
+            analyzer=analyzer,
+            metadata_reader=metadata_reader,
+            color_converter=color_converter,
+        )
+        first_path = Path("/tmp/first.icc")
+        invalid_path = Path("/tmp/invalid.icc")
+        second_path = Path("/tmp/second.icm")
+        first_profile = self._local_profile(name="First", file_name="first.icc")
+        second_profile = self._local_profile(name="Second", file_name="second.icm")
+        color_converter.load_local_profile.side_effect = [
+            first_profile,
+            ColorProfileLoadError("Unable to load ICC profile"),
+            second_profile,
+        ]
+
+        with (
+            patch(
+                "pic_viewer.app.services.image_service.discover_system_color_profile_paths",
+                return_value=[first_path, invalid_path, second_path],
+            ),
+            self.assertLogs("pic_viewer.app.services.image_service", level="INFO") as logs,
+        ):
+            result = service.load_system_color_profiles()
+
+        self.assertEqual([first_profile, second_profile], result)
+        log_output = "\n".join(logs.output)
+        self.assertIn(f"{first_path.resolve()} loaded successfully", log_output)
+        self.assertIn(f"{second_path.resolve()} loaded successfully", log_output)
+        self.assertEqual(
+            [
+                unittest.mock.call(first_path),
+                unittest.mock.call(invalid_path),
+                unittest.mock.call(second_path),
+            ],
+            color_converter.load_local_profile.call_args_list,
+        )
 
     def test_warm_up_optional_backends_delegates_to_metadata_reader(self) -> None:
         reader = MagicMock()
