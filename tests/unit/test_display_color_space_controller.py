@@ -20,8 +20,14 @@ if str(SRC_ROOT) not in sys.path:
 from pic_viewer.app.dto.image_analysis import ImageLoadResult, PreviewLoadResult  # noqa: E402
 from pic_viewer.common.errors import ColorProfileLoadError  # noqa: E402
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth  # noqa: E402
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
-from pic_viewer.domain.models.color_space import LocalColorProfile, ColorSpacePreset  # noqa: E402
+from pic_viewer.domain.models.color_space import (  # noqa: E402
+    COLOR_SPACE_PRESET_ORDER,
+    LOCAL_COLOR_PROFILE_CHOICE_DATA,
+    LocalColorProfile,
+    ColorSpacePreset,
+)
 from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 from pic_viewer.ui.workers.image_worker import ImageLoadTask, PreviewLoadTask  # noqa: E402
@@ -74,6 +80,7 @@ class DisplayColorSpaceControllerTests(QtWidgetTestCase):
             ColorSpacePreset.PROPHOTO_RGB,
             ColorSpacePreset.DISPLAY_P3,
             RenderingIntent.ABSOLUTE_COLORIMETRIC,
+            ChannelBitDepth.EIGHT,
         )
 
     def test_worker_tasks_pass_local_color_profiles_to_service(self) -> None:
@@ -115,6 +122,7 @@ class DisplayColorSpaceControllerTests(QtWidgetTestCase):
             display_profile,
             source_profile,
             RenderingIntent.RELATIVE_COLORIMETRIC,
+            ChannelBitDepth.EIGHT,
         )
 
     def test_worker_tasks_default_to_app_display_color_space(self) -> None:
@@ -139,7 +147,25 @@ class DisplayColorSpaceControllerTests(QtWidgetTestCase):
             ColorSpacePreset.SRGB,
             ColorSpacePreset.SRGB,
             RenderingIntent.PERCEPTUAL,
+            ChannelBitDepth.EIGHT,
         )
+
+    def test_system_color_profiles_are_inserted_before_local_icc_chooser(self) -> None:
+        first_profile = self._local_profile(name="System Display", file_name="display.icc")
+        second_profile = self._local_profile(name="System Camera", file_name="camera.icm")
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI(system_color_profiles=[first_profile, second_profile])
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        for combo in (ui.comboSpecifiedImageColorSpace, ui.comboDisplayColorSpace):
+            with self.subTest(combo=combo.objectName()):
+                item_data = [combo.itemData(index) for index in range(combo.count())]
+
+                self.assertEqual(list(COLOR_SPACE_PRESET_ORDER), item_data[:4])
+                self.assertEqual([first_profile, second_profile], item_data[4:6])
+                self.assertEqual(LOCAL_COLOR_PROFILE_CHOICE_DATA, item_data[-1])
+                self.assertEqual(ColorSpacePreset.SRGB, combo.currentData())
 
     def test_switching_display_color_space_clears_image_caches_and_reloads_open_tabs(self) -> None:
         window, ui, controller = self._build_controller()
@@ -243,6 +269,40 @@ class DisplayColorSpaceControllerTests(QtWidgetTestCase):
         controller._ensure_full_load.assert_called_once_with(path, 1)
         controller.update_info_for_image.assert_called_once_with(path)
 
+    def test_switching_analysis_sample_precision_clears_image_caches_and_reloads_open_tabs(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        path = Path("/tmp/sample.jpg")
+        tab = QtWidgets.QWidget()
+        tab.setProperty("image_path", str(path))
+        ui.tabsImages.addTab(tab, path.name)
+        ui.tabsImages.setCurrentIndex(0)
+        key = str(path)
+        controller._images_by_path[key] = object()
+        controller._preview_by_path[key] = object()
+        controller._load_error_by_path[key] = "old error"
+        controller._preview_tasks_by_path[key] = object()
+        controller._load_tasks_by_path[key] = object()
+        controller._analysis_render_key_by_path[key] = object()
+        controller._tab_preview_render_key_by_path[key] = object()
+        controller._zoom_by_path[key] = 2.0
+
+        index = ui.comboAnalysisSamplePrecision.findData(ChannelBitDepth.SIXTEEN)
+        MainController._on_analysis_sample_precision_changed(controller, index)
+
+        self.assertEqual(ChannelBitDepth.SIXTEEN, controller._analysis_bit_depth)
+        self.assertNotIn(key, controller._images_by_path)
+        self.assertNotIn(key, controller._preview_by_path)
+        self.assertNotIn(key, controller._load_error_by_path)
+        self.assertNotIn(key, controller._preview_tasks_by_path)
+        self.assertNotIn(key, controller._load_tasks_by_path)
+        self.assertNotIn(key, controller._analysis_render_key_by_path)
+        self.assertNotIn(key, controller._tab_preview_render_key_by_path)
+        self.assertEqual(2.0, controller._zoom_by_path[key])
+        controller._ensure_preview_load.assert_called_once_with(path, 1)
+        controller._ensure_full_load.assert_called_once_with(path, 1)
+        controller.update_info_for_image.assert_called_once_with(path)
+
     def test_choose_local_display_icc_loads_profile_and_reloads_open_images(self) -> None:
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
@@ -267,6 +327,29 @@ class DisplayColorSpaceControllerTests(QtWidgetTestCase):
             ui.comboDisplayColorSpace.itemText(ui.comboDisplayColorSpace.count() - 1),
         )
         controller._reload_open_images_for_color_settings.assert_called_once()
+
+    def test_choose_local_display_icc_keeps_system_profile_options(self) -> None:
+        system_profile = self._local_profile(name="System Display", file_name="system.icc")
+        local_profile = self._local_profile(name="Local Display", file_name="display.icc")
+        window, ui, controller = self._build_controller(system_color_profiles=[system_profile])
+        self.addCleanup(window.deleteLater)
+        controller._image_service = MagicMock()
+        controller._image_service.load_local_color_profile.return_value = local_profile
+        controller._reload_open_images_for_color_settings = MagicMock()  # type: ignore[method-assign]
+        choose_index = ui.comboDisplayColorSpace.findText("Choose a local ICC...")
+
+        with unittest.mock.patch(
+            "pic_viewer.controllers.main_controller_analysis_mixin.QtWidgets.QFileDialog.getOpenFileName",
+            return_value=("/tmp/display.icc", "ICC Profiles (*.icc *.icm)"),
+        ):
+            MainController._on_display_color_space_changed(controller, choose_index)
+
+        self.assertGreaterEqual(ui.comboDisplayColorSpace.findData(system_profile), 0)
+        self.assertEqual(local_profile, ui.comboDisplayColorSpace.currentData())
+        self.assertLess(
+            ui.comboDisplayColorSpace.currentIndex(),
+            ui.comboDisplayColorSpace.findData(LOCAL_COLOR_PROFILE_CHOICE_DATA),
+        )
 
     def test_choose_local_source_icc_loads_profile_and_reloads_open_images(self) -> None:
         window, ui, controller = self._build_controller()
@@ -525,9 +608,12 @@ class DisplayColorSpaceControllerTests(QtWidgetTestCase):
         self.assertNotIn(key, controller._images_by_path)
         self.assertEqual("Display P3 (embedded ICC)", controller._ui.labelImageColorSpaceValue.text())
 
-    def _build_controller(self) -> tuple[QtWidgets.QMainWindow, MainWindowUI, MainController]:
+    def _build_controller(
+        self,
+        system_color_profiles: list[LocalColorProfile] | None = None,
+    ) -> tuple[QtWidgets.QMainWindow, MainWindowUI, MainController]:
         window = QtWidgets.QMainWindow()
-        ui = MainWindowUI()
+        ui = MainWindowUI(system_color_profiles=system_color_profiles or [])
         ui.setup_ui(window)
         controller = MainController.__new__(MainController)
         QtCore.QObject.__init__(controller, window)
@@ -537,6 +623,7 @@ class DisplayColorSpaceControllerTests(QtWidgetTestCase):
         controller._display_color_space = ColorSpacePreset.SRGB
         controller._assumed_source_color_space = ColorSpacePreset.SRGB
         controller._rendering_intent = RenderingIntent.PERCEPTUAL
+        controller._analysis_bit_depth = ChannelBitDepth.EIGHT
         controller._images_by_path = {}
         controller._preview_by_path = {}
         controller._preview_tasks_by_path = {}

@@ -7,6 +7,7 @@ from __future__ import annotations
 # - opencv-python>=4.7
 # - numpy>=1.23
 # - pyexiv2>=2.15.5,<3
+# - pyvips>=3,<4
 # - Pillow>=10.0
 # - pillow-heif>=1,<2
 # - pillow-avif-plugin>=1.5,<2
@@ -89,8 +90,9 @@ def main(argv: Sequence[str] | None = None) -> None:
 
     service = build_services(settings)
     service.warm_up_optional_backends()
+    system_color_profiles = service.load_system_color_profiles()
     view_service = AnalysisViewService()
-    window = MainWindow(service, view_service)
+    window = MainWindow(service, view_service, system_color_profiles=system_color_profiles)
     window.setWindowIcon(app_icon)
     window.show()
     sys.exit(app.exec())

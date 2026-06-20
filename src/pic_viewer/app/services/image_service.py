@@ -10,7 +10,8 @@ import numpy as np
 from pic_viewer.app.dto.analysis_view import AnalysisView, AnalysisViewSettings, LumaRgbMode, RgbChannel
 from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult, PreviewLoadResult
 from pic_viewer.app.dto.metadata import ImageMetadata, MetadataSection
-from pic_viewer.common.errors import ImageLoadError
+from pic_viewer.common.errors import ColorProfileLoadError, ImageLoadError
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
     DEFAULT_DISPLAY_COLOR_SPACE,
@@ -28,6 +29,7 @@ from pic_viewer.domain.rules.focus_peaking import (
 from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConverter
 from pic_viewer.infra.adapters.image_reader import ImageReader
 from pic_viewer.infra.adapters.metadata_reader import MetadataReader
+from pic_viewer.infra.system.color_profiles import discover_system_color_profile_paths
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +55,7 @@ class ImageService:
         display_color_space: ColorProfileSpec = DEFAULT_DISPLAY_COLOR_SPACE,
         assumed_source_color_space: ColorProfileSpec = DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
         rendering_intent: RenderingIntent = DEFAULT_RENDERING_INTENT,
+        analysis_bit_depth: ChannelBitDepth = ChannelBitDepth.EIGHT,
     ) -> ImageLoadResult:
         """Load an image, compute analysis artifacts, and read metadata.
 
@@ -71,7 +74,7 @@ class ImageService:
         """
 
         try:
-            bgr, source_color_profile = self._reader.read_with_color_profile_info(
+            read_result = self._reader.read_with_profile_and_depth(
                 path,
                 display_color_space=display_color_space,
                 assumed_source_color_space=assumed_source_color_space,
@@ -83,7 +86,10 @@ class ImageService:
             logger.exception("Failed to read image: %s", path)
             raise ImageLoadError("Unable to read this image file") from exc
 
-        result = self._analyzer.analyze(bgr)
+        result = self._analyzer.analyze(
+            read_result.bgr,
+            analysis_bit_depth=analysis_bit_depth,
+        )
         analysis = ImageAnalysis(
             analysis_bgr=result.analysis_bgr,
             preview_rgb=result.preview_rgb,
@@ -101,7 +107,9 @@ class ImageService:
             display_color_space=display_color_space,
             assumed_source_color_space=assumed_source_color_space,
             rendering_intent=rendering_intent,
-            source_color_profile=source_color_profile,
+            source_color_profile=read_result.source_color_profile,
+            cms_bit_depth=read_result.cms_bit_depth,
+            analysis_bit_depth=result.analysis_bit_depth,
         )
 
         raw_metadata = self._metadata_reader.read(path)
@@ -120,10 +128,30 @@ class ImageService:
 
         return self._color_converter.load_local_profile(path)
 
+    def load_system_color_profiles(self) -> list[LocalColorProfile]:
+        """Load valid ICC profiles from the operating system profile directory."""
+
+        profiles: list[LocalColorProfile] = []
+        for path in discover_system_color_profile_paths():
+            try:
+                profile = self._color_converter.load_local_profile(path)
+                profiles.append(profile)
+                logger.info("%s loaded successfully", profile.path.resolve())
+            except ColorProfileLoadError:
+                logger.info("Skipping unavailable system ICC profile: path=%s", path, exc_info=True)
+            except Exception:
+                logger.exception("Unexpected error while loading system ICC profile: path=%s", path)
+        return profiles
+
     def warm_up_optional_backends(self) -> None:
         """Prepare optional native backends before background image loads start."""
 
         self._metadata_reader.warm_up()
+
+    def read_metadata(self, path: Path) -> ImageMetadata:
+        """Read structured image metadata without decoding or analyzing pixels."""
+
+        return self._metadata_reader.read(path)
 
     def load_preview(
         self,
@@ -135,7 +163,7 @@ class ImageService:
         """Load a lightweight preview without metadata or analysis plots."""
 
         try:
-            preview_bgr, source_color_profile = self._reader.read_preview_with_color_profile_info(
+            read_result = self._reader.read_preview_with_profile_and_depth(
                 path,
                 display_color_space=display_color_space,
                 assumed_source_color_space=assumed_source_color_space,
@@ -147,13 +175,14 @@ class ImageService:
             logger.exception("Failed to read preview: %s", path)
             raise ImageLoadError("Unable to read this image file") from exc
 
-        preview_rgb = self._analyzer.build_preview_rgb(preview_bgr)
+        preview_rgb = self._analyzer.build_preview_rgb(read_result.bgr)
         return PreviewLoadResult(
             preview_rgb=preview_rgb,
             display_color_space=display_color_space,
             assumed_source_color_space=assumed_source_color_space,
             rendering_intent=rendering_intent,
-            source_color_profile=source_color_profile,
+            source_color_profile=read_result.source_color_profile,
+            cms_bit_depth=read_result.cms_bit_depth,
         )
 
     def render_analysis_view(

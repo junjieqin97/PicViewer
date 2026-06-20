@@ -126,10 +126,11 @@ Inside the info area, use `DetachableTabWidget` (`QTabWidget` subclass):
 
 Each info tab is first implemented with placeholder controls (the metadata table may scroll internally):
 
-- Analysis: `tabAnalysis` uses a vertical layout. From top to bottom it displays the current source image color space status, a `Specify Image Color Space` selector, the `Rendering Intent` selector, the `Display Color Space` selector, the histogram, and the waveform. Both analysis charts should be centered horizontally and aligned near the top.
-  - `Specify Image Color Space` uses `sRGB`, `Display P3`, `Adobe RGB (1998)`, `ProPhoto RGB`, and `Choose a local ICC...`; `sRGB` is selected by default. `Choose a local ICC...` opens a file dialog for `.icc` and `.icm` files, validates the profile, inserts the selected local profile before the chooser entry, and keeps it only for the current application session. It is a global fallback source color space selector used only when no embedded ICC profile is present, the embedded ICC profile cannot be read, or embedded ICC conversion fails. It is disabled with a gray style and blank visible text when the current image has a valid embedded ICC profile, then restored to the selected fallback value when fallback, loading, failed, or empty states enable it again.
+- Analysis: `tabAnalysis` uses a vertical layout. From top to bottom it displays the current source image color space status, the `Analysis Sample Precision` selector, a `Specify Image Color Space` selector, the `Rendering Intent` selector, the `Display Color Space` selector, the histogram, and the waveform. Both analysis charts should be centered horizontally and aligned near the top.
+  - `Analysis Sample Precision` uses `8-bit/channel` and `16-bit/channel (if available)`; `8-bit/channel` is selected by default. Choosing 16-bit preserves 16-bit/channel analysis only when the ICC-converted display source is 16-bit. 8-bit sources remain 8-bit and are not artificially expanded.
+  - `Specify Image Color Space` uses `sRGB`, `Display P3`, `Adobe RGB (1998)`, `ProPhoto RGB`, startup-loaded system ICC profiles when supported, and `Choose a local ICC...`; `sRGB` is selected by default. System ICC profiles are inserted after the built-in presets and before the chooser entry. `Choose a local ICC...` opens a file dialog for `.icc` and `.icm` files, validates the profile, inserts the selected local profile before the chooser entry, and keeps it only for the current application session. It is a global fallback source color space selector used only when no embedded ICC profile is present, the embedded ICC profile cannot be read, or embedded ICC conversion fails. It is disabled with a gray style and blank visible text when the current image has a valid embedded ICC profile. For RAW images, it is disabled with a gray style and fixed visible text `ProPhoto RGB`; this per-image display state does not change the global fallback selection. It is restored to the selected fallback value when fallback, loading, failed, or empty states enable it again.
   - `Rendering Intent` uses `Perceptual`, `Relative Colorimetric`, `Saturation`, and `Absolute Colorimetric`; `Perceptual` is selected by default. It is a global ICC gamut mapping selector used for image-to-display-space conversion.
-  - `Display Color Space` uses `sRGB`, `Display P3`, `Adobe RGB (1998)`, `ProPhoto RGB`, and `Choose a local ICC...`; `sRGB` is selected by default. `Choose a local ICC...` opens the same `.icc`/`.icm` file dialog, validates the profile, inserts the selected local profile before the chooser entry, and keeps it only for the current application session.
+  - `Display Color Space` uses `sRGB`, `Display P3`, `Adobe RGB (1998)`, `ProPhoto RGB`, startup-loaded system ICC profiles when supported, and `Choose a local ICC...`; `sRGB` is selected by default. System ICC profiles are inserted after the built-in presets and before the chooser entry. `Choose a local ICC...` opens the same `.icc`/`.icm` file dialog, validates the profile, inserts the selected local profile before the chooser entry, and keeps it only for the current application session.
 - Histogram: `widgetHistogram` (may initially be a `QLabel` with "Histogram Placeholder")
   - Fixed display size: height 100 x width 256 (logical pixels)
   - Above the histogram widget, `widgetPixelSampleValues` displays four numeric labels from left to right:
@@ -157,6 +158,11 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 
 - Container: `frameFilmstrip: QFrame` (or `QWidget`)
 - Fixed height: `h=140`; height adjustment by vertical dragging is not supported.
+- Lightweight filter toolbar: `widgetFilmstripFilterToolbar` sits above the thumbnail list and contains three single-select combo boxes:
+  - `comboFilmstripExtensionFilter`: filters by file extension case-insensitively; suffixes are displayed in normalized lowercase form such as `.jpg`.
+  - `comboFilmstripCameraFilter`: filters by camera model.
+  - `comboFilmstripLensFilter`: filters by lens model.
+  Each combo has an all-inclusive first item: `All Extensions`, `All Cameras`, and `All Lenses`.
 - Internal control: choose one of the following two implementations (1 is recommended):
   1. `listFilmstrip: QListWidget` (horizontal layout)
      - `setFlow(QListView.LeftToRight)`
@@ -172,8 +178,11 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - If the corresponding image tab exists: switch to that tab.
 - If it does not exist (theoretically should not happen): ignore or TODO.
 - When switching tabs: synchronize the selected item in the filmstrip.
+- Filmstrip filters combine with AND semantics and only hide/show Filmstrip items. They must not close image tabs, cancel image loads, or remove cached image data.
+- Camera and lens filter candidates are populated from metadata-only background scans and from full image load metadata. Missing or unreadable camera/lens metadata is grouped as `Unknown Camera` or `Unknown Lens`.
+- If the current image is excluded by a newly selected filter and at least one image still matches, the current image switches to the first matching Filmstrip item. If no image matches, the Filmstrip selection is cleared and the current image view remains open.
 - When the filmstrip pane is hidden, the right side of the status bar must display a current file summary in the format `Current: {name} ({index}/{total})`;
-  `name` is the full file name, and the tooltip displays the full path. When the filmstrip pane is shown again or there is no current image, this summary must be hidden.
+  `name` is the full file name, `index` and `total` count only currently visible filtered Filmstrip items, and the tooltip displays the full path. When the filmstrip pane is shown again or there is no current visible image, this summary must be hidden.
 - Selected state requirement: clearly visible (system default selection style may be used first).
 
 ## 5. Component Checklist (Must Be Created One by One and Named Consistently)
@@ -227,6 +236,10 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `labelPixelBlueValue: QLabel`
 - `labelPixelLumaValue: QLabel`
 - `frameFilmstrip: QFrame`
+- `widgetFilmstripFilterToolbar: QWidget`
+- `comboFilmstripExtensionFilter: QComboBox`
+- `comboFilmstripCameraFilter: QComboBox`
+- `comboFilmstripLensFilter: QComboBox`
 - `listFilmstrip: QListWidget`
 - `labelFilmstripSummary: QLabel` (right side of the status bar; displays the current file summary when the filmstrip pane is hidden)
 

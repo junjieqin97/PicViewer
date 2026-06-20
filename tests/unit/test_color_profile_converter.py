@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import importlib
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
+import types
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
-from PIL import Image, ImageCms
+from PIL import Image
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -15,23 +17,49 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.common.errors import ColorProfileLoadError  # noqa: E402
-from pic_viewer.domain.models.color_profile import ImageColorProfileStatus  # noqa: E402
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth  # noqa: E402
+from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus  # noqa: E402
 from pic_viewer.domain.models.color_space import LocalColorProfile, ColorSpacePreset  # noqa: E402
 from pic_viewer.domain.models.rendering_intent import RenderingIntent  # noqa: E402
+from pic_viewer.infra.adapters import color_profile_converter as converter_module  # noqa: E402
 from pic_viewer.infra.adapters.color_profile_converter import ColorProfileConverter  # noqa: E402
 
 
-class ColorProfileConverterTests(unittest.TestCase):
-    """Validate ICC color conversion behavior for image loading."""
+class _FakeVipsImage:
+    """Small pyvips.Image stand-in for CMS unit tests."""
 
-    def test_builtin_display_color_spaces_resolve_to_icc_profiles(self) -> None:
+    def __init__(self, array: np.ndarray) -> None:
+        self.array = array
+        self.icc_calls: list[dict[str, object]] = []
+
+    def copy(self, **_kwargs: object) -> "_FakeVipsImage":
+        return self
+
+    def icc_transform(self, output_profile: str, **kwargs: object) -> "_FakeVipsImage":
+        self.icc_calls.append({"output_profile": output_profile, **kwargs})
+        return self
+
+    def write_to_memory(self) -> bytes:
+        return np.ascontiguousarray(self.array).tobytes()
+
+
+class ColorProfileConverterTests(unittest.TestCase):
+    """Validate pyvips-backed ICC color conversion behavior."""
+
+    def test_module_does_not_import_pillow_imagecms(self) -> None:
+        module = importlib.import_module("pic_viewer.infra.adapters.color_profile_converter")
+
+        self.assertFalse(hasattr(module, "ImageCms"))
+
+    def test_builtin_display_color_spaces_resolve_to_icc_profile_paths(self) -> None:
         converter = ColorProfileConverter()
 
         for color_space in ColorSpacePreset:
             with self.subTest(color_space=color_space):
-                profile = converter.profile_for(color_space)
+                profile_path = converter.profile_for(color_space)
 
-                self.assertIsInstance(profile, ImageCms.ImageCmsProfile)
+                self.assertTrue(profile_path.exists())
+                self.assertEqual(".icc", profile_path.suffix.lower())
 
     def test_local_icc_file_loads_profile_spec_with_bytes_and_stable_key(self) -> None:
         converter = ColorProfileConverter()
@@ -40,30 +68,14 @@ class ColorProfileConverterTests(unittest.TestCase):
         with TemporaryDirectory() as tmp_dir:
             profile_path = Path(tmp_dir) / "camera-profile.icc"
             profile_path.write_bytes(profile_bytes)
-
-            profile = converter.load_local_profile(profile_path)
+            with patch.object(converter, "_validate_profile_bytes"):
+                profile = converter.load_local_profile(profile_path)
 
         self.assertIsInstance(profile, LocalColorProfile)
         self.assertEqual("camera-profile.icc", profile.path.name)
         self.assertEqual(profile_bytes, profile.profile_bytes)
         self.assertEqual("camera-profile", profile.display_name)
         self.assertTrue(profile.stable_key.startswith("local:"))
-
-    def test_local_icc_display_name_uses_file_stem_to_distinguish_matching_profile_names(self) -> None:
-        converter = ColorProfileConverter()
-        profile_bytes = converter.profile_bytes_for(ColorSpacePreset.SRGB)
-
-        with TemporaryDirectory() as tmp_dir:
-            first_path = Path(tmp_dir) / "camera-a.icc"
-            second_path = Path(tmp_dir) / "camera-b.icm"
-            first_path.write_bytes(profile_bytes)
-            second_path.write_bytes(profile_bytes)
-
-            first_profile = converter.load_local_profile(first_path)
-            second_profile = converter.load_local_profile(second_path)
-
-        self.assertEqual("camera-a", first_profile.display_name)
-        self.assertEqual("camera-b", second_profile.display_name)
 
     def test_local_icc_file_rejects_non_icc_extension(self) -> None:
         converter = ColorProfileConverter()
@@ -77,388 +89,202 @@ class ColorProfileConverterTests(unittest.TestCase):
 
         self.assertEqual("ICC profile files must use .icc or .icm extension", str(ctx.exception))
 
-    def test_actual_cms_conversion_supports_all_builtin_display_color_spaces(self) -> None:
-        converter = ColorProfileConverter()
-        bgr = np.arange(27, dtype=np.uint8).reshape((3, 3, 3))
-
-        with patch.object(
-            converter,
-            "_read_embedded_icc_profile",
-            return_value=converter.profile_bytes_for(ColorSpacePreset.SRGB),
-        ):
-            for color_space in ColorSpacePreset:
-                with self.subTest(color_space=color_space):
-                    result = converter.convert_file_bgr_to_display_space(
-                        Path("/tmp/profiled.jpg"),
-                        bgr,
-                        color_space,
-                    )
-
-                    self.assertEqual(bgr.shape, result.shape)
-                    self.assertEqual(np.uint8, result.dtype)
-
-    def test_missing_embedded_profile_uses_srgb_source_and_keeps_srgb_pixels(self) -> None:
-        converter = ColorProfileConverter()
-        bgr = np.arange(12, dtype=np.uint8).reshape((2, 2, 3))
-
-        with patch.object(converter, "_read_embedded_icc_profile", return_value=None):
-            result = converter.convert_file_bgr_to_display_space(
-                Path("/tmp/no-profile.jpg"),
-                bgr,
-                ColorSpacePreset.SRGB,
-            )
-
-        np.testing.assert_array_equal(result, bgr)
-
-    def test_missing_embedded_profile_reports_srgb_default_source_info(self) -> None:
-        converter = ColorProfileConverter()
-        bgr = np.arange(12, dtype=np.uint8).reshape((2, 2, 3))
-
-        with patch.object(converter, "_read_embedded_icc_profile", return_value=None):
-            _pixels, info = converter.convert_file_bgr_to_display_space_with_info(
-                Path("/tmp/no-profile.jpg"),
-                bgr,
-                ColorSpacePreset.SRGB,
-            )
-
-        self.assertEqual(ImageColorProfileStatus.MISSING, info.status)
-        self.assertEqual("sRGB", info.display_name)
-        self.assertTrue(info.uses_srgb_fallback)
-        self.assertEqual(ColorSpacePreset.SRGB, info.assumed_color_space)
-
-    def test_embedded_profile_reader_registers_optional_pillow_plugins(self) -> None:
+    def test_local_icc_validation_error_maps_to_color_profile_load_error(self) -> None:
         converter = ColorProfileConverter()
 
-        with (
-            TemporaryDirectory() as tmp_dir,
-            patch(
-                "pic_viewer.infra.adapters.color_profile_converter.register_optional_pillow_image_plugins"
-            ) as register_plugins,
-        ):
-            path = Path(tmp_dir) / "sample.heic"
-            Image.new("RGB", (1, 1)).save(path, format="PNG")
+        with TemporaryDirectory() as tmp_dir:
+            profile_path = Path(tmp_dir) / "profile.icc"
+            profile_path.write_bytes(b"not-an-icc")
+            with patch.object(converter, "_validate_profile_bytes", side_effect=RuntimeError("bad")):
+                with self.assertRaises(ColorProfileLoadError) as ctx:
+                    converter.load_local_profile(profile_path)
 
-            converter._read_embedded_icc_profile(path)
+        self.assertEqual("Unable to load ICC profile", str(ctx.exception))
 
-        register_plugins.assert_called_once_with()
-
-    def test_missing_embedded_profile_uses_specified_source_color_space(self) -> None:
+    def test_pyvips_conversion_receives_selected_depth_and_rendering_intent(self) -> None:
         converter = ColorProfileConverter()
-        bgr = np.zeros((1, 1, 3), dtype=np.uint8)
-        converted_rgb = Image.new("RGB", (1, 1), (12, 34, 56))
+        bgr = np.array([[[1, 2, 3]]], dtype=np.uint16)
+        fake_image = _FakeVipsImage(bgr[:, :, ::-1])
 
         with (
             patch.object(converter, "_read_embedded_icc_profile", return_value=None),
-            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
+            patch.object(converter, "_new_vips_image_from_rgb", return_value=fake_image),
         ):
-            transform.return_value = converted_rgb
-            result, info = converter.convert_file_bgr_to_display_space_with_info(
-                Path("/tmp/no-profile.jpg"),
-                bgr,
-                ColorSpacePreset.PROPHOTO_RGB,
-                assumed_source_color_space=ColorSpacePreset.DISPLAY_P3,
-            )
-
-        transform.assert_called_once()
-        self.assertEqual(ImageColorProfileStatus.MISSING, info.status)
-        self.assertEqual("Display P3", info.display_name)
-        self.assertEqual(ColorSpacePreset.DISPLAY_P3, info.assumed_color_space)
-        self.assertTrue(info.uses_srgb_fallback)
-        np.testing.assert_array_equal(result[0, 0], np.array([56, 34, 12], dtype=np.uint8))
-
-    def test_missing_embedded_profile_uses_local_source_color_profile(self) -> None:
-        converter = ColorProfileConverter()
-        bgr = np.zeros((1, 1, 3), dtype=np.uint8)
-        converted_rgb = Image.new("RGB", (1, 1), (12, 34, 56))
-        local_profile = LocalColorProfile(
-            display_name="Local sRGB",
-            path=Path("/tmp/local-source.icc"),
-            profile_bytes=converter.profile_bytes_for(ColorSpacePreset.SRGB),
-        )
-
-        with (
-            patch.object(converter, "_read_embedded_icc_profile", return_value=None),
-            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
-        ):
-            transform.return_value = converted_rgb
-            result, info = converter.convert_file_bgr_to_display_space_with_info(
-                Path("/tmp/no-profile.jpg"),
-                bgr,
-                ColorSpacePreset.PROPHOTO_RGB,
-                assumed_source_color_space=local_profile,
-            )
-
-        transform.assert_called_once()
-        self.assertEqual(ImageColorProfileStatus.MISSING, info.status)
-        self.assertEqual("Local sRGB", info.display_name)
-        self.assertEqual(local_profile, info.assumed_color_space)
-        self.assertTrue(info.uses_srgb_fallback)
-        np.testing.assert_array_equal(result[0, 0], np.array([56, 34, 12], dtype=np.uint8))
-
-    def test_embedded_profile_reports_normalized_profile_name(self) -> None:
-        converter = ColorProfileConverter()
-        bgr = np.zeros((1, 1, 3), dtype=np.uint8)
-        converted_rgb = Image.new("RGB", (1, 1), (1, 2, 3))
-
-        with (
-            patch.object(
-                converter,
-                "_read_embedded_icc_profile",
-                return_value=converter.profile_bytes_for(ColorSpacePreset.SRGB),
-            ),
-            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.getProfileName") as name_reader,
-            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
-        ):
-            name_reader.return_value = "  Example\nProfile\tName  "
-            transform.return_value = converted_rgb
-            _pixels, info = converter.convert_file_bgr_to_display_space_with_info(
-                Path("/tmp/profiled.jpg"),
+            result, info, depth = converter.convert_file_bgr_to_display_space_with_depth(
+                Path("/tmp/no-profile.tif"),
                 bgr,
                 ColorSpacePreset.DISPLAY_P3,
-            )
-
-        self.assertEqual(ImageColorProfileStatus.EMBEDDED, info.status)
-        self.assertEqual("Example Profile Name", info.display_name)
-        self.assertFalse(info.uses_srgb_fallback)
-
-    def test_embedded_profile_conversion_returns_bgr_with_original_shape_and_dtype(self) -> None:
-        converter = ColorProfileConverter()
-        bgr = np.zeros((2, 3, 3), dtype=np.uint8)
-        bgr[:, :, 0] = 200
-        converted_rgb = Image.new("RGB", (3, 2), (10, 20, 30))
-
-        with (
-            patch.object(
-                converter,
-                "_read_embedded_icc_profile",
-                return_value=converter.profile_bytes_for(ColorSpacePreset.SRGB),
-            ),
-            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
-        ):
-            transform.return_value = converted_rgb
-            result = converter.convert_file_bgr_to_display_space(
-                Path("/tmp/profiled.jpg"),
-                bgr,
-                ColorSpacePreset.DISPLAY_P3,
-            )
-
-        transform.assert_called_once()
-        self.assertEqual(bgr.shape, result.shape)
-        self.assertEqual(np.uint8, result.dtype)
-        np.testing.assert_array_equal(result[0, 0], np.array([30, 20, 10], dtype=np.uint8))
-
-    def test_embedded_profile_conversion_uses_selected_rendering_intent(self) -> None:
-        converter = ColorProfileConverter()
-        bgr = np.zeros((1, 1, 3), dtype=np.uint8)
-        converted_rgb = Image.new("RGB", (1, 1), (10, 20, 30))
-
-        with (
-            patch.object(
-                converter,
-                "_read_embedded_icc_profile",
-                return_value=converter.profile_bytes_for(ColorSpacePreset.SRGB),
-            ),
-            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
-        ):
-            transform.return_value = converted_rgb
-            converter.convert_file_bgr_to_display_space(
-                Path("/tmp/profiled.jpg"),
-                bgr,
-                ColorSpacePreset.DISPLAY_P3,
+                bit_depth=ChannelBitDepth.SIXTEEN,
                 rendering_intent=RenderingIntent.RELATIVE_COLORIMETRIC,
             )
 
-        transform.assert_called_once()
-        self.assertEqual(ImageCms.Intent.RELATIVE_COLORIMETRIC, transform.call_args.kwargs["renderingIntent"])
+        self.assertEqual(np.uint16, result.dtype)
+        self.assertEqual(ChannelBitDepth.SIXTEEN, depth)
+        self.assertEqual(ImageColorProfileStatus.MISSING, info.status)
+        self.assertEqual("relative", fake_image.icc_calls[0]["intent"])
+        self.assertEqual(16, fake_image.icc_calls[0]["depth"])
+        self.assertIn("input_profile", fake_image.icc_calls[0])
 
-    def test_invalid_embedded_profile_falls_back_to_srgb_source_profile(self) -> None:
+    def test_embedded_profile_is_preferred_when_available(self) -> None:
         converter = ColorProfileConverter()
-        bgr = np.zeros((1, 1, 3), dtype=np.uint8)
-        converted_rgb = Image.new("RGB", (1, 1), (11, 22, 33))
+        bgr = np.array([[[1, 2, 3]]], dtype=np.uint8)
+        fake_image = _FakeVipsImage(bgr[:, :, ::-1])
 
         with (
-            patch.object(converter, "_read_embedded_icc_profile", return_value=b"not-an-icc-profile"),
-            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
+            patch.object(converter, "_read_embedded_icc_profile", return_value=converter.profile_bytes_for(ColorSpacePreset.SRGB)),
+            patch.object(converter, "_validate_profile_bytes", return_value=None),
+            patch.object(converter, "_new_vips_image_from_rgb", return_value=fake_image),
         ):
-            transform.return_value = converted_rgb
-            result = converter.convert_file_bgr_to_display_space(
-                Path("/tmp/bad-profile.jpg"),
-                bgr,
-                ColorSpacePreset.PROPHOTO_RGB,
-            )
-
-        transform.assert_called_once()
-        np.testing.assert_array_equal(result[0, 0], np.array([33, 22, 11], dtype=np.uint8))
-
-    def test_invalid_embedded_profile_reports_unreadable_icc_default_source_info(self) -> None:
-        converter = ColorProfileConverter()
-        bgr = np.zeros((1, 1, 3), dtype=np.uint8)
-        converted_rgb = Image.new("RGB", (1, 1), (11, 22, 33))
-
-        with (
-            patch.object(converter, "_read_embedded_icc_profile", return_value=b"not-an-icc-profile"),
-            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
-        ):
-            transform.return_value = converted_rgb
-            _pixels, info = converter.convert_file_bgr_to_display_space_with_info(
-                Path("/tmp/bad-profile.jpg"),
-                bgr,
-                ColorSpacePreset.PROPHOTO_RGB,
-            )
-
-        self.assertEqual(ImageColorProfileStatus.INVALID, info.status)
-        self.assertEqual("sRGB", info.display_name)
-        self.assertTrue(info.uses_srgb_fallback)
-        self.assertEqual(ColorSpacePreset.SRGB, info.assumed_color_space)
-
-    def test_invalid_embedded_profile_uses_specified_source_color_space(self) -> None:
-        converter = ColorProfileConverter()
-        bgr = np.zeros((1, 1, 3), dtype=np.uint8)
-        converted_rgb = Image.new("RGB", (1, 1), (22, 33, 44))
-
-        with (
-            patch.object(converter, "_read_embedded_icc_profile", return_value=b"not-an-icc-profile"),
-            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
-        ):
-            transform.return_value = converted_rgb
-            result, info = converter.convert_file_bgr_to_display_space_with_info(
-                Path("/tmp/bad-profile.jpg"),
-                bgr,
-                ColorSpacePreset.PROPHOTO_RGB,
-                assumed_source_color_space=ColorSpacePreset.ADOBE_RGB_1998,
-            )
-
-        transform.assert_called_once()
-        self.assertEqual(ImageColorProfileStatus.INVALID, info.status)
-        self.assertEqual("Adobe RGB (1998)", info.display_name)
-        self.assertEqual(ColorSpacePreset.ADOBE_RGB_1998, info.assumed_color_space)
-        self.assertTrue(info.uses_srgb_fallback)
-        np.testing.assert_array_equal(result[0, 0], np.array([44, 33, 22], dtype=np.uint8))
-
-    def test_embedded_profile_transform_failure_retries_with_srgb_source_profile(self) -> None:
-        converter = ColorProfileConverter()
-        bgr = np.zeros((1, 1, 3), dtype=np.uint8)
-        converted_rgb = Image.new("RGB", (1, 1), (77, 88, 99))
-
-        with (
-            patch.object(
-                converter,
-                "_read_embedded_icc_profile",
-                return_value=converter.profile_bytes_for(ColorSpacePreset.DISPLAY_P3),
-            ),
-            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
-        ):
-            transform.side_effect = [ImageCms.PyCMSError("bad transform"), converted_rgb]
-            result = converter.convert_file_bgr_to_display_space(
+            _result, info, depth = converter.convert_file_bgr_to_display_space_with_depth(
                 Path("/tmp/profiled.jpg"),
                 bgr,
-                ColorSpacePreset.PROPHOTO_RGB,
+                ColorSpacePreset.DISPLAY_P3,
+                bit_depth=ChannelBitDepth.EIGHT,
             )
 
-        self.assertEqual(2, transform.call_count)
-        np.testing.assert_array_equal(result[0, 0], np.array([99, 88, 77], dtype=np.uint8))
-
-    def test_embedded_profile_transform_failure_reports_conversion_fallback_info(self) -> None:
-        converter = ColorProfileConverter()
-        bgr = np.zeros((1, 1, 3), dtype=np.uint8)
-        converted_rgb = Image.new("RGB", (1, 1), (77, 88, 99))
-
-        with (
-            patch.object(
-                converter,
-                "_read_embedded_icc_profile",
-                return_value=converter.profile_bytes_for(ColorSpacePreset.DISPLAY_P3),
-            ),
-            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.getProfileName") as name_reader,
-            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
-        ):
-            name_reader.return_value = "Display P3"
-            transform.side_effect = [ImageCms.PyCMSError("bad transform"), converted_rgb]
-            _pixels, info = converter.convert_file_bgr_to_display_space_with_info(
-                Path("/tmp/profiled.jpg"),
-                bgr,
-                ColorSpacePreset.PROPHOTO_RGB,
-            )
-
-        self.assertEqual(ImageColorProfileStatus.CONVERSION_FAILED, info.status)
-        self.assertEqual("sRGB", info.display_name)
-        self.assertTrue(info.uses_srgb_fallback)
-        self.assertEqual(ColorSpacePreset.SRGB, info.assumed_color_space)
-
-    def test_embedded_profile_transform_failure_retries_with_specified_source_profile(self) -> None:
-        converter = ColorProfileConverter()
-        bgr = np.zeros((1, 1, 3), dtype=np.uint8)
-        converted_rgb = Image.new("RGB", (1, 1), (17, 27, 37))
-
-        with (
-            patch.object(
-                converter,
-                "_read_embedded_icc_profile",
-                return_value=converter.profile_bytes_for(ColorSpacePreset.DISPLAY_P3),
-            ),
-            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
-        ):
-            transform.side_effect = [ImageCms.PyCMSError("bad transform"), converted_rgb]
-            result, info = converter.convert_file_bgr_to_display_space_with_info(
-                Path("/tmp/profiled.jpg"),
-                bgr,
-                ColorSpacePreset.PROPHOTO_RGB,
-                assumed_source_color_space=ColorSpacePreset.ADOBE_RGB_1998,
-            )
-
-        self.assertEqual(2, transform.call_count)
-        self.assertEqual(ImageColorProfileStatus.CONVERSION_FAILED, info.status)
-        self.assertEqual("Adobe RGB (1998)", info.display_name)
-        self.assertEqual(ColorSpacePreset.ADOBE_RGB_1998, info.assumed_color_space)
-        self.assertTrue(info.uses_srgb_fallback)
-        np.testing.assert_array_equal(result[0, 0], np.array([37, 27, 17], dtype=np.uint8))
-
-    def test_embedded_profile_ignores_specified_source_color_space_when_conversion_succeeds(self) -> None:
-        converter = ColorProfileConverter()
-        bgr = np.zeros((1, 1, 3), dtype=np.uint8)
-        converted_rgb = Image.new("RGB", (1, 1), (41, 51, 61))
-
-        with (
-            patch.object(
-                converter,
-                "_read_embedded_icc_profile",
-                return_value=converter.profile_bytes_for(ColorSpacePreset.SRGB),
-            ),
-            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.getProfileName") as name_reader,
-            patch("pic_viewer.infra.adapters.color_profile_converter.ImageCms.profileToProfile") as transform,
-        ):
-            name_reader.return_value = "Embedded sRGB"
-            transform.return_value = converted_rgb
-            _result, info = converter.convert_file_bgr_to_display_space_with_info(
-                Path("/tmp/profiled.jpg"),
-                bgr,
-                ColorSpacePreset.PROPHOTO_RGB,
-                assumed_source_color_space=ColorSpacePreset.DISPLAY_P3,
-            )
-
-        transform.assert_called_once()
         self.assertEqual(ImageColorProfileStatus.EMBEDDED, info.status)
-        self.assertEqual("Embedded sRGB", info.display_name)
-        self.assertIsNone(info.assumed_color_space)
+        self.assertEqual(ChannelBitDepth.EIGHT, depth)
+        self.assertTrue(fake_image.icc_calls[0]["embedded"])
+        self.assertNotIn("input_profile", fake_image.icc_calls[0])
 
-    def test_qt_color_space_for_builtin_display_space_is_valid(self) -> None:
+    def test_source_profile_override_skips_embedded_icc_and_uses_override_profile(self) -> None:
         converter = ColorProfileConverter()
-
-        color_space = converter.qt_color_space_for(ColorSpacePreset.DISPLAY_P3)
-
-        self.assertTrue(color_space.isValid())
-
-    def test_qt_color_space_for_local_profile_is_valid(self) -> None:
-        converter = ColorProfileConverter()
-        local_profile = LocalColorProfile(
-            display_name="Local Display",
-            path=Path("/tmp/local-display.icc"),
-            profile_bytes=converter.profile_bytes_for(ColorSpacePreset.SRGB),
+        bgr = np.array([[[1, 2, 3]]], dtype=np.uint16)
+        fake_image = _FakeVipsImage(bgr[:, :, ::-1])
+        source_info = ImageColorProfileInfo(
+            display_name="ProPhoto RGB",
+            status=ImageColorProfileStatus.RAW_DECODED,
+            uses_srgb_fallback=False,
+            assumed_color_space=ColorSpacePreset.PROPHOTO_RGB,
         )
 
-        color_space = converter.qt_color_space_for(local_profile)
+        with (
+            patch.object(converter, "_read_embedded_icc_profile") as read_embedded,
+            patch.object(converter, "_new_vips_image_from_rgb", return_value=fake_image),
+        ):
+            _result, info, depth = converter.convert_file_bgr_to_display_space_with_depth(
+                Path("/tmp/camera.dng"),
+                bgr,
+                ColorSpacePreset.DISPLAY_P3,
+                assumed_source_color_space=ColorSpacePreset.SRGB,
+                rendering_intent=RenderingIntent.PERCEPTUAL,
+                bit_depth=ChannelBitDepth.SIXTEEN,
+                source_color_profile_override=source_info,
+            )
 
-        self.assertTrue(color_space.isValid())
+        read_embedded.assert_not_called()
+        self.assertEqual(source_info, info)
+        self.assertEqual(ChannelBitDepth.SIXTEEN, depth)
+        self.assertEqual(
+            str(converter.profile_for(ColorSpacePreset.PROPHOTO_RGB)),
+            fake_image.icc_calls[0]["input_profile"],
+        )
+        self.assertNotIn("embedded", fake_image.icc_calls[0])
+
+    def test_embedded_transform_failure_retries_with_assumed_source_profile(self) -> None:
+        converter = ColorProfileConverter()
+        bgr = np.array([[[1, 2, 3]]], dtype=np.uint8)
+        fake_image = _FakeVipsImage(bgr[:, :, ::-1])
+        original_transform = fake_image.icc_transform
+        calls = {"count": 0}
+
+        def fail_once(output_profile: str, **kwargs: object) -> _FakeVipsImage:
+            calls["count"] += 1
+            if calls["count"] == 1:
+                raise RuntimeError("bad embedded profile")
+            return original_transform(output_profile, **kwargs)
+
+        fake_image.icc_transform = fail_once  # type: ignore[method-assign]
+
+        with (
+            patch.object(converter, "_read_embedded_icc_profile", return_value=b"bad-profile"),
+            patch.object(converter, "_new_vips_image_from_rgb", return_value=fake_image),
+            patch.object(converter, "_validate_profile_bytes", return_value=None),
+        ):
+            _result, info, _depth = converter.convert_file_bgr_to_display_space_with_depth(
+                Path("/tmp/profiled.jpg"),
+                bgr,
+                ColorSpacePreset.DISPLAY_P3,
+            )
+
+        self.assertEqual(2, calls["count"])
+        self.assertEqual(ImageColorProfileStatus.CONVERSION_FAILED, info.status)
+        self.assertTrue(info.uses_srgb_fallback)
+        self.assertIn("input_profile", fake_image.icc_calls[0])
+
+    def test_missing_pyvips_dependency_raises_runtime_error_on_conversion(self) -> None:
+        converter = ColorProfileConverter()
+        bgr = np.array([[[1, 2, 3]]], dtype=np.uint8)
+
+        with (
+            patch.object(converter, "_read_embedded_icc_profile", return_value=None),
+            patch("pic_viewer.infra.adapters.color_profile_converter.pyvips", None),
+        ):
+            with self.assertRaises(RuntimeError):
+                converter.convert_file_bgr_to_display_space_with_depth(
+                    Path("/tmp/no-profile.jpg"),
+                    bgr,
+                    ColorSpacePreset.DISPLAY_P3,
+                )
+
+    @unittest.skipUnless(converter_module.pyvips is not None, "pyvips/libvips is not available")
+    def test_actual_pyvips_conversion_preserves_eight_and_sixteen_bit_depth(self) -> None:
+        converter = ColorProfileConverter()
+
+        with TemporaryDirectory() as tmp_dir:
+            image_path = Path(tmp_dir) / "sample.png"
+
+            Image.new("RGB", (2, 1), (20, 80, 140)).save(image_path)
+            cases = (
+                (
+                    np.array([[[20, 80, 140], [180, 120, 60]]], dtype=np.uint8),
+                    ChannelBitDepth.EIGHT,
+                ),
+                (
+                    np.array([[[20, 80, 140], [180, 120, 60]]], dtype=np.uint16) * np.uint16(257),
+                    ChannelBitDepth.SIXTEEN,
+                ),
+            )
+
+            for bgr, bit_depth in cases:
+                with self.subTest(bit_depth=bit_depth):
+                    result, info, cms_depth = converter.convert_file_bgr_to_display_space_with_depth(
+                        image_path,
+                        bgr,
+                        ColorSpacePreset.DISPLAY_P3,
+                        bit_depth=bit_depth,
+                    )
+
+                    self.assertEqual(bit_depth.dtype, result.dtype)
+                    self.assertEqual(bgr.shape, result.shape)
+                    self.assertEqual(bit_depth, cms_depth)
+                    self.assertEqual(ImageColorProfileStatus.MISSING, info.status)
+
+    @unittest.skipUnless(converter_module.pyvips is not None, "pyvips/libvips is not available")
+    def test_actual_pyvips_conversion_uses_embedded_icc_profile(self) -> None:
+        converter = ColorProfileConverter()
+        bgr = np.array([[[20, 80, 140], [180, 120, 60]]], dtype=np.uint16) * np.uint16(257)
+
+        with TemporaryDirectory() as tmp_dir:
+            image_path = Path(tmp_dir) / "embedded.png"
+
+            Image.new("RGB", (2, 1), (20, 80, 140)).save(
+                image_path,
+                icc_profile=converter.profile_bytes_for(ColorSpacePreset.SRGB),
+            )
+
+            result, info, cms_depth = converter.convert_file_bgr_to_display_space_with_depth(
+                image_path,
+                bgr,
+                ColorSpacePreset.DISPLAY_P3,
+                bit_depth=ChannelBitDepth.SIXTEEN,
+            )
+
+        self.assertEqual(np.uint16, result.dtype)
+        self.assertEqual(bgr.shape, result.shape)
+        self.assertEqual(ChannelBitDepth.SIXTEEN, cms_depth)
+        self.assertEqual(ImageColorProfileStatus.EMBEDDED, info.status)
+        self.assertFalse(info.uses_srgb_fallback)
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from pic_viewer.app.dto.analysis_view import AnalysisViewSettings, LumaRgbMode, RgbChannel
 from pic_viewer.app.dto.image_analysis import ImageAnalysis
 from pic_viewer.common.errors import ColorProfileLoadError
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth
 from pic_viewer.domain.models.color_profile import ImageColorProfileInfo, ImageColorProfileStatus
 from pic_viewer.domain.models.color_space import (
     DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
@@ -232,12 +233,25 @@ class MainControllerAnalysisMixin:
         combo: QtWidgets.QComboBox,
         profile: LocalColorProfile,
     ) -> None:
-        """Insert or replace the session-local ICC item before the chooser."""
+        """Insert or select a session-local ICC item before the chooser."""
 
         with block_signals(combo):
-            for item_index in range(combo.count() - 1, -1, -1):
-                if isinstance(combo.itemData(item_index), LocalColorProfile):
-                    combo.removeItem(item_index)
+            for item_index in range(combo.count()):
+                existing = combo.itemData(item_index)
+                if not isinstance(existing, LocalColorProfile):
+                    continue
+                if existing.stable_key != profile.stable_key:
+                    continue
+                combo.setItemText(item_index, profile.display_name)
+                combo.setItemData(item_index, profile)
+                combo.setItemData(
+                    item_index,
+                    str(profile.path),
+                    QtCore.Qt.ItemDataRole.ToolTipRole,
+                )
+                combo.setCurrentIndex(item_index)
+                return
+
             choose_index = combo.findData(LOCAL_COLOR_PROFILE_CHOICE_DATA)
             insert_index = choose_index if choose_index >= 0 else combo.count()
             combo.insertItem(insert_index, profile.display_name, profile)
@@ -299,6 +313,25 @@ class MainControllerAnalysisMixin:
             return
 
         self._rendering_intent = selected
+        self._current_analysis_render_key = None
+        self._reload_open_images_for_color_settings()
+
+    def _on_analysis_sample_precision_changed(self, index: int) -> None:
+        """Reload full analysis when the analysis sampling precision changes."""
+
+        combo = self._ui.comboAnalysisSamplePrecision
+        selected = combo.itemData(index)
+        if isinstance(selected, int):
+            try:
+                selected = ChannelBitDepth(selected)
+            except ValueError:
+                return
+        if not isinstance(selected, ChannelBitDepth):
+            return
+        if selected == self._analysis_bit_depth:
+            return
+
+        self._analysis_bit_depth = selected
         self._current_analysis_render_key = None
         self._reload_open_images_for_color_settings()
 
@@ -536,6 +569,8 @@ class MainControllerAnalysisMixin:
             self._color_profile_key(data.analysis.display_color_space),
             self._color_profile_key(data.analysis.assumed_source_color_space),
             data.analysis.rendering_intent.value,
+            data.analysis.cms_bit_depth.value,
+            data.analysis.analysis_bit_depth.value,
         )
         path_key = str(image_path)
         current_render_key = (path_key, render_key)
@@ -629,25 +664,39 @@ class MainControllerAnalysisMixin:
             self._reset_pixel_sample_display()
 
     def _sync_specified_image_color_space_enabled(self, info: ImageColorProfileInfo) -> None:
+        if info.status == ImageColorProfileStatus.RAW_DECODED:
+            self._set_specified_image_color_space_enabled(
+                False,
+                locked_color_space=ColorSpacePreset.PROPHOTO_RGB,
+            )
+            return
         enabled = info.status != ImageColorProfileStatus.EMBEDDED
         self._set_specified_image_color_space_enabled(enabled)
 
-    def _set_specified_image_color_space_enabled(self, enabled: bool) -> None:
+    def _set_specified_image_color_space_enabled(
+        self,
+        enabled: bool,
+        locked_color_space: ColorProfileSpec | None = None,
+    ) -> None:
         if not hasattr(self._ui, "comboSpecifiedImageColorSpace"):
             return
         combo = self._ui.comboSpecifiedImageColorSpace
         with block_signals(combo):
             if enabled:
                 combo.setEnabled(True)
-                if combo.currentIndex() < 0:
-                    selected = getattr(
-                        self,
-                        "_assumed_source_color_space",
-                        DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
-                    )
-                    index = combo.findData(selected)
-                    if index >= 0:
-                        combo.setCurrentIndex(index)
+                selected = getattr(
+                    self,
+                    "_assumed_source_color_space",
+                    DEFAULT_ASSUMED_IMAGE_COLOR_SPACE,
+                )
+                index = combo.findData(selected)
+                if index >= 0 and combo.currentData() != selected:
+                    combo.setCurrentIndex(index)
+                return
+            if locked_color_space is not None:
+                locked_index = combo.findData(locked_color_space)
+                combo.setCurrentIndex(locked_index if locked_index >= 0 else -1)
+                combo.setEnabled(False)
                 return
             combo.setCurrentIndex(-1)
             combo.setEnabled(False)
@@ -655,6 +704,8 @@ class MainControllerAnalysisMixin:
     def _format_source_color_profile_info(self, info: ImageColorProfileInfo) -> str:
         if info.status == ImageColorProfileStatus.EMBEDDED:
             return self._tr("{name} (embedded ICC)").format(name=info.display_name)
+        if info.status == ImageColorProfileStatus.RAW_DECODED:
+            return self._tr("{name} (RAW output)").format(name=info.display_name)
         assumed = getattr(info, "assumed_color_space", None)
         has_specified_fallback = assumed is not None and assumed != DEFAULT_ASSUMED_IMAGE_COLOR_SPACE
         if info.status == ImageColorProfileStatus.INVALID:
@@ -725,6 +776,7 @@ class MainControllerAnalysisMixin:
                 getattr(self, "_assumed_source_color_space", DEFAULT_ASSUMED_IMAGE_COLOR_SPACE)
             ),
             getattr(self, "_rendering_intent", DEFAULT_RENDERING_INTENT).value,
+            getattr(self, "_analysis_bit_depth", ChannelBitDepth.EIGHT).value,
             id(preview_rgb),
         )
         if (

@@ -15,6 +15,7 @@ class ImageColorProfileStatus(Enum):
     MISSING = "missing"
     INVALID = "invalid"
     CONVERSION_FAILED = "conversion_failed"
+    RAW_DECODED = "raw_decoded"
 
 
 @dataclass(frozen=True)
