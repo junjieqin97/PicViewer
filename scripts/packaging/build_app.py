@@ -6,6 +6,7 @@ import argparse
 import logging
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 from typing import Callable, Mapping, Optional, Sequence
@@ -13,6 +14,15 @@ from typing import Callable, Mapping, Optional, Sequence
 logger = logging.getLogger(__name__)
 
 EXPECTED_CONDA_ENV = "PicViewer"
+APP_BUNDLE_NAME = "PicViewer.app"
+MACOS_LIBVIPS_RUNTIME_DYLIBS = (
+    "libglib-2.0.0.dylib",
+    "libgobject-2.0.0.dylib",
+    "libgmodule-2.0.0.dylib",
+    "libgio-2.0.0.dylib",
+    "libintl.8.dylib",
+    "libpcre2-8.0.dylib",
+)
 
 
 def python_executable() -> str:
@@ -38,10 +48,63 @@ def ensure_conda_environment(env: Optional[Mapping[str, str]] = None) -> None:
         )
 
 
+def normalize_macos_libvips_runtime_dylibs(
+    app_path: Path,
+    conda_prefix: Path,
+    platform: str = sys.platform,
+) -> bool:
+    """Replace macOS libvips GLib runtime symlinks with conda dylib copies."""
+
+    if platform != "darwin":
+        return False
+
+    frameworks_dir = app_path / "Contents" / "Frameworks"
+    if not frameworks_dir.is_dir():
+        raise RuntimeError(f"Missing app Frameworks directory: {frameworks_dir}.")
+
+    changed = False
+    conda_lib_dir = conda_prefix / "lib"
+    for library_name in MACOS_LIBVIPS_RUNTIME_DYLIBS:
+        source = conda_lib_dir / library_name
+        target = frameworks_dir / library_name
+        if not source.exists():
+            if target.is_symlink():
+                raise RuntimeError(f"Missing conda runtime library required by libvips: {source}.")
+            continue
+        if not target.exists() and not target.is_symlink():
+            continue
+
+        if target.is_symlink() or not _same_file_bytes(source, target):
+            if target.is_dir() and not target.is_symlink():
+                raise RuntimeError(f"Cannot replace directory with runtime dylib: {target}.")
+            target.unlink()
+            shutil.copy2(source, target)
+            changed = True
+            logger.info("Normalized macOS libvips runtime dylib: %s", target)
+    return changed
+
+
+def _same_file_bytes(first: Path, second: Path) -> bool:
+    try:
+        return first.read_bytes() == second.read_bytes()
+    except OSError:
+        return False
+
+
+def resign_macos_app_bundle(
+    app_path: Path,
+    runner: Callable[..., object] = subprocess.run,
+) -> None:
+    """Re-sign a macOS app bundle after post-processing native libraries."""
+
+    runner(["codesign", "--force", "--sign", "-", "--deep", str(app_path)], check=True)
+
+
 def build_app(
     project_root: Path,
     env: Optional[Mapping[str, str]] = None,
     runner: Callable[..., object] = subprocess.run,
+    platform: str = sys.platform,
 ) -> None:
     """Generate translations and build the platform-native PyInstaller app."""
 
@@ -67,6 +130,11 @@ def build_app(
         env=command_env,
         check=True,
     )
+    if platform == "darwin":
+        conda_prefix = Path(command_env.get("CONDA_PREFIX") or sys.prefix)
+        app_path = project_root / "dist" / APP_BUNDLE_NAME
+        if normalize_macos_libvips_runtime_dylibs(app_path, conda_prefix, platform):
+            resign_macos_app_bundle(app_path, runner)
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
