@@ -44,14 +44,18 @@ The packaging scripts remain the source of truth for generating the app
 bundle, DMG, and MSI. The workflow only orchestrates those scripts in GitHub
 Actions.
 
-The release jobs pin Qt/PySide6 to `6.9.2` through `QT_RUNTIME_VERSION` before
-installing packaging dependencies. They also install pyvips from conda-forge so
-the pyvips Python binding has a matching libvips binary with LittleCMS support,
-and pin `rawpy` to `0.27.0` through `RAWPY_VERSION` while `pyproject.toml`
-keeps the user-facing lower bound at `rawpy>=0.27.0`. Keeping the native Qt
-runtime, pyvips/libvips CMS backend, and packaged RAW backend stable across
-GitHub runner image updates reduces release-only failures in headless unit
-tests and PyInstaller packaging.
+The release jobs pin Qt/PySide6 to `6.9.2` through `QT_RUNTIME_VERSION`,
+pyvips to `3.1.1` through `PYVIPS_VERSION`, libvips to `8.18.3` through
+`LIBVIPS_VERSION`, and rawpy to `0.27.0` through `RAWPY_VERSION`. Qt,
+pyvips, and libvips are installed from conda-forge before pip installs the
+remaining packaging dependencies. The workflow then installs PicViewer itself
+with `python -m pip install -e . --no-deps` so pip cannot replace conda-forge
+pyvips with the pure-Python PyPI package. After dependency installation and
+after PyInstaller app creation, `scripts/packaging/verify_pyvips_runtime.py`
+checks that pyvips metadata and libvips/LittleCMS native files are still
+present. Keeping the native Qt runtime, pyvips/libvips CMS backend, and
+packaged RAW backend stable across GitHub runner image updates reduces
+release-only failures in headless unit tests and PyInstaller packaging.
 
 ## Windows WiX EULA Handling
 

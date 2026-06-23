@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -462,7 +463,7 @@ class PackagingScriptsTests(unittest.TestCase):
             for name in ("libglib-2.0.0.dylib", "libintl.8.dylib", "libpcre2-8.0.dylib"):
                 (conda_lib / name).write_bytes(f"conda {name}".encode("utf-8"))
                 (cv2_libs / name).write_bytes(f"cv2 {name}".encode("utf-8"))
-                (frameworks / name).symlink_to(Path("cv2") / ".dylibs" / name)
+                self._symlink_or_skip(frameworks / name, Path("cv2") / ".dylibs" / name)
 
             changed = build_app.normalize_macos_libvips_runtime_dylibs(
                 app_path,
@@ -491,7 +492,8 @@ class PackagingScriptsTests(unittest.TestCase):
             cv2_libs.mkdir(parents=True)
             (conda_lib / "libglib-2.0.0.dylib").write_bytes(b"conda glib")
             (cv2_libs / "libglib-2.0.0.dylib").write_bytes(b"cv2 glib")
-            (frameworks / "libglib-2.0.0.dylib").symlink_to(
+            self._symlink_or_skip(
+                frameworks / "libglib-2.0.0.dylib",
                 Path("cv2") / ".dylibs" / "libglib-2.0.0.dylib"
             )
 
@@ -883,3 +885,123 @@ class PackagingScriptsTests(unittest.TestCase):
 
         with self.assertRaisesRegex(RuntimeError, "WiX CLI"):
             build_msi.ensure_wix_executable("wix-missing", path_lookup=lambda _: None)
+
+    def _symlink_or_skip(self, link_path: Path, target_path: Path) -> None:
+        try:
+            link_path.symlink_to(target_path)
+        except OSError as exc:
+            if os.name == "nt" and getattr(exc, "winerror", None) == 1314:
+                self.skipTest("Windows symlink privileges are unavailable.")
+            raise
+
+    def test_verify_pyvips_runtime_accepts_conda_windows_environment(self) -> None:
+        verify = load_script("scripts/packaging/verify_pyvips_runtime.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            site_packages = root / "site-packages"
+            conda_prefix = root / "env"
+            self._write_pyvips_dist_info(site_packages)
+            (site_packages / "_libvips.pyd").write_bytes(b"libvips extension")
+            library_bin = conda_prefix / "Library" / "bin"
+            library_bin.mkdir(parents=True)
+            (library_bin / "vips-42.dll").write_bytes(b"vips")
+            (library_bin / "lcms2.dll").write_bytes(b"lcms")
+
+            verify.verify_environment(site_packages, conda_prefix=conda_prefix, platform="win32")
+
+    def test_verify_pyvips_runtime_rejects_pip_installed_pyvips(self) -> None:
+        verify = load_script("scripts/packaging/verify_pyvips_runtime.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            site_packages = root / "site-packages"
+            conda_prefix = root / "env"
+            self._write_pyvips_dist_info(site_packages, installer="pip")
+            (site_packages / "_libvips.pyd").write_bytes(b"libvips extension")
+            library_bin = conda_prefix / "Library" / "bin"
+            library_bin.mkdir(parents=True)
+            (library_bin / "vips-42.dll").write_bytes(b"vips")
+            (library_bin / "lcms2.dll").write_bytes(b"lcms")
+
+            with self.assertRaisesRegex(RuntimeError, "conda"):
+                verify.verify_environment(site_packages, conda_prefix=conda_prefix, platform="win32")
+
+    def test_verify_pyvips_runtime_rejects_pure_python_pyvips_wheel(self) -> None:
+        verify = load_script("scripts/packaging/verify_pyvips_runtime.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            site_packages = root / "site-packages"
+            conda_prefix = root / "env"
+            self._write_pyvips_dist_info(
+                site_packages,
+                root_is_purelib="true",
+                tag="py3-none-any",
+            )
+            (site_packages / "_libvips.pyd").write_bytes(b"libvips extension")
+            library_bin = conda_prefix / "Library" / "bin"
+            library_bin.mkdir(parents=True)
+            (library_bin / "vips-42.dll").write_bytes(b"vips")
+            (library_bin / "lcms2.dll").write_bytes(b"lcms")
+
+            with self.assertRaisesRegex(RuntimeError, "pure Python"):
+                verify.verify_environment(site_packages, conda_prefix=conda_prefix, platform="win32")
+
+    def test_verify_pyvips_runtime_accepts_windows_bundle_with_native_files(self) -> None:
+        verify = load_script("scripts/packaging/verify_pyvips_runtime.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            app_dir = Path(tmp) / "PicViewer"
+            internal = app_dir / "_internal"
+            self._write_pyvips_dist_info(internal)
+            (internal / "_libvips.pyd").write_bytes(b"libvips extension")
+            (internal / "vips-42.dll").write_bytes(b"vips")
+            (internal / "lcms2.dll").write_bytes(b"lcms")
+
+            verify.verify_bundle(app_dir, platform="win32")
+
+    def test_verify_pyvips_runtime_rejects_windows_bundle_missing_libvips_dll(self) -> None:
+        verify = load_script("scripts/packaging/verify_pyvips_runtime.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            app_dir = Path(tmp) / "PicViewer"
+            internal = app_dir / "_internal"
+            self._write_pyvips_dist_info(internal)
+            (internal / "_libvips.pyd").write_bytes(b"libvips extension")
+            (internal / "lcms2.dll").write_bytes(b"lcms")
+
+            with self.assertRaisesRegex(RuntimeError, "vips"):
+                verify.verify_bundle(app_dir, platform="win32")
+
+    def test_verify_pyvips_runtime_rejects_macos_bundle_missing_littlecms(self) -> None:
+        verify = load_script("scripts/packaging/verify_pyvips_runtime.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            app_dir = Path(tmp) / "PicViewer.app"
+            frameworks = app_dir / "Contents" / "Frameworks"
+            self._write_pyvips_dist_info(frameworks)
+            (frameworks / "_libvips.so").write_bytes(b"libvips extension")
+            (frameworks / "libvips.42.dylib").write_bytes(b"vips")
+
+            with self.assertRaisesRegex(RuntimeError, "LittleCMS"):
+                verify.verify_bundle(app_dir, platform="darwin")
+
+    def _write_pyvips_dist_info(
+        self,
+        parent: Path,
+        installer: str = "conda",
+        root_is_purelib: str = "false",
+        tag: str = "cp310-cp310-win_amd64",
+    ) -> Path:
+        dist_info = parent / "pyvips-3.1.1.dist-info"
+        dist_info.mkdir(parents=True)
+        (dist_info / "INSTALLER").write_text(f"{installer}\n", encoding="utf-8")
+        (dist_info / "WHEEL").write_text(
+            "Wheel-Version: 1.0\n"
+            "Generator: setuptools (82.0.1)\n"
+            f"Root-Is-Purelib: {root_is_purelib}\n"
+            f"Tag: {tag}\n",
+            encoding="utf-8",
+        )
+        return dist_info
