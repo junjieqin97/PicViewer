@@ -239,16 +239,25 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("brew install inih", workflow)
         self.assertIn("QT_RUNTIME_VERSION: \"6.9.2\"", workflow)
         self.assertIn("RAWPY_VERSION: \"0.27.0\"", workflow)
+        self.assertIn("PYVIPS_VERSION: \"3.1.1\"", workflow)
+        self.assertIn("LIBVIPS_VERSION: \"8.18.3\"", workflow)
         self.assertIn(
-            'conda install -y -c conda-forge "pyside6=$QT_RUNTIME_VERSION" "qt6-main=$QT_RUNTIME_VERSION"',
+            'conda install -y -c conda-forge "pyside6=$QT_RUNTIME_VERSION" '
+            '"qt6-main=$QT_RUNTIME_VERSION" "pyvips=$PYVIPS_VERSION" "libvips=$LIBVIPS_VERSION"',
             workflow,
         )
         self.assertIn(
-            'conda install -y -c conda-forge "pyside6=$env:QT_RUNTIME_VERSION" "qt6-main=$env:QT_RUNTIME_VERSION"',
+            'conda install -y -c conda-forge "pyside6=$env:QT_RUNTIME_VERSION" '
+            '"qt6-main=$env:QT_RUNTIME_VERSION" "pyvips=$env:PYVIPS_VERSION" '
+            '"libvips=$env:LIBVIPS_VERSION"',
             workflow,
         )
-        self.assertIn('python -m pip install -e ".[packaging]" "rawpy==$RAWPY_VERSION"', workflow)
-        self.assertIn('python -m pip install -e ".[packaging]" "rawpy==$env:RAWPY_VERSION"', workflow)
+        self.assertIn("python -m pip install -e . --no-deps", workflow)
+        self.assertIn('python scripts/packaging/verify_pyvips_runtime.py --environment', workflow)
+        self.assertIn('python scripts/packaging/verify_pyvips_runtime.py --bundle dist/PicViewer.app', workflow)
+        self.assertIn('python scripts/packaging/verify_pyvips_runtime.py --bundle dist/PicViewer', workflow)
+        self.assertNotIn('python -m pip install -e ".[packaging]" "rawpy==$RAWPY_VERSION"', workflow)
+        self.assertNotIn('python -m pip install -e ".[packaging]" "rawpy==$env:RAWPY_VERSION"', workflow)
         self.assertIn("$CONDA_PREFIX/lib/qt6/bin", workflow)
         self.assertIn("$env:CONDA_PREFIX", workflow)
         self.assertIn("Library\\bin", workflow)

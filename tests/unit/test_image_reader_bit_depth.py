@@ -105,8 +105,8 @@ class ImageReaderBitDepthTests(unittest.TestCase):
         source = np.array([[[1000, 2000, 3000], [60000, 32000, 12000]]], dtype=np.uint16)
         reader = ImageReader(allow_raw=False)
 
-        with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
-            path = Path(tmp.name)
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = Path(tmp_dir) / "sixteen-bit.png"
             self.assertTrue(cv2.imwrite(str(path), source))
 
             decoded = reader._read_pyvips_non_raw(path)
