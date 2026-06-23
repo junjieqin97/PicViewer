@@ -41,6 +41,22 @@ libvips runtime with LittleCMS support. Release builds install pyvips from
 conda-forge so the Python binding and native libvips binary match. Pillow
 remains the plugin host used by `pillow-heif` and `pillow-avif-plugin`.
 Packaging builds must keep those native files bundled with the application.
+For desktop release builds, do not let pip resolve PicViewer's runtime
+dependencies after conda installs pyvips/libvips. Install the native CMS
+runtime through conda-forge, install the remaining pip-only packaging
+dependencies explicitly, and then install PicViewer itself with `--no-deps`:
+
+```bash
+conda install -y -c conda-forge "pyside6=6.9.2" "qt6-main=6.9.2" "pyvips=3.1.1" "libvips=8.18.3"
+python -m pip install --upgrade pip
+python -m pip install "build>=1.2" "twine>=5.0" "pyinstaller>=6.0" "rawpy==0.27.0" "opencv-python>=4.7" "numpy>=1.23" "pyexiv2>=2.15.5,<3" "Pillow>=10.0" "pillow-heif>=1,<2" "pillow-avif-plugin>=1.5,<2"
+python -m pip install -e . --no-deps
+python scripts/packaging/verify_pyvips_runtime.py --environment
+```
+
+This prevents pip from replacing conda-forge pyvips with the pure-Python PyPI
+package, which cannot provide the native libvips DLLs/dylibs required for ICC
+conversion.
 On macOS, if importing `pyexiv2` reports a missing `libINIReader.0.dylib`,
 install the native dependency with `brew install inih` before building.
 
@@ -160,6 +176,17 @@ be older than the libvips runtime and break ICC conversion. Other pruning only
 applies to Qt runtime entries; OpenCV, rawpy, pyexiv2, pyvips/libvips, Pillow
 image plugins, and PicViewer resources are left unchanged.
 
+After building the PyInstaller app, verify that the bundle still contains
+conda-forge pyvips metadata and native libvips/LittleCMS runtime files:
+
+```bash
+# Windows:
+python scripts/packaging/verify_pyvips_runtime.py --bundle dist/PicViewer
+
+# macOS:
+python scripts/packaging/verify_pyvips_runtime.py --bundle dist/PicViewer.app
+```
+
 After building, inspect the packaged Qt runtime with platform-specific file
 listing tools. On macOS, for example:
 
@@ -236,13 +263,18 @@ python --version  # Should output Python 3.10.x
 python -m unittest discover -s tests/unit
 python scripts/packaging/build_python_package.py
 python -m zipfile -l dist/*.whl
+conda install -y -c conda-forge "pyside6=6.9.2" "qt6-main=6.9.2" "pyvips=3.1.1" "libvips=8.18.3"
+python -m pip install -e . --no-deps
+python scripts/packaging/verify_pyvips_runtime.py --environment
 python scripts/packaging/build_app.py
 # Windows:
+python scripts/packaging/verify_pyvips_runtime.py --bundle dist/PicViewer
 python scripts/packaging/build_msi.py
 cd dist
 certutil -hashfile PicViewer-0.1.0.msi SHA256
 cd ..
 # macOS:
+python scripts/packaging/verify_pyvips_runtime.py --bundle dist/PicViewer.app
 python scripts/packaging/build_dmg.py
 cd dist
 shasum -a 256 -c *.dmg.sha256
