@@ -45,7 +45,7 @@ bundle, DMG, and MSI. The workflow only orchestrates those scripts in GitHub
 Actions.
 
 The release jobs pin Qt/PySide6 to `6.9.2` through `QT_RUNTIME_VERSION`,
-pyvips to `3.1.1` through `PYVIPS_VERSION`, libvips to `8.18.3` through
+pyvips to `3.0.0` through `PYVIPS_VERSION`, libvips to `8.17.1` through
 `LIBVIPS_VERSION`, and rawpy to `0.27.0` through `RAWPY_VERSION`. Qt,
 pyvips, and libvips are installed from conda-forge before pip installs the
 remaining packaging dependencies. The workflow then installs PicViewer itself

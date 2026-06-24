@@ -47,7 +47,7 @@ runtime through conda-forge, install the remaining pip-only packaging
 dependencies explicitly, and then install PicViewer itself with `--no-deps`:
 
 ```bash
-conda install -y -c conda-forge "pyside6=6.9.2" "qt6-main=6.9.2" "pyvips=3.1.1" "libvips=8.18.3"
+conda install -y -c conda-forge "pyside6=6.9.2" "qt6-main=6.9.2" "pyvips=3.0.0" "libvips=8.17.1"
 python -m pip install --upgrade pip
 python -m pip install "build>=1.2" "twine>=5.0" "pyinstaller>=6.0" "rawpy==0.27.0" "opencv-python>=4.7" "numpy>=1.23" "pyexiv2>=2.15.5,<3" "Pillow>=10.0" "pillow-heif>=1,<2" "pillow-avif-plugin>=1.5,<2"
 python -m pip install -e . --no-deps
@@ -263,7 +263,7 @@ python --version  # Should output Python 3.10.x
 python -m unittest discover -s tests/unit
 python scripts/packaging/build_python_package.py
 python -m zipfile -l dist/*.whl
-conda install -y -c conda-forge "pyside6=6.9.2" "qt6-main=6.9.2" "pyvips=3.1.1" "libvips=8.18.3"
+conda install -y -c conda-forge "pyside6=6.9.2" "qt6-main=6.9.2" "pyvips=3.0.0" "libvips=8.17.1"
 python -m pip install -e . --no-deps
 python scripts/packaging/verify_pyvips_runtime.py --environment
 python scripts/packaging/build_app.py
