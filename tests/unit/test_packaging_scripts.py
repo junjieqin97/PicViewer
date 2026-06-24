@@ -948,6 +948,17 @@ class PackagingScriptsTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "pure Python"):
                 verify.verify_environment(site_packages, conda_prefix=conda_prefix, platform="win32")
 
+    def test_verify_pyvips_runtime_reports_missing_environment_metadata(self) -> None:
+        verify = load_script("scripts/packaging/verify_pyvips_runtime.py")
+
+        with mock.patch.object(
+            verify.importlib_metadata,
+            "distribution",
+            side_effect=verify.importlib_metadata.PackageNotFoundError("pyvips"),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "pyvips is not installed"):
+                verify.verify_environment(conda_prefix=Path("env"), platform="win32")
+
     def test_verify_pyvips_runtime_accepts_windows_bundle_with_native_files(self) -> None:
         verify = load_script("scripts/packaging/verify_pyvips_runtime.py")
 

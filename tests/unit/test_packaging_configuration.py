@@ -237,10 +237,13 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("activate-environment: PicViewer", workflow)
         self.assertIn("python-version: \"3.10\"", workflow)
         self.assertIn("brew install inih", workflow)
-        self.assertIn("QT_RUNTIME_VERSION: \"6.9.2\"", workflow)
+        self.assertIn("QT_RUNTIME_VERSION: \"6.11.1\"", workflow)
         self.assertIn("RAWPY_VERSION: \"0.27.0\"", workflow)
-        self.assertIn("PYVIPS_VERSION: \"3.0.0\"", workflow)
-        self.assertIn("LIBVIPS_VERSION: \"8.17.1\"", workflow)
+        self.assertIn("PYVIPS_VERSION: \"3.1.1\"", workflow)
+        self.assertIn("LIBVIPS_VERSION: \"8.18.2\"", workflow)
+        self.assertNotIn("QT_RUNTIME_VERSION: \"6.9.2\"", workflow)
+        self.assertNotIn("PYVIPS_VERSION: \"3.0.0\"", workflow)
+        self.assertNotIn("LIBVIPS_VERSION: \"8.17.1\"", workflow)
         self.assertIn(
             'conda install -y -c conda-forge "pyside6=$QT_RUNTIME_VERSION" '
             '"qt6-main=$QT_RUNTIME_VERSION" "pyvips=$PYVIPS_VERSION" "libvips=$LIBVIPS_VERSION"',
@@ -252,6 +255,8 @@ class PackagingConfigurationTests(unittest.TestCase):
             '"libvips=$env:LIBVIPS_VERSION"',
             workflow,
         )
+        self.assertIn("$PSNativeCommandUseErrorActionPreference = $true", workflow)
+        self.assertIn('$ErrorActionPreference = "Stop"', workflow)
         self.assertIn("python -m pip install -e . --no-deps", workflow)
         self.assertIn('python scripts/packaging/verify_pyvips_runtime.py --environment', workflow)
         self.assertIn('python scripts/packaging/verify_pyvips_runtime.py --bundle dist/PicViewer.app', workflow)
@@ -295,9 +300,14 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("Apple Silicon", ci_doc)
         self.assertIn("arm64", ci_doc)
         self.assertIn("Qt/PySide6", ci_doc)
-        self.assertIn("6.9.2", ci_doc)
+        self.assertIn("6.11.1", ci_doc)
         self.assertIn("rawpy", ci_doc)
         self.assertIn("0.27.0", ci_doc)
+        self.assertIn("3.1.1", ci_doc)
+        self.assertIn("8.18.2", ci_doc)
+        self.assertNotIn("6.9.2", ci_doc)
+        self.assertNotIn("3.0.0", ci_doc)
+        self.assertNotIn("8.17.1", ci_doc)
         self.assertIn("Windows", ci_doc)
         self.assertIn("MSI", ci_doc)
         self.assertIn("WiX", ci_doc)
