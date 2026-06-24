@@ -239,8 +239,8 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("brew install inih", workflow)
         self.assertIn("QT_RUNTIME_VERSION: \"6.9.2\"", workflow)
         self.assertIn("RAWPY_VERSION: \"0.27.0\"", workflow)
-        self.assertIn("PYVIPS_VERSION: \"3.1.1\"", workflow)
-        self.assertIn("LIBVIPS_VERSION: \"8.18.3\"", workflow)
+        self.assertIn("PYVIPS_VERSION: \"3.0.0\"", workflow)
+        self.assertIn("LIBVIPS_VERSION: \"8.17.1\"", workflow)
         self.assertIn(
             'conda install -y -c conda-forge "pyside6=$QT_RUNTIME_VERSION" '
             '"qt6-main=$QT_RUNTIME_VERSION" "pyvips=$PYVIPS_VERSION" "libvips=$LIBVIPS_VERSION"',
