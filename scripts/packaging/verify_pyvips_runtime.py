@@ -49,7 +49,10 @@ def verify_bundle(bundle_path: Path, *, platform: str = sys.platform) -> None:
 
 
 def _active_site_packages() -> Path:
-    distribution = importlib_metadata.distribution("pyvips")
+    try:
+        distribution = importlib_metadata.distribution("pyvips")
+    except importlib_metadata.PackageNotFoundError as exc:
+        raise RuntimeError("pyvips is not installed in the active Python environment.") from exc
     return Path(distribution.locate_file(""))
 
 

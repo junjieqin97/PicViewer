@@ -11,10 +11,10 @@ permissions:
   contents: write
 
 env:
-  QT_RUNTIME_VERSION: "6.9.2"
+  QT_RUNTIME_VERSION: "6.11.1"
   RAWPY_VERSION: "0.27.0"
-  PYVIPS_VERSION: "3.0.0"
-  LIBVIPS_VERSION: "8.17.1"
+  PYVIPS_VERSION: "3.1.1"
+  LIBVIPS_VERSION: "8.18.2"
 
 jobs:
   release-metadata:
@@ -177,6 +177,8 @@ jobs:
 
       - name: Install packaging dependencies
         run: |
+          $ErrorActionPreference = "Stop"
+          $PSNativeCommandUseErrorActionPreference = $true
           conda activate PicViewer
           conda install -y -c conda-forge "pyside6=$env:QT_RUNTIME_VERSION" "qt6-main=$env:QT_RUNTIME_VERSION" "pyvips=$env:PYVIPS_VERSION" "libvips=$env:LIBVIPS_VERSION"
           $qtToolDirs = @(
