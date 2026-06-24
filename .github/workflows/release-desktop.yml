@@ -11,8 +11,10 @@ permissions:
   contents: write
 
 env:
-  QT_RUNTIME_VERSION: "6.9.2"
+  QT_RUNTIME_VERSION: "6.11.1"
   RAWPY_VERSION: "0.27.0"
+  PYVIPS_VERSION: "3.1.1"
+  LIBVIPS_VERSION: "8.18.2"
 
 jobs:
   release-metadata:
@@ -89,19 +91,37 @@ jobs:
       - name: Install packaging dependencies
         run: |
           brew install inih
-          conda install -y -c conda-forge "pyside6=$QT_RUNTIME_VERSION" "qt6-main=$QT_RUNTIME_VERSION" pyvips
+          conda install -y -c conda-forge "pyside6=$QT_RUNTIME_VERSION" "qt6-main=$QT_RUNTIME_VERSION" "pyvips=$PYVIPS_VERSION" "libvips=$LIBVIPS_VERSION"
           if [ -d "$CONDA_PREFIX/lib/qt6/bin" ]; then
             echo "$CONDA_PREFIX/lib/qt6/bin" >> "$GITHUB_PATH"
             export PATH="$CONDA_PREFIX/lib/qt6/bin:$PATH"
           fi
           python -m pip install --upgrade pip
-          python -m pip install -e ".[packaging]" "rawpy==$RAWPY_VERSION"
+          python -m pip install \
+            "build>=1.2" \
+            "twine>=5.0" \
+            "pyinstaller>=6.0" \
+            "tomli>=2.0; python_version < '3.11'" \
+            "rawpy==$RAWPY_VERSION" \
+            "opencv-python>=4.7" \
+            "numpy>=1.23" \
+            "pyexiv2>=2.15.5,<3" \
+            "Pillow>=10.0" \
+            "pillow-heif>=1,<2" \
+            "pillow-avif-plugin>=1.5,<2"
+          python -m pip install -e . --no-deps
+
+      - name: Verify pyvips runtime
+        run: python scripts/packaging/verify_pyvips_runtime.py --environment
 
       - name: Run unit tests
         run: python -m unittest discover -s tests/unit
 
       - name: Build macOS app
         run: python scripts/packaging/build_app.py
+
+      - name: Verify macOS app pyvips runtime
+        run: python scripts/packaging/verify_pyvips_runtime.py --bundle dist/PicViewer.app
 
       - name: Build macOS DMG
         run: python scripts/packaging/build_dmg.py
@@ -157,8 +177,10 @@ jobs:
 
       - name: Install packaging dependencies
         run: |
+          $ErrorActionPreference = "Stop"
+          $PSNativeCommandUseErrorActionPreference = $true
           conda activate PicViewer
-          conda install -y -c conda-forge "pyside6=$env:QT_RUNTIME_VERSION" "qt6-main=$env:QT_RUNTIME_VERSION" pyvips
+          conda install -y -c conda-forge "pyside6=$env:QT_RUNTIME_VERSION" "qt6-main=$env:QT_RUNTIME_VERSION" "pyvips=$env:PYVIPS_VERSION" "libvips=$env:LIBVIPS_VERSION"
           $qtToolDirs = @(
             "$env:CONDA_PREFIX\Library\bin"
             "$env:CONDA_PREFIX\lib\qt6\bin"
@@ -170,7 +192,24 @@ jobs:
             }
           }
           python -m pip install --upgrade pip
-          python -m pip install -e ".[packaging]" "rawpy==$env:RAWPY_VERSION"
+          python -m pip install `
+            "build>=1.2" `
+            "twine>=5.0" `
+            "pyinstaller>=6.0" `
+            "tomli>=2.0; python_version < '3.11'" `
+            "rawpy==$env:RAWPY_VERSION" `
+            "opencv-python>=4.7" `
+            "numpy>=1.23" `
+            "pyexiv2>=2.15.5,<3" `
+            "Pillow>=10.0" `
+            "pillow-heif>=1,<2" `
+            "pillow-avif-plugin>=1.5,<2"
+          python -m pip install -e . --no-deps
+
+      - name: Verify pyvips runtime
+        run: |
+          conda activate PicViewer
+          python scripts/packaging/verify_pyvips_runtime.py --environment
 
       - name: Run unit tests
         run: |
@@ -181,6 +220,11 @@ jobs:
         run: |
           conda activate PicViewer
           python scripts/packaging/build_app.py
+
+      - name: Verify Windows app pyvips runtime
+        run: |
+          conda activate PicViewer
+          python scripts/packaging/verify_pyvips_runtime.py --bundle dist/PicViewer
 
       - name: Build Windows MSI
         run: |
