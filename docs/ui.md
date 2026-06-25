@@ -311,12 +311,9 @@ Shortcuts for common features must be set as follows:
 | Cross Reference Line  | `F5`                     | `F5`                    |
 | Diagonal Reference Line | `F6`                   | `F6`                    |
 | Rule of Thirds Reference Line | `F7`             | `F7`                    |
-| Add Color Readout     | `Alt + +`                | `Option + +`            |
-| Delete Color Readout  | `Alt + -`                | `Option + -`            |
-| Delete All Readouts   | `Shift + Alt + -`        | `Shift + Option + -`    |
-
-For keyboard layouts where typing `+` requires the `=` key with Shift, `Alt + Shift + =`
-on Windows/Linux and `Option + Shift + =` on macOS must also trigger `Add Color Readout`.
+| Add Color Readout     | `Ctrl + ]`               | `Command + ]`           |
+| Delete Color Readout  | `Ctrl + [`               | `Command + [`           |
+| Delete All Readouts   | `Shift + Ctrl + [`       | `Shift + Command + [`   |
 
 ## 7. Interaction Rules (Synchronization Relationships That Must Be Implemented)
 

@@ -130,9 +130,9 @@ class MainWindowShortcutTests(QtWidgetTestCase):
             ui.actToggleCrossReferenceLine: "F5",
             ui.actToggleDiagonalReferenceLine: "F6",
             ui.actToggleThirdsReferenceLine: "F7",
-            ui.actAddColorReadout: "Alt++",
-            ui.actDeleteColorReadout: "Alt+-",
-            ui.actDeleteAllColorReadouts: "Alt+Shift+-",
+            ui.actAddColorReadout: "Ctrl+]",
+            ui.actDeleteColorReadout: "Ctrl+[",
+            ui.actDeleteAllColorReadouts: "Ctrl+Shift+[",
         }
 
         for action, expected in shortcuts.items():
@@ -142,7 +142,7 @@ class MainWindowShortcutTests(QtWidgetTestCase):
                     action.shortcut().toString(QtGui.QKeySequence.PortableText),
                 )
 
-    def test_add_color_readout_shortcut_accepts_shift_equal_plus_key(self) -> None:
+    def test_color_readout_shortcuts_trigger_from_bracket_keys(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
         ui.setup_ui(window)
@@ -150,22 +150,35 @@ class MainWindowShortcutTests(QtWidgetTestCase):
         window.show()
         self._app.processEvents()
 
-        triggered_states: list[bool] = []
+        triggered_actions: list[str] = []
         ui.actAddColorReadout.triggered.connect(
-            lambda _checked=False: triggered_states.append(
-                ui.actAddColorReadout.isChecked()
-            )
+            lambda _checked=False: triggered_actions.append("add")
+        )
+        ui.actDeleteColorReadout.triggered.connect(
+            lambda _checked=False: triggered_actions.append("delete")
+        )
+        ui.actDeleteAllColorReadouts.triggered.connect(
+            lambda _checked=False: triggered_actions.append("delete_all")
         )
 
         QtTest.QTest.keyClick(
             window,
-            QtCore.Qt.Key.Key_Equal,
-            QtCore.Qt.KeyboardModifier.AltModifier | QtCore.Qt.KeyboardModifier.ShiftModifier,
+            QtCore.Qt.Key.Key_BracketRight,
+            QtCore.Qt.KeyboardModifier.ControlModifier,
+        )
+        QtTest.QTest.keyClick(
+            window,
+            QtCore.Qt.Key.Key_BracketLeft,
+            QtCore.Qt.KeyboardModifier.ControlModifier,
+        )
+        QtTest.QTest.keyClick(
+            window,
+            QtCore.Qt.Key.Key_BracketLeft,
+            QtCore.Qt.KeyboardModifier.ControlModifier | QtCore.Qt.KeyboardModifier.ShiftModifier,
         )
         self._app.processEvents()
 
-        self.assertEqual([True], triggered_states)
-        self.assertTrue(ui.actAddColorReadout.isChecked())
+        self.assertEqual(["add", "delete", "delete_all"], triggered_actions)
 
     def test_help_menu_contains_about_and_third_party_license_actions(self) -> None:
         window = QtWidgets.QMainWindow()

@@ -280,14 +280,9 @@ class MainWindowUI:
         self.actToggleCrossReferenceLine.setShortcut(QtGui.QKeySequence("F5"))
         self.actToggleDiagonalReferenceLine.setShortcut(QtGui.QKeySequence("F6"))
         self.actToggleThirdsReferenceLine.setShortcut(QtGui.QKeySequence("F7"))
-        self.actAddColorReadout.setShortcuts(
-            [
-                QtGui.QKeySequence("Alt++"),
-                QtGui.QKeySequence("Alt+Shift+="),
-            ]
-        )
-        self.actDeleteColorReadout.setShortcut(QtGui.QKeySequence("Alt+-"))
-        self.actDeleteAllColorReadouts.setShortcut(QtGui.QKeySequence("Shift+Alt+-"))
+        self.actAddColorReadout.setShortcut(QtGui.QKeySequence(f"{modifier}+]"))
+        self.actDeleteColorReadout.setShortcut(QtGui.QKeySequence(f"{modifier}+["))
+        self.actDeleteAllColorReadouts.setShortcut(QtGui.QKeySequence(f"{modifier}+Shift+["))
 
     def create_menus(self) -> None:
         menu_bar = self._main_window.menuBar()
