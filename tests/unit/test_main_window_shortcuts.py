@@ -9,7 +9,7 @@ from unittest.mock import patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from tests.unit.qt_test_utils import QtWidgetTestCase
-from PySide6 import QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtTest, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -141,6 +141,31 @@ class MainWindowShortcutTests(QtWidgetTestCase):
                     expected,
                     action.shortcut().toString(QtGui.QKeySequence.PortableText),
                 )
+
+    def test_add_color_readout_shortcut_accepts_shift_equal_plus_key(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+        window.show()
+        self._app.processEvents()
+
+        triggered_states: list[bool] = []
+        ui.actAddColorReadout.triggered.connect(
+            lambda _checked=False: triggered_states.append(
+                ui.actAddColorReadout.isChecked()
+            )
+        )
+
+        QtTest.QTest.keyClick(
+            window,
+            QtCore.Qt.Key.Key_Equal,
+            QtCore.Qt.KeyboardModifier.AltModifier | QtCore.Qt.KeyboardModifier.ShiftModifier,
+        )
+        self._app.processEvents()
+
+        self.assertEqual([True], triggered_states)
+        self.assertTrue(ui.actAddColorReadout.isChecked())
 
     def test_help_menu_contains_about_and_third_party_license_actions(self) -> None:
         window = QtWidgets.QMainWindow()

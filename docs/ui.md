@@ -315,6 +315,9 @@ Shortcuts for common features must be set as follows:
 | Delete Color Readout  | `Alt + -`                | `Option + -`            |
 | Delete All Readouts   | `Shift + Alt + -`        | `Shift + Option + -`    |
 
+For keyboard layouts where typing `+` requires the `=` key with Shift, `Alt + Shift + =`
+on Windows/Linux and `Option + Shift + =` on macOS must also trigger `Add Color Readout`.
+
 ## 7. Interaction Rules (Synchronization Relationships That Must Be Implemented)
 
 - Open Image => add a new tab + add a new filmstrip item + automatically switch to that tab.

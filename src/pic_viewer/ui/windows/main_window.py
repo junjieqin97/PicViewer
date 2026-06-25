@@ -280,7 +280,12 @@ class MainWindowUI:
         self.actToggleCrossReferenceLine.setShortcut(QtGui.QKeySequence("F5"))
         self.actToggleDiagonalReferenceLine.setShortcut(QtGui.QKeySequence("F6"))
         self.actToggleThirdsReferenceLine.setShortcut(QtGui.QKeySequence("F7"))
-        self.actAddColorReadout.setShortcut(QtGui.QKeySequence("Alt++"))
+        self.actAddColorReadout.setShortcuts(
+            [
+                QtGui.QKeySequence("Alt++"),
+                QtGui.QKeySequence("Alt+Shift+="),
+            ]
+        )
         self.actDeleteColorReadout.setShortcut(QtGui.QKeySequence("Alt+-"))
         self.actDeleteAllColorReadouts.setShortcut(QtGui.QKeySequence("Shift+Alt+-"))
 
