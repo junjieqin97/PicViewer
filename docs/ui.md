@@ -307,6 +307,13 @@ Shortcuts for common features must be set as follows:
 | Show Peaking (High)   | `F3`                     | `F3`                    |
 | Show Peaking (Medium) | `F2`                     | `F2`                    |
 | Show Peaking (Low)    | `F1`                     | `F1`                    |
+| Show Metadata Overlay | `Ctrl + I`               | `Command + I`           |
+| Cross Reference Line  | `F5`                     | `F5`                    |
+| Diagonal Reference Line | `F6`                   | `F6`                    |
+| Rule of Thirds Reference Line | `F7`             | `F7`                    |
+| Add Color Readout     | `Alt + +`                | `Option + +`            |
+| Delete Color Readout  | `Alt + -`                | `Option + -`            |
+| Delete All Readouts   | `Shift + Alt + -`        | `Shift + Option + -`    |
 
 ## 7. Interaction Rules (Synchronization Relationships That Must Be Implemented)
 

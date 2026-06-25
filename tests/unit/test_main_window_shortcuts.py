@@ -116,9 +116,31 @@ class MainWindowShortcutTests(QtWidgetTestCase):
         self.assertTrue(ui.actAddColorReadout.isCheckable())
         self.assertTrue(ui.actDeleteColorReadout.isCheckable())
         self.assertFalse(ui.actDeleteAllColorReadouts.isCheckable())
-        self.assertTrue(all(action.shortcut().isEmpty() for action in actions))
         self.assertFalse(ui.actAddColorReadout.isChecked())
         self.assertFalse(ui.actDeleteColorReadout.isChecked())
+
+    def test_overlay_reference_line_and_readout_shortcuts(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        shortcuts = {
+            ui.actToggleMetadataOverlay: "Ctrl+I",
+            ui.actToggleCrossReferenceLine: "F5",
+            ui.actToggleDiagonalReferenceLine: "F6",
+            ui.actToggleThirdsReferenceLine: "F7",
+            ui.actAddColorReadout: "Alt++",
+            ui.actDeleteColorReadout: "Alt+-",
+            ui.actDeleteAllColorReadouts: "Alt+Shift+-",
+        }
+
+        for action, expected in shortcuts.items():
+            with self.subTest(action=action.objectName()):
+                self.assertEqual(
+                    expected,
+                    action.shortcut().toString(QtGui.QKeySequence.PortableText),
+                )
 
     def test_help_menu_contains_about_and_third_party_license_actions(self) -> None:
         window = QtWidgets.QMainWindow()

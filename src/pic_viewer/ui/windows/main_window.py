@@ -276,6 +276,13 @@ class MainWindowUI:
         self.actPeakHigh.setShortcut(QtGui.QKeySequence("F3"))
         self.actPeakMedium.setShortcut(QtGui.QKeySequence("F2"))
         self.actPeakLow.setShortcut(QtGui.QKeySequence("F1"))
+        self.actToggleMetadataOverlay.setShortcut(QtGui.QKeySequence(f"{modifier}+I"))
+        self.actToggleCrossReferenceLine.setShortcut(QtGui.QKeySequence("F5"))
+        self.actToggleDiagonalReferenceLine.setShortcut(QtGui.QKeySequence("F6"))
+        self.actToggleThirdsReferenceLine.setShortcut(QtGui.QKeySequence("F7"))
+        self.actAddColorReadout.setShortcut(QtGui.QKeySequence("Alt++"))
+        self.actDeleteColorReadout.setShortcut(QtGui.QKeySequence("Alt+-"))
+        self.actDeleteAllColorReadouts.setShortcut(QtGui.QKeySequence("Shift+Alt+-"))
 
     def create_menus(self) -> None:
         menu_bar = self._main_window.menuBar()
