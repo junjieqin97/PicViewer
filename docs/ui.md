@@ -290,6 +290,7 @@ Shortcuts for common features must be set as follows:
 | Open Image                    | `Ctrl + O`               | `Command + O`           |
 | Open Folder                   | `Shift + Ctrl + O`       | `Shift + Command + O`   |
 | Close Current Tab             | `Esc`                    | `Esc`                   |
+| Show Metadata Overlay         | `Ctrl + I`               | `Command + I`           |
 | Info Panel                    | `Ctrl + Right Arrow`     | `Command + Right Arrow` |
 | Analysis Toolbar              | `Ctrl + Up Arrow`        | `Command + Up Arrow`    |
 | Filmstrip Pane                | `Ctrl + Down Arrow`      | `Command + Down Arrow`  |
@@ -304,10 +305,9 @@ Shortcuts for common features must be set as follows:
 | Blue Channel Only             | `Ctrl + B`               | `Command + B`           |
 | Show Underexposed             | `Shift + Ctrl + P`       | `Shift + Command + P`   |
 | Show Overexposed              | `Ctrl + P`               | `Command + P`           |
-| Show Peaking (High)           | `F3`                     | `F3`                    |
-| Show Peaking (Medium)         | `F2`                     | `F2`                    |
 | Show Peaking (Low)            | `F1`                     | `F1`                    |
-| Show Metadata Overlay         | `Ctrl + I`               | `Command + I`           |
+| Show Peaking (Medium)         | `F2`                     | `F2`                    |
+| Show Peaking (High)           | `F3`                     | `F3`                    |
 | Cross Reference Line          | `F5`                     | `F5`                    |
 | Diagonal Reference Line       | `F6`                     | `F6`                    |
 | Rule of Thirds Reference Line | `F7`                     | `F7`                    |
