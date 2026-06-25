@@ -262,7 +262,7 @@ class MainWindowUI:
         self.actToggleInfoPanel.setShortcut(QtGui.QKeySequence(f"{modifier}+Right"))
         self.actToggleAnalysisToolbar.setShortcut(QtGui.QKeySequence(f"{modifier}+Up"))
         self.actToggleFilmstrip.setShortcut(QtGui.QKeySequence(f"{modifier}+Down"))
-        self.actZoomIn.setShortcut(QtGui.QKeySequence(f"{modifier}++"))
+        self.actZoomIn.setShortcut(QtGui.QKeySequence(f"{modifier}+="))
         self.actZoomOut.setShortcut(QtGui.QKeySequence(f"{modifier}+-"))
         self.actFitToWindow.setShortcut(QtGui.QKeySequence(f"{modifier}+0"))
         self.actModeLuma.setShortcut(QtGui.QKeySequence(f"{modifier}+L"))
