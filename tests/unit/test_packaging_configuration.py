@@ -244,25 +244,28 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertNotIn("QT_RUNTIME_VERSION: \"6.9.2\"", workflow)
         self.assertNotIn("PYVIPS_VERSION: \"3.0.0\"", workflow)
         self.assertNotIn("LIBVIPS_VERSION: \"8.17.1\"", workflow)
-        self.assertIn(
-            'conda install -y -c conda-forge "pyside6=$QT_RUNTIME_VERSION" '
-            '"qt6-main=$QT_RUNTIME_VERSION" "pyvips=$PYVIPS_VERSION" "libvips=$LIBVIPS_VERSION"',
-            workflow,
-        )
-        self.assertIn(
-            'conda install -y -c conda-forge "pyside6=$env:QT_RUNTIME_VERSION" '
-            '"qt6-main=$env:QT_RUNTIME_VERSION" "pyvips=$env:PYVIPS_VERSION" '
-            '"libvips=$env:LIBVIPS_VERSION"',
-            workflow,
-        )
+        self.assertEqual(2, workflow.count("python scripts/packaging/install_release_dependencies.py"))
+        self.assertIn("python scripts/packaging/verify_dependency_sources.py", workflow)
         self.assertIn("$PSNativeCommandUseErrorActionPreference = $true", workflow)
         self.assertIn('$ErrorActionPreference = "Stop"', workflow)
-        self.assertIn("python -m pip install -e . --no-deps", workflow)
         self.assertIn('python scripts/packaging/verify_pyvips_runtime.py --environment', workflow)
         self.assertIn('python scripts/packaging/verify_pyvips_runtime.py --bundle dist/PicViewer.app', workflow)
         self.assertIn('python scripts/packaging/verify_pyvips_runtime.py --bundle dist/PicViewer', workflow)
         self.assertNotIn('python -m pip install -e ".[packaging]" "rawpy==$RAWPY_VERSION"', workflow)
         self.assertNotIn('python -m pip install -e ".[packaging]" "rawpy==$env:RAWPY_VERSION"', workflow)
+        for pip_resolved_dependency in (
+            '"build>=1.2"',
+            '"twine>=5.0"',
+            '"pyinstaller>=6.0"',
+            '"rawpy==$RAWPY_VERSION"',
+            '"rawpy==$env:RAWPY_VERSION"',
+            '"opencv-python>=4.7"',
+            '"numpy>=1.23"',
+            '"Pillow>=10.0"',
+            '"pillow-heif>=1,<2"',
+            '"pillow-avif-plugin>=1.5,<2"',
+        ):
+            self.assertNotIn(pip_resolved_dependency, workflow)
         self.assertIn("$CONDA_PREFIX/lib/qt6/bin", workflow)
         self.assertIn("$env:CONDA_PREFIX", workflow)
         self.assertIn("Library\\bin", workflow)
@@ -300,6 +303,8 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("Apple Silicon", ci_doc)
         self.assertIn("arm64", ci_doc)
         self.assertIn("Qt/PySide6", ci_doc)
+        self.assertIn("conda-forge-first", ci_doc)
+        self.assertIn("pyexiv2", ci_doc)
         self.assertIn("6.11.1", ci_doc)
         self.assertIn("rawpy", ci_doc)
         self.assertIn("0.27.0", ci_doc)

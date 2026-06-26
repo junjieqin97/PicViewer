@@ -91,25 +91,14 @@ jobs:
       - name: Install packaging dependencies
         run: |
           brew install inih
-          conda install -y -c conda-forge "pyside6=$QT_RUNTIME_VERSION" "qt6-main=$QT_RUNTIME_VERSION" "pyvips=$PYVIPS_VERSION" "libvips=$LIBVIPS_VERSION"
+          python scripts/packaging/install_release_dependencies.py
           if [ -d "$CONDA_PREFIX/lib/qt6/bin" ]; then
             echo "$CONDA_PREFIX/lib/qt6/bin" >> "$GITHUB_PATH"
             export PATH="$CONDA_PREFIX/lib/qt6/bin:$PATH"
           fi
-          python -m pip install --upgrade pip
-          python -m pip install \
-            "build>=1.2" \
-            "twine>=5.0" \
-            "pyinstaller>=6.0" \
-            "tomli>=2.0; python_version < '3.11'" \
-            "rawpy==$RAWPY_VERSION" \
-            "opencv-python>=4.7" \
-            "numpy>=1.23" \
-            "pyexiv2>=2.15.5,<3" \
-            "Pillow>=10.0" \
-            "pillow-heif>=1,<2" \
-            "pillow-avif-plugin>=1.5,<2"
-          python -m pip install -e . --no-deps
+
+      - name: Verify dependency sources
+        run: python scripts/packaging/verify_dependency_sources.py
 
       - name: Verify pyvips runtime
         run: python scripts/packaging/verify_pyvips_runtime.py --environment
@@ -180,7 +169,7 @@ jobs:
           $ErrorActionPreference = "Stop"
           $PSNativeCommandUseErrorActionPreference = $true
           conda activate PicViewer
-          conda install -y -c conda-forge "pyside6=$env:QT_RUNTIME_VERSION" "qt6-main=$env:QT_RUNTIME_VERSION" "pyvips=$env:PYVIPS_VERSION" "libvips=$env:LIBVIPS_VERSION"
+          python scripts/packaging/install_release_dependencies.py
           $qtToolDirs = @(
             "$env:CONDA_PREFIX\Library\bin"
             "$env:CONDA_PREFIX\lib\qt6\bin"
@@ -191,20 +180,11 @@ jobs:
               $env:PATH = "$dir;$env:PATH"
             }
           }
-          python -m pip install --upgrade pip
-          python -m pip install `
-            "build>=1.2" `
-            "twine>=5.0" `
-            "pyinstaller>=6.0" `
-            "tomli>=2.0; python_version < '3.11'" `
-            "rawpy==$env:RAWPY_VERSION" `
-            "opencv-python>=4.7" `
-            "numpy>=1.23" `
-            "pyexiv2>=2.15.5,<3" `
-            "Pillow>=10.0" `
-            "pillow-heif>=1,<2" `
-            "pillow-avif-plugin>=1.5,<2"
-          python -m pip install -e . --no-deps
+
+      - name: Verify dependency sources
+        run: |
+          conda activate PicViewer
+          python scripts/packaging/verify_dependency_sources.py
 
       - name: Verify pyvips runtime
         run: |

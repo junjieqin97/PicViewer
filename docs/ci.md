@@ -46,16 +46,20 @@ Actions.
 
 The release jobs pin Qt/PySide6 to `6.11.1` through `QT_RUNTIME_VERSION`,
 pyvips to `3.1.1` through `PYVIPS_VERSION`, libvips to `8.18.2` through
-`LIBVIPS_VERSION`, and rawpy to `0.27.0` through `RAWPY_VERSION`. Qt,
-pyvips, and libvips are installed from conda-forge before pip installs the
-remaining packaging dependencies. The workflow then installs PicViewer itself
-with `python -m pip install -e . --no-deps` so pip cannot replace conda-forge
-pyvips with the pure-Python PyPI package. After dependency installation and
-after PyInstaller app creation, `scripts/packaging/verify_pyvips_runtime.py`
-checks that pyvips metadata and libvips/LittleCMS native files are still
-present. Keeping the native Qt runtime, pyvips/libvips CMS backend, and
-packaged RAW backend stable across GitHub runner image updates reduces
-release-only failures in headless unit tests and PyInstaller packaging.
+`LIBVIPS_VERSION`, and rawpy to `0.27.0` through `RAWPY_VERSION`. Dependency
+installation follows a conda-forge-first policy through
+`scripts/packaging/install_release_dependencies.py`: conda-forge provides
+Qt/PySide6, OpenCV, numpy, pyvips/libvips, Pillow, Pillow AVIF/HEIF plugins,
+rawpy, PyInstaller, twine, and Python build tooling. PyPI is used only for the
+explicit `pyexiv2` fallback, then PicViewer itself is installed with
+`python -m pip install -e . --no-deps` so pip cannot replace conda-forge
+packages. After dependency installation,
+`scripts/packaging/verify_dependency_sources.py` checks the conda/PyPI source
+split, and `scripts/packaging/verify_pyvips_runtime.py` checks pyvips metadata
+and libvips/LittleCMS native files. Keeping the native Qt runtime,
+pyvips/libvips CMS backend, and packaged RAW backend stable across GitHub
+runner image updates reduces release-only failures in headless unit tests and
+PyInstaller packaging.
 
 ## Windows WiX EULA Handling
 
