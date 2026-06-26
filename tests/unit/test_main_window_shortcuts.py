@@ -9,7 +9,7 @@ from unittest.mock import patch
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from tests.unit.qt_test_utils import QtWidgetTestCase
-from PySide6 import QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtTest, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -116,9 +116,69 @@ class MainWindowShortcutTests(QtWidgetTestCase):
         self.assertTrue(ui.actAddColorReadout.isCheckable())
         self.assertTrue(ui.actDeleteColorReadout.isCheckable())
         self.assertFalse(ui.actDeleteAllColorReadouts.isCheckable())
-        self.assertTrue(all(action.shortcut().isEmpty() for action in actions))
         self.assertFalse(ui.actAddColorReadout.isChecked())
         self.assertFalse(ui.actDeleteColorReadout.isChecked())
+
+    def test_overlay_reference_line_and_readout_shortcuts(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        shortcuts = {
+            ui.actToggleMetadataOverlay: "Ctrl+I",
+            ui.actToggleCrossReferenceLine: "F5",
+            ui.actToggleDiagonalReferenceLine: "F6",
+            ui.actToggleThirdsReferenceLine: "F7",
+            ui.actAddColorReadout: "Ctrl+]",
+            ui.actDeleteColorReadout: "Ctrl+[",
+            ui.actDeleteAllColorReadouts: "Ctrl+Shift+[",
+        }
+
+        for action, expected in shortcuts.items():
+            with self.subTest(action=action.objectName()):
+                self.assertEqual(
+                    expected,
+                    action.shortcut().toString(QtGui.QKeySequence.PortableText),
+                )
+
+    def test_color_readout_shortcuts_trigger_from_bracket_keys(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+        window.show()
+        self._app.processEvents()
+
+        triggered_actions: list[str] = []
+        ui.actAddColorReadout.triggered.connect(
+            lambda _checked=False: triggered_actions.append("add")
+        )
+        ui.actDeleteColorReadout.triggered.connect(
+            lambda _checked=False: triggered_actions.append("delete")
+        )
+        ui.actDeleteAllColorReadouts.triggered.connect(
+            lambda _checked=False: triggered_actions.append("delete_all")
+        )
+
+        QtTest.QTest.keyClick(
+            window,
+            QtCore.Qt.Key.Key_BracketRight,
+            QtCore.Qt.KeyboardModifier.ControlModifier,
+        )
+        QtTest.QTest.keyClick(
+            window,
+            QtCore.Qt.Key.Key_BracketLeft,
+            QtCore.Qt.KeyboardModifier.ControlModifier,
+        )
+        QtTest.QTest.keyClick(
+            window,
+            QtCore.Qt.Key.Key_BracketLeft,
+            QtCore.Qt.KeyboardModifier.ControlModifier | QtCore.Qt.KeyboardModifier.ShiftModifier,
+        )
+        self._app.processEvents()
+
+        self.assertEqual(["add", "delete", "delete_all"], triggered_actions)
 
     def test_help_menu_contains_about_and_third_party_license_actions(self) -> None:
         window = QtWidgets.QMainWindow()

@@ -262,7 +262,7 @@ class MainWindowUI:
         self.actToggleInfoPanel.setShortcut(QtGui.QKeySequence(f"{modifier}+Right"))
         self.actToggleAnalysisToolbar.setShortcut(QtGui.QKeySequence(f"{modifier}+Up"))
         self.actToggleFilmstrip.setShortcut(QtGui.QKeySequence(f"{modifier}+Down"))
-        self.actZoomIn.setShortcut(QtGui.QKeySequence(f"{modifier}++"))
+        self.actZoomIn.setShortcut(QtGui.QKeySequence(f"{modifier}+="))
         self.actZoomOut.setShortcut(QtGui.QKeySequence(f"{modifier}+-"))
         self.actFitToWindow.setShortcut(QtGui.QKeySequence(f"{modifier}+0"))
         self.actModeLuma.setShortcut(QtGui.QKeySequence(f"{modifier}+L"))
@@ -276,6 +276,13 @@ class MainWindowUI:
         self.actPeakHigh.setShortcut(QtGui.QKeySequence("F3"))
         self.actPeakMedium.setShortcut(QtGui.QKeySequence("F2"))
         self.actPeakLow.setShortcut(QtGui.QKeySequence("F1"))
+        self.actToggleMetadataOverlay.setShortcut(QtGui.QKeySequence(f"{modifier}+I"))
+        self.actToggleCrossReferenceLine.setShortcut(QtGui.QKeySequence("F5"))
+        self.actToggleDiagonalReferenceLine.setShortcut(QtGui.QKeySequence("F6"))
+        self.actToggleThirdsReferenceLine.setShortcut(QtGui.QKeySequence("F7"))
+        self.actAddColorReadout.setShortcut(QtGui.QKeySequence(f"{modifier}+]"))
+        self.actDeleteColorReadout.setShortcut(QtGui.QKeySequence(f"{modifier}+["))
+        self.actDeleteAllColorReadouts.setShortcut(QtGui.QKeySequence(f"{modifier}+Shift+["))
 
     def create_menus(self) -> None:
         menu_bar = self._main_window.menuBar()
