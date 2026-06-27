@@ -24,39 +24,44 @@ To rebuild the environment, use:
 ```bash
 conda create -n PicViewer python=3.10
 conda activate PicViewer
-pip install -e ".[packaging]"
+python scripts/packaging/install_release_dependencies.py
+python scripts/packaging/verify_dependency_sources.py
 ```
 
-Packaging tools are installed through optional dependencies:
-
-```bash
-pip install ".[packaging]"
-```
+The `packaging` optional dependency group remains in `pyproject.toml` for pip
+users and package metadata, but release builds do not use it to resolve the
+desktop packaging environment.
 
 PicViewer uses `pyexiv2` as the runtime metadata backend, pyvips/libvips as
 the runtime color management backend, and Pillow image plugins for AVIF/HEIF
 decoding. These are installed with the base package. `pyexiv2` includes native
 Exiv2 runtime files in its wheels, while pyvips requires a matching native
-libvips runtime with LittleCMS support. Release builds install pyvips from
-conda-forge so the Python binding and native libvips binary match. Pillow
-remains the plugin host used by `pillow-heif` and `pillow-avif-plugin`.
-Packaging builds must keep those native files bundled with the application.
+libvips runtime with LittleCMS support. Desktop release builds use a
+conda-forge-first dependency policy: all dependencies available from
+conda-forge are installed with conda, and PyPI is used only for the explicit
+`pyexiv2` fallback because `pyexiv2` is not available on conda-forge for the
+current macOS arm64 and Windows x64 release targets.
+
+Some package names differ between PyPI metadata and conda-forge release
+dependencies:
+
+- `PySide6` -> `pyside6`
+- `opencv-python` -> `opencv`
+- `Pillow` -> `pillow`
+- `build` -> `python-build`
+
 For desktop release builds, do not let pip resolve PicViewer's runtime
-dependencies after conda installs pyvips/libvips. Install the native CMS
-runtime through conda-forge, install the remaining pip-only packaging
-dependencies explicitly, and then install PicViewer itself with `--no-deps`:
+dependencies. Install conda-forge dependencies and the PyPI-only fallback with
+the release dependency script, then verify the resulting sources:
 
 ```bash
-conda install -y -c conda-forge "pyside6=6.11.1" "qt6-main=6.11.1" "pyvips=3.1.1" "libvips=8.18.2"
-python -m pip install --upgrade pip
-python -m pip install "build>=1.2" "twine>=5.0" "pyinstaller>=6.0" "rawpy==0.27.0" "opencv-python>=4.7" "numpy>=1.23" "pyexiv2>=2.15.5,<3" "Pillow>=10.0" "pillow-heif>=1,<2" "pillow-avif-plugin>=1.5,<2"
-python -m pip install -e . --no-deps
+python scripts/packaging/install_release_dependencies.py
+python scripts/packaging/verify_dependency_sources.py
 python scripts/packaging/verify_pyvips_runtime.py --environment
 ```
 
-This prevents pip from replacing conda-forge pyvips with the pure-Python PyPI
-package, which cannot provide the native libvips DLLs/dylibs required for ICC
-conversion.
+This prevents pip from replacing conda-forge packages such as pyvips, OpenCV,
+Pillow plugins, rawpy, and PyInstaller with PyPI wheels during release builds.
 On macOS, if importing `pyexiv2` reports a missing `libINIReader.0.dylib`,
 install the native dependency with `brew install inih` before building.
 
@@ -123,7 +128,11 @@ The script performs the following steps:
 - Verify that the current conda environment name is `PicViewer`.
 - Generate `src/pic_viewer/ui/resources/i18n/*.qm`.
 - Clean old `dist/`, `build/`, and `src/picviewer.egg-info/`.
-- Run `python -m build`, with artifacts written to `dist/`.
+- Run `python -m build --no-isolation`, with artifacts written to `dist/`.
+
+The no-isolation build is intentional. The release dependency script installs
+`setuptools`, `wheel`, and `python-build` from conda-forge first, so the build
+step must not create a pip-resolved isolated build environment.
 
 The release package includes QSS, TS, and QM resources. After installation, it supports:
 
@@ -260,11 +269,11 @@ The SHA256 checksum file is written to `dist/PicViewer-version.dmg.sha256`, with
 ```bash
 conda activate PicViewer
 python --version  # Should output Python 3.10.x
+python scripts/packaging/install_release_dependencies.py
+python scripts/packaging/verify_dependency_sources.py
 python -m unittest discover -s tests/unit
 python scripts/packaging/build_python_package.py
 python -m zipfile -l dist/*.whl
-conda install -y -c conda-forge "pyside6=6.11.1" "qt6-main=6.11.1" "pyvips=3.1.1" "libvips=8.18.2"
-python -m pip install -e . --no-deps
 python scripts/packaging/verify_pyvips_runtime.py --environment
 python scripts/packaging/build_app.py
 # Windows:

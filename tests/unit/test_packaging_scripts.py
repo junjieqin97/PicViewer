@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -394,6 +395,146 @@ class PackagingScriptsTests(unittest.TestCase):
             build_package.ensure_conda_environment({"CONDA_DEFAULT_ENV": "base"})
 
         build_package.ensure_conda_environment({"CONDA_DEFAULT_ENV": "PicViewer"})
+
+    def test_build_python_package_disables_build_isolation(self) -> None:
+        build_package = load_script("scripts/packaging/build_python_package.py")
+        commands: list[list[str]] = []
+
+        def fake_runner(command: list[str], **_: object) -> None:
+            commands.append(command)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "scripts" / "i18n").mkdir(parents=True)
+            (root / "scripts" / "i18n" / "build_qm.py").write_text("", encoding="utf-8")
+
+            build_package.build_python_package(
+                root,
+                env={"CONDA_DEFAULT_ENV": "PicViewer"},
+                runner=fake_runner,
+            )
+
+        self.assertIn(
+            [build_package.python_executable(), "-m", "build", "--no-isolation"],
+            commands,
+        )
+
+    def test_install_release_dependencies_uses_conda_forge_before_pypi_fallback(self) -> None:
+        install_deps = load_script("scripts/packaging/install_release_dependencies.py")
+        commands: list[list[str]] = []
+
+        def fake_runner(command: list[str], **_: object) -> None:
+            commands.append(command)
+
+        install_deps.install_release_dependencies(
+            PROJECT_ROOT,
+            env={
+                "CONDA_DEFAULT_ENV": "PicViewer",
+                "QT_RUNTIME_VERSION": "6.11.1",
+                "PYVIPS_VERSION": "3.1.1",
+                "LIBVIPS_VERSION": "8.18.2",
+                "RAWPY_VERSION": "0.27.0",
+            },
+            runner=fake_runner,
+        )
+
+        self.assertEqual("conda", commands[0][0])
+        self.assertEqual(["install", "-y", "--override-channels", "-c", "conda-forge"], commands[0][1:6])
+        for package_spec in (
+            "pyside6=6.11.1",
+            "qt6-main=6.11.1",
+            "pyvips=3.1.1",
+            "libvips=8.18.2",
+            "rawpy=0.27.0",
+            "opencv>=4.7,<5",
+            "numpy>=1.23",
+            "pillow>=10.0",
+            "pillow-heif>=1,<2",
+            "pillow-avif-plugin>=1.5,<2",
+            "pyinstaller>=6.0",
+            "python-build>=1.2",
+            "twine>=5.0",
+            "tomli>=2.0",
+            "setuptools>=68.0",
+            "wheel",
+            "pip",
+        ):
+            self.assertIn(package_spec, commands[0])
+
+        self.assertEqual(
+            [
+                install_deps.python_executable(),
+                "-m",
+                "pip",
+                "install",
+                "--no-deps",
+                "pyexiv2>=2.15.5,<3",
+            ],
+            commands[1],
+        )
+        self.assertEqual(
+            [
+                install_deps.python_executable(),
+                "-m",
+                "pip",
+                "install",
+                "-e",
+                str(PROJECT_ROOT),
+                "--no-deps",
+            ],
+            commands[2],
+        )
+        self.assertNotIn("opencv-python", " ".join(" ".join(command) for command in commands[1:]))
+        self.assertNotIn("rawpy", " ".join(" ".join(command) for command in commands[1:]))
+        self.assertNotIn("Pillow", " ".join(" ".join(command) for command in commands[1:]))
+        self.assertNotIn("build>=1.2", " ".join(" ".join(command) for command in commands[1:]))
+
+    def test_verify_dependency_sources_accepts_conda_forge_and_pypi_fallback(self) -> None:
+        verify_sources = load_script("scripts/packaging/verify_dependency_sources.py")
+        records = [
+            {
+                "name": package_name,
+                "channel": "conda-forge"
+                if index % 2 == 0
+                else "https://conda.anaconda.org/conda-forge",
+            }
+            for index, package_name in enumerate(verify_sources.CONDA_FORGE_PACKAGES)
+        ]
+        records.append({"name": "pyexiv2", "channel": "pypi"})
+
+        verify_sources.verify_dependency_sources(records)
+
+    def test_verify_dependency_sources_rejects_pypi_for_conda_preferred_package(self) -> None:
+        verify_sources = load_script("scripts/packaging/verify_dependency_sources.py")
+        records = [
+            {"name": package_name, "channel": "conda-forge"}
+            for package_name in verify_sources.CONDA_FORGE_PACKAGES
+        ]
+        records.append({"name": "pyexiv2", "channel": "pypi"})
+        records = [
+            {"name": "opencv", "channel": "pypi"} if record["name"] == "opencv" else record
+            for record in records
+        ]
+
+        with self.assertRaisesRegex(RuntimeError, "opencv.*conda-forge"):
+            verify_sources.verify_dependency_sources(records)
+
+    def test_verify_dependency_sources_reads_conda_list_json(self) -> None:
+        verify_sources = load_script("scripts/packaging/verify_dependency_sources.py")
+        records = [
+            {"name": package_name, "channel": "conda-forge"}
+            for package_name in verify_sources.CONDA_FORGE_PACKAGES
+        ]
+        records.append({"name": "pyexiv2", "channel": "pypi"})
+        commands: list[list[str]] = []
+
+        def fake_runner(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+            commands.append(command)
+            return subprocess.CompletedProcess(command, 0, stdout=json.dumps(records))
+
+        verify_sources.verify_active_environment(runner=fake_runner)
+
+        self.assertEqual([["conda", "list", "--json"]], commands)
 
     def test_build_app_uses_pyinstaller_spec(self) -> None:
         build_app = load_script("scripts/packaging/build_app.py")
