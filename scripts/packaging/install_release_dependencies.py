@@ -10,6 +10,11 @@ import subprocess
 import sys
 from typing import Callable, Mapping, Optional, Sequence
 
+try:
+    from conda_cli import conda_executable
+except ModuleNotFoundError:  # pragma: no cover - used when imported from tests
+    from scripts.packaging.conda_cli import conda_executable
+
 logger = logging.getLogger(__name__)
 
 EXPECTED_CONDA_ENV = "PicViewer"
@@ -82,7 +87,7 @@ def install_release_dependencies(
 
     ensure_conda_environment(env)
     conda_command = [
-        "conda",
+        conda_executable(env),
         "install",
         "-y",
         "--override-channels",

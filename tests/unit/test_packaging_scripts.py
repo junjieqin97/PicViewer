@@ -419,6 +419,39 @@ class PackagingScriptsTests(unittest.TestCase):
             commands,
         )
 
+    def test_conda_executable_prefers_conda_exe_environment(self) -> None:
+        conda_cli = load_script("scripts/packaging/conda_cli.py")
+
+        executable = conda_cli.conda_executable(
+            env={"CONDA_EXE": "conda-test"},
+            path_lookup=lambda _: None,
+        )
+
+        self.assertEqual("conda-test", executable)
+
+    def test_conda_executable_uses_windows_conda_root(self) -> None:
+        conda_cli = load_script("scripts/packaging/conda_cli.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            conda_root = Path(tmp) / "miniconda3"
+            conda_exe = conda_root / "Scripts" / "conda.exe"
+            conda_exe.parent.mkdir(parents=True)
+            conda_exe.write_text("conda", encoding="utf-8")
+
+            executable = conda_cli.conda_executable(
+                env={"CONDA": str(conda_root)},
+                platform="win32",
+                path_lookup=lambda _: None,
+            )
+
+        self.assertEqual(str(conda_exe), executable)
+
+    def test_conda_executable_reports_missing_conda(self) -> None:
+        conda_cli = load_script("scripts/packaging/conda_cli.py")
+
+        with self.assertRaisesRegex(RuntimeError, "Cannot find conda executable"):
+            conda_cli.conda_executable(env={}, path_lookup=lambda _: None)
+
     def test_install_release_dependencies_uses_conda_forge_before_pypi_fallback(self) -> None:
         install_deps = load_script("scripts/packaging/install_release_dependencies.py")
         commands: list[list[str]] = []
@@ -434,11 +467,12 @@ class PackagingScriptsTests(unittest.TestCase):
                 "PYVIPS_VERSION": "3.1.1",
                 "LIBVIPS_VERSION": "8.18.2",
                 "RAWPY_VERSION": "0.27.0",
+                "CONDA_EXE": "conda-test",
             },
             runner=fake_runner,
         )
 
-        self.assertEqual("conda", commands[0][0])
+        self.assertEqual("conda-test", commands[0][0])
         self.assertEqual(["install", "-y", "--override-channels", "-c", "conda-forge"], commands[0][1:6])
         for package_spec in (
             "pyside6=6.11.1",
@@ -532,9 +566,9 @@ class PackagingScriptsTests(unittest.TestCase):
             commands.append(command)
             return subprocess.CompletedProcess(command, 0, stdout=json.dumps(records))
 
-        verify_sources.verify_active_environment(runner=fake_runner)
+        verify_sources.verify_active_environment(env={"CONDA_EXE": "conda-test"}, runner=fake_runner)
 
-        self.assertEqual([["conda", "list", "--json"]], commands)
+        self.assertEqual([["conda-test", "list", "--json"]], commands)
 
     def test_build_app_uses_pyinstaller_spec(self) -> None:
         build_app = load_script("scripts/packaging/build_app.py")
