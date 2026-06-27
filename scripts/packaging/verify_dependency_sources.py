@@ -8,6 +8,11 @@ import logging
 import subprocess
 from typing import Callable, Mapping, Optional, Sequence
 
+try:
+    from conda_cli import conda_executable
+except ModuleNotFoundError:  # pragma: no cover - used when imported from tests
+    from scripts.packaging.conda_cli import conda_executable
+
 logger = logging.getLogger(__name__)
 
 CONDA_FORGE_PACKAGES = (
@@ -32,11 +37,14 @@ CONDA_FORGE_PACKAGES = (
 PYPI_FALLBACK_PACKAGES = ("pyexiv2",)
 
 
-def verify_active_environment(runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run) -> None:
+def verify_active_environment(
+    env: Optional[Mapping[str, str]] = None,
+    runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+) -> None:
     """Load `conda list --json` output and verify dependency source channels."""
 
     result = runner(
-        ["conda", "list", "--json"],
+        [conda_executable(env), "list", "--json"],
         check=True,
         stdout=subprocess.PIPE,
         text=True,
