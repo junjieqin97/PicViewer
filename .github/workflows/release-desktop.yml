@@ -5,10 +5,11 @@ on:
     types:
       - closed
     branches:
+      - develop
       - 'release-*'
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   QT_RUNTIME_VERSION: "6.11.1"
@@ -21,19 +22,26 @@ jobs:
     name: Read release metadata
     if: >-
       github.event.pull_request.merged == true &&
-      github.event.pull_request.head.ref == 'develop' &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (
+        github.event.pull_request.base.ref == 'develop' ||
+        (
+          startsWith(github.event.pull_request.base.ref, 'release-') &&
+          github.event.pull_request.head.ref == 'develop'
+        )
+      )
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.release.outputs.version }}
       tag: ${{ steps.release.outputs.tag }}
+      publish_release: ${{ steps.release.outputs.publish_release }}
       dmg: ${{ steps.release.outputs.dmg }}
       dmg_checksum: ${{ steps.release.outputs.dmg_checksum }}
       msi: ${{ steps.release.outputs.msi }}
       msi_checksum: ${{ steps.release.outputs.msi_checksum }}
 
     steps:
-      - name: Check out release branch
+      - name: Check out target branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.ref }}
@@ -41,6 +49,9 @@ jobs:
 
       - name: Read release version
         id: release
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           VERSION="$(sed -nE 's/^version = "([^"]+)"/\1/p' pyproject.toml | head -n 1)"
           if [ -z "$VERSION" ]; then
@@ -53,8 +64,14 @@ jobs:
           echo "dmg_checksum=dist/PicViewer-$VERSION.dmg.sha256" >> "$GITHUB_OUTPUT"
           echo "msi=dist/PicViewer-$VERSION.msi" >> "$GITHUB_OUTPUT"
           echo "msi_checksum=dist/PicViewer-$VERSION.msi.sha256" >> "$GITHUB_OUTPUT"
+          if [[ "$BASE_REF" == release-* && "$HEAD_REF" == "develop" ]]; then
+            echo "publish_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish_release=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Ensure release does not already exist
+        if: ${{ steps.release.outputs.publish_release == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -73,7 +90,7 @@ jobs:
         shell: bash -el {0}
 
     steps:
-      - name: Check out release branch
+      - name: Check out target branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.ref }}
@@ -137,7 +154,7 @@ jobs:
         shell: pwsh
 
     steps:
-      - name: Check out release branch
+      - name: Check out target branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.ref }}
@@ -244,7 +261,10 @@ jobs:
       - release-metadata
       - build-macos
       - build-windows
+    if: ${{ needs.release-metadata.outputs.publish_release == 'true' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Download release assets
