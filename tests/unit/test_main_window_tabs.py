@@ -312,6 +312,50 @@ class MainWindowTabsTests(QtWidgetTestCase):
         self.assertEqual("All Cameras", ui.comboFilmstripCameraFilter.currentText())
         self.assertEqual("All Lenses", ui.comboFilmstripLensFilter.currentText())
 
+    def test_filmstrip_filter_all_options_use_popup_tooltips(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        self._assert_combo_item_tooltips_match_text(
+            ui.comboFilmstripExtensionFilter,
+            ui.comboFilmstripCameraFilter,
+            ui.comboFilmstripLensFilter,
+        )
+
+    def test_filmstrip_filter_dynamic_options_use_popup_tooltips(self) -> None:
+        window, ui, controller = self._build_filmstrip_summary_controller()
+        self.addCleanup(window.deleteLater)
+
+        MainController._populate_filter_combo(
+            controller,
+            ui.comboFilmstripExtensionFilter,
+            "All Extensions",
+            (".jpg", ".tiff"),
+            None,
+        )
+        MainController._populate_filter_combo(
+            controller,
+            ui.comboFilmstripCameraFilter,
+            "All Cameras",
+            ("Canon EOS R5", "Very Long Camera Model Name"),
+            None,
+        )
+        MainController._populate_filter_combo(
+            controller,
+            ui.comboFilmstripLensFilter,
+            "All Lenses",
+            ("RF 50mm F1.2", "Very Long Lens Model Name"),
+            None,
+        )
+
+        self._assert_combo_item_tooltips_match_text(
+            ui.comboFilmstripExtensionFilter,
+            ui.comboFilmstripCameraFilter,
+            ui.comboFilmstripLensFilter,
+        )
+
     def test_status_bar_has_hidden_filmstrip_summary_label(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
@@ -1021,6 +1065,15 @@ class MainWindowTabsTests(QtWidgetTestCase):
         tab.setProperty("image_path", str(path))
         ui.tabsImages.addTab(tab, path.name)
         controller._add_filmstrip_placeholder_item(path)
+
+    def _assert_combo_item_tooltips_match_text(self, *combos: QtWidgets.QComboBox) -> None:
+        for combo in combos:
+            for index in range(combo.count()):
+                with self.subTest(combo=combo.objectName(), index=index):
+                    self.assertEqual(
+                        combo.itemText(index),
+                        combo.itemData(index, QtCore.Qt.ItemDataRole.ToolTipRole),
+                    )
 
     class _TemporaryDropFiles:
         def __init__(self) -> None:
