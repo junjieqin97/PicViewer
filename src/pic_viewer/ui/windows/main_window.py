@@ -956,6 +956,7 @@ class MainWindowUI:
         table.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         table.setWordWrap(False)
         table.setTextElideMode(QtCore.Qt.TextElideMode.ElideRight)
+        table.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         header = table.horizontalHeader()
         header.setStretchLastSection(False)
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Fixed)

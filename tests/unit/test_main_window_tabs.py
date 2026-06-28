@@ -691,6 +691,10 @@ class MainWindowTabsTests(QtWidgetTestCase):
             self.assertEqual(ui.METADATA_KEY_COLUMN_WIDTH, table.columnWidth(0))
             self.assertFalse(table.wordWrap())
             self.assertEqual(QtCore.Qt.TextElideMode.ElideRight, table.textElideMode())
+            self.assertEqual(
+                QtCore.Qt.ContextMenuPolicy.CustomContextMenu,
+                table.contextMenuPolicy(),
+            )
 
     def test_empty_image_placeholder_hides_tab_bar(self) -> None:
         window, ui, controller = self._build_tabs_controller()
