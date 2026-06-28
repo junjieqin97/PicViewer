@@ -186,8 +186,19 @@ class MainControllerFilmstripMixin:
         with block_signals(combo):
             combo.clear()
             combo.addItem(all_text, None)
+            combo.setItemData(
+                combo.count() - 1,
+                all_text,
+                QtCore.Qt.ItemDataRole.ToolTipRole,
+            )
             for option in options:
-                combo.addItem(self._filter_option_display_text(option), option)
+                display_text = self._filter_option_display_text(option)
+                combo.addItem(display_text, option)
+                combo.setItemData(
+                    combo.count() - 1,
+                    display_text,
+                    QtCore.Qt.ItemDataRole.ToolTipRole,
+                )
             index = combo.findData(next_value)
             combo.setCurrentIndex(index if index >= 0 else 0)
 

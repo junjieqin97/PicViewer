@@ -889,6 +889,15 @@ class MainWindowUI:
     def _apply_combo_popup_delegate(combo: QtWidgets.QComboBox) -> None:
         combo.setItemDelegate(ComboPopupItemDelegate(combo))
 
+    @staticmethod
+    def _set_combo_item_text_and_tooltip(
+        combo: QtWidgets.QComboBox,
+        index: int,
+        text: str,
+    ) -> None:
+        combo.setItemText(index, text)
+        combo.setItemData(index, text, QtCore.Qt.ItemDataRole.ToolTipRole)
+
     def create_layouts(self) -> None:
         self.layoutMain = QtWidgets.QVBoxLayout(self.central)
         self.layoutMain.setObjectName("layoutMain")
@@ -956,6 +965,7 @@ class MainWindowUI:
         table.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         table.setWordWrap(False)
         table.setTextElideMode(QtCore.Qt.TextElideMode.ElideRight)
+        table.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         header = table.horizontalHeader()
         header.setStretchLastSection(False)
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Fixed)
@@ -1002,9 +1012,21 @@ class MainWindowUI:
         self.actPeakLow.setText(self._tr("Low"))
         self._sync_analysis_action_tooltips()
 
-        self.comboFilmstripExtensionFilter.setItemText(0, self._tr("All Extensions"))
-        self.comboFilmstripCameraFilter.setItemText(0, self._tr("All Cameras"))
-        self.comboFilmstripLensFilter.setItemText(0, self._tr("All Lenses"))
+        self._set_combo_item_text_and_tooltip(
+            self.comboFilmstripExtensionFilter,
+            0,
+            self._tr("All Extensions"),
+        )
+        self._set_combo_item_text_and_tooltip(
+            self.comboFilmstripCameraFilter,
+            0,
+            self._tr("All Cameras"),
+        )
+        self._set_combo_item_text_and_tooltip(
+            self.comboFilmstripLensFilter,
+            0,
+            self._tr("All Lenses"),
+        )
         self.comboFilmstripExtensionFilter.setToolTip(self._tr("Filter Filmstrip by file extension"))
         self.comboFilmstripCameraFilter.setToolTip(self._tr("Filter Filmstrip by camera model"))
         self.comboFilmstripLensFilter.setToolTip(self._tr("Filter Filmstrip by lens model"))

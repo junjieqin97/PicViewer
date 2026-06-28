@@ -509,20 +509,40 @@ class InfoPanelLoadStateTests(QtWidgetTestCase):
         self.assertEqual("File Name", ui.tableMetadataGeneral.item(0, 0).text())
         self.assertEqual("detached-metadata.jpg", ui.tableMetadataGeneral.item(0, 1).text())
 
-    def test_long_metadata_values_have_full_value_tooltips(self) -> None:
+    def test_metadata_key_and_value_items_use_full_text_tooltips(self) -> None:
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
-        long_value = "/tmp/" + ("nested/" * 8) + "sample-with-a-long-name.jpg"
 
         controller._populate_metadata_table(
             ui.tableMetadataGeneral,
-            (("Path", long_value),),
+            (("Short Key", "Short Value"),),
             "No general metadata",
         )
 
+        key_item = ui.tableMetadataGeneral.item(0, 0)
         value_item = ui.tableMetadataGeneral.item(0, 1)
-        self.assertEqual(long_value, value_item.text())
-        self.assertEqual(long_value, value_item.toolTip())
+        self.assertEqual("Short Key", key_item.text())
+        self.assertEqual("Short Key", key_item.toolTip())
+        self.assertEqual("Short Value", value_item.text())
+        self.assertEqual("Short Value", value_item.toolTip())
+
+    def test_metadata_copy_helper_writes_key_and_value_text_to_clipboard(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        clipboard = QtWidgets.QApplication.clipboard()
+        clipboard.clear()
+
+        controller._populate_metadata_table(
+            ui.tableMetadataGeneral,
+            (("Camera Model", "X-T5"),),
+            "No general metadata",
+        )
+
+        controller._copy_metadata_item_text(ui.tableMetadataGeneral.item(0, 0))
+        self.assertEqual("Camera Model", clipboard.text())
+
+        controller._copy_metadata_item_text(ui.tableMetadataGeneral.item(0, 1))
+        self.assertEqual("X-T5", clipboard.text())
 
     def test_empty_metadata_state_spans_both_columns_and_is_not_selectable(self) -> None:
         window, ui, controller = self._build_controller()
@@ -536,6 +556,7 @@ class InfoPanelLoadStateTests(QtWidgetTestCase):
         self.assertEqual(2, table.columnSpan(0, 0))
         self.assertEqual(QtCore.Qt.AlignmentFlag.AlignCenter, empty_item.textAlignment())
         self.assertFalse(empty_item.flags() & QtCore.Qt.ItemFlag.ItemIsSelectable)
+        self.assertFalse(controller._is_metadata_copyable_item(table, empty_item))
 
     def test_metadata_table_clears_empty_span_when_entries_return(self) -> None:
         window, ui, controller = self._build_controller()
