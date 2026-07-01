@@ -1,3 +1,5 @@
+.vscode/*
+.zed/*
 .idea/*
 *.iml
 .DS_Store
