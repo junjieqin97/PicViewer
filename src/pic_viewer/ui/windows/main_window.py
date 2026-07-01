@@ -262,7 +262,7 @@ class MainWindowUI:
         self.actToggleInfoPanel.setShortcut(QtGui.QKeySequence(f"{modifier}+Right"))
         self.actToggleAnalysisToolbar.setShortcut(QtGui.QKeySequence(f"{modifier}+Up"))
         self.actToggleFilmstrip.setShortcut(QtGui.QKeySequence(f"{modifier}+Down"))
-        self.actZoomIn.setShortcut(QtGui.QKeySequence(f"{modifier}++"))
+        self.actZoomIn.setShortcut(QtGui.QKeySequence(f"{modifier}+="))
         self.actZoomOut.setShortcut(QtGui.QKeySequence(f"{modifier}+-"))
         self.actFitToWindow.setShortcut(QtGui.QKeySequence(f"{modifier}+0"))
         self.actModeLuma.setShortcut(QtGui.QKeySequence(f"{modifier}+L"))
@@ -276,6 +276,13 @@ class MainWindowUI:
         self.actPeakHigh.setShortcut(QtGui.QKeySequence("F3"))
         self.actPeakMedium.setShortcut(QtGui.QKeySequence("F2"))
         self.actPeakLow.setShortcut(QtGui.QKeySequence("F1"))
+        self.actToggleMetadataOverlay.setShortcut(QtGui.QKeySequence(f"{modifier}+I"))
+        self.actToggleCrossReferenceLine.setShortcut(QtGui.QKeySequence("F5"))
+        self.actToggleDiagonalReferenceLine.setShortcut(QtGui.QKeySequence("F6"))
+        self.actToggleThirdsReferenceLine.setShortcut(QtGui.QKeySequence("F7"))
+        self.actAddColorReadout.setShortcut(QtGui.QKeySequence(f"{modifier}+]"))
+        self.actDeleteColorReadout.setShortcut(QtGui.QKeySequence(f"{modifier}+["))
+        self.actDeleteAllColorReadouts.setShortcut(QtGui.QKeySequence(f"{modifier}+Shift+["))
 
     def create_menus(self) -> None:
         menu_bar = self._main_window.menuBar()
@@ -882,6 +889,15 @@ class MainWindowUI:
     def _apply_combo_popup_delegate(combo: QtWidgets.QComboBox) -> None:
         combo.setItemDelegate(ComboPopupItemDelegate(combo))
 
+    @staticmethod
+    def _set_combo_item_text_and_tooltip(
+        combo: QtWidgets.QComboBox,
+        index: int,
+        text: str,
+    ) -> None:
+        combo.setItemText(index, text)
+        combo.setItemData(index, text, QtCore.Qt.ItemDataRole.ToolTipRole)
+
     def create_layouts(self) -> None:
         self.layoutMain = QtWidgets.QVBoxLayout(self.central)
         self.layoutMain.setObjectName("layoutMain")
@@ -949,6 +965,7 @@ class MainWindowUI:
         table.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         table.setWordWrap(False)
         table.setTextElideMode(QtCore.Qt.TextElideMode.ElideRight)
+        table.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         header = table.horizontalHeader()
         header.setStretchLastSection(False)
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Fixed)
@@ -995,9 +1012,21 @@ class MainWindowUI:
         self.actPeakLow.setText(self._tr("Low"))
         self._sync_analysis_action_tooltips()
 
-        self.comboFilmstripExtensionFilter.setItemText(0, self._tr("All Extensions"))
-        self.comboFilmstripCameraFilter.setItemText(0, self._tr("All Cameras"))
-        self.comboFilmstripLensFilter.setItemText(0, self._tr("All Lenses"))
+        self._set_combo_item_text_and_tooltip(
+            self.comboFilmstripExtensionFilter,
+            0,
+            self._tr("All Extensions"),
+        )
+        self._set_combo_item_text_and_tooltip(
+            self.comboFilmstripCameraFilter,
+            0,
+            self._tr("All Cameras"),
+        )
+        self._set_combo_item_text_and_tooltip(
+            self.comboFilmstripLensFilter,
+            0,
+            self._tr("All Lenses"),
+        )
         self.comboFilmstripExtensionFilter.setToolTip(self._tr("Filter Filmstrip by file extension"))
         self.comboFilmstripCameraFilter.setToolTip(self._tr("Filter Filmstrip by camera model"))
         self.comboFilmstripLensFilter.setToolTip(self._tr("Filter Filmstrip by lens model"))

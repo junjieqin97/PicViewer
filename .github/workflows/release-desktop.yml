@@ -5,10 +5,11 @@ on:
     types:
       - closed
     branches:
+      - develop
       - 'release-*'
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   QT_RUNTIME_VERSION: "6.11.1"
@@ -21,19 +22,26 @@ jobs:
     name: Read release metadata
     if: >-
       github.event.pull_request.merged == true &&
-      github.event.pull_request.head.ref == 'develop' &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (
+        github.event.pull_request.base.ref == 'develop' ||
+        (
+          startsWith(github.event.pull_request.base.ref, 'release-') &&
+          github.event.pull_request.head.ref == 'develop'
+        )
+      )
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.release.outputs.version }}
       tag: ${{ steps.release.outputs.tag }}
+      publish_release: ${{ steps.release.outputs.publish_release }}
       dmg: ${{ steps.release.outputs.dmg }}
       dmg_checksum: ${{ steps.release.outputs.dmg_checksum }}
       msi: ${{ steps.release.outputs.msi }}
       msi_checksum: ${{ steps.release.outputs.msi_checksum }}
 
     steps:
-      - name: Check out release branch
+      - name: Check out target branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.ref }}
@@ -41,6 +49,9 @@ jobs:
 
       - name: Read release version
         id: release
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           VERSION="$(sed -nE 's/^version = "([^"]+)"/\1/p' pyproject.toml | head -n 1)"
           if [ -z "$VERSION" ]; then
@@ -53,8 +64,14 @@ jobs:
           echo "dmg_checksum=dist/PicViewer-$VERSION.dmg.sha256" >> "$GITHUB_OUTPUT"
           echo "msi=dist/PicViewer-$VERSION.msi" >> "$GITHUB_OUTPUT"
           echo "msi_checksum=dist/PicViewer-$VERSION.msi.sha256" >> "$GITHUB_OUTPUT"
+          if [[ "$BASE_REF" == release-* && "$HEAD_REF" == "develop" ]]; then
+            echo "publish_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish_release=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Ensure release does not already exist
+        if: ${{ steps.release.outputs.publish_release == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -73,7 +90,7 @@ jobs:
         shell: bash -el {0}
 
     steps:
-      - name: Check out release branch
+      - name: Check out target branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.ref }}
@@ -91,25 +108,14 @@ jobs:
       - name: Install packaging dependencies
         run: |
           brew install inih
-          conda install -y -c conda-forge "pyside6=$QT_RUNTIME_VERSION" "qt6-main=$QT_RUNTIME_VERSION" "pyvips=$PYVIPS_VERSION" "libvips=$LIBVIPS_VERSION"
+          python scripts/packaging/install_release_dependencies.py
           if [ -d "$CONDA_PREFIX/lib/qt6/bin" ]; then
             echo "$CONDA_PREFIX/lib/qt6/bin" >> "$GITHUB_PATH"
             export PATH="$CONDA_PREFIX/lib/qt6/bin:$PATH"
           fi
-          python -m pip install --upgrade pip
-          python -m pip install \
-            "build>=1.2" \
-            "twine>=5.0" \
-            "pyinstaller>=6.0" \
-            "tomli>=2.0; python_version < '3.11'" \
-            "rawpy==$RAWPY_VERSION" \
-            "opencv-python>=4.7" \
-            "numpy>=1.23" \
-            "pyexiv2>=2.15.5,<3" \
-            "Pillow>=10.0" \
-            "pillow-heif>=1,<2" \
-            "pillow-avif-plugin>=1.5,<2"
-          python -m pip install -e . --no-deps
+
+      - name: Verify dependency sources
+        run: python scripts/packaging/verify_dependency_sources.py
 
       - name: Verify pyvips runtime
         run: python scripts/packaging/verify_pyvips_runtime.py --environment
@@ -148,7 +154,7 @@ jobs:
         shell: pwsh
 
     steps:
-      - name: Check out release branch
+      - name: Check out target branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.ref }}
@@ -180,7 +186,7 @@ jobs:
           $ErrorActionPreference = "Stop"
           $PSNativeCommandUseErrorActionPreference = $true
           conda activate PicViewer
-          conda install -y -c conda-forge "pyside6=$env:QT_RUNTIME_VERSION" "qt6-main=$env:QT_RUNTIME_VERSION" "pyvips=$env:PYVIPS_VERSION" "libvips=$env:LIBVIPS_VERSION"
+          python scripts/packaging/install_release_dependencies.py
           $qtToolDirs = @(
             "$env:CONDA_PREFIX\Library\bin"
             "$env:CONDA_PREFIX\lib\qt6\bin"
@@ -191,20 +197,11 @@ jobs:
               $env:PATH = "$dir;$env:PATH"
             }
           }
-          python -m pip install --upgrade pip
-          python -m pip install `
-            "build>=1.2" `
-            "twine>=5.0" `
-            "pyinstaller>=6.0" `
-            "tomli>=2.0; python_version < '3.11'" `
-            "rawpy==$env:RAWPY_VERSION" `
-            "opencv-python>=4.7" `
-            "numpy>=1.23" `
-            "pyexiv2>=2.15.5,<3" `
-            "Pillow>=10.0" `
-            "pillow-heif>=1,<2" `
-            "pillow-avif-plugin>=1.5,<2"
-          python -m pip install -e . --no-deps
+
+      - name: Verify dependency sources
+        run: |
+          conda activate PicViewer
+          python scripts/packaging/verify_dependency_sources.py
 
       - name: Verify pyvips runtime
         run: |
@@ -264,7 +261,10 @@ jobs:
       - release-metadata
       - build-macos
       - build-windows
+    if: ${{ needs.release-metadata.outputs.publish_release == 'true' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Download release assets

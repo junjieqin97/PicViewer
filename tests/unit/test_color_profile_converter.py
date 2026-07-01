@@ -51,6 +51,28 @@ class ColorProfileConverterTests(unittest.TestCase):
 
         self.assertFalse(hasattr(module, "ImageCms"))
 
+    def test_profile_display_name_reads_mluc_data_inside_desc_tag(self) -> None:
+        converter = ColorProfileConverter()
+        profile_bytes = self._icc_profile_with_text_tag(
+            b"desc",
+            self._mluc_tag_data("Display P3"),
+        )
+
+        display_name = converter._profile_display_name(profile_bytes)
+
+        self.assertEqual("Display P3", display_name)
+
+    def test_profile_display_name_reads_legacy_desc_tag(self) -> None:
+        converter = ColorProfileConverter()
+        profile_bytes = self._icc_profile_with_text_tag(
+            b"desc",
+            self._desc_tag_data("Camera RGB"),
+        )
+
+        display_name = converter._profile_display_name(profile_bytes)
+
+        self.assertEqual("Camera RGB", display_name)
+
     def test_builtin_display_color_spaces_resolve_to_icc_profile_paths(self) -> None:
         converter = ColorProfileConverter()
 
@@ -285,6 +307,34 @@ class ColorProfileConverterTests(unittest.TestCase):
         self.assertEqual(ChannelBitDepth.SIXTEEN, cms_depth)
         self.assertEqual(ImageColorProfileStatus.EMBEDDED, info.status)
         self.assertFalse(info.uses_srgb_fallback)
+
+    def _icc_profile_with_text_tag(self, signature: bytes, tag_data: bytes) -> bytes:
+        header = bytearray(128)
+        tag_table = bytearray()
+        tag_table.extend((1).to_bytes(4, "big"))
+        tag_offset = 128 + 4 + 12
+        tag_table.extend(signature)
+        tag_table.extend(tag_offset.to_bytes(4, "big"))
+        tag_table.extend(len(tag_data).to_bytes(4, "big"))
+        return bytes(header + tag_table + tag_data)
+
+    def _desc_tag_data(self, label: str) -> bytes:
+        text = label.encode("ascii") + b"\x00"
+        return b"desc" + b"\x00" * 4 + len(text).to_bytes(4, "big") + text
+
+    def _mluc_tag_data(self, label: str) -> bytes:
+        text = label.encode("utf-16-be")
+        text_offset = 28
+        return (
+            b"mluc"
+            + b"\x00" * 4
+            + (1).to_bytes(4, "big")
+            + (12).to_bytes(4, "big")
+            + b"enUS"
+            + len(text).to_bytes(4, "big")
+            + text_offset.to_bytes(4, "big")
+            + text
+        )
 
 
 if __name__ == "__main__":

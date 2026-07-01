@@ -4,6 +4,7 @@ import os
 import sys
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -64,6 +65,35 @@ class ComboPopupItemDelegateTests(QtWidgetTestCase):
         self.assertEqual(
             option.palette.color(QtGui.QPalette.ColorRole.Highlight).name(),
             image.pixelColor(3, option.rect.center().y()).name(),
+        )
+
+    def test_delegate_shows_item_tooltip_for_help_event(self) -> None:
+        delegate = ComboPopupItemDelegate()
+        view = QtWidgets.QListView()
+        self.addCleanup(view.deleteLater)
+        model = QtGui.QStandardItemModel(view)
+        item = QtGui.QStandardItem("Very long filter option")
+        item.setData(
+            "Very long filter option",
+            QtCore.Qt.ItemDataRole.ToolTipRole,
+        )
+        model.appendRow(item)
+        view.setModel(model)
+        option = self._item_option(QtWidgets.QStyle.StateFlag.State_MouseOver)
+        event = QtGui.QHelpEvent(
+            QtCore.QEvent.Type.ToolTip,
+            QtCore.QPoint(8, 8),
+            QtCore.QPoint(120, 120),
+        )
+
+        with patch.object(QtWidgets.QToolTip, "showText") as show_text:
+            handled = delegate.helpEvent(event, view, option, model.index(0, 0))
+
+        self.assertTrue(handled)
+        show_text.assert_called_once_with(
+            QtCore.QPoint(120, 120),
+            "Very long filter option",
+            view,
         )
 
     def test_analysis_combos_use_combo_popup_delegate(self) -> None:

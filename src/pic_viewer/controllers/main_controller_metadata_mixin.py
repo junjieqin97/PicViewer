@@ -15,8 +15,6 @@ from pic_viewer.ui.widgets.image_display_label import ImageDisplayLabel
 class MainControllerMetadataMixin:
     """Provide metadata table rendering helpers."""
 
-    METADATA_TOOLTIP_VALUE_LENGTH = 48
-
     def _on_metadata_overlay_toggled(self, active: bool) -> None:
         """Handle metadata overlay visibility changes from shared actions."""
 
@@ -71,6 +69,81 @@ class MainControllerMetadataMixin:
         for tab in tabs:
             for label in tab.findChildren(ImageDisplayLabel, "lblImage"):
                 label.set_metadata_overlay(tuple(), False)
+
+    def _connect_metadata_table_context_menus(self) -> None:
+        """Connect metadata tables to a shared copy-only context menu."""
+
+        for table in self._metadata_tables():
+            table.customContextMenuRequested.connect(self._show_metadata_context_menu)
+
+    def _metadata_tables(self) -> tuple[QtWidgets.QTableWidget, ...]:
+        """Return the metadata tables that support cell-level interactions."""
+
+        table_names = (
+            "tableMetadataGeneral",
+            "tableMetadataExif",
+            "tableMetadataIptc",
+            "tableMetadataTiff",
+        )
+        tables: list[QtWidgets.QTableWidget] = []
+        for table_name in table_names:
+            table = getattr(self._ui, table_name, None)
+            if isinstance(table, QtWidgets.QTableWidget):
+                tables.append(table)
+        return tuple(tables)
+
+    def _show_metadata_context_menu(self, pos: QtCore.QPoint) -> None:
+        """Show the metadata cell copy menu for a valid key or value cell."""
+
+        sender = self.sender()
+        if not isinstance(sender, QtWidgets.QTableWidget):
+            return
+
+        item = self._metadata_item_for_context_menu(sender, pos)
+        if item is None:
+            return
+
+        menu = QtWidgets.QMenu(sender)
+        copy_action = menu.addAction(self._tr("Copy"))
+        selected_action = menu.exec(sender.viewport().mapToGlobal(pos))
+        if selected_action == copy_action:
+            self._copy_metadata_item_text(item)
+
+    def _metadata_item_for_context_menu(
+        self,
+        table: QtWidgets.QTableWidget,
+        pos: QtCore.QPoint,
+    ) -> QtWidgets.QTableWidgetItem | None:
+        """Return the metadata item under a context menu position if copyable."""
+
+        item = table.itemAt(pos)
+        if item is None or not self._is_metadata_copyable_item(table, item):
+            return None
+        return item
+
+    def _is_metadata_copyable_item(
+        self,
+        table: QtWidgets.QTableWidget,
+        item: QtWidgets.QTableWidgetItem | None,
+    ) -> bool:
+        """Return whether a table item represents real metadata text."""
+
+        if item is None or not item.text():
+            return False
+        row = table.row(item)
+        column = table.column(item)
+        if row < 0 or column not in (0, 1):
+            return False
+        if not item.flags() & QtCore.Qt.ItemFlag.ItemIsSelectable:
+            return False
+        return table.rowSpan(row, column) == 1 and table.columnSpan(row, column) == 1
+
+    def _copy_metadata_item_text(self, item: QtWidgets.QTableWidgetItem | None) -> None:
+        """Copy metadata cell text to the application clipboard."""
+
+        if item is None:
+            return
+        QtWidgets.QApplication.clipboard().setText(item.text())
 
     def _clear_metadata_tables(self) -> None:
         self._populate_metadata_table(self._ui.tableMetadataGeneral, tuple(), self._tr("No general metadata"))
@@ -149,18 +222,15 @@ class MainControllerMetadataMixin:
             table.setRowCount(len(entries))
             for row, (key, value) in enumerate(entries):
                 table.setItem(row, 0, self._create_metadata_item(key))
-                table.setItem(row, 1, self._create_metadata_item(value, tooltip_if_long=True))
+                table.setItem(row, 1, self._create_metadata_item(value))
         else:
             table.setRowCount(1)
             table.setItem(0, 0, self._create_metadata_state_item(empty_message))
             table.setSpan(0, 0, 1, 2)
 
-    def _create_metadata_item(
-        self, text: str, tooltip_if_long: bool = False
-    ) -> QtWidgets.QTableWidgetItem:
+    def _create_metadata_item(self, text: str) -> QtWidgets.QTableWidgetItem:
         item = QtWidgets.QTableWidgetItem(text)
-        if tooltip_if_long and self._should_show_metadata_tooltip(text):
-            item.setToolTip(text)
+        item.setToolTip(text)
         return item
 
     def _create_metadata_state_item(self, text: str) -> QtWidgets.QTableWidgetItem:
@@ -168,6 +238,3 @@ class MainControllerMetadataMixin:
         item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsSelectable)
         return item
-
-    def _should_show_metadata_tooltip(self, text: str) -> bool:
-        return "\n" in text or len(text) > self.METADATA_TOOLTIP_VALUE_LENGTH

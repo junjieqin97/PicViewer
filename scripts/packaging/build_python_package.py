@@ -69,7 +69,7 @@ def build_python_package(
     build_qm_script = root / "scripts" / "i18n" / "build_qm.py"
     runner([python_executable(), str(build_qm_script)], cwd=root, check=True)
     clean_build_outputs(root)
-    runner([python_executable(), "-m", "build"], cwd=root, check=True)
+    runner([python_executable(), "-m", "build", "--no-isolation"], cwd=root, check=True)
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:

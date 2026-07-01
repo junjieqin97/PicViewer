@@ -378,9 +378,10 @@ class ColorProfileConverter:
                 offset = int.from_bytes(profile_bytes[record_start + 4 : record_start + 8], "big")
                 size = int.from_bytes(profile_bytes[record_start + 8 : record_start + 12], "big")
                 tag_data = profile_bytes[offset : offset + size]
-                if signature == b"desc":
+                tag_type = tag_data[:4]
+                if tag_type == b"desc":
                     return self._read_desc_tag(tag_data)
-                if signature == b"mluc":
+                if tag_type == b"mluc":
                     return self._read_mluc_tag(tag_data)
         except (IndexError, ValueError):
             return ""
