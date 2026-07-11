@@ -75,6 +75,13 @@ pyvips/libvips CMS backend, and packaged RAW backend stable across GitHub
 runner image updates reduces release-only failures in headless unit tests and
 PyInstaller packaging.
 
+The Windows job also runs `dist\PicViewer\PicViewer.exe --help` after building
+the PyInstaller onedir app. This smoke test imports PicViewer's startup modules,
+including OpenCV, before argparse exits without launching the GUI. It catches
+Windows bundle failures where conda-forge OpenCV loader files still point to the
+GitHub runner's conda environment instead of the packaged `_internal\cv2`
+layout.
+
 ## Windows WiX EULA Handling
 
 The Windows job installs WiX with the .NET SDK and runs:

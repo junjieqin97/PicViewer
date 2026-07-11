@@ -623,6 +623,97 @@ class PackagingScriptsTests(unittest.TestCase):
             pyinstaller_envs[0]["PYINSTALLER_CONFIG_DIR"],
         )
 
+    def test_normalize_windows_cv2_runtime_config_rewrites_conda_paths(self) -> None:
+        build_app = load_script("scripts/packaging/build_app.py")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            app_path = Path(tmp_dir) / "dist" / "PicViewer"
+            cv2_dir = app_path / "_internal" / "cv2"
+            extension_dir = cv2_dir / "python-3"
+            extension_dir.mkdir(parents=True)
+            (extension_dir / "cv2.pyd").write_bytes(b"native extension")
+            (cv2_dir / "config-3.py").write_text(
+                "PYTHON_EXTENSIONS_PATHS = [\n"
+                "    os.path.join('C:/Users/runneradmin/miniconda3/envs/PicViewer/Lib/site-packages/cv2', 'python-3')\n"
+                "] + PYTHON_EXTENSIONS_PATHS\n",
+                encoding="utf-8",
+            )
+            (cv2_dir / "config.py").write_text(
+                "import os\n\n"
+                "BINARIES_PATHS = [\n"
+                "    os.path.join('C:/Users/runneradmin/miniconda3/envs/PicViewer/Library', 'bin')\n"
+                "] + BINARIES_PATHS\n",
+                encoding="utf-8",
+            )
+
+            changed = build_app.normalize_windows_cv2_runtime_config(app_path, platform="win32")
+
+            self.assertTrue(changed)
+            self.assertEqual(
+                'import os\n\n'
+                'PYTHON_EXTENSIONS_PATHS = [\n'
+                '    os.path.join(LOADER_DIR, "python-3")\n'
+                '] + PYTHON_EXTENSIONS_PATHS\n',
+                (cv2_dir / "config-3.py").read_text(encoding="utf-8"),
+            )
+            self.assertEqual(
+                'import os\n\n'
+                'BINARIES_PATHS = [\n'
+                '    os.path.abspath(os.path.join(LOADER_DIR, os.pardir))\n'
+                '] + BINARIES_PATHS\n',
+                (cv2_dir / "config.py").read_text(encoding="utf-8"),
+            )
+
+    def test_normalize_windows_cv2_runtime_config_skips_non_windows(self) -> None:
+        build_app = load_script("scripts/packaging/build_app.py")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            missing_app_path = Path(tmp_dir) / "dist" / "PicViewer"
+
+            self.assertFalse(build_app.normalize_windows_cv2_runtime_config(missing_app_path, platform="linux"))
+
+    def test_normalize_windows_cv2_runtime_config_requires_cv2_extension(self) -> None:
+        build_app = load_script("scripts/packaging/build_app.py")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            app_path = Path(tmp_dir) / "dist" / "PicViewer"
+            cv2_dir = app_path / "_internal" / "cv2"
+            cv2_dir.mkdir(parents=True)
+            (cv2_dir / "config-3.py").write_text("bad", encoding="utf-8")
+            (cv2_dir / "config.py").write_text("bad", encoding="utf-8")
+
+            with self.assertRaisesRegex(RuntimeError, "cv2.pyd"):
+                build_app.normalize_windows_cv2_runtime_config(app_path, platform="win32")
+
+    def test_build_app_normalizes_windows_cv2_runtime_config(self) -> None:
+        build_app = load_script("scripts/packaging/build_app.py")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+
+            def fake_runner(command: list[str], **_: object) -> None:
+                if "-m" in command and "PyInstaller" in command:
+                    cv2_dir = root / "dist" / "PicViewer" / "_internal" / "cv2"
+                    extension_dir = cv2_dir / "python-3"
+                    extension_dir.mkdir(parents=True)
+                    (extension_dir / "cv2.pyd").write_bytes(b"native extension")
+                    (cv2_dir / "config-3.py").write_text("bad python path", encoding="utf-8")
+                    (cv2_dir / "config.py").write_text("bad binary path", encoding="utf-8")
+
+            build_app.build_app(
+                project_root=root,
+                env={"CONDA_DEFAULT_ENV": "PicViewer"},
+                runner=fake_runner,
+                platform="win32",
+            )
+
+            cv2_dir = root / "dist" / "PicViewer" / "_internal" / "cv2"
+            self.assertIn('os.path.join(LOADER_DIR, "python-3")', (cv2_dir / "config-3.py").read_text(encoding="utf-8"))
+            self.assertIn(
+                "os.path.abspath(os.path.join(LOADER_DIR, os.pardir))",
+                (cv2_dir / "config.py").read_text(encoding="utf-8"),
+            )
+
     def test_normalize_macos_libvips_runtime_dylibs_replaces_cv2_symlinks(self) -> None:
         build_app = load_script("scripts/packaging/build_app.py")
 
