@@ -157,6 +157,28 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertNotIn('"PySide2"', spec)
         self.assertIn("_collect_runtime_metadata(RUNTIME_METADATA_PACKAGES)", spec)
 
+    def test_pyinstaller_spec_keeps_rawpy_core_without_optional_enhancement_chain(self) -> None:
+        spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")
+        runtime_modules = spec.split("RAWPY_RUNTIME_MODULES = (", maxsplit=1)[1].split(")", maxsplit=1)[0]
+        excluded_modules = spec.split("EXCLUDED_OPTIONAL_RAWPY_MODULES = (", maxsplit=1)[1].split(
+            ")",
+            maxsplit=1,
+        )[0]
+
+        self.assertNotIn('collect_submodules("rawpy")', spec)
+        self.assertIn("RAWPY_RUNTIME_MODULES", spec)
+        self.assertIn('"rawpy"', runtime_modules)
+        self.assertIn('"rawpy._rawpy"', runtime_modules)
+        self.assertIn('"rawpy._version"', runtime_modules)
+        self.assertIn("EXCLUDED_OPTIONAL_RAWPY_MODULES", spec)
+        for module_name in (
+            "rawpy.enhance",
+            "skimage",
+            "scipy",
+        ):
+            self.assertIn(f'"{module_name}"', excluded_modules)
+        self.assertIn("excludes=list(EXCLUDED_OPTIONAL_RAWPY_MODULES)", spec)
+
     def test_pyinstaller_spec_collects_pyvips_runtime_and_excludes_pillow_imagecms(self) -> None:
         spec = (PROJECT_ROOT / "packaging" / "pyinstaller" / "PicViewer.spec").read_text(encoding="utf-8")
 

@@ -162,12 +162,15 @@ The script performs the following steps:
 - Invoke PyInstaller with `packaging/pyinstaller/PicViewer.spec`.
 - Output native platform artifacts to `dist/`.
 
-PyInstaller uses `onedir` mode. The Windows artifact is `dist/PicViewer/`, and the macOS artifact is `dist/PicViewer.app`. Windows uses `packaging/icons/picviewer.ico` as the application icon, and macOS uses `packaging/icons/picviewer.icns`. The app version installs and collects `rawpy` through the `packaging` extra by default, providing RAW support for ordinary users.
+PyInstaller uses `onedir` mode. The Windows artifact is `dist/PicViewer/`, and the macOS artifact is `dist/PicViewer.app`. Windows uses `packaging/icons/picviewer.ico` as the application icon, and macOS uses `packaging/icons/picviewer.icns`. The app version installs `rawpy` through the `packaging` extra by default, providing RAW support for ordinary users. The spec packages the `rawpy` runtime core explicitly by keeping `rawpy`, `rawpy._rawpy`, and `rawpy._version`.
 The spec also collects `pyexiv2` submodules, `pyexiv2` dynamic libraries,
 pyvips submodules, pyvips/libvips dynamic libraries, Pillow HEIF/AVIF plugin
 modules and dynamic libraries, and macOS Homebrew `inih` dynamic libraries so
 Exiv2 metadata reading, ICC color conversion, and modern image decoding work in
 packaged apps. Pillow ImageCms hidden imports are intentionally not collected.
+`rawpy.enhance` and its optional `skimage`/`scipy` image-enhancement chain are
+also intentionally excluded because PicViewer decodes RAW files through
+`rawpy.imread(...).postprocess(...)` and does not use rawpy enhancement helpers.
 The spec generates PicViewer's own package metadata for the About dialog from `pyproject.toml` and sets the macOS bundle version from the same source.
 
 The PyInstaller spec prunes unused PySide6 runtime entries after dependency
@@ -182,8 +185,9 @@ pyvips/libvips with the active conda environment's `lib/` copies, then re-signs
 the bundle. This prevents PyInstaller from leaving top-level `libglib`,
 `libintl`, or `libpcre2` symlinks to OpenCV's private bundled copies, which can
 be older than the libvips runtime and break ICC conversion. Other pruning only
-applies to Qt runtime entries; OpenCV, rawpy, pyexiv2, pyvips/libvips, Pillow
-image plugins, and PicViewer resources are left unchanged.
+applies to Qt runtime entries and the unused rawpy optional enhancement chain;
+OpenCV, rawpy's core runtime, pyexiv2, pyvips/libvips, Pillow image plugins, and
+PicViewer resources are left unchanged.
 
 After building the PyInstaller app, verify that the bundle still contains
 conda-forge pyvips metadata and native libvips/LittleCMS runtime files:
