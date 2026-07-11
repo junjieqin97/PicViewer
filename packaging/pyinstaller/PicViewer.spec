@@ -39,6 +39,16 @@ RUNTIME_METADATA_PACKAGES = (
     "rawpy",
 )
 OPTIONAL_METADATA_PACKAGES = {"rawpy"}
+RAWPY_RUNTIME_MODULES = (
+    "rawpy",
+    "rawpy._rawpy",
+    "rawpy._version",
+)
+EXCLUDED_OPTIONAL_RAWPY_MODULES = (
+    "rawpy.enhance",
+    "skimage",
+    "scipy",
+)
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(SRC_ROOT))
 
@@ -127,10 +137,7 @@ try:
 except Exception:
     hiddenimports.append("pyvips")
 
-try:
-    hiddenimports += collect_submodules("rawpy")
-except Exception:
-    hiddenimports.append("rawpy")
+hiddenimports += list(RAWPY_RUNTIME_MODULES)
 
 try:
     binaries += collect_dynamic_libs("pillow_heif")
@@ -153,7 +160,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=list(EXCLUDED_OPTIONAL_RAWPY_MODULES),
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,

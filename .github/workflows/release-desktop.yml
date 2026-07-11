@@ -218,6 +218,11 @@ jobs:
           conda activate PicViewer
           python scripts/packaging/build_app.py
 
+      - name: Smoke test Windows app startup
+        run: |
+          conda activate PicViewer
+          dist\PicViewer\PicViewer.exe --help
+
       - name: Verify Windows app pyvips runtime
         run: |
           conda activate PicViewer
