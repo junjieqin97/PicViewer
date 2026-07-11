@@ -116,6 +116,30 @@ class UiStylesTests(QtWidgetTestCase):
         self.assertIn("QLabel#labelRenderingIntentTitle", light_style)
         self.assertIn("QWidget#tabAnalysis QComboBox", light_style)
 
+    def test_analysis_sample_precision_title_matches_color_space_title_color(self) -> None:
+        expected_colors = {
+            styles.AppearanceTheme.DARK: "#9aa4af",
+            styles.AppearanceTheme.LIGHT: "#657386",
+        }
+
+        for theme, expected_color in expected_colors.items():
+            with self.subTest(theme=theme):
+                style_sheet = styles.load_stylesheet(theme)
+                sample_rule = self._style_block(
+                    style_sheet,
+                    "QLabel#labelAnalysisSamplePrecisionTitle",
+                )
+                color_space_rule = self._style_block(
+                    style_sheet,
+                    "QLabel#labelSpecifiedImageColorSpaceTitle",
+                )
+
+                self.assertEqual(expected_color, self._style_property(sample_rule, "color"))
+                self.assertEqual(
+                    self._style_property(color_space_rule, "color"),
+                    self._style_property(sample_rule, "color"),
+                )
+
     def test_analysis_color_selectors_use_fixed_width_styles(self) -> None:
         for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
             with self.subTest(theme=theme):

@@ -223,6 +223,7 @@ class MainController(
             self._ui.actToggleThirdsReferenceLine.toggled.connect(self._on_thirds_reference_line_toggled)
         if hasattr(self._ui, "actToggleMetadataOverlay"):
             self._ui.actToggleMetadataOverlay.toggled.connect(self._on_metadata_overlay_toggled)
+        self._connect_metadata_table_context_menus()
         if hasattr(self._ui, "actAddColorReadout"):
             self._ui.actAddColorReadout.triggered.connect(self._on_add_color_readout_triggered)
         if hasattr(self._ui, "actDeleteColorReadout"):

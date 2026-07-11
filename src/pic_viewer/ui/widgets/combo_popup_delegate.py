@@ -8,6 +8,21 @@ from PySide6 import QtCore, QtGui, QtWidgets
 class ComboPopupItemDelegate(QtWidgets.QStyledItemDelegate):
     """Paint combo popup rows using the view palette for reliable highlighting."""
 
+    def helpEvent(
+        self,
+        event: QtGui.QHelpEvent,
+        view: QtWidgets.QAbstractItemView,
+        option: QtWidgets.QStyleOptionViewItem,
+        index: QtCore.QModelIndex,
+    ) -> bool:
+        """Show the full item tooltip when a combo popup row is hovered."""
+
+        tooltip = index.data(QtCore.Qt.ItemDataRole.ToolTipRole) if index.isValid() else None
+        if tooltip:
+            QtWidgets.QToolTip.showText(event.globalPos(), str(tooltip), view)
+            return True
+        return super().helpEvent(event, view, option, index)
+
     def paint(
         self,
         painter: QtGui.QPainter,

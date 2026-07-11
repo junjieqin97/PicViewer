@@ -269,6 +269,7 @@ QFrame#separatorAnalysisToolbar {
 }
 
 QWidget#widgetImageColorSpace,
+QWidget#widgetAnalysisSamplePrecision,
 QWidget#widgetSpecifiedImageColorSpace,
 QWidget#widgetRenderingIntent,
 QWidget#widgetDisplayColorSpace {
@@ -276,6 +277,7 @@ QWidget#widgetDisplayColorSpace {
 }
 
 QLabel#labelImageColorSpaceTitle,
+QLabel#labelAnalysisSamplePrecisionTitle,
 QLabel#labelSpecifiedImageColorSpaceTitle,
 QLabel#labelRenderingIntentTitle,
 QLabel#labelDisplayColorSpaceTitle {

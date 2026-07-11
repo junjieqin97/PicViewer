@@ -39,6 +39,8 @@ Activate the project environment before release:
 
 ```bash
 conda activate PicViewer
+python scripts/packaging/install_release_dependencies.py
+python scripts/packaging/verify_dependency_sources.py
 ```
 
 Build the Python source distribution and wheel:

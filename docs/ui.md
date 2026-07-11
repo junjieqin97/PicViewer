@@ -285,28 +285,35 @@ Actions (names must be consistent; copy may mix Chinese and English, but consist
 
 Shortcuts for common features must be set as follows:
 
-| Feature               | Shortcut (Windows/Linux) | Shortcut (MacOS)        |
-| --------------------- | ------------------------ | ----------------------- |
-| Open Image            | `Ctrl + O`               | `Command + O`           |
-| Open Folder           | `Shift + Ctrl + O`       | `Shift + Command + O`   |
-| Close Current Tab     | `Esc`                    | `Esc`                   |
-| Info Panel            | `Ctrl + Right Arrow`     | `Command + Right Arrow` |
-| Analysis Toolbar      | `Ctrl + Up Arrow`        | `Command + Up Arrow`    |
-| Filmstrip Pane        | `Ctrl + Down Arrow`      | `Command + Down Arrow`  |
-| Zoom In               | `Ctrl + +`               | `Command + +`           |
-| Zoom Out              | `Ctrl + -`               | `Command + -`           |
-| Fit to Window         | `Ctrl + 0`               | `Command + 0`           |
-| Luma Mode             | `Ctrl + L`               | `Command + L`           |
-| RGB Mode              | `Ctrl + K`               | `Command + K`           |
-| All RGB Channels      | `Ctrl + K`               | `Command + K`           |
-| Red Channel Only      | `Ctrl + R`               | `Command + R`           |
-| Green Channel Only    | `Ctrl + G`               | `Command + G`           |
-| Blue Channel Only     | `Ctrl + B`               | `Command + B`           |
-| Show Underexposed     | `Shift + Ctrl + P`       | `Shift + Command + P`   |
-| Show Overexposed      | `Ctrl + P`               | `Command + P`           |
-| Show Peaking (High)   | `F3`                     | `F3`                    |
-| Show Peaking (Medium) | `F2`                     | `F2`                    |
-| Show Peaking (Low)    | `F1`                     | `F1`                    |
+| Feature                       | Shortcut (Windows/Linux) | Shortcut (MacOS)        |
+|-------------------------------|--------------------------|-------------------------|
+| Open Image                    | `Ctrl + O`               | `Command + O`           |
+| Open Folder                   | `Shift + Ctrl + O`       | `Shift + Command + O`   |
+| Close Current Tab             | `Esc`                    | `Esc`                   |
+| Show Metadata Overlay         | `Ctrl + I`               | `Command + I`           |
+| Info Panel                    | `Ctrl + Right Arrow`     | `Command + Right Arrow` |
+| Analysis Toolbar              | `Ctrl + Up Arrow`        | `Command + Up Arrow`    |
+| Filmstrip Pane                | `Ctrl + Down Arrow`      | `Command + Down Arrow`  |
+| Zoom In                       | `Ctrl + =`               | `Command + =`           |
+| Zoom Out                      | `Ctrl + -`               | `Command + -`           |
+| Fit to Window                 | `Ctrl + 0`               | `Command + 0`           |
+| Luma Mode                     | `Ctrl + L`               | `Command + L`           |
+| RGB Mode                      | `Ctrl + K`               | `Command + K`           |
+| All RGB Channels              | `Ctrl + K`               | `Command + K`           |
+| Red Channel Only              | `Ctrl + R`               | `Command + R`           |
+| Green Channel Only            | `Ctrl + G`               | `Command + G`           |
+| Blue Channel Only             | `Ctrl + B`               | `Command + B`           |
+| Show Underexposed             | `Shift + Ctrl + P`       | `Shift + Command + P`   |
+| Show Overexposed              | `Ctrl + P`               | `Command + P`           |
+| Show Peaking (Low)            | `F1`                     | `F1`                    |
+| Show Peaking (Medium)         | `F2`                     | `F2`                    |
+| Show Peaking (High)           | `F3`                     | `F3`                    |
+| Cross Reference Line          | `F5`                     | `F5`                    |
+| Diagonal Reference Line       | `F6`                     | `F6`                    |
+| Rule of Thirds Reference Line | `F7`                     | `F7`                    |
+| Add Color Readout             | `Ctrl + ]`               | `Command + ]`           |
+| Delete Color Readout          | `Ctrl + [`               | `Command + [`           |
+| Delete All Readouts           | `Shift + Ctrl + [`       | `Shift + Command + [`   |
 
 ## 7. Interaction Rules (Synchronization Relationships That Must Be Implemented)
 
