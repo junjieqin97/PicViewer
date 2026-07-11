@@ -184,16 +184,22 @@ generated app bundle by replacing top-level GLib runtime dylibs used by
 pyvips/libvips with the active conda environment's `lib/` copies, then re-signs
 the bundle. This prevents PyInstaller from leaving top-level `libglib`,
 `libintl`, or `libpcre2` symlinks to OpenCV's private bundled copies, which can
-be older than the libvips runtime and break ICC conversion. Other pruning only
+be older than the libvips runtime and break ICC conversion. On Windows,
+`build_app.py` rewrites the bundled `cv2/config.py` and `cv2/config-3.py`
+loader files after PyInstaller finishes so conda-forge OpenCV resolves
+`cv2/python-3/cv2.pyd` and the top-level bundled DLL directory from the installed
+app instead of the GitHub runner's conda environment path. Other pruning only
 applies to Qt runtime entries and the unused rawpy optional enhancement chain;
 OpenCV, rawpy's core runtime, pyexiv2, pyvips/libvips, Pillow image plugins, and
-PicViewer resources are left unchanged.
+PicViewer resources are left unchanged except for the Windows OpenCV loader
+path normalization described above.
 
 After building the PyInstaller app, verify that the bundle still contains
 conda-forge pyvips metadata and native libvips/LittleCMS runtime files:
 
 ```bash
 # Windows:
+dist\PicViewer\PicViewer.exe --help
 python scripts/packaging/verify_pyvips_runtime.py --bundle dist/PicViewer
 
 # macOS:

@@ -15,6 +15,19 @@ logger = logging.getLogger(__name__)
 
 EXPECTED_CONDA_ENV = "PicViewer"
 APP_BUNDLE_NAME = "PicViewer.app"
+WINDOWS_APP_DIR_NAME = "PicViewer"
+WINDOWS_CV2_CONFIG = """import os
+
+BINARIES_PATHS = [
+    os.path.abspath(os.path.join(LOADER_DIR, os.pardir))
+] + BINARIES_PATHS
+"""
+WINDOWS_CV2_CONFIG_3 = """import os
+
+PYTHON_EXTENSIONS_PATHS = [
+    os.path.join(LOADER_DIR, "python-3")
+] + PYTHON_EXTENSIONS_PATHS
+"""
 MACOS_LIBVIPS_RUNTIME_DYLIBS = (
     "libglib-2.0.0.dylib",
     "libgobject-2.0.0.dylib",
@@ -46,6 +59,44 @@ def ensure_conda_environment(env: Optional[Mapping[str, str]] = None) -> None:
             f"Activate the {EXPECTED_CONDA_ENV} conda environment before packaging "
             f"(current: {current_env or 'not set'})."
         )
+
+
+def normalize_windows_cv2_runtime_config(
+    app_path: Path,
+    platform: str = sys.platform,
+) -> bool:
+    """Rewrite conda OpenCV loader paths to the bundled Windows app layout."""
+
+    if platform != "win32":
+        return False
+
+    cv2_dir = app_path / "_internal" / "cv2"
+    extension_path = cv2_dir / "python-3" / "cv2.pyd"
+    if not extension_path.is_file():
+        raise RuntimeError(f"Missing bundled OpenCV extension: {extension_path}.")
+
+    _write_text_if_changed(cv2_dir / "config.py", WINDOWS_CV2_CONFIG)
+    _write_text_if_changed(cv2_dir / "config-3.py", WINDOWS_CV2_CONFIG_3)
+    logger.info("Normalized Windows OpenCV runtime config: %s", cv2_dir)
+    return True
+
+
+def _write_text_if_changed(path: Path, content: str) -> bool:
+    try:
+        existing = path.read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise RuntimeError(f"Missing bundled OpenCV loader config: {path}.") from exc
+    except OSError as exc:
+        raise RuntimeError(f"Cannot read bundled OpenCV loader config: {path}.") from exc
+
+    if existing == content:
+        return False
+
+    try:
+        path.write_text(content, encoding="utf-8", newline="\n")
+    except OSError as exc:
+        raise RuntimeError(f"Cannot write bundled OpenCV loader config: {path}.") from exc
+    return True
 
 
 def normalize_macos_libvips_runtime_dylibs(
@@ -130,6 +181,9 @@ def build_app(
         env=command_env,
         check=True,
     )
+    if platform == "win32":
+        app_path = project_root / "dist" / WINDOWS_APP_DIR_NAME
+        normalize_windows_cv2_runtime_config(app_path, platform)
     if platform == "darwin":
         conda_prefix = Path(command_env.get("CONDA_PREFIX") or sys.prefix)
         app_path = project_root / "dist" / APP_BUNDLE_NAME
