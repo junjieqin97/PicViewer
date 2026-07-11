@@ -305,6 +305,7 @@ class PackagingConfigurationTests(unittest.TestCase):
         self.assertIn("dotnet tool install --global wix", workflow)
         self.assertIn("python -m unittest discover -s tests/unit", workflow)
         self.assertIn("python scripts/packaging/build_app.py", workflow)
+        self.assertIn("dist\\PicViewer\\PicViewer.exe --help", workflow)
         self.assertIn("python scripts/packaging/build_dmg.py", workflow)
         self.assertIn("python scripts/packaging/build_msi.py --accept-wix-eula", workflow)
         self.assertIn("working-directory: dist", workflow)
