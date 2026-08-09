@@ -27,7 +27,11 @@ from pic_viewer.domain.models.color_space import (
 from pic_viewer.domain.models.bit_depth import ChannelBitDepth
 from pic_viewer.domain.models.rendering_intent import DEFAULT_RENDERING_INTENT
 from pic_viewer.domain.rules.focus_peaking import FocusPeakLevel
-from pic_viewer.domain.rules.pixel_sample import ColorReadout
+from pic_viewer.domain.rules.pixel_sample import (
+    DEFAULT_COLOR_READOUT_TYPE,
+    ColorReadout,
+    ColorReadoutType,
+)
 from pic_viewer.domain.rules.reference_lines import ReferenceLineSettings
 from pic_viewer.ui.workers.image_worker import ImageLoadTask, PreviewLoadTask
 from pic_viewer.ui.workers.metadata_worker import MetadataLoadTask
@@ -119,6 +123,7 @@ class MainController(
         self._show_metadata_overlay = self._ui.actToggleMetadataOverlay.isChecked()
         self._reference_line_settings = ReferenceLineSettings()
         self._color_readout_mode: Optional[str] = None
+        self._color_readout_type = DEFAULT_COLOR_READOUT_TYPE
         self._color_readouts_by_path: Dict[str, list[ColorReadout]] = {}
         self._next_color_readout_id = 1
         self._zoom_step = 1.25
@@ -142,6 +147,7 @@ class MainController(
         self._sync_histogram_overlay_state()
         self._sync_reference_line_actions()
         self._sync_reference_line_widgets()
+        self._sync_color_readout_type_actions()
         self._sync_color_readout_actions()
         self._refresh_actions_state()
         self.update_info_for_image(None)
@@ -230,6 +236,18 @@ class MainController(
             self._ui.actDeleteColorReadout.triggered.connect(self._on_delete_color_readout_triggered)
         if hasattr(self._ui, "actDeleteAllColorReadouts"):
             self._ui.actDeleteAllColorReadouts.triggered.connect(self._on_delete_all_color_readouts_triggered)
+        if hasattr(self._ui, "actColorReadoutTypeRgbl"):
+            self._ui.actColorReadoutTypeRgbl.triggered.connect(
+                lambda _checked=False: self._set_color_readout_type(ColorReadoutType.RGBL)
+            )
+        if hasattr(self._ui, "actColorReadoutTypeHsb"):
+            self._ui.actColorReadoutTypeHsb.triggered.connect(
+                lambda _checked=False: self._set_color_readout_type(ColorReadoutType.HSB)
+            )
+        if hasattr(self._ui, "actColorReadoutTypeHsl"):
+            self._ui.actColorReadoutTypeHsl.triggered.connect(
+                lambda _checked=False: self._set_color_readout_type(ColorReadoutType.HSL)
+            )
 
         self._ui.tabsImages.currentChanged.connect(self._on_tab_changed)
         self._ui.tabsImages.tabCloseRequested.connect(self.close_tab)

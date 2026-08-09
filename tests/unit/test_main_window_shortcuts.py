@@ -119,6 +119,37 @@ class MainWindowShortcutTests(QtWidgetTestCase):
         self.assertFalse(ui.actAddColorReadout.isChecked())
         self.assertFalse(ui.actDeleteColorReadout.isChecked())
 
+    def test_tools_menu_contains_color_readouts_type_submenu(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        self.assertEqual("menuColorReadoutsType", ui.menuColorReadoutsType.objectName())
+        self.assertEqual("Color Readouts Type", ui.menuColorReadoutsType.title())
+        tools_actions = ui.menuTools.actions()
+        self.assertEqual(
+            tools_actions.index(ui.menuColorReadouts.menuAction()) + 1,
+            tools_actions.index(ui.menuColorReadoutsType.menuAction()),
+        )
+
+        actions = (
+            ui.actColorReadoutTypeRgbl,
+            ui.actColorReadoutTypeHsb,
+            ui.actColorReadoutTypeHsl,
+        )
+        self.assertEqual(["RGBL", "HSB", "HSL"], [action.text() for action in actions])
+        self.assertTrue(all(action.isCheckable() for action in actions))
+        self.assertTrue(ui.actionGroupColorReadoutType.isExclusive())
+        self.assertTrue(ui.actColorReadoutTypeRgbl.isChecked())
+        self.assertFalse(ui.actColorReadoutTypeHsb.isChecked())
+        self.assertFalse(ui.actColorReadoutTypeHsl.isChecked())
+
+        ui.actColorReadoutTypeHsl.trigger()
+
+        self.assertFalse(ui.actColorReadoutTypeRgbl.isChecked())
+        self.assertTrue(ui.actColorReadoutTypeHsl.isChecked())
+
     def test_overlay_reference_line_and_readout_shortcuts(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()

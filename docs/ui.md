@@ -31,6 +31,7 @@ The main window uses a typical four-area structure:
     - Pseudo Color: Show Underexposed (checkable), Show Overexposed (checkable), Show Peaking (High/Medium/Low, checkable, three levels are mutually exclusive and clicking the current level turns it off)
     - Reference Lines: Crosshair Reference Line, Diagonal Reference Line, Rule-of-Thirds Grid Reference Line (all checkable; can be toggled independently and displayed as overlays together)
     - Color Readouts: Add Color Readout, Delete Color Readout (checkable tool modes; activating one deactivates the other, and clicking the active tool again exits the mode), Delete All Readouts (clears all readouts from the current image only)
+    - Color Readouts Type: RGBL, HSB, HSL (mutually exclusive global session setting; RGBL is selected by default)
   - Help: About, Third-Party Library License Information
 - In the `Third-Party Library License Information` dialog, recognizable license names must be displayed as hyperlinks; clicking a license name opens a read-only dialog showing the original English text of that license.
 - Requirement: create and name each menu item with `QAction` (see "Component Checklist").
@@ -66,7 +67,7 @@ The main window uses a typical four-area structure:
   - Show Metadata Overlay
 - The Show Metadata Overlay button is pinned to the far right side of the toolbar. The centered analysis button group must remain visually centered by reserving equal space on the left side.
 - The Show Metadata Overlay button is enabled by default. When enabled, the current image shows up to three metadata lines at the upper-left corner of the actual displayed image: camera/lens, exposure settings, and resolution. The camera name combines camera maker and camera model when both are available. Missing metadata fields are omitted instead of shown as placeholders. The text is drawn in semi-transparent white.
-- The Add Color Readout, Delete Color Readout, and Delete All Readouts buttons reuse the corresponding `Tools > Color Readouts` actions. Add mode uses a plus-style cursor over the analyzed image and can add multiple persistent labels. Delete mode uses a minus-style cursor and removes a readout only when the user clicks an existing readout label. Delete All Readouts is a one-shot action that clears all readouts from the current image only. Labels use the active light/dark appearance style with a nearly transparent background and display only four numeric values: red, green, blue, and luma. The red, green, and blue numbers use matching channel text colors; luma uses black text in light mode and white text in dark mode.
+- The Add Color Readout, Delete Color Readout, and Delete All Readouts buttons reuse the corresponding `Tools > Color Readouts` actions. Add mode uses a plus-style cursor over the analyzed image and can add multiple persistent labels. Delete mode uses a minus-style cursor and removes a readout only when the user clicks an existing readout label. Delete All Readouts is a one-shot action that clears all readouts from the current image only. `Tools > Color Readouts Type` globally selects RGBL, HSB, or HSL for all existing and future labels during the current session. RGBL labels retain four unprefixed red, green, blue, and luma integer values with the existing channel colors. HSB/HSL labels use three prefixed values (`H n°`, `S n%`, and `B n%` or `L n%`) in theme-aware neutral text. Labels use the active light/dark appearance style with a nearly transparent background.
 
 ## 3. Upper Content Area: Image Tabs + Right Info Area (QSplitter)
 
@@ -247,7 +248,7 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 
 Top-level menus: `menuFile` `menuView` `menuTools` `menuHelp`
 Submenus: `menuAppearance`
-Tools submenus: `menuColorReadouts`
+Tools submenus: `menuColorReadouts` `menuColorReadoutsType`
 Actions (names must be consistent; copy may mix Chinese and English, but consistency is recommended):
 
 - `actOpenFile`: Open Image...
@@ -275,6 +276,9 @@ Actions (names must be consistent; copy may mix Chinese and English, but consist
 - `actAddColorReadout`: Add Color Readout (checkable)
 - `actDeleteColorReadout`: Delete Color Readout (checkable)
 - `actDeleteAllColorReadouts`: Delete All Readouts
+- `actColorReadoutTypeRgbl`: RGBL (checkable, selected by default)
+- `actColorReadoutTypeHsb`: HSB (checkable)
+- `actColorReadoutTypeHsl`: HSL (checkable)
 - `actAbout`: About
 - `actThirdPartyLicenses`: Third-Party Library License Information
 
@@ -359,3 +363,4 @@ Do not write business logic inside UI files; TODO/placeholder implementations ar
 - When the mouse pointer is at the boundary between the `image display area` and the `right info area`, the pointer `style` must automatically change to a `double arrow` (that is, a `move arrow`).
 - Hovering the mouse over the `image display area` should immediately change the pointer to a `hand`, and holding the mouse button should allow dragging to pan a zoomed image.
 - When Add Color Readout is active, hovering over a loaded analyzed image uses a plus-style cursor, and left-clicking a displayed image pixel adds a persistent readout label for that image. When Delete Color Readout is active, hovering uses a minus-style cursor, and left-clicking a readout label deletes only that label. Delete All Readouts clears every readout for the current image only and leaves other images' readouts unchanged. If the current image is not fully loaded, all Color Readouts actions are disabled. If the current image has no readouts, Delete Color Readout and Delete All Readouts are disabled, and Delete Color Readout mode is cleared.
+- Color Readouts Type remains selectable when no image is loaded. RGBL is selected on startup, and changing to RGBL, HSB, or HSL immediately updates every existing fixed readout label across attached and detached image views without changing the hover sample display.

@@ -13,7 +13,9 @@ from pic_viewer.app.services.app_metadata_service import AppMetadata, load_app_m
 from pic_viewer.app.services.image_file_policy import filter_supported_image_paths
 from pic_viewer.app.services.third_party_license_service import load_third_party_licenses
 from pic_viewer.domain.rules.pixel_sample import (
+    DEFAULT_COLOR_READOUT_TYPE,
     ColorReadout,
+    ColorReadoutType,
     INVALID_PIXEL_SAMPLE,
     PixelSample,
     sample_analysis_pixel,
@@ -363,6 +365,7 @@ class MainControllerInteractionMixin:
             x=x,
             y=y,
             sample=sample,
+            bit_depth=ChannelBitDepth.from_dtype(analysis_bgr.dtype),
         )
         self._next_color_readout_id += 1
         key = str(path)
@@ -414,6 +417,7 @@ class MainControllerInteractionMixin:
                     x=x,
                     y=y,
                     sample=sample_analysis_pixel(analysis_bgr, x, y),
+                    bit_depth=ChannelBitDepth.from_dtype(analysis_bgr.dtype),
                 )
             )
         readouts_by_path[key] = refreshed
@@ -428,11 +432,13 @@ class MainControllerInteractionMixin:
         data = getattr(self, "_images_by_path", {}).get(key)
         image_size = data.analysis.analysis_bgr.shape[:2] if data is not None else None
         theme = getattr(self._ui, "_appearance_theme", styles.AppearanceTheme.DARK)
+        readout_type = getattr(self, "_color_readout_type", DEFAULT_COLOR_READOUT_TYPE)
         for tab in self._all_image_tab_widgets():
             if self._tab_path(tab) != path:
                 continue
             for label in tab.findChildren(ImageDisplayLabel, "lblImage"):
                 label.set_color_readout_theme(theme)
+                label.set_color_readout_type(readout_type)
                 label.set_color_readouts(readouts, image_size)
 
     def _apply_color_readouts_to_label(self, label: QtWidgets.QLabel) -> None:
@@ -447,8 +453,37 @@ class MainControllerInteractionMixin:
         data = getattr(self, "_images_by_path", {}).get(key)
         image_size = data.analysis.analysis_bgr.shape[:2] if data is not None else None
         theme = getattr(self._ui, "_appearance_theme", styles.AppearanceTheme.DARK)
+        readout_type = getattr(self, "_color_readout_type", DEFAULT_COLOR_READOUT_TYPE)
         label.set_color_readout_theme(theme)
+        label.set_color_readout_type(readout_type)
         label.set_color_readouts(tuple(getattr(self, "_color_readouts_by_path", {}).get(key, [])), image_size)
+
+    def _set_color_readout_type(self, readout_type: ColorReadoutType) -> None:
+        """Set the global fixed color readout format and repaint every label."""
+
+        if not isinstance(readout_type, ColorReadoutType):
+            return
+        self._color_readout_type = readout_type
+        self._sync_color_readout_type_actions()
+        for tab in self._all_image_tab_widgets():
+            for label in tab.findChildren(ImageDisplayLabel, "lblImage"):
+                label.set_color_readout_type(readout_type)
+
+    def _sync_color_readout_type_actions(self) -> None:
+        """Keep the global color readout type actions mutually synchronized."""
+
+        readout_type = getattr(self, "_color_readout_type", DEFAULT_COLOR_READOUT_TYPE)
+        action_state = (
+            ("actColorReadoutTypeRgbl", readout_type is ColorReadoutType.RGBL),
+            ("actColorReadoutTypeHsb", readout_type is ColorReadoutType.HSB),
+            ("actColorReadoutTypeHsl", readout_type is ColorReadoutType.HSL),
+        )
+        for action_name, checked in action_state:
+            action = getattr(self._ui, action_name, None)
+            if action is None:
+                continue
+            with block_signals(action):
+                action.setChecked(checked)
 
     def _sync_color_readout_actions(self) -> None:
         """Keep color readout tool actions enabled and checked consistently."""

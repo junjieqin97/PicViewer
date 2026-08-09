@@ -21,7 +21,11 @@ if str(SRC_ROOT) not in sys.path:
 from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult  # noqa: E402
 from pic_viewer.app.dto.metadata import ImageMetadata  # noqa: E402
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
-from pic_viewer.domain.rules.pixel_sample import ColorReadout, PixelSample  # noqa: E402
+from pic_viewer.domain.rules.pixel_sample import (  # noqa: E402
+    ColorReadout,
+    ColorReadoutType,
+    PixelSample,
+)
 from pic_viewer.domain.rules.reference_lines import ReferenceLineSettings  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 
@@ -152,6 +156,39 @@ class MainControllerPixelSampleTests(QtWidgetTestCase):
         self.assertEqual(80, readout.sample.green)
         self.assertEqual(70, readout.sample.blue)
         self.assertEqual(tuple(controller._color_readouts_by_path[str(path)]), label.color_readouts())
+
+    def test_color_readout_type_switch_updates_existing_and_future_readouts(self) -> None:
+        window, ui, controller, path, label, _bgr = self._build_loaded_image_controller()
+        self.addCleanup(window.deleteLater)
+        self._set_large_display_pixmap(label)
+        controller._color_readout_type = ColorReadoutType.RGBL
+
+        MainController._on_add_color_readout_triggered(controller, True)
+        MainController.eventFilter(controller, label, self._mouse_press_at(50, 15))
+        original_readout = controller._color_readouts_by_path[str(path)][0]
+
+        MainController._set_color_readout_type(controller, ColorReadoutType.HSB)
+
+        self.assertEqual(ColorReadoutType.HSB, label.color_readout_type())
+        self.assertTrue(ui.actColorReadoutTypeHsb.isChecked())
+        self.assertIs(original_readout, controller._color_readouts_by_path[str(path)][0])
+        self.assertEqual(
+            ("H 30°", "S 67%", "B 12%"),
+            original_readout.display_values(label.color_readout_type()),
+        )
+
+        MainController.eventFilter(controller, label, self._mouse_press_at(30, 15))
+        self.assertEqual(2, len(controller._color_readouts_by_path[str(path)]))
+        self.assertTrue(
+            all(
+                len(readout.display_values(label.color_readout_type())) == 3
+                for readout in controller._color_readouts_by_path[str(path)]
+            )
+        )
+
+        MainController._set_color_readout_type(controller, ColorReadoutType.RGBL)
+
+        self.assertEqual(("30", "20", "10", "22"), original_readout.display_values())
 
     def _mouse_press_at(self, x: int, y: int) -> QtGui.QMouseEvent:
         return QtGui.QMouseEvent(

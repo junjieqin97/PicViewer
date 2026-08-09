@@ -124,6 +124,15 @@ class MainWindowUI:
         self.actDeleteColorReadout.setCheckable(True)
         self.actDeleteAllColorReadouts = QtGui.QAction(self._main_window)
         self.actDeleteAllColorReadouts.setObjectName("actDeleteAllColorReadouts")
+        self.actColorReadoutTypeRgbl = QtGui.QAction(self._main_window)
+        self.actColorReadoutTypeRgbl.setObjectName("actColorReadoutTypeRgbl")
+        self.actColorReadoutTypeRgbl.setCheckable(True)
+        self.actColorReadoutTypeHsb = QtGui.QAction(self._main_window)
+        self.actColorReadoutTypeHsb.setObjectName("actColorReadoutTypeHsb")
+        self.actColorReadoutTypeHsb.setCheckable(True)
+        self.actColorReadoutTypeHsl = QtGui.QAction(self._main_window)
+        self.actColorReadoutTypeHsl.setObjectName("actColorReadoutTypeHsl")
+        self.actColorReadoutTypeHsl.setCheckable(True)
 
         self.actAbout = QtGui.QAction(self._main_window)
         self.actAbout.setObjectName("actAbout")
@@ -181,6 +190,11 @@ class MainWindowUI:
         self.actionGroupAppearance.setExclusive(True)
         self.actionGroupAppearance.addAction(self.actAppearanceLight)
         self.actionGroupAppearance.addAction(self.actAppearanceDark)
+        self.actionGroupColorReadoutType = QtGui.QActionGroup(self._main_window)
+        self.actionGroupColorReadoutType.setExclusive(True)
+        self.actionGroupColorReadoutType.addAction(self.actColorReadoutTypeRgbl)
+        self.actionGroupColorReadoutType.addAction(self.actColorReadoutTypeHsb)
+        self.actionGroupColorReadoutType.addAction(self.actColorReadoutTypeHsl)
         self.actAppearanceLight.triggered.connect(
             lambda _checked=False: self.apply_appearance_theme(styles.AppearanceTheme.LIGHT)
         )
@@ -190,6 +204,7 @@ class MainWindowUI:
 
         self.actModeLuma.setChecked(True)
         self.actChannelAll.setChecked(True)
+        self.actColorReadoutTypeRgbl.setChecked(True)
         self._apply_analysis_action_icons()
         self._apply_shortcuts()
 
@@ -345,6 +360,12 @@ class MainWindowUI:
         self.menuColorReadouts.addAction(self.actAddColorReadout)
         self.menuColorReadouts.addAction(self.actDeleteColorReadout)
         self.menuColorReadouts.addAction(self.actDeleteAllColorReadouts)
+
+        self.menuColorReadoutsType = self.menuTools.addMenu("")
+        self.menuColorReadoutsType.setObjectName("menuColorReadoutsType")
+        self.menuColorReadoutsType.addAction(self.actColorReadoutTypeRgbl)
+        self.menuColorReadoutsType.addAction(self.actColorReadoutTypeHsb)
+        self.menuColorReadoutsType.addAction(self.actColorReadoutTypeHsl)
 
         self.menuHelp = menu_bar.addMenu("")
         self.menuHelp.setObjectName("menuHelp")
@@ -997,6 +1018,9 @@ class MainWindowUI:
         self.actAddColorReadout.setText(self._tr("Add Color Readout"))
         self.actDeleteColorReadout.setText(self._tr("Delete Color Readout"))
         self.actDeleteAllColorReadouts.setText(self._tr("Delete All Readouts"))
+        self.actColorReadoutTypeRgbl.setText(self._tr("RGBL"))
+        self.actColorReadoutTypeHsb.setText(self._tr("HSB"))
+        self.actColorReadoutTypeHsl.setText(self._tr("HSL"))
         self.actAbout.setText(self._tr("About"))
         self.actThirdPartyLicenses.setText(self._tr("Third-Party License Information"))
         self.actModeLuma.setText(self._tr("Luma Mode"))
@@ -1041,6 +1065,7 @@ class MainWindowUI:
         self.menuPseudoColor.setTitle(self._tr("Pseudo Color"))
         self.menuFocusPeaking.setTitle(self._tr("Show Peaks"))
         self.menuColorReadouts.setTitle(self._tr("Color Readouts"))
+        self.menuColorReadoutsType.setTitle(self._tr("Color Readouts Type"))
         self.menuHelp.setTitle(self._tr("Help"))
 
         self.tabsInfo.setTabText(self.tabsInfo.indexOf(self.tabAnalysis), self._tr("Analysis"))
