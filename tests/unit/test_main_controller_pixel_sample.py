@@ -113,6 +113,27 @@ class MainControllerPixelSampleTests(QtWidgetTestCase):
         self.assertFalse(ui.actDeleteColorReadout.isChecked())
         self.assertFalse(ui.actDeleteColorReadout.isEnabled())
 
+    def test_color_readout_tool_cursors_use_circled_plus_and_minus(self) -> None:
+        (
+            window,
+            _ui,
+            controller,
+            _path,
+            label,
+            _bgr,
+        ) = self._build_loaded_image_controller()
+        self.addCleanup(window.deleteLater)
+        self._set_large_display_pixmap(label)
+
+        MainController._on_add_color_readout_triggered(controller, True)
+        add_cursor = label.cursor()
+        MainController.eventFilter(controller, label, self._mouse_press_at(50, 15))
+        MainController._on_delete_color_readout_triggered(controller, True)
+        delete_cursor = label.cursor()
+
+        self._assert_color_readout_cursor(add_cursor, has_vertical_stroke=True)
+        self._assert_color_readout_cursor(delete_cursor, has_vertical_stroke=False)
+
     def test_delete_all_color_readouts_clears_only_current_image(self) -> None:
         window, ui, controller, path, label, _bgr = self._build_loaded_image_controller()
         self.addCleanup(window.deleteLater)
@@ -212,6 +233,23 @@ class MainControllerPixelSampleTests(QtWidgetTestCase):
         pixmap = QtGui.QPixmap(80, 40)
         pixmap.fill(QtGui.QColor(0, 0, 0))
         label.setPixmap(pixmap)
+
+    def _assert_color_readout_cursor(
+        self,
+        cursor: QtGui.QCursor,
+        *,
+        has_vertical_stroke: bool,
+    ) -> None:
+        pixmap = cursor.pixmap()
+        image = pixmap.toImage()
+        self.assertEqual(QtCore.QPoint(12, 12), cursor.hotSpot())
+        self.assertEqual(QtCore.QSize(24, 24), pixmap.size())
+        self.assertGreater(image.pixelColor(12, 4).alpha(), 0)
+        self.assertGreater(image.pixelColor(12, 12).alpha(), 0)
+        if has_vertical_stroke:
+            self.assertGreater(image.pixelColor(12, 8).alpha(), 0)
+        else:
+            self.assertEqual(0, image.pixelColor(12, 8).alpha())
 
     def _build_loaded_image_controller(
         self,

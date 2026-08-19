@@ -519,7 +519,7 @@ class MainControllerInteractionMixin:
 
         mode = getattr(self, "_color_readout_mode", None)
         if mode == "add":
-            cursor = QtGui.QCursor(QtCore.Qt.CursorShape.CrossCursor)
+            cursor = self._add_color_readout_cursor()
         elif mode == "delete":
             cursor = self._delete_color_readout_cursor()
         else:
@@ -541,16 +541,51 @@ class MainControllerInteractionMixin:
                 label.set_color_readout_theme(theme)
         self._sync_color_readout_cursors()
 
+    def _add_color_readout_cursor(self) -> QtGui.QCursor:
+        """Return a circular cursor containing a plus sign."""
+
+        return self._color_readout_cursor(include_vertical_stroke=True)
+
     def _delete_color_readout_cursor(self) -> QtGui.QCursor:
+        """Return a circular cursor containing a minus sign."""
+
+        return self._color_readout_cursor(include_vertical_stroke=False)
+
+    def _color_readout_cursor(self, *, include_vertical_stroke: bool) -> QtGui.QCursor:
+        """Build a high-contrast circular cursor for a color readout tool."""
+
         size = 24
         pixmap = QtGui.QPixmap(size, size)
         pixmap.fill(QtCore.Qt.GlobalColor.transparent)
         painter = QtGui.QPainter(pixmap)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
         theme = getattr(self._ui, "_appearance_theme", styles.AppearanceTheme.DARK)
-        color = QtGui.QColor(31, 37, 45) if theme == styles.AppearanceTheme.LIGHT else QtGui.QColor(237, 241, 245)
-        painter.setPen(QtGui.QPen(color, 3, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap))
-        painter.drawLine(QtCore.QPointF(7, 12), QtCore.QPointF(17, 12))
+        foreground = (
+            QtGui.QColor(31, 37, 45)
+            if theme == styles.AppearanceTheme.LIGHT
+            else QtGui.QColor(237, 241, 245)
+        )
+        halo = (
+            QtGui.QColor(255, 255, 255, 220)
+            if theme == styles.AppearanceTheme.LIGHT
+            else QtGui.QColor(0, 0, 0, 220)
+        )
+        circle = QtCore.QRectF(4, 4, 16, 16)
+        horizontal = QtCore.QLineF(8, 12, 16, 12)
+        vertical = QtCore.QLineF(12, 8, 12, 16)
+        for color, width in ((halo, 4.0), (foreground, 2.0)):
+            painter.setPen(
+                QtGui.QPen(
+                    color,
+                    width,
+                    QtCore.Qt.PenStyle.SolidLine,
+                    QtCore.Qt.PenCapStyle.RoundCap,
+                )
+            )
+            painter.drawEllipse(circle)
+            painter.drawLine(horizontal)
+            if include_vertical_stroke:
+                painter.drawLine(vertical)
         painter.end()
         return QtGui.QCursor(pixmap, 12, 12)
 
