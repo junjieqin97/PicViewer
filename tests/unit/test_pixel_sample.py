@@ -17,6 +17,8 @@ SRC_ROOT = PROJECT_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth  # noqa: E402
+
 
 class PixelSampleTests(unittest.TestCase):
     """Validate RGB and luma sampling from analysis-space pixels."""
@@ -95,6 +97,149 @@ class PixelSampleTests(unittest.TestCase):
 
         self.assertEqual(("11", "22", "33", "44"), readout.display_values())
         self.assertEqual("11  22  33  44", readout.display_text())
+
+    def test_color_readout_formats_hsb_and_hsl_values(self) -> None:
+        module = self._pixel_sample_module()
+        readout = module.ColorReadout(
+            readout_id=7,
+            x=12,
+            y=34,
+            sample=module.PixelSample(red=0, green=128, blue=255, luma=105),
+        )
+
+        self.assertEqual(
+            ("H 210°", "S 100%", "B 100%"),
+            readout.display_values(module.ColorReadoutType.HSB),
+        )
+        self.assertEqual(
+            ("H 210°", "S 100%", "L 50%"),
+            readout.display_values(module.ColorReadoutType.HSL),
+        )
+
+    def test_color_readout_hsb_and_hsl_cover_primary_and_achromatic_boundaries(self) -> None:
+        module = self._pixel_sample_module()
+        cases = (
+            (
+                module.PixelSample(255, 0, 0, 76),
+                ("H 0°", "S 100%", "B 100%"),
+                ("H 0°", "S 100%", "L 50%"),
+            ),
+            (
+                module.PixelSample(0, 255, 0, 150),
+                ("H 120°", "S 100%", "B 100%"),
+                ("H 120°", "S 100%", "L 50%"),
+            ),
+            (
+                module.PixelSample(0, 0, 255, 29),
+                ("H 240°", "S 100%", "B 100%"),
+                ("H 240°", "S 100%", "L 50%"),
+            ),
+            (
+                module.PixelSample(0, 0, 0, 0),
+                ("H 0°", "S 0%", "B 0%"),
+                ("H 0°", "S 0%", "L 0%"),
+            ),
+            (
+                module.PixelSample(255, 255, 255, 255),
+                ("H 0°", "S 0%", "B 100%"),
+                ("H 0°", "S 0%", "L 100%"),
+            ),
+            (
+                module.PixelSample(128, 128, 128, 128),
+                ("H 0°", "S 0%", "B 50%"),
+                ("H 0°", "S 0%", "L 50%"),
+            ),
+        )
+
+        for sample, expected_hsb, expected_hsl in cases:
+            with self.subTest(sample=sample):
+                readout = module.ColorReadout(1, 0, 0, sample)
+                self.assertEqual(
+                    expected_hsb,
+                    readout.display_values(module.ColorReadoutType.HSB),
+                )
+                self.assertEqual(
+                    expected_hsl,
+                    readout.display_values(module.ColorReadoutType.HSL),
+                )
+
+    def test_color_readout_lab_covers_primary_and_achromatic_boundaries(self) -> None:
+        module = self._pixel_sample_module()
+        cases = (
+            (module.PixelSample(0, 0, 0, 0), ("L 0", "a 0", "b 0")),
+            (module.PixelSample(255, 255, 255, 255), ("L 100", "a 0", "b 0")),
+            (module.PixelSample(255, 0, 0, 76), ("L 53", "a 80", "b 67")),
+            (module.PixelSample(0, 255, 0, 150), ("L 88", "a -86", "b 83")),
+            (module.PixelSample(0, 0, 255, 29), ("L 32", "a 79", "b -108")),
+            (module.PixelSample(128, 128, 128, 128), ("L 54", "a 0", "b 0")),
+            (module.PixelSample(0, 128, 255, 105), ("L 55", "a 19", "b -71")),
+        )
+
+        for sample, expected_lab in cases:
+            with self.subTest(sample=sample):
+                readout = module.ColorReadout(1, 0, 0, sample)
+                self.assertEqual(
+                    expected_lab,
+                    readout.display_values(module.ColorReadoutType.LAB),
+                )
+
+    def test_color_readout_normalizes_hsb_and_hsl_using_sample_bit_depth(self) -> None:
+        module = self._pixel_sample_module()
+        eight_bit = module.ColorReadout(
+            1,
+            0,
+            0,
+            module.PixelSample(255, 128, 0, 151),
+            ChannelBitDepth.EIGHT,
+        )
+        sixteen_bit = module.ColorReadout(
+            2,
+            0,
+            0,
+            module.PixelSample(65535, 32896, 0, 38807),
+            ChannelBitDepth.SIXTEEN,
+        )
+
+        self.assertEqual(
+            eight_bit.display_values(module.ColorReadoutType.HSB),
+            sixteen_bit.display_values(module.ColorReadoutType.HSB),
+        )
+        self.assertEqual(
+            eight_bit.display_values(module.ColorReadoutType.HSL),
+            sixteen_bit.display_values(module.ColorReadoutType.HSL),
+        )
+
+    def test_color_readout_normalizes_lab_using_sample_bit_depth(self) -> None:
+        module = self._pixel_sample_module()
+        eight_bit = module.ColorReadout(
+            1,
+            0,
+            0,
+            module.PixelSample(255, 128, 0, 151),
+            ChannelBitDepth.EIGHT,
+        )
+        sixteen_bit = module.ColorReadout(
+            2,
+            0,
+            0,
+            module.PixelSample(65535, 32896, 0, 38807),
+            ChannelBitDepth.SIXTEEN,
+        )
+
+        self.assertEqual(
+            ("L 67", "a 43", "b 74"),
+            eight_bit.display_values(module.ColorReadoutType.LAB),
+        )
+        self.assertEqual(
+            eight_bit.display_values(module.ColorReadoutType.LAB),
+            sixteen_bit.display_values(module.ColorReadoutType.LAB),
+        )
+
+    def test_lab_rounding_is_symmetric_for_signed_values(self) -> None:
+        module = self._pixel_sample_module()
+
+        self.assertEqual(2, module._round_signed(1.5))
+        self.assertEqual(-2, module._round_signed(-1.5))
 
 
 if __name__ == "__main__":
