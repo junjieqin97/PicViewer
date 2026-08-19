@@ -162,18 +162,26 @@ class MainControllerPixelSampleTests(QtWidgetTestCase):
         self.addCleanup(window.deleteLater)
         self._set_large_display_pixmap(label)
         controller._color_readout_type = ColorReadoutType.RGBL
+        detached_container = QtWidgets.QWidget()
+        detached_label = type(label)(detached_container)
+        detached_label.setObjectName("lblImage")
+        self.addCleanup(detached_container.deleteLater)
+        controller._all_image_tab_widgets = (  # type: ignore[method-assign]
+            lambda: [window, detached_container]
+        )
 
         MainController._on_add_color_readout_triggered(controller, True)
         MainController.eventFilter(controller, label, self._mouse_press_at(50, 15))
         original_readout = controller._color_readouts_by_path[str(path)][0]
 
-        MainController._set_color_readout_type(controller, ColorReadoutType.HSB)
+        MainController._set_color_readout_type(controller, ColorReadoutType.LAB)
 
-        self.assertEqual(ColorReadoutType.HSB, label.color_readout_type())
-        self.assertTrue(ui.actColorReadoutTypeHsb.isChecked())
+        self.assertEqual(ColorReadoutType.LAB, label.color_readout_type())
+        self.assertEqual(ColorReadoutType.LAB, detached_label.color_readout_type())
+        self.assertTrue(ui.actColorReadoutTypeLab.isChecked())
         self.assertIs(original_readout, controller._color_readouts_by_path[str(path)][0])
         self.assertEqual(
-            ("H 30°", "S 67%", "B 12%"),
+            ("L 7", "a 3", "b 7"),
             original_readout.display_values(label.color_readout_type()),
         )
 

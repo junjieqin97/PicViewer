@@ -133,6 +133,9 @@ class MainWindowUI:
         self.actColorReadoutTypeHsl = QtGui.QAction(self._main_window)
         self.actColorReadoutTypeHsl.setObjectName("actColorReadoutTypeHsl")
         self.actColorReadoutTypeHsl.setCheckable(True)
+        self.actColorReadoutTypeLab = QtGui.QAction(self._main_window)
+        self.actColorReadoutTypeLab.setObjectName("actColorReadoutTypeLab")
+        self.actColorReadoutTypeLab.setCheckable(True)
 
         self.actAbout = QtGui.QAction(self._main_window)
         self.actAbout.setObjectName("actAbout")
@@ -195,6 +198,7 @@ class MainWindowUI:
         self.actionGroupColorReadoutType.addAction(self.actColorReadoutTypeRgbl)
         self.actionGroupColorReadoutType.addAction(self.actColorReadoutTypeHsb)
         self.actionGroupColorReadoutType.addAction(self.actColorReadoutTypeHsl)
+        self.actionGroupColorReadoutType.addAction(self.actColorReadoutTypeLab)
         self.actAppearanceLight.triggered.connect(
             lambda _checked=False: self.apply_appearance_theme(styles.AppearanceTheme.LIGHT)
         )
@@ -366,6 +370,7 @@ class MainWindowUI:
         self.menuColorReadoutsType.addAction(self.actColorReadoutTypeRgbl)
         self.menuColorReadoutsType.addAction(self.actColorReadoutTypeHsb)
         self.menuColorReadoutsType.addAction(self.actColorReadoutTypeHsl)
+        self.menuColorReadoutsType.addAction(self.actColorReadoutTypeLab)
 
         self.menuHelp = menu_bar.addMenu("")
         self.menuHelp.setObjectName("menuHelp")
@@ -1021,6 +1026,7 @@ class MainWindowUI:
         self.actColorReadoutTypeRgbl.setText(self._tr("RGBL"))
         self.actColorReadoutTypeHsb.setText(self._tr("HSB"))
         self.actColorReadoutTypeHsl.setText(self._tr("HSL"))
+        self.actColorReadoutTypeLab.setText(self._tr("Lab"))
         self.actAbout.setText(self._tr("About"))
         self.actThirdPartyLicenses.setText(self._tr("Third-Party License Information"))
         self.actModeLuma.setText(self._tr("Luma Mode"))

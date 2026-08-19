@@ -477,6 +477,7 @@ class MainControllerInteractionMixin:
             ("actColorReadoutTypeRgbl", readout_type is ColorReadoutType.RGBL),
             ("actColorReadoutTypeHsb", readout_type is ColorReadoutType.HSB),
             ("actColorReadoutTypeHsl", readout_type is ColorReadoutType.HSL),
+            ("actColorReadoutTypeLab", readout_type is ColorReadoutType.LAB),
         )
         for action_name, checked in action_state:
             action = getattr(self._ui, action_name, None)

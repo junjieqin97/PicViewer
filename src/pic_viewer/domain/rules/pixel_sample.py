@@ -18,6 +18,7 @@ class ColorReadoutType(str, Enum):
     RGBL = "rgbl"
     HSB = "hsb"
     HSL = "hsl"
+    LAB = "lab"
 
 
 DEFAULT_COLOR_READOUT_TYPE = ColorReadoutType.RGBL
@@ -55,6 +56,9 @@ class ColorReadout:
         if readout_type is ColorReadoutType.HSL:
             hue, saturation, lightness = self._hsl_values()
             return (f"H {hue}°", f"S {saturation}%", f"L {lightness}%")
+        if readout_type is ColorReadoutType.LAB:
+            lightness, green_red, blue_yellow = self._lab_values()
+            return (f"L {lightness}", f"a {green_red}", f"b {blue_yellow}")
         return (
             str(self.sample.red),
             str(self.sample.green),
@@ -86,6 +90,17 @@ class ColorReadout:
         hue, lightness, saturation = colorsys.rgb_to_hls(*self._normalized_rgb())
         return (_round_hue(hue), _round_percentage(saturation), _round_percentage(lightness))
 
+    def _lab_values(self) -> tuple[int, int, int]:
+        """Return rounded D65 CIE Lab values for the normalized RGB sample."""
+
+        rgb = np.asarray([[self._normalized_rgb()]], dtype=np.float32)
+        lightness, green_red, blue_yellow = cv2.cvtColor(rgb, cv2.COLOR_RGB2LAB)[0, 0]
+        return (
+            min(100, max(0, _round_signed(float(lightness)))),
+            _round_signed(float(green_red)),
+            _round_signed(float(blue_yellow)),
+        )
+
 
 def _clamp_unit(value: float) -> float:
     return min(1.0, max(0.0, value))
@@ -97,6 +112,14 @@ def _round_hue(value: float) -> int:
 
 def _round_percentage(value: float) -> int:
     return min(100, max(0, int(value * 100.0 + 0.5)))
+
+
+def _round_signed(value: float) -> int:
+    """Round positive and negative halves symmetrically away from zero."""
+
+    if value >= 0.0:
+        return int(value + 0.5)
+    return -int(-value + 0.5)
 
 
 INVALID_PIXEL_SAMPLE = PixelSample(red=-1, green=-1, blue=-1, luma=-1)

@@ -137,18 +137,20 @@ class MainWindowShortcutTests(QtWidgetTestCase):
             ui.actColorReadoutTypeRgbl,
             ui.actColorReadoutTypeHsb,
             ui.actColorReadoutTypeHsl,
+            ui.actColorReadoutTypeLab,
         )
-        self.assertEqual(["RGBL", "HSB", "HSL"], [action.text() for action in actions])
+        self.assertEqual(["RGBL", "HSB", "HSL", "Lab"], [action.text() for action in actions])
         self.assertTrue(all(action.isCheckable() for action in actions))
         self.assertTrue(ui.actionGroupColorReadoutType.isExclusive())
         self.assertTrue(ui.actColorReadoutTypeRgbl.isChecked())
         self.assertFalse(ui.actColorReadoutTypeHsb.isChecked())
         self.assertFalse(ui.actColorReadoutTypeHsl.isChecked())
+        self.assertFalse(ui.actColorReadoutTypeLab.isChecked())
 
-        ui.actColorReadoutTypeHsl.trigger()
+        ui.actColorReadoutTypeLab.trigger()
 
         self.assertFalse(ui.actColorReadoutTypeRgbl.isChecked())
-        self.assertTrue(ui.actColorReadoutTypeHsl.isChecked())
+        self.assertTrue(ui.actColorReadoutTypeLab.isChecked())
 
     def test_overlay_reference_line_and_readout_shortcuts(self) -> None:
         window = QtWidgets.QMainWindow()

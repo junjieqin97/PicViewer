@@ -163,6 +163,26 @@ class PixelSampleTests(unittest.TestCase):
                     readout.display_values(module.ColorReadoutType.HSL),
                 )
 
+    def test_color_readout_lab_covers_primary_and_achromatic_boundaries(self) -> None:
+        module = self._pixel_sample_module()
+        cases = (
+            (module.PixelSample(0, 0, 0, 0), ("L 0", "a 0", "b 0")),
+            (module.PixelSample(255, 255, 255, 255), ("L 100", "a 0", "b 0")),
+            (module.PixelSample(255, 0, 0, 76), ("L 53", "a 80", "b 67")),
+            (module.PixelSample(0, 255, 0, 150), ("L 88", "a -86", "b 83")),
+            (module.PixelSample(0, 0, 255, 29), ("L 32", "a 79", "b -108")),
+            (module.PixelSample(128, 128, 128, 128), ("L 54", "a 0", "b 0")),
+            (module.PixelSample(0, 128, 255, 105), ("L 55", "a 19", "b -71")),
+        )
+
+        for sample, expected_lab in cases:
+            with self.subTest(sample=sample):
+                readout = module.ColorReadout(1, 0, 0, sample)
+                self.assertEqual(
+                    expected_lab,
+                    readout.display_values(module.ColorReadoutType.LAB),
+                )
+
     def test_color_readout_normalizes_hsb_and_hsl_using_sample_bit_depth(self) -> None:
         module = self._pixel_sample_module()
         eight_bit = module.ColorReadout(
@@ -188,6 +208,38 @@ class PixelSampleTests(unittest.TestCase):
             eight_bit.display_values(module.ColorReadoutType.HSL),
             sixteen_bit.display_values(module.ColorReadoutType.HSL),
         )
+
+    def test_color_readout_normalizes_lab_using_sample_bit_depth(self) -> None:
+        module = self._pixel_sample_module()
+        eight_bit = module.ColorReadout(
+            1,
+            0,
+            0,
+            module.PixelSample(255, 128, 0, 151),
+            ChannelBitDepth.EIGHT,
+        )
+        sixteen_bit = module.ColorReadout(
+            2,
+            0,
+            0,
+            module.PixelSample(65535, 32896, 0, 38807),
+            ChannelBitDepth.SIXTEEN,
+        )
+
+        self.assertEqual(
+            ("L 67", "a 43", "b 74"),
+            eight_bit.display_values(module.ColorReadoutType.LAB),
+        )
+        self.assertEqual(
+            eight_bit.display_values(module.ColorReadoutType.LAB),
+            sixteen_bit.display_values(module.ColorReadoutType.LAB),
+        )
+
+    def test_lab_rounding_is_symmetric_for_signed_values(self) -> None:
+        module = self._pixel_sample_module()
+
+        self.assertEqual(2, module._round_signed(1.5))
+        self.assertEqual(-2, module._round_signed(-1.5))
 
 
 if __name__ == "__main__":

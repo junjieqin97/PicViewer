@@ -248,6 +248,10 @@ class MainController(
             self._ui.actColorReadoutTypeHsl.triggered.connect(
                 lambda _checked=False: self._set_color_readout_type(ColorReadoutType.HSL)
             )
+        if hasattr(self._ui, "actColorReadoutTypeLab"):
+            self._ui.actColorReadoutTypeLab.triggered.connect(
+                lambda _checked=False: self._set_color_readout_type(ColorReadoutType.LAB)
+            )
 
         self._ui.tabsImages.currentChanged.connect(self._on_tab_changed)
         self._ui.tabsImages.tabCloseRequested.connect(self.close_tab)

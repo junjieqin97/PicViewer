@@ -191,7 +191,7 @@ class ImageDisplayLabelTests(QtWidgetTestCase):
         light_colors = label.color_readout_text_colors()
         self.assertEqual(QtGui.QColor(0, 0, 0), light_colors["luma"])
 
-    def test_hsb_and_hsl_readout_text_runs_use_neutral_theme_color(self) -> None:
+    def test_hsb_hsl_and_lab_readout_text_runs_use_neutral_theme_color(self) -> None:
         label = ImageDisplayLabel()
         self.addCleanup(label.deleteLater)
         readout = ColorReadout(
@@ -211,6 +211,12 @@ class ImageDisplayLabelTests(QtWidgetTestCase):
         label.set_color_readout_type(ColorReadoutType.HSL)
         self.assertEqual(
             (("H 210°", "luma"), ("S 100%", "luma"), ("L 50%", "luma")),
+            label.color_readout_text_runs(readout),
+        )
+
+        label.set_color_readout_type(ColorReadoutType.LAB)
+        self.assertEqual(
+            (("L 55", "luma"), ("a 19", "luma"), ("b -71", "luma")),
             label.color_readout_text_runs(readout),
         )
 
