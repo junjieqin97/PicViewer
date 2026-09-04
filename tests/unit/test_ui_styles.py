@@ -72,25 +72,59 @@ class UiStylesTests(QtWidgetTestCase):
 
         self.assertIn("background: transparent;", rule)
 
-    def test_light_stylesheet_uses_light_image_canvas_background(self) -> None:
-        style_sheet = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
-
-        for selector in (
+    def test_selected_canvas_color_is_theme_independent_and_neutral(self) -> None:
+        expected_colors = {
+            styles.CanvasColor.DEEP_NEUTRAL: "#202020",
+            styles.CanvasColor.MIDDLE_GRAY_18: "#777777",
+            styles.CanvasColor.NEAR_BLACK: "#101010",
+        }
+        selectors = (
             "QWidget#pageImagePreview",
             "QScrollArea#scrollImage",
             "QWidget#viewportImageCanvas",
-        ):
-            rule = self._style_block(style_sheet, selector)
-            self.assertIn("background: #ffffff", rule)
-            self.assertNotIn("background: #1d2228", rule)
+        )
+
+        for canvas_color, expected_color in expected_colors.items():
+            for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
+                with self.subTest(canvas_color=canvas_color, theme=theme):
+                    style_sheet = styles.load_stylesheet(theme, canvas_color)
+                    for selector in selectors:
+                        rule = self._last_style_block(style_sheet, selector)
+                        self.assertEqual(
+                            expected_color,
+                            self._style_property(rule, "background"),
+                        )
+
+    def test_default_canvas_color_is_deep_neutral_gray(self) -> None:
+        self.assertEqual(styles.CanvasColor.DEEP_NEUTRAL, styles.DEFAULT_CANVAS_COLOR)
+        for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
+            rule = self._last_style_block(
+                styles.load_stylesheet(theme),
+                "QWidget#viewportImageCanvas",
+            )
+            self.assertEqual("#202020", self._style_property(rule, "background"))
+
+    def test_canvas_color_does_not_replace_loading_state_background(self) -> None:
+        expected_backgrounds = {
+            styles.AppearanceTheme.DARK: "#191b1f",
+            styles.AppearanceTheme.LIGHT: "#eef2f6",
+        }
+
+        for theme, expected_color in expected_backgrounds.items():
+            with self.subTest(theme=theme):
+                style_sheet = styles.load_stylesheet(theme, styles.CanvasColor.MIDDLE_GRAY_18)
+                rule = self._style_block(style_sheet, "QWidget#widgetImageLoadState")
+                self.assertEqual(expected_color, self._style_property(rule, "background"))
+
+    def test_light_stylesheet_keeps_light_image_scrollbars(self) -> None:
+        style_sheet = styles.load_stylesheet(styles.AppearanceTheme.LIGHT)
 
         for selector in (
             "QScrollArea#scrollImage QScrollBar:horizontal",
             "QScrollArea#scrollImage QScrollBar:vertical",
         ):
             rule = self._style_block(style_sheet, selector)
-            self.assertIn("background: #eef2f6", rule)
-            self.assertNotIn("background: #20262d", rule)
+            self.assertEqual("#eef2f6", self._style_property(rule, "background"))
 
     def test_specified_image_color_space_selector_has_disabled_gray_styles(self) -> None:
         dark_style = styles.load_stylesheet(styles.AppearanceTheme.DARK)
@@ -455,11 +489,18 @@ class UiStylesTests(QtWidgetTestCase):
         window = QtWidgets.QMainWindow()
         self.addCleanup(window.deleteLater)
 
-        applied_theme = styles.apply_stylesheet(window, styles.AppearanceTheme.LIGHT)
+        applied_theme = styles.apply_stylesheet(
+            window,
+            styles.AppearanceTheme.LIGHT,
+            styles.CanvasColor.MIDDLE_GRAY_18,
+        )
 
         self.assertEqual(styles.AppearanceTheme.LIGHT, applied_theme)
         self.assertEqual(
-            styles.load_stylesheet(styles.AppearanceTheme.LIGHT),
+            styles.load_stylesheet(
+                styles.AppearanceTheme.LIGHT,
+                styles.CanvasColor.MIDDLE_GRAY_18,
+            ),
             window.styleSheet(),
         )
 
@@ -477,6 +518,28 @@ class UiStylesTests(QtWidgetTestCase):
                 return style_block
 
             search_start = block_end + 1
+
+    @staticmethod
+    def _last_style_block(style_sheet: str, selector: str) -> str:
+        search_start = 0
+        last_match: str | None = None
+
+        while search_start < len(style_sheet):
+            block_start = style_sheet.find("{", search_start)
+            if block_start < 0:
+                break
+            selector_start = style_sheet.rfind("}", 0, block_start) + 1
+            block_end = style_sheet.index("}", block_start)
+            style_block = style_sheet[selector_start:block_end]
+
+            if selector in UiStylesTests._style_block_selectors(style_block):
+                last_match = style_block
+
+            search_start = block_end + 1
+
+        if last_match is None:
+            raise ValueError(f"Style selector not found: {selector}")
+        return last_match
 
     @staticmethod
     def _style_block_selectors(style_block: str) -> tuple[str, ...]:

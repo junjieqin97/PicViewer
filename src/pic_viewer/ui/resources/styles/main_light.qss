@@ -129,7 +129,6 @@ QWidget#widgetImageLoadState {
 }
 
 QWidget#pageImagePreview {
-    background: #ffffff;
     color: #263241;
 }
 
@@ -180,12 +179,7 @@ QPushButton#buttonImageLoadRetry:hover {
 }
 
 QScrollArea#scrollImage {
-    background: #ffffff;
     border: 1px solid #c6d2df;
-}
-
-QWidget#viewportImageCanvas {
-    background: #ffffff;
 }
 
 QLabel#lblImage {

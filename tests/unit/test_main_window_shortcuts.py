@@ -245,7 +245,34 @@ class MainWindowShortcutTests(QtWidgetTestCase):
             ui.actionGroupAppearance.actions(),
         )
 
-    def test_view_menu_places_metadata_overlay_before_appearance(self) -> None:
+    def test_view_menu_contains_canvas_color_actions(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        self.assertEqual("menuCanvasColor", ui.menuCanvasColor.objectName())
+        self.assertEqual("Canvas Color", ui.menuCanvasColor.title())
+        self.assertIn(ui.menuCanvasColor.menuAction(), ui.menuView.actions())
+
+        actions = (
+            ui.actCanvasColorDeepNeutral,
+            ui.actCanvasColorMiddleGray18,
+            ui.actCanvasColorNearBlack,
+        )
+        self.assertEqual(
+            ["Deep Neutral Gray", "18% Middle Gray", "Near-Black Neutral Gray"],
+            [action.text() for action in actions],
+        )
+        self.assertTrue(all(action.isCheckable() for action in actions))
+        self.assertTrue(ui.actionGroupCanvasColor.isExclusive())
+        self.assertEqual(list(actions), ui.actionGroupCanvasColor.actions())
+        self.assertTrue(ui.actCanvasColorDeepNeutral.isChecked())
+        self.assertFalse(ui.actCanvasColorMiddleGray18.isChecked())
+        self.assertFalse(ui.actCanvasColorNearBlack.isChecked())
+        self.assertTrue(all(action.shortcut().isEmpty() for action in actions))
+
+    def test_view_menu_places_canvas_color_after_appearance(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
         ui.setup_ui(window)
@@ -258,7 +285,11 @@ class MainWindowShortcutTests(QtWidgetTestCase):
             view_actions.index(ui.menuAppearance.menuAction()),
         )
         self.assertEqual(ui.actToggleMetadataOverlay, view_actions[3])
-        self.assertEqual(ui.menuAppearance.menuAction(), view_actions[-1])
+        self.assertLess(
+            view_actions.index(ui.menuAppearance.menuAction()),
+            view_actions.index(ui.menuCanvasColor.menuAction()),
+        )
+        self.assertEqual(ui.menuCanvasColor.menuAction(), view_actions[-1])
 
     def test_image_context_menu_contains_show_in_folder_action(self) -> None:
         window = QtWidgets.QMainWindow()
@@ -316,6 +347,64 @@ class MainWindowShortcutTests(QtWidgetTestCase):
         ui.actAppearanceLight.trigger()
         self.assertTrue(ui.actAppearanceLight.isChecked())
         self.assertEqual(styles.load_stylesheet(styles.AppearanceTheme.LIGHT), window.styleSheet())
+
+    def test_canvas_color_actions_switch_stylesheet_and_survive_theme_changes(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        self.addCleanup(window.deleteLater)
+
+        with patch(
+            "pic_viewer.ui.windows.main_window.styles.resolve_system_theme",
+            return_value=styles.AppearanceTheme.LIGHT,
+        ):
+            ui.setup_ui(window)
+
+        ui.actCanvasColorMiddleGray18.trigger()
+        self.assertTrue(ui.actCanvasColorMiddleGray18.isChecked())
+        self.assertEqual(
+            styles.load_stylesheet(
+                styles.AppearanceTheme.LIGHT,
+                styles.CanvasColor.MIDDLE_GRAY_18,
+            ),
+            window.styleSheet(),
+        )
+
+        ui.actAppearanceDark.trigger()
+        self.assertTrue(ui.actAppearanceDark.isChecked())
+        self.assertTrue(ui.actCanvasColorMiddleGray18.isChecked())
+        self.assertEqual(
+            styles.load_stylesheet(
+                styles.AppearanceTheme.DARK,
+                styles.CanvasColor.MIDDLE_GRAY_18,
+            ),
+            window.styleSheet(),
+        )
+
+        ui.actCanvasColorNearBlack.trigger()
+        self.assertTrue(ui.actCanvasColorNearBlack.isChecked())
+        self.assertEqual(
+            styles.load_stylesheet(
+                styles.AppearanceTheme.DARK,
+                styles.CanvasColor.NEAR_BLACK,
+            ),
+            window.styleSheet(),
+        )
+
+    def test_canvas_color_changes_update_detached_image_window_styles(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        image_page = QtWidgets.QWidget()
+        ui.tabsImages.addTab(image_page, "sample.jpg")
+        floating = ui.tabsImages.detach_tab(0, show=False)
+        self.assertIsNotNone(floating)
+
+        ui.actCanvasColorMiddleGray18.trigger()
+
+        self.assertEqual(window.styleSheet(), floating.styleSheet())
+        floating.close()
 
     def test_light_appearance_uses_dark_neutral_icons_visible_in_menus(self) -> None:
         window = QtWidgets.QMainWindow()

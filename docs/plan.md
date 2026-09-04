@@ -107,7 +107,7 @@ The following UI improvements are ordered by priority. Any item that changes the
 ### High Priority
 
 - [x] Make the Analysis panel usable at the supported minimum window size. At `900 x 600`, the waveform is currently clipped and long analysis labels or color-space status text can be truncated. Preserve the non-scrollable outer info panel, but define an approved compact or internally scrollable Analysis-page behavior for short windows, or raise the minimum supported window height if the fixed chart dimensions must remain mandatory.
-- [ ] Keep the image canvas on a neutral, color-accurate background in both appearance themes. The light theme should change the application chrome and controls without surrounding the displayed photo with a pure-white canvas that can affect perceived exposure and color.
+- [x] Keep the image canvas on a neutral, color-accurate background in both appearance themes. The light theme should change the application chrome and controls without surrounding the displayed photo with a pure-white canvas that can affect perceived exposure and color.
 - [ ] Resolve the duplicate `Ctrl/Cmd + K` shortcut currently assigned to both `RGB Mode` and `All RGB Channels`. Give each independently actionable command an unambiguous shortcut and update `docs/ui.md` together with the implementation.
 
 ### Medium Priority

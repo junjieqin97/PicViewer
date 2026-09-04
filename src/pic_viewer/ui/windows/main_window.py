@@ -48,6 +48,7 @@ class MainWindowUI:
 
     def __init__(self, system_color_profiles: Sequence[LocalColorProfile] = ()) -> None:
         self._system_color_profiles = tuple(system_color_profiles)
+        self._canvas_color = styles.DEFAULT_CANVAS_COLOR
 
     def setup_ui(self, main_window: QtWidgets.QMainWindow) -> None:
         self._main_window = main_window
@@ -93,6 +94,15 @@ class MainWindowUI:
         self.actAppearanceDark = QtGui.QAction(self._main_window)
         self.actAppearanceDark.setObjectName("actAppearanceDark")
         self.actAppearanceDark.setCheckable(True)
+        self.actCanvasColorDeepNeutral = QtGui.QAction(self._main_window)
+        self.actCanvasColorDeepNeutral.setObjectName("actCanvasColorDeepNeutral")
+        self.actCanvasColorDeepNeutral.setCheckable(True)
+        self.actCanvasColorMiddleGray18 = QtGui.QAction(self._main_window)
+        self.actCanvasColorMiddleGray18.setObjectName("actCanvasColorMiddleGray18")
+        self.actCanvasColorMiddleGray18.setCheckable(True)
+        self.actCanvasColorNearBlack = QtGui.QAction(self._main_window)
+        self.actCanvasColorNearBlack.setObjectName("actCanvasColorNearBlack")
+        self.actCanvasColorNearBlack.setCheckable(True)
 
         self.actToggleInfoPanel = QtGui.QAction(self._main_window)
         self.actToggleInfoPanel.setObjectName("actToggleInfoPanel")
@@ -193,6 +203,11 @@ class MainWindowUI:
         self.actionGroupAppearance.setExclusive(True)
         self.actionGroupAppearance.addAction(self.actAppearanceLight)
         self.actionGroupAppearance.addAction(self.actAppearanceDark)
+        self.actionGroupCanvasColor = QtGui.QActionGroup(self._main_window)
+        self.actionGroupCanvasColor.setExclusive(True)
+        self.actionGroupCanvasColor.addAction(self.actCanvasColorDeepNeutral)
+        self.actionGroupCanvasColor.addAction(self.actCanvasColorMiddleGray18)
+        self.actionGroupCanvasColor.addAction(self.actCanvasColorNearBlack)
         self.actionGroupColorReadoutType = QtGui.QActionGroup(self._main_window)
         self.actionGroupColorReadoutType.setExclusive(True)
         self.actionGroupColorReadoutType.addAction(self.actColorReadoutTypeRgbl)
@@ -205,9 +220,19 @@ class MainWindowUI:
         self.actAppearanceDark.triggered.connect(
             lambda _checked=False: self.apply_appearance_theme(styles.AppearanceTheme.DARK)
         )
+        self.actCanvasColorDeepNeutral.triggered.connect(
+            lambda _checked=False: self.apply_canvas_color(styles.CanvasColor.DEEP_NEUTRAL)
+        )
+        self.actCanvasColorMiddleGray18.triggered.connect(
+            lambda _checked=False: self.apply_canvas_color(styles.CanvasColor.MIDDLE_GRAY_18)
+        )
+        self.actCanvasColorNearBlack.triggered.connect(
+            lambda _checked=False: self.apply_canvas_color(styles.CanvasColor.NEAR_BLACK)
+        )
 
         self.actModeLuma.setChecked(True)
         self.actChannelAll.setChecked(True)
+        self.actCanvasColorDeepNeutral.setChecked(True)
         self.actColorReadoutTypeRgbl.setChecked(True)
         self._apply_analysis_action_icons()
         self._apply_shortcuts()
@@ -329,6 +354,11 @@ class MainWindowUI:
         self.menuAppearance.setObjectName("menuAppearance")
         self.menuAppearance.addAction(self.actAppearanceLight)
         self.menuAppearance.addAction(self.actAppearanceDark)
+        self.menuCanvasColor = self.menuView.addMenu("")
+        self.menuCanvasColor.setObjectName("menuCanvasColor")
+        self.menuCanvasColor.addAction(self.actCanvasColorDeepNeutral)
+        self.menuCanvasColor.addAction(self.actCanvasColorMiddleGray18)
+        self.menuCanvasColor.addAction(self.actCanvasColorNearBlack)
 
         self.menuTools = menu_bar.addMenu("")
         self.menuTools.setObjectName("menuTools")
@@ -1001,16 +1031,24 @@ class MainWindowUI:
     ) -> styles.AppearanceTheme:
         """Apply an appearance theme and synchronize the menu state."""
 
-        applied_theme = styles.apply_stylesheet(self._main_window, theme)
+        applied_theme = styles.apply_stylesheet(self._main_window, theme, self._canvas_color)
         self._appearance_theme = applied_theme
         self._apply_analysis_action_icons(applied_theme)
         self._sync_appearance_actions(applied_theme)
+        self._sync_canvas_color_actions(self._canvas_color)
         for label in self._main_window.findChildren(ImageDisplayLabel, "lblImage"):
             label.set_color_readout_theme(applied_theme)
         for tabs in (getattr(self, "tabsImages", None), getattr(self, "tabsInfo", None)):
             if hasattr(tabs, "apply_floating_stylesheet"):
                 tabs.apply_floating_stylesheet(self._main_window.styleSheet())
         return applied_theme
+
+    def apply_canvas_color(self, canvas_color: styles.CanvasColor) -> styles.CanvasColor:
+        """Apply a neutral image canvas color without changing the appearance theme."""
+
+        self._canvas_color = canvas_color
+        self.apply_appearance_theme(getattr(self, "_appearance_theme", None))
+        return canvas_color
 
     def _sync_appearance_actions(self, theme: styles.AppearanceTheme) -> None:
         light_blocker = QtCore.QSignalBlocker(self.actAppearanceLight)
@@ -1021,6 +1059,19 @@ class MainWindowUI:
         finally:
             del light_blocker
             del dark_blocker
+
+    def _sync_canvas_color_actions(self, canvas_color: styles.CanvasColor) -> None:
+        actions = {
+            styles.CanvasColor.DEEP_NEUTRAL: self.actCanvasColorDeepNeutral,
+            styles.CanvasColor.MIDDLE_GRAY_18: self.actCanvasColorMiddleGray18,
+            styles.CanvasColor.NEAR_BLACK: self.actCanvasColorNearBlack,
+        }
+        blockers = [QtCore.QSignalBlocker(action) for action in actions.values()]
+        try:
+            for color, action in actions.items():
+                action.setChecked(color == canvas_color)
+        finally:
+            del blockers
 
     def _create_metadata_table(
         self, parent: QtWidgets.QWidget, object_name: str
@@ -1056,6 +1107,9 @@ class MainWindowUI:
         self.actShowInFolder.setText(self._tr("Show in Folder"))
         self.actAppearanceLight.setText(self._tr("Light"))
         self.actAppearanceDark.setText(self._tr("Dark"))
+        self.actCanvasColorDeepNeutral.setText(self._tr("Deep Neutral Gray"))
+        self.actCanvasColorMiddleGray18.setText(self._tr("18% Middle Gray"))
+        self.actCanvasColorNearBlack.setText(self._tr("Near-Black Neutral Gray"))
         self.actToggleInfoPanel.setText(self._tr("Info Panel"))
         self.actToggleAnalysisToolbar.setText(self._tr("Analysis Toolbar"))
         self.actToggleFilmstrip.setText(self._tr("Filmstrip"))
@@ -1107,6 +1161,7 @@ class MainWindowUI:
         self.menuFile.setTitle(self._tr("File"))
         self.menuView.setTitle(self._tr("View"))
         self.menuAppearance.setTitle(self._tr("Appearance"))
+        self.menuCanvasColor.setTitle(self._tr("Canvas Color"))
         self.menuReferenceLines.setTitle(self._tr("Reference Lines"))
         self.menuTools.setTitle(self._tr("Tools"))
         self.menuMode.setTitle(self._tr("Histogram/Waveform Mode"))
