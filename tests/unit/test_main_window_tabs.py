@@ -226,7 +226,7 @@ class MainWindowTabsTests(QtWidgetTestCase):
         self.assertLessEqual(histogram_frame.height(), max_histogram_height)
         self.assertLessEqual(waveform_frame.height(), max_waveform_height)
 
-        analysis_layout = ui.tabAnalysis.layout()
+        analysis_layout = ui.analysisScrollContent.layout()
         self.assertIs(ui.widgetImageColorSpace, analysis_layout.itemAt(0).widget())
         self.assertIs(ui.widgetAnalysisSamplePrecision, analysis_layout.itemAt(1).widget())
         self.assertIs(ui.widgetSpecifiedImageColorSpace, analysis_layout.itemAt(2).widget())
@@ -239,6 +239,76 @@ class MainWindowTabsTests(QtWidgetTestCase):
         expected_alignment = QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignTop
         self.assertEqual(expected_alignment, analysis_layout.itemAt(5).alignment())
         self.assertEqual(expected_alignment, analysis_layout.itemAt(6).alignment())
+
+    def test_analysis_page_scrolls_at_minimum_supported_window_size(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        window.resize(900, 600)
+        window.show()
+        self._app.processEvents()
+
+        self.assertNotIsInstance(ui.scrollInfo, QtWidgets.QScrollArea)
+        self.assertIsInstance(ui.scrollAnalysis, QtWidgets.QScrollArea)
+        self.assertIs(ui.scrollAnalysis, ui.tabAnalysis.layout().itemAt(0).widget())
+        self.assertIs(ui.analysisScrollContent, ui.scrollAnalysis.widget())
+        self.assertTrue(ui.scrollAnalysis.widgetResizable())
+        self.assertEqual(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded,
+            ui.scrollAnalysis.verticalScrollBarPolicy(),
+        )
+        self.assertEqual(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff,
+            ui.scrollAnalysis.horizontalScrollBarPolicy(),
+        )
+        self.assertGreater(ui.scrollAnalysis.verticalScrollBar().maximum(), 0)
+
+        ui.scrollAnalysis.verticalScrollBar().setValue(
+            ui.scrollAnalysis.verticalScrollBar().maximum()
+        )
+        self._app.processEvents()
+        waveform_top = ui.frameWaveformAnalysis.mapTo(
+            ui.scrollAnalysis.viewport(),
+            QtCore.QPoint(),
+        ).y()
+        visible_height = ui.scrollAnalysis.viewport().rect().intersected(
+            ui.frameWaveformAnalysis.rect().translated(0, waveform_top)
+        ).height()
+        self.assertEqual(ui.frameWaveformAnalysis.height(), visible_height)
+
+    def test_analysis_labels_wrap_without_horizontal_scrolling(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+
+        for label in (
+            ui.labelImageColorSpaceTitle,
+            ui.labelImageColorSpaceValue,
+            ui.labelAnalysisSamplePrecisionTitle,
+            ui.labelSpecifiedImageColorSpaceTitle,
+            ui.labelRenderingIntentTitle,
+            ui.labelDisplayColorSpaceTitle,
+        ):
+            self.assertTrue(label.wordWrap())
+
+        window.resize(900, 600)
+        ui.labelImageColorSpaceValue.setText(
+            "Display P3 (specified because the embedded ICC profile could not be read)"
+        )
+        window.show()
+        self._app.processEvents()
+
+        self.assertLessEqual(
+            ui.analysisScrollContent.width(),
+            ui.scrollAnalysis.viewport().width(),
+        )
+        self.assertGreater(
+            ui.labelImageColorSpaceValue.height(),
+            ui.labelImageColorSpaceValue.fontMetrics().height(),
+        )
 
     def test_analysis_tab_has_sample_precision_selector_after_image_color_space(self) -> None:
         window = QtWidgets.QMainWindow()
@@ -263,7 +333,7 @@ class MainWindowTabsTests(QtWidgetTestCase):
         self.assertEqual("8-bit/channel", ui.comboAnalysisSamplePrecision.currentText())
         self.assertEqual(ChannelBitDepth.EIGHT, ui.comboAnalysisSamplePrecision.currentData())
 
-        analysis_layout = ui.tabAnalysis.layout()
+        analysis_layout = ui.analysisScrollContent.layout()
         self.assertIs(ui.widgetImageColorSpace, analysis_layout.itemAt(0).widget())
         self.assertIs(ui.widgetAnalysisSamplePrecision, analysis_layout.itemAt(1).widget())
         self.assertIs(ui.widgetSpecifiedImageColorSpace, analysis_layout.itemAt(2).widget())
@@ -665,7 +735,7 @@ class MainWindowTabsTests(QtWidgetTestCase):
         self.assertEqual("Perceptual", ui.comboRenderingIntent.currentText())
         self.assertEqual(RenderingIntent.PERCEPTUAL, ui.comboRenderingIntent.currentData())
 
-        analysis_layout = ui.tabAnalysis.layout()
+        analysis_layout = ui.analysisScrollContent.layout()
         self.assertIs(ui.widgetImageColorSpace, analysis_layout.itemAt(0).widget())
         self.assertIs(ui.widgetAnalysisSamplePrecision, analysis_layout.itemAt(1).widget())
         self.assertIs(ui.widgetSpecifiedImageColorSpace, analysis_layout.itemAt(2).widget())
@@ -691,7 +761,7 @@ class MainWindowTabsTests(QtWidgetTestCase):
         )
         self.assertEqual("sRGB", ui.comboSpecifiedImageColorSpace.currentText())
 
-        analysis_layout = ui.tabAnalysis.layout()
+        analysis_layout = ui.analysisScrollContent.layout()
         self.assertIs(ui.widgetImageColorSpace, analysis_layout.itemAt(0).widget())
         self.assertIs(ui.widgetAnalysisSamplePrecision, analysis_layout.itemAt(1).widget())
         self.assertIs(ui.widgetSpecifiedImageColorSpace, analysis_layout.itemAt(2).widget())
@@ -709,7 +779,7 @@ class MainWindowTabsTests(QtWidgetTestCase):
         self.assertEqual("labelImageColorSpaceValue", ui.labelImageColorSpaceValue.objectName())
         self.assertEqual("Image Color Space", ui.labelImageColorSpaceTitle.text())
         self.assertEqual("Not Loaded", ui.labelImageColorSpaceValue.text())
-        analysis_layout = ui.tabAnalysis.layout()
+        analysis_layout = ui.analysisScrollContent.layout()
         self.assertIs(ui.widgetImageColorSpace, analysis_layout.itemAt(0).widget())
         self.assertIs(ui.widgetAnalysisSamplePrecision, analysis_layout.itemAt(1).widget())
         self.assertIs(ui.widgetSpecifiedImageColorSpace, analysis_layout.itemAt(2).widget())

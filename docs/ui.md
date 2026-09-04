@@ -127,7 +127,7 @@ Inside the info area, use `DetachableTabWidget` (`QTabWidget` subclass):
 
 Each info tab is first implemented with placeholder controls (the metadata table may scroll internally):
 
-- Analysis: `tabAnalysis` uses a vertical layout. From top to bottom it displays the current source image color space status, the `Analysis Sample Precision` selector, a `Specify Image Color Space` selector, the `Rendering Intent` selector, the `Display Color Space` selector, the histogram, and the waveform. Both analysis charts should be centered horizontally and aligned near the top.
+- Analysis: `tabAnalysis` contains a borderless `scrollAnalysis: QScrollArea` whose vertical scrollbar appears only when needed and whose horizontal scrollbar is disabled. The outer `scrollInfo` panel remains non-scrollable. `scrollAnalysis` owns a resizable `analysisScrollContent` widget with a vertical layout. From top to bottom, that layout displays the current source image color space status, the `Analysis Sample Precision` selector, a `Specify Image Color Space` selector, the `Rendering Intent` selector, the `Display Color Space` selector, the histogram, and the waveform. Both analysis charts remain centered horizontally, aligned near the top, and keep their fixed logical sizes. At short supported window heights, including `900 x 600`, users scroll only the Analysis page to reach the complete waveform. Analysis field titles and the source color-space value wrap when the available width is insufficient so their full text remains readable without horizontal scrolling.
   - `Analysis Sample Precision` uses `8-bit/channel` and `16-bit/channel (if available)`; `8-bit/channel` is selected by default. Choosing 16-bit preserves 16-bit/channel analysis only when the ICC-converted display source is 16-bit. 8-bit sources remain 8-bit and are not artificially expanded.
   - `Specify Image Color Space` uses `sRGB`, `Display P3`, `Adobe RGB (1998)`, `ProPhoto RGB`, startup-loaded system ICC profiles when supported, and `Choose a local ICC...`; `sRGB` is selected by default. System ICC profiles are inserted after the built-in presets and before the chooser entry. `Choose a local ICC...` opens a file dialog for `.icc` and `.icm` files, validates the profile, inserts the selected local profile before the chooser entry, and keeps it only for the current application session. It is a global fallback source color space selector used only when no embedded ICC profile is present, the embedded ICC profile cannot be read, or embedded ICC conversion fails. It is disabled with a gray style and blank visible text when the current image has a valid embedded ICC profile. For RAW images, it is disabled with a gray style and fixed visible text `ProPhoto RGB`; this per-image display state does not change the global fallback selection. It is restored to the selected fallback value when fallback, loading, failed, or empty states enable it again.
   - `Rendering Intent` uses `Perceptual`, `Relative Colorimetric`, `Saturation`, and `Absolute Colorimetric`; `Perceptual` is selected by default. It is a global ICC gamut mapping selector used for image-to-display-space conversion.
@@ -218,6 +218,8 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `buttonToolbarMetadataOverlay: QToolButton`
 - `tabsInfo: DetachableTabWidget`
 - `tabAnalysis: QWidget`
+- `scrollAnalysis: QScrollArea`
+- `analysisScrollContent: QWidget`
 - `tabMetadata: QWidget`
 - `widgetImageColorSpace: QWidget`
 - `labelImageColorSpaceTitle: QLabel`

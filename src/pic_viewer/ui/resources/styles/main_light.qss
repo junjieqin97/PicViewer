@@ -50,6 +50,12 @@ QWidget#tabMetadata {
     background: #ffffff;
 }
 
+QScrollArea#scrollAnalysis,
+QWidget#analysisScrollContent {
+    background: #ffffff;
+    border: none;
+}
+
 QTabWidget#tabsImages::tab-bar {
     alignment: left;
     background: #ffffff;

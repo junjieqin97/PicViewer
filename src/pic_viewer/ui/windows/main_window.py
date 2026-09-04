@@ -553,11 +553,40 @@ class MainWindowUI:
 
         self.tabAnalysis = QtWidgets.QWidget(self.tabsInfo)
         self.tabAnalysis.setObjectName("tabAnalysis")
-        analysis_layout = QtWidgets.QVBoxLayout(self.tabAnalysis)
-        analysis_layout.setContentsMargins(6, 6, 6, 6)
-        analysis_layout.setSpacing(8)
+        tab_analysis_layout = QtWidgets.QVBoxLayout(self.tabAnalysis)
+        tab_analysis_layout.setObjectName("layoutTabAnalysis")
+        tab_analysis_layout.setContentsMargins(0, 0, 0, 0)
+        tab_analysis_layout.setSpacing(0)
 
-        self.widgetImageColorSpace = QtWidgets.QWidget(self.tabAnalysis)
+        self.scrollAnalysis = QtWidgets.QScrollArea(self.tabAnalysis)
+        self.scrollAnalysis.setObjectName("scrollAnalysis")
+        self.scrollAnalysis.setWidgetResizable(True)
+        self.scrollAnalysis.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
+        self.scrollAnalysis.setHorizontalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.scrollAnalysis.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+        tab_analysis_layout.addWidget(self.scrollAnalysis)
+
+        self.analysisScrollContent = QtWidgets.QWidget()
+        self.analysisScrollContent.setObjectName("analysisScrollContent")
+        self.analysisScrollContent.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Minimum,
+        )
+        self.scrollAnalysis.setWidget(self.analysisScrollContent)
+
+        analysis_layout = QtWidgets.QVBoxLayout(self.analysisScrollContent)
+        analysis_layout.setObjectName("layoutAnalysis")
+        analysis_layout.setContentsMargins(4, 4, 4, 4)
+        analysis_layout.setSpacing(8)
+        analysis_layout.setSizeConstraint(
+            QtWidgets.QLayout.SizeConstraint.SetMinimumSize
+        )
+
+        self.widgetImageColorSpace = QtWidgets.QWidget(self.analysisScrollContent)
         self.widgetImageColorSpace.setObjectName("widgetImageColorSpace")
         image_space_layout = QtWidgets.QHBoxLayout(self.widgetImageColorSpace)
         image_space_layout.setObjectName("layoutImageColorSpace")
@@ -578,7 +607,7 @@ class MainWindowUI:
         image_space_layout.addWidget(self.labelImageColorSpaceValue, 1)
         analysis_layout.addWidget(self.widgetImageColorSpace)
 
-        self.widgetAnalysisSamplePrecision = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetAnalysisSamplePrecision = QtWidgets.QWidget(self.analysisScrollContent)
         self.widgetAnalysisSamplePrecision.setObjectName("widgetAnalysisSamplePrecision")
         sample_precision_layout = QtWidgets.QHBoxLayout(self.widgetAnalysisSamplePrecision)
         sample_precision_layout.setObjectName("layoutAnalysisSamplePrecision")
@@ -608,7 +637,7 @@ class MainWindowUI:
         sample_precision_layout.addWidget(self.comboAnalysisSamplePrecision, 1)
         analysis_layout.addWidget(self.widgetAnalysisSamplePrecision)
 
-        self.widgetSpecifiedImageColorSpace = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetSpecifiedImageColorSpace = QtWidgets.QWidget(self.analysisScrollContent)
         self.widgetSpecifiedImageColorSpace.setObjectName("widgetSpecifiedImageColorSpace")
         specified_space_layout = QtWidgets.QHBoxLayout(self.widgetSpecifiedImageColorSpace)
         specified_space_layout.setObjectName("layoutSpecifiedImageColorSpace")
@@ -635,7 +664,7 @@ class MainWindowUI:
         specified_space_layout.addWidget(self.comboSpecifiedImageColorSpace, 1)
         analysis_layout.addWidget(self.widgetSpecifiedImageColorSpace)
 
-        self.widgetRenderingIntent = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetRenderingIntent = QtWidgets.QWidget(self.analysisScrollContent)
         self.widgetRenderingIntent.setObjectName("widgetRenderingIntent")
         rendering_intent_layout = QtWidgets.QHBoxLayout(self.widgetRenderingIntent)
         rendering_intent_layout.setObjectName("layoutRenderingIntent")
@@ -659,7 +688,7 @@ class MainWindowUI:
         rendering_intent_layout.addWidget(self.comboRenderingIntent, 1)
         analysis_layout.addWidget(self.widgetRenderingIntent)
 
-        self.widgetDisplayColorSpace = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetDisplayColorSpace = QtWidgets.QWidget(self.analysisScrollContent)
         self.widgetDisplayColorSpace.setObjectName("widgetDisplayColorSpace")
         display_space_layout = QtWidgets.QHBoxLayout(self.widgetDisplayColorSpace)
         display_space_layout.setObjectName("layoutDisplayColorSpace")
@@ -686,7 +715,21 @@ class MainWindowUI:
         display_space_layout.addWidget(self.comboDisplayColorSpace, 1)
         analysis_layout.addWidget(self.widgetDisplayColorSpace)
 
-        self.frameHistogramAnalysis = QtWidgets.QFrame(self.tabAnalysis)
+        for label in (
+            self.labelImageColorSpaceTitle,
+            self.labelImageColorSpaceValue,
+            self.labelAnalysisSamplePrecisionTitle,
+            self.labelSpecifiedImageColorSpaceTitle,
+            self.labelRenderingIntentTitle,
+            self.labelDisplayColorSpaceTitle,
+        ):
+            label.setWordWrap(True)
+            label.setSizePolicy(
+                QtWidgets.QSizePolicy.Policy.Preferred,
+                QtWidgets.QSizePolicy.Policy.Preferred,
+            )
+
+        self.frameHistogramAnalysis = QtWidgets.QFrame(self.analysisScrollContent)
         self.frameHistogramAnalysis.setObjectName("frameHistogramAnalysis")
         self.frameHistogramAnalysis.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
         self.frameHistogramAnalysis.setSizePolicy(
@@ -737,7 +780,7 @@ class MainWindowUI:
             QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignTop,
         )
 
-        self.frameWaveformAnalysis = QtWidgets.QFrame(self.tabAnalysis)
+        self.frameWaveformAnalysis = QtWidgets.QFrame(self.analysisScrollContent)
         self.frameWaveformAnalysis.setObjectName("frameWaveformAnalysis")
         self.frameWaveformAnalysis.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
         self.frameWaveformAnalysis.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
