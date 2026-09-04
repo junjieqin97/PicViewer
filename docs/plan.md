@@ -99,3 +99,27 @@ Fixed color readouts reuse the same analysis-space sampling path. Add mode maps 
 Metadata analysis is represented as structured DTO data rather than UI table state. `ImageService.load_and_analyze()` combines pyexiv2-derived Exif/IPTC/TIFF sections with General metadata derived from file system state and `ImageAnalysis.source_size`. `MainControllerMetadataMixin` renders those sections into four `QTableWidget` instances and uses `build_metadata_overlay_lines()` to derive the optional three-line overlay: camera/lens, exposure settings, and resolution. Missing fields are omitted instead of shown as placeholders.
 
 Overall, the analysis pipeline's single source of truth is the accepted `ImageLoadResult` stored in `_images_by_path`. UI widgets never own analysis data; they render selected views, overlays, and labels derived from that DTO. Reloading color settings clears the affected caches, starts new sessions, and regenerates both preview and full analysis data so display and analysis remain consistent.
+
+## TODO
+
+The following UI improvements are ordered by priority. Any item that changes the existing UI specification must update `docs/ui.md` before implementation.
+
+### High Priority
+
+- [ ] Make the Analysis panel usable at the supported minimum window size. At `900 x 600`, the waveform is currently clipped and long analysis labels or color-space status text can be truncated. Preserve the non-scrollable outer info panel, but define an approved compact or internally scrollable Analysis-page behavior for short windows, or raise the minimum supported window height if the fixed chart dimensions must remain mandatory.
+- [ ] Keep the image canvas on a neutral, color-accurate background in both appearance themes. The light theme should change the application chrome and controls without surrounding the displayed photo with a pure-white canvas that can affect perceived exposure and color.
+- [ ] Resolve the duplicate `Ctrl/Cmd + K` shortcut currently assigned to both `RGB Mode` and `All RGB Channels`. Give each independently actionable command an unambiguous shortcut and update `docs/ui.md` together with the implementation.
+
+### Medium Priority
+
+- [ ] Replace the user-visible `Histogram Placeholder` and `Waveform Placeholder` text with production-ready empty, loading, and failure states. Empty states should explain that an image must be opened, while loading and failure states should remain concise and localized.
+- [ ] Improve the Analysis form layout at the minimum info-panel width. Align field labels consistently, allow selectors to use the available width, place long source color-space status text on a dedicated line when necessary, and provide elision plus a tooltip for text that still cannot fit.
+- [ ] Add explicit channel prefixes to hover pixel samples, such as `R 255`, `G 255`, `B 255`, and `L 255`, so the values do not rely on color alone for identification. Keep the existing semantic channel colors as secondary cues.
+- [ ] Improve the analysis toolbar's target size and discoverability while keeping it within the specified compact height. Use the largest icon and button sizes that fit within the maximum toolbar height, preserve clear group separators, and include shortcuts in tooltips where available.
+- [ ] Add consistent visible keyboard-focus styling for tool buttons, push buttons, combo boxes, tab bars, metadata tables, and Filmstrip items. Ensure custom clickable histogram triangles expose an understandable accessible interaction, or clearly treat them as visual mirrors of the accessible menu and toolbar actions.
+
+### Low Priority
+
+- [ ] Reduce nested border density across tab panes, the info panel, analysis chart frames, the Filmstrip frame, and the Filmstrip list. Use background hierarchy and a smaller number of separators so the image remains the dominant visual element in both themes.
+- [ ] Align the Filmstrip filter controls with the left edge of the thumbnail content instead of centering the filters independently from the thumbnail flow.
+- [ ] Add visual regression coverage for the principal layout combinations: `900 x 600` and `1200 x 800`, light and dark themes, English and Simplified Chinese, empty and loaded states, and standard and high-DPI rendering. The checks should detect clipped controls, missing focus indicators, unreadable states, and unintended canvas-color changes.
