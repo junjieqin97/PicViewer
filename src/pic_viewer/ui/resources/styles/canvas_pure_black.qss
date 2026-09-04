@@ -1,0 +1,5 @@
+QWidget#pageImagePreview,
+QScrollArea#scrollImage,
+QWidget#viewportImageCanvas {
+    background: #000000;
+}

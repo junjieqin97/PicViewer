@@ -26,7 +26,7 @@ The main window uses a typical four-area structure:
 - The menu bar is the entry point for all features.
 - It must contain at least these top-level menus (names must be consistent):
   - File: Open Image, Open Folder, Close Current Tab, Exit
-  - View: Zoom, Fit to Window, Show Metadata Overlay (checkable, checked = visible), Info Panel (checkable, checked = visible), Analysis Toolbar (checkable, checked = visible), Filmstrip Pane (checkable, checked = visible), Appearance (Light/Dark, mutually exclusive), Canvas Color (Deep Neutral Gray/18% Middle Gray/Near-Black Neutral Gray, mutually exclusive)
+  - View: Zoom, Fit to Window, Show Metadata Overlay (checkable, checked = visible), Info Panel (checkable, checked = visible), Analysis Toolbar (checkable, checked = visible), Filmstrip Pane (checkable, checked = visible), Appearance (Light/Dark, mutually exclusive), Canvas Color (Pure White/18% Middle Gray/Deep Neutral Gray/Near-Black Neutral Gray/Pure Black, mutually exclusive and ordered from light to dark)
   - Tools: Histogram/Waveform options + pseudo color options + reference line options
     - Pseudo Color: Show Underexposed (checkable), Show Overexposed (checkable), Show Peaking (High/Medium/Low, checkable, three levels are mutually exclusive and clicking the current level turns it off)
     - Reference Lines: Crosshair Reference Line, Diagonal Reference Line, Rule-of-Thirds Grid Reference Line (all checkable; can be toggled independently and displayed as overlays together)
@@ -102,7 +102,7 @@ Constraint: the right info area width is adjustable by default; when the main wi
 - The display control inside a tab is named `viewImage` (if using `QGraphicsView`) or `lblImage` (if using `QLabel` as a placeholder).
 - Context menu: right-clicking in the `image display area` opens a context menu containing `Zoom In`, `Zoom Out`, `Fit to Window`, and `Show in Folder`; zoom behavior must remain consistent with the `top menu bar` actions, and `Show in Folder` opens the current image's parent directory. See `5.2 MenuBar Actions`.
 - Mouse wheel: scrolling up in the `image display area` performs `Zoom In`, and scrolling down performs `Zoom Out`; the implementation must reuse the zoom logic from the `top menu bar`.
-- Canvas color: the area surrounding a loaded image uses a neutral RGB background independent of the Light/Dark appearance theme. `View > Canvas Color` provides `Deep Neutral Gray` (`#202020`), `18% Middle Gray` (`#777777`), and `Near-Black Neutral Gray` (`#101010`). `Deep Neutral Gray` is selected by default. The selection applies immediately to attached and detached image views, remains active when the appearance theme changes, and is kept only for the current application session. Empty, loading, and error states continue to use their appearance-theme backgrounds.
+- Canvas color: the area surrounding a loaded image uses an achromatic RGB background independent of the Light/Dark appearance theme. `View > Canvas Color` lists its options from light to dark: `Pure White` (`#FFFFFF`), `18% Middle Gray` (`#777777`), `Deep Neutral Gray` (`#202020`), `Near-Black Neutral Gray` (`#101010`), and `Pure Black` (`#000000`). `Deep Neutral Gray` is selected by default. The selection applies immediately to attached and detached image views, remains active when the appearance theme changes, and is kept only for the current application session. Empty, loading, and error states continue to use their appearance-theme backgrounds.
 
 ### 3.2 Right Info Area (Info Panel)
 
@@ -264,9 +264,11 @@ Actions (names must be consistent; copy may mix Chinese and English, but consist
 - `actShowInFolder`: Show in Folder (image context menu only)
 - `actAppearanceLight`: Light (checkable, mutually exclusive with Dark)
 - `actAppearanceDark`: Dark (checkable, mutually exclusive with Light)
-- `actCanvasColorDeepNeutral`: Deep Neutral Gray (checkable, mutually exclusive with the other canvas colors; selected by default)
+- `actCanvasColorPureWhite`: Pure White (checkable, mutually exclusive with the other canvas colors)
 - `actCanvasColorMiddleGray18`: 18% Middle Gray (checkable, mutually exclusive with the other canvas colors)
+- `actCanvasColorDeepNeutral`: Deep Neutral Gray (checkable, mutually exclusive with the other canvas colors; selected by default)
 - `actCanvasColorNearBlack`: Near-Black Neutral Gray (checkable, mutually exclusive with the other canvas colors)
+- `actCanvasColorPureBlack`: Pure Black (checkable, mutually exclusive with the other canvas colors)
 - `actToggleInfoPanel`: Info Panel (checkable, checked = visible)
 - `actToggleAnalysisToolbar`: Analysis Toolbar (checkable, checked = visible)
 - `actToggleFilmstrip`: Filmstrip Pane (checkable, checked = visible)

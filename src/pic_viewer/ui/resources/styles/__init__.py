@@ -12,9 +12,11 @@ logger = logging.getLogger(__name__)
 
 STYLESHEET_NAME = "main.qss"
 LIGHT_STYLESHEET_NAME = "main_light.qss"
-DEEP_NEUTRAL_CANVAS_STYLESHEET_NAME = "canvas_deep_neutral.qss"
+PURE_WHITE_CANVAS_STYLESHEET_NAME = "canvas_pure_white.qss"
 MIDDLE_GRAY_18_CANVAS_STYLESHEET_NAME = "canvas_middle_gray_18.qss"
+DEEP_NEUTRAL_CANVAS_STYLESHEET_NAME = "canvas_deep_neutral.qss"
 NEAR_BLACK_CANVAS_STYLESHEET_NAME = "canvas_near_black.qss"
+PURE_BLACK_CANVAS_STYLESHEET_NAME = "canvas_pure_black.qss"
 ICON_DIR_PLACEHOLDER = "@PICVIEWER_ICON_DIR@"
 
 
@@ -28,9 +30,11 @@ class AppearanceTheme(str, Enum):
 class CanvasColor(str, Enum):
     """Supported neutral image canvas colors."""
 
-    DEEP_NEUTRAL = "deep-neutral"
+    PURE_WHITE = "pure-white"
     MIDDLE_GRAY_18 = "middle-gray-18"
+    DEEP_NEUTRAL = "deep-neutral"
     NEAR_BLACK = "near-black"
+    PURE_BLACK = "pure-black"
 
 
 DEFAULT_CANVAS_COLOR = CanvasColor.DEEP_NEUTRAL
@@ -42,9 +46,11 @@ _STYLESHEET_NAMES = {
 }
 
 _CANVAS_STYLESHEET_NAMES = {
-    CanvasColor.DEEP_NEUTRAL: DEEP_NEUTRAL_CANVAS_STYLESHEET_NAME,
+    CanvasColor.PURE_WHITE: PURE_WHITE_CANVAS_STYLESHEET_NAME,
     CanvasColor.MIDDLE_GRAY_18: MIDDLE_GRAY_18_CANVAS_STYLESHEET_NAME,
+    CanvasColor.DEEP_NEUTRAL: DEEP_NEUTRAL_CANVAS_STYLESHEET_NAME,
     CanvasColor.NEAR_BLACK: NEAR_BLACK_CANVAS_STYLESHEET_NAME,
+    CanvasColor.PURE_BLACK: PURE_BLACK_CANVAS_STYLESHEET_NAME,
 }
 
 

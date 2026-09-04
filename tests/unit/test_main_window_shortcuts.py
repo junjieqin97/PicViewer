@@ -256,20 +256,30 @@ class MainWindowShortcutTests(QtWidgetTestCase):
         self.assertIn(ui.menuCanvasColor.menuAction(), ui.menuView.actions())
 
         actions = (
-            ui.actCanvasColorDeepNeutral,
+            ui.actCanvasColorPureWhite,
             ui.actCanvasColorMiddleGray18,
+            ui.actCanvasColorDeepNeutral,
             ui.actCanvasColorNearBlack,
+            ui.actCanvasColorPureBlack,
         )
         self.assertEqual(
-            ["Deep Neutral Gray", "18% Middle Gray", "Near-Black Neutral Gray"],
+            [
+                "Pure White",
+                "18% Middle Gray",
+                "Deep Neutral Gray",
+                "Near-Black Neutral Gray",
+                "Pure Black",
+            ],
             [action.text() for action in actions],
         )
         self.assertTrue(all(action.isCheckable() for action in actions))
         self.assertTrue(ui.actionGroupCanvasColor.isExclusive())
         self.assertEqual(list(actions), ui.actionGroupCanvasColor.actions())
         self.assertTrue(ui.actCanvasColorDeepNeutral.isChecked())
+        self.assertFalse(ui.actCanvasColorPureWhite.isChecked())
         self.assertFalse(ui.actCanvasColorMiddleGray18.isChecked())
         self.assertFalse(ui.actCanvasColorNearBlack.isChecked())
+        self.assertFalse(ui.actCanvasColorPureBlack.isChecked())
         self.assertTrue(all(action.shortcut().isEmpty() for action in actions))
 
     def test_view_menu_places_canvas_color_after_appearance(self) -> None:
@@ -359,6 +369,16 @@ class MainWindowShortcutTests(QtWidgetTestCase):
         ):
             ui.setup_ui(window)
 
+        ui.actCanvasColorPureWhite.trigger()
+        self.assertTrue(ui.actCanvasColorPureWhite.isChecked())
+        self.assertEqual(
+            styles.load_stylesheet(
+                styles.AppearanceTheme.LIGHT,
+                styles.CanvasColor.PURE_WHITE,
+            ),
+            window.styleSheet(),
+        )
+
         ui.actCanvasColorMiddleGray18.trigger()
         self.assertTrue(ui.actCanvasColorMiddleGray18.isChecked())
         self.assertEqual(
@@ -386,6 +406,16 @@ class MainWindowShortcutTests(QtWidgetTestCase):
             styles.load_stylesheet(
                 styles.AppearanceTheme.DARK,
                 styles.CanvasColor.NEAR_BLACK,
+            ),
+            window.styleSheet(),
+        )
+
+        ui.actCanvasColorPureBlack.trigger()
+        self.assertTrue(ui.actCanvasColorPureBlack.isChecked())
+        self.assertEqual(
+            styles.load_stylesheet(
+                styles.AppearanceTheme.DARK,
+                styles.CanvasColor.PURE_BLACK,
             ),
             window.styleSheet(),
         )

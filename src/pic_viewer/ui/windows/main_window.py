@@ -94,6 +94,9 @@ class MainWindowUI:
         self.actAppearanceDark = QtGui.QAction(self._main_window)
         self.actAppearanceDark.setObjectName("actAppearanceDark")
         self.actAppearanceDark.setCheckable(True)
+        self.actCanvasColorPureWhite = QtGui.QAction(self._main_window)
+        self.actCanvasColorPureWhite.setObjectName("actCanvasColorPureWhite")
+        self.actCanvasColorPureWhite.setCheckable(True)
         self.actCanvasColorDeepNeutral = QtGui.QAction(self._main_window)
         self.actCanvasColorDeepNeutral.setObjectName("actCanvasColorDeepNeutral")
         self.actCanvasColorDeepNeutral.setCheckable(True)
@@ -103,6 +106,9 @@ class MainWindowUI:
         self.actCanvasColorNearBlack = QtGui.QAction(self._main_window)
         self.actCanvasColorNearBlack.setObjectName("actCanvasColorNearBlack")
         self.actCanvasColorNearBlack.setCheckable(True)
+        self.actCanvasColorPureBlack = QtGui.QAction(self._main_window)
+        self.actCanvasColorPureBlack.setObjectName("actCanvasColorPureBlack")
+        self.actCanvasColorPureBlack.setCheckable(True)
 
         self.actToggleInfoPanel = QtGui.QAction(self._main_window)
         self.actToggleInfoPanel.setObjectName("actToggleInfoPanel")
@@ -205,9 +211,11 @@ class MainWindowUI:
         self.actionGroupAppearance.addAction(self.actAppearanceDark)
         self.actionGroupCanvasColor = QtGui.QActionGroup(self._main_window)
         self.actionGroupCanvasColor.setExclusive(True)
-        self.actionGroupCanvasColor.addAction(self.actCanvasColorDeepNeutral)
+        self.actionGroupCanvasColor.addAction(self.actCanvasColorPureWhite)
         self.actionGroupCanvasColor.addAction(self.actCanvasColorMiddleGray18)
+        self.actionGroupCanvasColor.addAction(self.actCanvasColorDeepNeutral)
         self.actionGroupCanvasColor.addAction(self.actCanvasColorNearBlack)
+        self.actionGroupCanvasColor.addAction(self.actCanvasColorPureBlack)
         self.actionGroupColorReadoutType = QtGui.QActionGroup(self._main_window)
         self.actionGroupColorReadoutType.setExclusive(True)
         self.actionGroupColorReadoutType.addAction(self.actColorReadoutTypeRgbl)
@@ -220,6 +228,9 @@ class MainWindowUI:
         self.actAppearanceDark.triggered.connect(
             lambda _checked=False: self.apply_appearance_theme(styles.AppearanceTheme.DARK)
         )
+        self.actCanvasColorPureWhite.triggered.connect(
+            lambda _checked=False: self.apply_canvas_color(styles.CanvasColor.PURE_WHITE)
+        )
         self.actCanvasColorDeepNeutral.triggered.connect(
             lambda _checked=False: self.apply_canvas_color(styles.CanvasColor.DEEP_NEUTRAL)
         )
@@ -228,6 +239,9 @@ class MainWindowUI:
         )
         self.actCanvasColorNearBlack.triggered.connect(
             lambda _checked=False: self.apply_canvas_color(styles.CanvasColor.NEAR_BLACK)
+        )
+        self.actCanvasColorPureBlack.triggered.connect(
+            lambda _checked=False: self.apply_canvas_color(styles.CanvasColor.PURE_BLACK)
         )
 
         self.actModeLuma.setChecked(True)
@@ -356,9 +370,11 @@ class MainWindowUI:
         self.menuAppearance.addAction(self.actAppearanceDark)
         self.menuCanvasColor = self.menuView.addMenu("")
         self.menuCanvasColor.setObjectName("menuCanvasColor")
-        self.menuCanvasColor.addAction(self.actCanvasColorDeepNeutral)
+        self.menuCanvasColor.addAction(self.actCanvasColorPureWhite)
         self.menuCanvasColor.addAction(self.actCanvasColorMiddleGray18)
+        self.menuCanvasColor.addAction(self.actCanvasColorDeepNeutral)
         self.menuCanvasColor.addAction(self.actCanvasColorNearBlack)
+        self.menuCanvasColor.addAction(self.actCanvasColorPureBlack)
 
         self.menuTools = menu_bar.addMenu("")
         self.menuTools.setObjectName("menuTools")
@@ -1062,9 +1078,11 @@ class MainWindowUI:
 
     def _sync_canvas_color_actions(self, canvas_color: styles.CanvasColor) -> None:
         actions = {
-            styles.CanvasColor.DEEP_NEUTRAL: self.actCanvasColorDeepNeutral,
+            styles.CanvasColor.PURE_WHITE: self.actCanvasColorPureWhite,
             styles.CanvasColor.MIDDLE_GRAY_18: self.actCanvasColorMiddleGray18,
+            styles.CanvasColor.DEEP_NEUTRAL: self.actCanvasColorDeepNeutral,
             styles.CanvasColor.NEAR_BLACK: self.actCanvasColorNearBlack,
+            styles.CanvasColor.PURE_BLACK: self.actCanvasColorPureBlack,
         }
         blockers = [QtCore.QSignalBlocker(action) for action in actions.values()]
         try:
@@ -1107,9 +1125,11 @@ class MainWindowUI:
         self.actShowInFolder.setText(self._tr("Show in Folder"))
         self.actAppearanceLight.setText(self._tr("Light"))
         self.actAppearanceDark.setText(self._tr("Dark"))
+        self.actCanvasColorPureWhite.setText(self._tr("Pure White"))
         self.actCanvasColorDeepNeutral.setText(self._tr("Deep Neutral Gray"))
         self.actCanvasColorMiddleGray18.setText(self._tr("18% Middle Gray"))
         self.actCanvasColorNearBlack.setText(self._tr("Near-Black Neutral Gray"))
+        self.actCanvasColorPureBlack.setText(self._tr("Pure Black"))
         self.actToggleInfoPanel.setText(self._tr("Info Panel"))
         self.actToggleAnalysisToolbar.setText(self._tr("Analysis Toolbar"))
         self.actToggleFilmstrip.setText(self._tr("Filmstrip"))

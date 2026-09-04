@@ -74,9 +74,11 @@ class UiStylesTests(QtWidgetTestCase):
 
     def test_selected_canvas_color_is_theme_independent_and_neutral(self) -> None:
         expected_colors = {
-            styles.CanvasColor.DEEP_NEUTRAL: "#202020",
+            styles.CanvasColor.PURE_WHITE: "#FFFFFF",
             styles.CanvasColor.MIDDLE_GRAY_18: "#777777",
+            styles.CanvasColor.DEEP_NEUTRAL: "#202020",
             styles.CanvasColor.NEAR_BLACK: "#101010",
+            styles.CanvasColor.PURE_BLACK: "#000000",
         }
         selectors = (
             "QWidget#pageImagePreview",
