@@ -248,8 +248,25 @@ class MainWindowUI:
         self.actChannelAll.setChecked(True)
         self.actCanvasColorDeepNeutral.setChecked(True)
         self.actColorReadoutTypeRgbl.setChecked(True)
+        self._apply_canvas_color_action_icons()
         self._apply_analysis_action_icons()
         self._apply_shortcuts()
+
+    def _apply_canvas_color_action_icons(self) -> None:
+        """Assign neutral color swatches to the canvas color menu actions."""
+
+        icon_by_action = {
+            self.actCanvasColorPureWhite: "canvas-color-pure-white.svg",
+            self.actCanvasColorMiddleGray18: "canvas-color-middle-gray-18.svg",
+            self.actCanvasColorDeepNeutral: "canvas-color-deep-neutral.svg",
+            self.actCanvasColorNearBlack: "canvas-color-near-black.svg",
+            self.actCanvasColorPureBlack: "canvas-color-pure-black.svg",
+        }
+        for action, file_name in icon_by_action.items():
+            path = icon_path(file_name)
+            if path.is_file():
+                action.setIcon(QtGui.QIcon(str(path)))
+                action.setIconVisibleInMenu(True)
 
     def _apply_analysis_action_icons(
         self,

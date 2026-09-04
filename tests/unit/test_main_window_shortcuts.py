@@ -282,6 +282,21 @@ class MainWindowShortcutTests(QtWidgetTestCase):
         self.assertFalse(ui.actCanvasColorPureBlack.isChecked())
         self.assertTrue(all(action.shortcut().isEmpty() for action in actions))
 
+        expected_swatch_colors = {
+            ui.actCanvasColorPureWhite: "#ffffff",
+            ui.actCanvasColorMiddleGray18: "#777777",
+            ui.actCanvasColorDeepNeutral: "#202020",
+            ui.actCanvasColorNearBlack: "#101010",
+            ui.actCanvasColorPureBlack: "#000000",
+        }
+        for action, expected_color in expected_swatch_colors.items():
+            with self.subTest(action=action.objectName()):
+                self.assertTrue(action.isIconVisibleInMenu())
+                self.assertFalse(action.icon().isNull())
+                image = action.icon().pixmap(QtCore.QSize(16, 16)).toImage()
+                center = image.pixelColor(image.width() // 2, image.height() // 2)
+                self.assertEqual(expected_color, center.name())
+
     def test_view_menu_places_canvas_color_after_appearance(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
