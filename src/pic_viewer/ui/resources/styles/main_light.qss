@@ -161,7 +161,7 @@ QLabel#labelEmptyFormats,
 QLabel#labelEmptyOpenFileShortcut,
 QLabel#labelEmptyOpenFolderShortcut,
 QLabel#labelImageLoadStateFileName {
-    color: #66758a;
+    color: #5f6d80;
 }
 
 QLabel#labelImageLoadStateReason {

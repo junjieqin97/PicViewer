@@ -19,6 +19,7 @@
 
 ### Keyboard Focus and Accessibility
 
+- Empty/loading state text, including shortcut and supported-format hints, must retain at least 4.5:1 foreground/background contrast in both themes.
 - Tool buttons, push buttons, combo boxes, tab bars, metadata tables, and the Filmstrip support keyboard focus. Tab and Shift+Tab skip hidden and disabled controls; standard Qt arrow-key and activation behavior is retained.
 - Both themes use a contrasting dashed focus border, distinct from hover and selection. Focus never changes control geometry or the 30 px toolbar height. The current tab, metadata cell, and Filmstrip item show focus only while their container has focus; selection remains visible after focus leaves.
 - Focus styling applies to detached windows as well. Colors and borders are defined in the theme QSS resources.
