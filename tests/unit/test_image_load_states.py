@@ -135,7 +135,7 @@ class ImageLoadStateTests(QtWidgetTestCase):
 
 
 class InfoPanelLoadStateTests(QtWidgetTestCase):
-    """Validate right-side analysis and metadata placeholders."""
+    """Validate right-side analysis and metadata states."""
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -161,6 +161,82 @@ class InfoPanelLoadStateTests(QtWidgetTestCase):
         self.assertEqual("-1", ui.labelPixelLumaValue.text())
         self.assertEqual(-1, ui.widgetHistogram.luma_marker_value())
 
+    def test_initial_charts_explain_how_to_show_analysis(self) -> None:
+        window, ui, _controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+
+        self.assertEqual("Open an image to view its histogram.", ui.widgetHistogram.text())
+        self.assertEqual("Open an image to view its waveform.", ui.widgetWaveform.text())
+        for chart in (ui.widgetHistogram, ui.widgetWaveform):
+            self.assertTrue(chart.wordWrap())
+            self.assertEqual(QtCore.Qt.AlignmentFlag.AlignCenter, chart.alignment())
+            self._assert_label_has_no_pixmap(chart)
+
+    def test_non_loaded_states_clear_charts_and_restore_cached_analysis(self) -> None:
+        window, ui, controller = self._build_controller()
+        self.addCleanup(window.deleteLater)
+        self._configure_analysis_rendering(controller)
+        loaded_path = Path("/tmp/loaded.jpg")
+        loading_path = Path("/tmp/loading.jpg")
+        failed_path = Path("/tmp/failed.jpg")
+        controller._images_by_path[str(loaded_path)] = self._image_result((64, 96, 128))
+        controller._load_tasks_by_path[str(loading_path)] = object()
+        controller._load_error_by_path[str(failed_path)] = "Unable to read this image file"
+
+        for path in (None, loading_path, failed_path):
+            with self.subTest(path=path):
+                controller.update_info_for_image(loaded_path)
+                ui.labelPixelRedValue.setText("64")
+                ui.labelPixelGreenValue.setText("96")
+                ui.labelPixelBlueValue.setText("128")
+                ui.labelPixelLumaValue.setText("90")
+                ui.widgetHistogram.set_luma_marker_value(90)
+                controller.update_info_for_image(path)
+
+                for chart in (ui.widgetHistogram, ui.widgetWaveform):
+                    self._assert_label_has_no_pixmap(chart)
+                    self.assertTrue(chart.text())
+                for label in (ui.labelPixelRedValue, ui.labelPixelGreenValue,
+                              ui.labelPixelBlueValue, ui.labelPixelLumaValue):
+                    self.assertEqual("-1", label.text())
+                self.assertEqual(-1, ui.widgetHistogram.luma_marker_value())
+                self.assertIsNone(controller._current_analysis_render_key)
+
+                controller.update_info_for_image(loaded_path)
+                for chart in (ui.widgetHistogram, ui.widgetWaveform):
+                    self.assertEqual("", chart.text())
+                    self.assertEqual((64, 96, 128), self._center_pixmap_color(chart))
+
+    def test_retry_success_and_last_tab_close_update_chart_states(self) -> None:
+        window = QtWidgets.QMainWindow()
+        self.addCleanup(window.deleteLater)
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        controller = MainController(window, ui, MagicMock(), MagicMock())
+        self._configure_analysis_rendering(controller)
+        # Keep real load scheduling and UI refreshes, but complete workers deterministically.
+        controller._thread_pool.start = MagicMock()
+        path = Path("/tmp/retry-analysis.jpg")
+        controller.open_image(path)
+        controller._on_error(path, 1, "Unable to read this image file")
+        self.assertEqual("Histogram unavailable", ui.widgetHistogram.text())
+
+        retry = ui.tabsImages.findChild(QtWidgets.QPushButton, "buttonImageLoadRetry")
+        retry.click()
+        self.assertEqual("Generating histogram...", ui.widgetHistogram.text())
+        self.assertEqual("Generating waveform...", ui.widgetWaveform.text())
+        controller._on_loaded(path, 2, self._image_result((32, 64, 96)))
+        for chart in (ui.widgetHistogram, ui.widgetWaveform):
+            self.assertEqual("", chart.text())
+            self.assertEqual((32, 64, 96), self._center_pixmap_color(chart))
+
+        controller.close_current_tab()
+        self.assertIsNone(controller._current_image_path())
+        self.assertEqual("Open an image to view its histogram.", ui.widgetHistogram.text())
+        self.assertEqual("Open an image to view its waveform.", ui.widgetWaveform.text())
+        for chart in (ui.widgetHistogram, ui.widgetWaveform):
+            self._assert_label_has_no_pixmap(chart)
+
     def test_failed_image_shows_analysis_failure_and_reason(self) -> None:
         window, ui, controller = self._build_controller()
         self.addCleanup(window.deleteLater)
@@ -169,8 +245,8 @@ class InfoPanelLoadStateTests(QtWidgetTestCase):
 
         MainController.update_info_for_image(controller, path)
 
-        self.assertEqual("Image failed to load. Analysis is unavailable.", ui.widgetHistogram.text())
-        self.assertEqual("Image failed to load. Analysis is unavailable.", ui.widgetWaveform.text())
+        self.assertEqual("Histogram unavailable", ui.widgetHistogram.text())
+        self.assertEqual("Waveform unavailable", ui.widgetWaveform.text())
         self.assertEqual("Failure Reason", ui.tableMetadataGeneral.item(1, 0).text())
         self.assertEqual("Unable to read this image file", ui.tableMetadataGeneral.item(1, 1).text())
         self.assertEqual("Unavailable", ui.labelImageColorSpaceValue.text())

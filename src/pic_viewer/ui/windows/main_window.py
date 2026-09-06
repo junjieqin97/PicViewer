@@ -834,6 +834,7 @@ class MainWindowUI:
         self.widgetHistogram = HistogramClippingLabel("", self.frameHistogramAnalysis)
         self.widgetHistogram.setObjectName("widgetHistogram")
         self.widgetHistogram.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.widgetHistogram.setWordWrap(True)
         self.widgetHistogram.setFixedSize(self.info_panel_histogram_size)
         self.widgetHistogram.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         hist_frame_layout.addWidget(self.widgetHistogram)
@@ -853,6 +854,7 @@ class MainWindowUI:
         self.widgetWaveform = QtWidgets.QLabel("", self.frameWaveformAnalysis)
         self.widgetWaveform.setObjectName("widgetWaveform")
         self.widgetWaveform.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.widgetWaveform.setWordWrap(True)
         self.widgetWaveform.setFixedSize(self.info_panel_waveform_size)
         self.widgetWaveform.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         wave_frame_layout.addWidget(self.widgetWaveform)
@@ -1238,12 +1240,12 @@ class MainWindowUI:
                 self._translated_rendering_intent_label(rendering_intent),
             )
 
-        self.widgetHistogram.setText(self._tr("Histogram Placeholder"))
+        self.widgetHistogram.setText(self._tr("Open an image to view its histogram."))
         self.widgetHistogram.set_triangle_tooltips(
             self._tr("Show/Hide Underexposed Areas"),
             self._tr("Show/Hide Overexposed Areas"),
         )
-        self.widgetWaveform.setText(self._tr("Waveform Placeholder"))
+        self.widgetWaveform.setText(self._tr("Open an image to view its waveform."))
         self._set_metadata_headers()
 
     def _sync_analysis_action_tooltips(self) -> None:

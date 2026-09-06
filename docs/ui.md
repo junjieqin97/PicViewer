@@ -126,14 +126,14 @@ Inside the info area, use `DetachableTabWidget` (`QTabWidget` subclass):
 - Detached info tabs can only be dropped back into `tabsInfo`; they must not be accepted by the image tab widget.
 - Nested metadata tabs (`General`, `Exif`, `IPTC`, `TIFF`) remain regular tabs and are not detachable in this version.
 
-Each info tab is first implemented with placeholder controls (the metadata table may scroll internally):
+The info tabs display analysis charts and metadata tables (the metadata table may scroll internally):
 
 - Analysis: `tabAnalysis` contains a borderless `scrollAnalysis: QScrollArea` whose vertical scrollbar appears only when needed and whose horizontal scrollbar is disabled. The outer `scrollInfo` panel remains non-scrollable. `scrollAnalysis` owns a resizable `analysisScrollContent` widget with a vertical layout. From top to bottom, that layout displays the current source image color space status, the `Analysis Sample Precision` selector, a `Specify Image Color Space` selector, the `Rendering Intent` selector, the `Display Color Space` selector, the histogram, and the waveform. Both analysis charts remain centered horizontally, aligned near the top, and keep their fixed logical sizes. At short supported window heights, including `900 x 600`, users scroll only the Analysis page to reach the complete waveform. Analysis field titles and the source color-space value wrap when the available width is insufficient so their full text remains readable without horizontal scrolling.
   - `Analysis Sample Precision` uses `8-bit/channel` and `16-bit/channel (if available)`; `8-bit/channel` is selected by default. Choosing 16-bit preserves 16-bit/channel analysis only when the ICC-converted display source is 16-bit. 8-bit sources remain 8-bit and are not artificially expanded.
   - `Specify Image Color Space` uses `sRGB`, `Display P3`, `Adobe RGB (1998)`, `ProPhoto RGB`, startup-loaded system ICC profiles when supported, and `Choose a local ICC...`; `sRGB` is selected by default. System ICC profiles are inserted after the built-in presets and before the chooser entry. `Choose a local ICC...` opens a file dialog for `.icc` and `.icm` files, validates the profile, inserts the selected local profile before the chooser entry, and keeps it only for the current application session. It is a global fallback source color space selector used only when no embedded ICC profile is present, the embedded ICC profile cannot be read, or embedded ICC conversion fails. It is disabled with a gray style and blank visible text when the current image has a valid embedded ICC profile. For RAW images, it is disabled with a gray style and fixed visible text `ProPhoto RGB`; this per-image display state does not change the global fallback selection. It is restored to the selected fallback value when fallback, loading, failed, or empty states enable it again.
   - `Rendering Intent` uses `Perceptual`, `Relative Colorimetric`, `Saturation`, and `Absolute Colorimetric`; `Perceptual` is selected by default. It is a global ICC gamut mapping selector used for image-to-display-space conversion.
   - `Display Color Space` uses `sRGB`, `Display P3`, `Adobe RGB (1998)`, `ProPhoto RGB`, startup-loaded system ICC profiles when supported, and `Choose a local ICC...`; `sRGB` is selected by default. System ICC profiles are inserted after the built-in presets and before the chooser entry. `Choose a local ICC...` opens the same `.icc`/`.icm` file dialog, validates the profile, inserts the selected local profile before the chooser entry, and keeps it only for the current application session.
-- Histogram: `widgetHistogram` (may initially be a `QLabel` with "Histogram Placeholder")
+- Histogram: `widgetHistogram` (`HistogramClippingLabel`)
   - Fixed display size: height 100 x width 256 (logical pixels)
   - Above the histogram widget, `widgetPixelSampleValues` displays four numeric labels from left to right:
     - `labelPixelRedValue`: red channel value, shown in red.
@@ -146,8 +146,14 @@ Each info tab is first implemented with placeholder controls (the metadata table
     - The upper-left triangle toggles the `underexposed` warning: underexposed areas are displayed on the main image with a semi-transparent `green` pseudo-color overlay.
     - The upper-right triangle toggles the `overexposed` warning: overexposed areas are displayed on the main image with a semi-transparent `red` pseudo-color overlay.
   - The underexposed/overexposed triangle state is shared globally (the current toggle state is preserved after switching images).
-- Waveform: `widgetWaveform` (may initially be a `QLabel` with "Waveform Placeholder")
+- Waveform: `widgetWaveform` (`QLabel`)
   - Fixed display size: height 256 x width 256 (logical pixels)
+- Both charts use centered, word-wrapped, localized state text within their fixed sizes:
+  - Empty, including startup and closing the last image: `Open an image to view its histogram.` and `Open an image to view its waveform.`
+  - Loading: `Generating histogram...` and `Generating waveform...`.
+  - Failure: `Histogram unavailable` and `Waveform unavailable`. The image page retains the detailed error and retry action.
+  - Entering any non-loaded state clears previous chart pixmaps, hover pixel samples, and the luma marker. Successful loading replaces state text with the current charts.
+  - Histogram clipping triangles retain their existing interaction and shared toggle states.
 - Metadata: `tableMetadata: QTableWidget` (two columns: Key/Value; a `QLabel` placeholder is also allowed, but a table is recommended)
   - The metadata container height adaptively fills the info area, and its width follows the info area; the internal table may scroll.
 
@@ -338,7 +344,7 @@ Shortcuts for common features must be set as follows:
 
 Performance constraint: background image loading uses a thread pool with a default maximum concurrency of 8.
 
-Note: this version allows "placeholder refresh" in the right info area, but the interface `update_info_for_image(image_path)` must be preserved.
+The interface `update_info_for_image(image_path)` must be preserved and must display the appropriate empty, loading, failure, or loaded state.
 
 ## 8. Code Structure Requirements (Delivery Format, Avoid UI Disorder)
 
@@ -362,7 +368,7 @@ Do not write business logic inside UI files; TODO/placeholder implementations ar
 
 - The UI structure is strictly: MenuBar + (top AnalysisToolbar) + (upper Splitter) + (bottom Filmstrip).
 - The image display area is a `QTabWidget`, and each tab title = file name.
-- The right info area contains two tabs: Analysis/Metadata; the Analysis tab displays both the histogram and waveform at the same time (placeholders are acceptable).
+- The right info area contains two tabs: Analysis/Metadata; the Analysis tab displays both the histogram and waveform, with localized empty, loading, and failure text when charts are unavailable.
 - The bottom filmstrip is a horizontal thumbnail list, and clicking an item switches tabs.
 - Tabs and filmstrip selected states are synchronized bidirectionally.
 - The tab titles in the `image display area` are left-aligned (the tab label group is left-aligned and not stretched evenly to fill the width).
