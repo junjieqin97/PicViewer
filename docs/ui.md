@@ -184,6 +184,7 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - Container: `frameFilmstrip: QFrame` (or `QWidget`)
 - Fixed height: `h=140`; height adjustment by vertical dragging is not supported.
 - Lightweight filter toolbar: `widgetFilmstripFilterToolbar` sits above the thumbnail list and contains three single-select combo boxes:
+  - The controls are left-aligned with the thumbnail list's outer left layout boundary, with flexible space only after the last control. The toolbar stays fixed when thumbnails scroll horizontally; control widths, spacing, and Filmstrip height remain unchanged.
   - `comboFilmstripExtensionFilter`: filters by file extension case-insensitively; suffixes are displayed in normalized lowercase form such as `.jpg`.
   - `comboFilmstripCameraFilter`: filters by camera model.
   - `comboFilmstripLensFilter`: filters by lens model.

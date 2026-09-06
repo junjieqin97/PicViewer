@@ -931,7 +931,6 @@ class MainWindowUI:
         self.comboFilmstripLensFilter = self._create_filmstrip_filter_combo(
             "comboFilmstripLensFilter"
         )
-        filter_layout.addStretch(1)
         filter_layout.addWidget(self.comboFilmstripExtensionFilter)
         filter_layout.addWidget(self.comboFilmstripCameraFilter)
         filter_layout.addWidget(self.comboFilmstripLensFilter)

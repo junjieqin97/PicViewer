@@ -121,5 +121,5 @@ The following UI improvements are ordered by priority. Any item that changes the
 ### Low Priority
 
 - [x] Reduce nested border density across tab panes, the info panel, analysis chart frames, the Filmstrip frame, and the Filmstrip list. Use background hierarchy and a smaller number of separators so the image remains the dominant visual element in both themes.
-- [ ] Align the Filmstrip filter controls with the left edge of the thumbnail content instead of centering the filters independently from the thumbnail flow.
+- [x] Align the Filmstrip filter controls with the left edge of the thumbnail content instead of centering the filters independently from the thumbnail flow.
 - [ ] Add visual regression coverage for the principal layout combinations: `900 x 600` and `1200 x 800`, light and dark themes, English and Simplified Chinese, empty and loaded states, and standard and high-DPI rendering. The checks should detect clipped controls, missing focus indicators, unreadable states, and unintended canvas-color changes.
