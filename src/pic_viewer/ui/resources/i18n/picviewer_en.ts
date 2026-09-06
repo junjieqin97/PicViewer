@@ -901,32 +901,32 @@
             <translation>Open an image to view its waveform.</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="1281" />
+            <location filename="main_window.py" line="1282" />
             <source>Perceptual</source>
             <translation>Perceptual</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="1282" />
+            <location filename="main_window.py" line="1283" />
             <source>Relative Colorimetric</source>
             <translation>Relative Colorimetric</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="1283" />
+            <location filename="main_window.py" line="1284" />
             <source>Saturation</source>
             <translation>Saturation</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="1284" />
+            <location filename="main_window.py" line="1285" />
             <source>Absolute Colorimetric</source>
             <translation>Absolute Colorimetric</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="1289" />
+            <location filename="main_window.py" line="1290" />
             <source>Key</source>
             <translation>Key</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="1289" />
+            <location filename="main_window.py" line="1290" />
             <source>Value</source>
             <translation>Value</translation>
         </message>
@@ -934,7 +934,7 @@
     <context>
         <name>MainWindow</name>
         <message>
-            <location filename="main_window.py" line="1312" />
+            <location filename="main_window.py" line="1313" />
             <source>Ready</source>
             <translation>Ready</translation>
         </message>

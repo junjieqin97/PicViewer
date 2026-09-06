@@ -53,10 +53,11 @@ The main window uses a typical four-area structure:
   - The toolbar is a shortcut entry point for menu actions and does not replace the menu bar; luma/RGB, RGB channels, pseudo color, and reference line features must still remain in the `Tools` menu.
   - Toolbar buttons must reuse the corresponding `QAction` objects to ensure the menu, shortcuts, and toolbar states stay synchronized.
 - Visual:
-  - Fixed low height, recommended to be no more than 30 logical pixels.
+  - Fixed height of 30 logical pixels, including the frame border.
   - Button groups must be horizontally centered inside the toolbar.
-  - Buttons show only small icons and no text; feature descriptions are provided through tooltips.
-  - Recommended icon size is no more than 18 x 18 logical pixels.
+  - Icon-only buttons use 28 x 28 logical pixel targets and 24 x 24 icons, filling the available height after frame borders and button padding. Vertical layout margins are zero.
+  - Tooltips include the localized action description followed by its shortcut in platform-native notation when available; actions without shortcuts show only the description.
+  - Preserve visible vertical separators and spacing between functional groups.
 - Tool buttons must include:
   - Luma Mode, RGB Mode
   - All RGB Channels, Red Channel Only, Green Channel Only, Blue Channel Only

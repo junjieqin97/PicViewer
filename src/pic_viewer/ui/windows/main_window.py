@@ -44,8 +44,8 @@ class MainWindowUI:
     FILMSTRIP_ITEM_WIDTH = 108
     FILMSTRIP_ITEM_VERTICAL_PADDING = 18
     FILMSTRIP_HEIGHT = 140
-    ANALYSIS_TOOLBAR_HEIGHT = 26
-    ANALYSIS_TOOLBAR_ICON_SIZE = QtCore.QSize(16, 16)
+    ANALYSIS_TOOLBAR_HEIGHT = 30
+    ANALYSIS_TOOLBAR_ICON_SIZE = QtCore.QSize(24, 24)
 
     def __init__(self, system_color_profiles: Sequence[LocalColorProfile] = ()) -> None:
         self._system_color_profiles = tuple(system_color_profiles)
@@ -478,7 +478,7 @@ class MainWindowUI:
         )
         toolbar_layout = QtWidgets.QHBoxLayout(self.widgetAnalysisToolbar)
         toolbar_layout.setObjectName("layoutAnalysisToolbar")
-        toolbar_layout.setContentsMargins(6, 2, 6, 2)
+        toolbar_layout.setContentsMargins(6, 0, 6, 0)
         toolbar_layout.setSpacing(2)
 
         self.buttonToolbarModeLuma = self._create_analysis_toolbar_button(
@@ -1000,8 +1000,8 @@ class MainWindowUI:
         button.setIconSize(self.ANALYSIS_TOOLBAR_ICON_SIZE)
         button.setDefaultAction(action)
         button.setFixedSize(
-            self.ANALYSIS_TOOLBAR_HEIGHT - 4,
-            self.ANALYSIS_TOOLBAR_HEIGHT - 4,
+            self.ANALYSIS_TOOLBAR_HEIGHT - 2,
+            self.ANALYSIS_TOOLBAR_HEIGHT - 2,
         )
         return button
 
@@ -1274,7 +1274,8 @@ class MainWindowUI:
             self.actToggleMetadataOverlay,
         )
         for action in actions:
-            action.setToolTip(action.text())
+            shortcut = action.shortcut().toString(QtGui.QKeySequence.SequenceFormat.NativeText)
+            action.setToolTip(f"{action.text()} ({shortcut})" if shortcut else action.text())
 
     def _translated_rendering_intent_label(self, rendering_intent: RenderingIntent) -> str:
         labels = {

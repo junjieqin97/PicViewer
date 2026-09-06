@@ -8,7 +8,7 @@ import unittest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from tests.unit.qt_test_utils import QtWidgetTestCase
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -78,14 +78,43 @@ class AnalysisToolbarTests(QtWidgetTestCase):
             with self.subTest(button=button.objectName()):
                 self.assertIs(action, button.defaultAction())
                 self.assertEqual(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly, button.toolButtonStyle())
-                self.assertLessEqual(button.iconSize().height(), 18)
-                self.assertLessEqual(button.iconSize().width(), 18)
+                self.assertEqual(QtCore.QSize(24, 24), button.iconSize())
                 self.assertFalse(button.icon().isNull())
-                self.assertEqual(action.text(), button.toolTip())
+                shortcut = action.shortcut().toString(QtGui.QKeySequence.SequenceFormat.NativeText)
+                self.assertEqual(f"{action.text()} ({shortcut})", button.toolTip())
 
         self.assertTrue(ui.actToggleMetadataOverlay.isCheckable())
         self.assertTrue(ui.actToggleMetadataOverlay.isChecked())
         self.assertIn(ui.actToggleMetadataOverlay, ui.menuView.actions())
+
+    def test_toolbar_targets_fit_minimum_window_in_both_themes(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+        window.resize(900, 600)
+        window.show()
+        for theme in ("light", "dark"):
+            ui.apply_appearance_theme(theme)
+            self._app.processEvents()
+            toolbar = ui.widgetAnalysisToolbar
+            buttons = toolbar.findChildren(QtWidgets.QToolButton)
+            for button in buttons:
+                with self.subTest(theme=theme, button=button.objectName()):
+                    self.assertEqual(QtCore.QSize(28, 28), button.size())
+                    self.assertTrue(toolbar.contentsRect().contains(button.geometry()))
+                    for other in buttons:
+                        if other is not button:
+                            self.assertFalse(button.geometry().intersects(other.geometry()))
+
+    def test_tooltip_without_shortcut_keeps_description(self) -> None:
+        window = QtWidgets.QMainWindow()
+        ui = MainWindowUI()
+        ui.setup_ui(window)
+        self.addCleanup(window.deleteLater)
+        ui.actModeLuma.setShortcut(QtGui.QKeySequence())
+        ui._sync_analysis_action_tooltips()
+        self.assertEqual(ui.actModeLuma.text(), ui.buttonToolbarModeLuma.toolTip())
 
     def test_toolbar_button_group_is_centered_between_stretches(self) -> None:
         window = QtWidgets.QMainWindow()

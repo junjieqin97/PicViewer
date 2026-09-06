@@ -901,32 +901,32 @@
             <translation>打开图片以查看波形图。</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="1281" />
+            <location filename="main_window.py" line="1282" />
             <source>Perceptual</source>
             <translation>感知</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="1282" />
+            <location filename="main_window.py" line="1283" />
             <source>Relative Colorimetric</source>
             <translation>相对色度</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="1283" />
+            <location filename="main_window.py" line="1284" />
             <source>Saturation</source>
             <translation>饱和度</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="1284" />
+            <location filename="main_window.py" line="1285" />
             <source>Absolute Colorimetric</source>
             <translation>绝对色度</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="1289" />
+            <location filename="main_window.py" line="1290" />
             <source>Key</source>
             <translation>键</translation>
         </message>
         <message>
-            <location filename="main_window.py" line="1289" />
+            <location filename="main_window.py" line="1290" />
             <source>Value</source>
             <translation>值</translation>
         </message>
@@ -934,7 +934,7 @@
     <context>
         <name>MainWindow</name>
         <message>
-            <location filename="main_window.py" line="1312" />
+            <location filename="main_window.py" line="1313" />
             <source>Ready</source>
             <translation>准备就绪</translation>
         </message>
