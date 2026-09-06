@@ -278,7 +278,7 @@ class MainWindowTabsTests(QtWidgetTestCase):
         ).height()
         self.assertEqual(ui.frameWaveformAnalysis.height(), visible_height)
 
-    def test_analysis_labels_wrap_without_horizontal_scrolling(self) -> None:
+    def test_analysis_titles_wrap_and_status_uses_its_own_line(self) -> None:
         window = QtWidgets.QMainWindow()
         ui = MainWindowUI()
         ui.setup_ui(window)
@@ -286,7 +286,6 @@ class MainWindowTabsTests(QtWidgetTestCase):
 
         for label in (
             ui.labelImageColorSpaceTitle,
-            ui.labelImageColorSpaceValue,
             ui.labelAnalysisSamplePrecisionTitle,
             ui.labelSpecifiedImageColorSpaceTitle,
             ui.labelRenderingIntentTitle,
@@ -305,9 +304,14 @@ class MainWindowTabsTests(QtWidgetTestCase):
             ui.analysisScrollContent.width(),
             ui.scrollAnalysis.viewport().width(),
         )
+        self.assertFalse(ui.labelImageColorSpaceValue.wordWrap())
         self.assertGreater(
-            ui.labelImageColorSpaceValue.height(),
-            ui.labelImageColorSpaceValue.fontMetrics().height(),
+            ui.labelImageColorSpaceValue.y(),
+            ui.labelImageColorSpaceTitle.geometry().bottom(),
+        )
+        self.assertEqual(
+            ui.labelImageColorSpaceValue.text(),
+            ui.labelImageColorSpaceValue.toolTip(),
         )
 
     def test_analysis_tab_has_sample_precision_selector_after_image_color_space(self) -> None:

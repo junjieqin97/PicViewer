@@ -24,6 +24,7 @@ from pic_viewer.domain.models.rendering_intent import (
 from pic_viewer.ui.resources import styles
 from pic_viewer.ui.resources.icons import icon_path
 from pic_viewer.ui.widgets.combo_popup_delegate import ComboPopupItemDelegate
+from pic_viewer.ui.widgets.elided_fields import ElidedComboBox, ElidedLabel
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel
 from pic_viewer.ui.widgets.detachable_tabs import DetachableTabWidget
 from pic_viewer.ui.widgets.image_display_label import ImageDisplayLabel
@@ -651,34 +652,27 @@ class MainWindowUI:
 
         self.widgetImageColorSpace = QtWidgets.QWidget(self.analysisScrollContent)
         self.widgetImageColorSpace.setObjectName("widgetImageColorSpace")
-        image_space_layout = QtWidgets.QHBoxLayout(self.widgetImageColorSpace)
+        image_space_layout = QtWidgets.QVBoxLayout(self.widgetImageColorSpace)
         image_space_layout.setObjectName("layoutImageColorSpace")
         image_space_layout.setContentsMargins(0, 0, 0, 0)
-        image_space_layout.setSpacing(8)
+        image_space_layout.setSpacing(4)
         self.labelImageColorSpaceTitle = QtWidgets.QLabel(self.widgetImageColorSpace)
         self.labelImageColorSpaceTitle.setObjectName("labelImageColorSpaceTitle")
-        self.labelImageColorSpaceValue = QtWidgets.QLabel(self.widgetImageColorSpace)
+        self.labelImageColorSpaceValue = ElidedLabel(self.widgetImageColorSpace)
         self.labelImageColorSpaceValue.setObjectName("labelImageColorSpaceValue")
-        self.labelImageColorSpaceValue.setTextInteractionFlags(
-            QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
-        )
-        self.labelImageColorSpaceValue.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Expanding,
-            QtWidgets.QSizePolicy.Policy.Fixed,
-        )
         image_space_layout.addWidget(self.labelImageColorSpaceTitle)
         image_space_layout.addWidget(self.labelImageColorSpaceValue, 1)
         analysis_layout.addWidget(self.widgetImageColorSpace)
 
         self.widgetAnalysisSamplePrecision = QtWidgets.QWidget(self.analysisScrollContent)
         self.widgetAnalysisSamplePrecision.setObjectName("widgetAnalysisSamplePrecision")
-        sample_precision_layout = QtWidgets.QHBoxLayout(self.widgetAnalysisSamplePrecision)
+        sample_precision_layout = QtWidgets.QVBoxLayout(self.widgetAnalysisSamplePrecision)
         sample_precision_layout.setObjectName("layoutAnalysisSamplePrecision")
         sample_precision_layout.setContentsMargins(0, 0, 0, 0)
-        sample_precision_layout.setSpacing(8)
+        sample_precision_layout.setSpacing(4)
         self.labelAnalysisSamplePrecisionTitle = QtWidgets.QLabel(self.widgetAnalysisSamplePrecision)
         self.labelAnalysisSamplePrecisionTitle.setObjectName("labelAnalysisSamplePrecisionTitle")
-        self.comboAnalysisSamplePrecision = QtWidgets.QComboBox(self.widgetAnalysisSamplePrecision)
+        self.comboAnalysisSamplePrecision = ElidedComboBox(self.widgetAnalysisSamplePrecision)
         self.comboAnalysisSamplePrecision.setObjectName("comboAnalysisSamplePrecision")
         self.comboAnalysisSamplePrecision.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
@@ -702,13 +696,13 @@ class MainWindowUI:
 
         self.widgetSpecifiedImageColorSpace = QtWidgets.QWidget(self.analysisScrollContent)
         self.widgetSpecifiedImageColorSpace.setObjectName("widgetSpecifiedImageColorSpace")
-        specified_space_layout = QtWidgets.QHBoxLayout(self.widgetSpecifiedImageColorSpace)
+        specified_space_layout = QtWidgets.QVBoxLayout(self.widgetSpecifiedImageColorSpace)
         specified_space_layout.setObjectName("layoutSpecifiedImageColorSpace")
         specified_space_layout.setContentsMargins(0, 0, 0, 0)
-        specified_space_layout.setSpacing(8)
+        specified_space_layout.setSpacing(4)
         self.labelSpecifiedImageColorSpaceTitle = QtWidgets.QLabel(self.widgetSpecifiedImageColorSpace)
         self.labelSpecifiedImageColorSpaceTitle.setObjectName("labelSpecifiedImageColorSpaceTitle")
-        self.comboSpecifiedImageColorSpace = QtWidgets.QComboBox(self.widgetSpecifiedImageColorSpace)
+        self.comboSpecifiedImageColorSpace = ElidedComboBox(self.widgetSpecifiedImageColorSpace)
         self.comboSpecifiedImageColorSpace.setObjectName("comboSpecifiedImageColorSpace")
         self.comboSpecifiedImageColorSpace.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
@@ -729,13 +723,13 @@ class MainWindowUI:
 
         self.widgetRenderingIntent = QtWidgets.QWidget(self.analysisScrollContent)
         self.widgetRenderingIntent.setObjectName("widgetRenderingIntent")
-        rendering_intent_layout = QtWidgets.QHBoxLayout(self.widgetRenderingIntent)
+        rendering_intent_layout = QtWidgets.QVBoxLayout(self.widgetRenderingIntent)
         rendering_intent_layout.setObjectName("layoutRenderingIntent")
         rendering_intent_layout.setContentsMargins(0, 0, 0, 0)
-        rendering_intent_layout.setSpacing(8)
+        rendering_intent_layout.setSpacing(4)
         self.labelRenderingIntentTitle = QtWidgets.QLabel(self.widgetRenderingIntent)
         self.labelRenderingIntentTitle.setObjectName("labelRenderingIntentTitle")
-        self.comboRenderingIntent = QtWidgets.QComboBox(self.widgetRenderingIntent)
+        self.comboRenderingIntent = ElidedComboBox(self.widgetRenderingIntent)
         self.comboRenderingIntent.setObjectName("comboRenderingIntent")
         self.comboRenderingIntent.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
@@ -753,13 +747,13 @@ class MainWindowUI:
 
         self.widgetDisplayColorSpace = QtWidgets.QWidget(self.analysisScrollContent)
         self.widgetDisplayColorSpace.setObjectName("widgetDisplayColorSpace")
-        display_space_layout = QtWidgets.QHBoxLayout(self.widgetDisplayColorSpace)
+        display_space_layout = QtWidgets.QVBoxLayout(self.widgetDisplayColorSpace)
         display_space_layout.setObjectName("layoutDisplayColorSpace")
         display_space_layout.setContentsMargins(0, 0, 0, 0)
-        display_space_layout.setSpacing(8)
+        display_space_layout.setSpacing(4)
         self.labelDisplayColorSpaceTitle = QtWidgets.QLabel(self.widgetDisplayColorSpace)
         self.labelDisplayColorSpaceTitle.setObjectName("labelDisplayColorSpaceTitle")
-        self.comboDisplayColorSpace = QtWidgets.QComboBox(self.widgetDisplayColorSpace)
+        self.comboDisplayColorSpace = ElidedComboBox(self.widgetDisplayColorSpace)
         self.comboDisplayColorSpace.setObjectName("comboDisplayColorSpace")
         self.comboDisplayColorSpace.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
@@ -780,12 +774,12 @@ class MainWindowUI:
 
         for label in (
             self.labelImageColorSpaceTitle,
-            self.labelImageColorSpaceValue,
             self.labelAnalysisSamplePrecisionTitle,
             self.labelSpecifiedImageColorSpaceTitle,
             self.labelRenderingIntentTitle,
             self.labelDisplayColorSpaceTitle,
         ):
+            label.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
             label.setWordWrap(True)
             label.setSizePolicy(
                 QtWidgets.QSizePolicy.Policy.Preferred,

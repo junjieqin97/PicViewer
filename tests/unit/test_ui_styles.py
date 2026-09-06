@@ -176,13 +176,13 @@ class UiStylesTests(QtWidgetTestCase):
                     self._style_property(sample_rule, "color"),
                 )
 
-    def test_analysis_color_selectors_use_fixed_width_styles(self) -> None:
+    def test_analysis_color_selectors_can_expand(self) -> None:
         for theme in (styles.AppearanceTheme.DARK, styles.AppearanceTheme.LIGHT):
             with self.subTest(theme=theme):
                 rule = self._style_block(styles.load_stylesheet(theme), "QWidget#tabAnalysis QComboBox")
 
-                self.assertIn("min-width: 144px", rule)
-                self.assertIn("max-width: 144px", rule)
+                self.assertNotIn("min-width:", rule)
+                self.assertNotIn("max-width:", rule)
 
     def test_filmstrip_filter_selectors_reuse_analysis_combo_style_blocks(self) -> None:
         shared_selector_pairs = (

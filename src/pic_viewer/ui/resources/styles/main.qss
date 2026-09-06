@@ -291,6 +291,9 @@ QWidget#widgetFilmstripFilterToolbar QComboBox {
     border: 1px solid #424a54;
     border-radius: 4px;
     padding: 3px 6px;
+}
+
+QWidget#widgetFilmstripFilterToolbar QComboBox {
     min-width: 144px;
     max-width: 144px;
 }
