@@ -47,7 +47,7 @@ QSplitter::handle:hover {
 QTabWidget#tabsImages::pane,
 QTabWidget#tabsInfo::pane,
 QTabWidget#tabsMetadata::pane {
-    border: 1px solid #d4dce7;
+    border: none;
     background: #ffffff;
 }
 
@@ -124,7 +124,7 @@ QWidget#floatingTabWindow {
 
 QWidget#floatingTabContent {
     background: #ffffff;
-    border: 1px solid #d4dce7;
+    border: none;
 }
 
 QWidget#tabImagePlaceholder,
@@ -240,7 +240,7 @@ QScrollArea#scrollImage QScrollBar::sub-page {
 
 QWidget#scrollInfo {
     background: #f7f9fc;
-    border-left: 1px solid #d3dce8;
+    border: none;
 }
 
 QFrame#widgetAnalysisToolbar {
@@ -382,7 +382,7 @@ QLabel#labelPixelLumaValue {
 QFrame#frameHistogramAnalysis,
 QFrame#frameWaveformAnalysis {
     background: #f4f7fb;
-    border: 1px solid #cbd6e3;
+    border: none;
     border-radius: 4px;
 }
 
@@ -403,7 +403,8 @@ QPlainTextEdit#textLicenseDocument {
 
 QFrame#frameFilmstrip {
     background: #edf2f7;
-    border: 1px solid #d1dbe7;
+    border: none;
+    border-top: 1px solid #d1dbe7;
 }
 
 QWidget#widgetFilmstripFilterToolbar {
@@ -413,7 +414,7 @@ QWidget#widgetFilmstripFilterToolbar {
 QListWidget#listFilmstrip {
     background: #ffffff;
     color: #334155;
-    border: 1px solid #cbd6e3;
+    border: 1px solid transparent;
     outline: none;
 }
 

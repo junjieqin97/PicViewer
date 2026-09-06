@@ -9,6 +9,14 @@
 
 ## 1. Main Window Layout Structure (Information Architecture)
 
+### Panel Backgrounds and Separators
+
+- Both themes use existing background levels to distinguish application chrome, content panes, analysis charts, and the Filmstrip thumbnail surface. Image, info, and nested metadata tab panes have no visible outer border.
+- The info panel has no additional left border; the splitter and its hover feedback provide the boundary between the image and info areas.
+- Histogram and waveform containers retain their backgrounds, corner radii, and layout spacing without an outline. Chart dimensions and rendering remain unchanged.
+- The Filmstrip frame has only a 1 px top separator, using the theme's existing frame border color. Its list retains a transparent 1 px border to reserve space for keyboard focus, without a visible outline at rest.
+- Detached tab content follows the same borderless pane treatment. Existing focus, hover, selection, toolbar separators, and user-selected neutral canvas colors are preserved.
+
 ### Keyboard Focus and Accessibility
 
 - Tool buttons, push buttons, combo boxes, tab bars, metadata tables, and the Filmstrip support keyboard focus. Tab and Shift+Tab skip hidden and disabled controls; standard Qt arrow-key and activation behavior is retained.
