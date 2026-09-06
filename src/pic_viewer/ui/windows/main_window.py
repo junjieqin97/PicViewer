@@ -999,6 +999,7 @@ class MainWindowUI:
         button.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly)
         button.setIconSize(self.ANALYSIS_TOOLBAR_ICON_SIZE)
         button.setDefaultAction(action)
+        button.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         button.setFixedSize(
             self.ANALYSIS_TOOLBAR_HEIGHT - 2,
             self.ANALYSIS_TOOLBAR_HEIGHT - 2,
@@ -1023,6 +1024,7 @@ class MainWindowUI:
 
     @staticmethod
     def _apply_combo_popup_delegate(combo: QtWidgets.QComboBox) -> None:
+        combo.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         combo.setItemDelegate(ComboPopupItemDelegate(combo))
 
     @staticmethod
@@ -1243,6 +1245,12 @@ class MainWindowUI:
             )
 
         self.widgetHistogram.setText(self._tr("Open an image to view its histogram."))
+        self.widgetHistogram.setAccessibleName(self._tr("Histogram"))
+        self.widgetHistogram.setAccessibleDescription(self._tr(
+            "The corner triangles mirror the exposure warning actions. "
+            "Use Show Underexposed or Show Overexposed in Tools > Pseudo Color "
+            "or the analysis toolbar to toggle them with the keyboard."
+        ))
         self.widgetHistogram.set_triangle_tooltips(
             self._tr("Show/Hide Underexposed Areas"),
             self._tr("Show/Hide Overexposed Areas"),

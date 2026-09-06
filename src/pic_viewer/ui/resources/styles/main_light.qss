@@ -3,6 +3,12 @@ QMainWindow {
     color: #1f252d;
 }
 
+/* Reserve item borders so moving keyboard focus never shifts content. */
+QTableWidget::item {
+    border: 1px solid transparent;
+}
+
+
 QMenuBar {
     background: #f8fafc;
     color: #1f252d;
@@ -498,4 +504,21 @@ QLabel#labelFilmstripSummary {
     border: 1px solid #b8c7d9;
     border-radius: 4px;
     padding: 2px 8px;
+}
+
+/* Keep focus after hover/checked rules and distinct from persistent selection. */
+QToolButton:focus:enabled,
+QFrame#widgetAnalysisToolbar QToolButton:focus:enabled,
+QPushButton:focus:enabled,
+QPushButton#buttonEmptyOpenFile:focus:enabled,
+QPushButton#buttonEmptyOpenFolder:focus:enabled,
+QPushButton#buttonImageLoadRetry:focus:enabled,
+QWidget#tabAnalysis QComboBox:focus:enabled,
+QWidget#widgetFilmstripFilterToolbar QComboBox:focus:enabled,
+QTabBar::tab:focus,
+QTableWidget:focus,
+QTableWidget::item:focus,
+QListWidget#listFilmstrip:focus,
+QListWidget#listFilmstrip::item:focus {
+    border: 1px dashed #805000;
 }

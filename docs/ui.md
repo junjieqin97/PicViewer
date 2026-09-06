@@ -9,6 +9,13 @@
 
 ## 1. Main Window Layout Structure (Information Architecture)
 
+### Keyboard Focus and Accessibility
+
+- Tool buttons, push buttons, combo boxes, tab bars, metadata tables, and the Filmstrip support keyboard focus. Tab and Shift+Tab skip hidden and disabled controls; standard Qt arrow-key and activation behavior is retained.
+- Both themes use a contrasting dashed focus border, distinct from hover and selection. Focus never changes control geometry or the 30 px toolbar height. The current tab, metadata cell, and Filmstrip item show focus only while their container has focus; selection remains visible after focus leaves.
+- Focus styling applies to detached windows as well. Colors and borders are defined in the theme QSS resources.
+- Histogram triangles remain mouse-clickable visual mirrors of the shared exposure actions, without independent keyboard focus. A localized accessible description directs keyboard and assistive-technology users to Tools > Pseudo Color or the analysis toolbar. The toolbar exposes the action names and checked states through standard Qt buttons.
+
 The main window uses a typical four-area structure:
 
 ```text

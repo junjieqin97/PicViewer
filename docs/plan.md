@@ -116,7 +116,7 @@ The following UI improvements are ordered by priority. Any item that changes the
 - [x] Improve the Analysis form layout at the minimum info-panel width. Align field labels consistently, allow selectors to use the available width, place long source color-space status text on a dedicated line when necessary, and provide elision plus a tooltip for text that still cannot fit.
 - [x] Add explicit channel prefixes to hover pixel samples, such as `R 255`, `G 255`, `B 255`, and `L 255`, so the values do not rely on color alone for identification. Keep the existing semantic channel colors as secondary cues.
 - [x] Improve the analysis toolbar's target size and discoverability while keeping it within the specified compact height. Use the largest icon and button sizes that fit within the maximum toolbar height, preserve clear group separators, and include shortcuts in tooltips where available.
-- [ ] Add consistent visible keyboard-focus styling for tool buttons, push buttons, combo boxes, tab bars, metadata tables, and Filmstrip items. Ensure custom clickable histogram triangles expose an understandable accessible interaction, or clearly treat them as visual mirrors of the accessible menu and toolbar actions.
+- [x] Add consistent visible keyboard-focus styling for tool buttons, push buttons, combo boxes, tab bars, metadata tables, and Filmstrip items. Ensure custom clickable histogram triangles expose an understandable accessible interaction, or clearly treat them as visual mirrors of the accessible menu and toolbar actions.
 
 ### Low Priority
 
