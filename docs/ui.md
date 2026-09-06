@@ -146,6 +146,7 @@ The info tabs display analysis charts and metadata tables (the metadata table ma
     - The upper-left triangle toggles the `underexposed` warning: underexposed areas are displayed on the main image with a semi-transparent `green` pseudo-color overlay.
     - The upper-right triangle toggles the `overexposed` warning: overexposed areas are displayed on the main image with a semi-transparent `red` pseudo-color overlay.
   - The underexposed/overexposed triangle state is shared globally (the current toggle state is preserved after switching images).
+- Hover pixel readouts always include channel prefixes: `R {value}`, `G {value}`, `B {value}`, and `L {value}`. Invalid samples display `R -1`, `G -1`, `B -1`, and `L -1`, including startup, loading, failure, and pointer exit. English and Chinese retain these channel abbreviations, with existing semantic channel colors as secondary cues. Both 8-bit and 16-bit values must fit at the minimum info-panel width.
 - Waveform: `widgetWaveform` (`QLabel`)
   - Fixed display size: height 256 x width 256 (logical pixels)
 - Both charts use centered, word-wrapped, localized state text within their fixed sizes:

@@ -209,10 +209,10 @@ class MainWindowTabsTests(QtWidgetTestCase):
         self.assertEqual("labelPixelGreenValue", ui.labelPixelGreenValue.objectName())
         self.assertEqual("labelPixelBlueValue", ui.labelPixelBlueValue.objectName())
         self.assertEqual("labelPixelLumaValue", ui.labelPixelLumaValue.objectName())
-        self.assertEqual("-1", ui.labelPixelRedValue.text())
-        self.assertEqual("-1", ui.labelPixelGreenValue.text())
-        self.assertEqual("-1", ui.labelPixelBlueValue.text())
-        self.assertEqual("-1", ui.labelPixelLumaValue.text())
+        self.assertEqual("R -1", ui.labelPixelRedValue.text())
+        self.assertEqual("G -1", ui.labelPixelGreenValue.text())
+        self.assertEqual("B -1", ui.labelPixelBlueValue.text())
+        self.assertEqual("L -1", ui.labelPixelLumaValue.text())
 
         histogram_frame = ui.frameHistogramAnalysis
         waveform_frame = ui.frameWaveformAnalysis

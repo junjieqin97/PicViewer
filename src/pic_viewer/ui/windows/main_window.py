@@ -807,13 +807,21 @@ class MainWindowUI:
         pixel_sample_layout.setObjectName("layoutPixelSampleValues")
         pixel_sample_layout.setContentsMargins(0, 0, 0, 0)
         pixel_sample_layout.setSpacing(0)
-        self.labelPixelRedValue = QtWidgets.QLabel("-1", self.widgetPixelSampleValues)
+        self.labelPixelRedValue = QtWidgets.QLabel(
+            self._tr("R {value}").format(value=-1), self.widgetPixelSampleValues,
+        )
         self.labelPixelRedValue.setObjectName("labelPixelRedValue")
-        self.labelPixelGreenValue = QtWidgets.QLabel("-1", self.widgetPixelSampleValues)
+        self.labelPixelGreenValue = QtWidgets.QLabel(
+            self._tr("G {value}").format(value=-1), self.widgetPixelSampleValues,
+        )
         self.labelPixelGreenValue.setObjectName("labelPixelGreenValue")
-        self.labelPixelBlueValue = QtWidgets.QLabel("-1", self.widgetPixelSampleValues)
+        self.labelPixelBlueValue = QtWidgets.QLabel(
+            self._tr("B {value}").format(value=-1), self.widgetPixelSampleValues,
+        )
         self.labelPixelBlueValue.setObjectName("labelPixelBlueValue")
-        self.labelPixelLumaValue = QtWidgets.QLabel("-1", self.widgetPixelSampleValues)
+        self.labelPixelLumaValue = QtWidgets.QLabel(
+            self._tr("L {value}").format(value=-1), self.widgetPixelSampleValues,
+        )
         self.labelPixelLumaValue.setObjectName("labelPixelLumaValue")
         for label in (
             self.labelPixelRedValue,

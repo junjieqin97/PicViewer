@@ -750,15 +750,15 @@ class MainControllerInteractionMixin:
     ) -> None:
         """Show one pixel sample in the analysis panel."""
 
-        for attr, value in (
-            ("labelPixelRedValue", sample.red),
-            ("labelPixelGreenValue", sample.green),
-            ("labelPixelBlueValue", sample.blue),
-            ("labelPixelLumaValue", sample.luma),
+        for attr, value, template in (
+            ("labelPixelRedValue", sample.red, self._tr("R {value}")),
+            ("labelPixelGreenValue", sample.green, self._tr("G {value}")),
+            ("labelPixelBlueValue", sample.blue, self._tr("B {value}")),
+            ("labelPixelLumaValue", sample.luma, self._tr("L {value}")),
         ):
             label = getattr(self._ui, attr, None)
             if isinstance(label, QtWidgets.QLabel):
-                label.setText(str(value))
+                label.setText(template.format(value=value))
 
         histogram = getattr(self._ui, "widgetHistogram", None)
         if hasattr(histogram, "set_luma_marker_value"):

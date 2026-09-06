@@ -155,10 +155,10 @@ class InfoPanelLoadStateTests(QtWidgetTestCase):
         self.assertEqual("Generating waveform...", ui.widgetWaveform.text())
         self.assertEqual("Reading metadata...", ui.tableMetadataGeneral.item(0, 0).text())
         self.assertEqual("Loading", ui.labelImageColorSpaceValue.text())
-        self.assertEqual("-1", ui.labelPixelRedValue.text())
-        self.assertEqual("-1", ui.labelPixelGreenValue.text())
-        self.assertEqual("-1", ui.labelPixelBlueValue.text())
-        self.assertEqual("-1", ui.labelPixelLumaValue.text())
+        self.assertEqual("R -1", ui.labelPixelRedValue.text())
+        self.assertEqual("G -1", ui.labelPixelGreenValue.text())
+        self.assertEqual("B -1", ui.labelPixelBlueValue.text())
+        self.assertEqual("L -1", ui.labelPixelLumaValue.text())
         self.assertEqual(-1, ui.widgetHistogram.luma_marker_value())
 
     def test_initial_charts_explain_how_to_show_analysis(self) -> None:
@@ -186,19 +186,21 @@ class InfoPanelLoadStateTests(QtWidgetTestCase):
         for path in (None, loading_path, failed_path):
             with self.subTest(path=path):
                 controller.update_info_for_image(loaded_path)
-                ui.labelPixelRedValue.setText("64")
-                ui.labelPixelGreenValue.setText("96")
-                ui.labelPixelBlueValue.setText("128")
-                ui.labelPixelLumaValue.setText("90")
+                ui.labelPixelRedValue.setText("R 64")
+                ui.labelPixelGreenValue.setText("G 96")
+                ui.labelPixelBlueValue.setText("B 128")
+                ui.labelPixelLumaValue.setText("L 90")
                 ui.widgetHistogram.set_luma_marker_value(90)
                 controller.update_info_for_image(path)
 
                 for chart in (ui.widgetHistogram, ui.widgetWaveform):
                     self._assert_label_has_no_pixmap(chart)
                     self.assertTrue(chart.text())
-                for label in (ui.labelPixelRedValue, ui.labelPixelGreenValue,
-                              ui.labelPixelBlueValue, ui.labelPixelLumaValue):
-                    self.assertEqual("-1", label.text())
+                for prefix, label in zip(
+                    "RGBL", (ui.labelPixelRedValue, ui.labelPixelGreenValue,
+                             ui.labelPixelBlueValue, ui.labelPixelLumaValue),
+                ):
+                    self.assertEqual(f"{prefix} -1", label.text())
                 self.assertEqual(-1, ui.widgetHistogram.luma_marker_value())
                 self.assertIsNone(controller._current_analysis_render_key)
 
@@ -250,10 +252,10 @@ class InfoPanelLoadStateTests(QtWidgetTestCase):
         self.assertEqual("Failure Reason", ui.tableMetadataGeneral.item(1, 0).text())
         self.assertEqual("Unable to read this image file", ui.tableMetadataGeneral.item(1, 1).text())
         self.assertEqual("Unavailable", ui.labelImageColorSpaceValue.text())
-        self.assertEqual("-1", ui.labelPixelRedValue.text())
-        self.assertEqual("-1", ui.labelPixelGreenValue.text())
-        self.assertEqual("-1", ui.labelPixelBlueValue.text())
-        self.assertEqual("-1", ui.labelPixelLumaValue.text())
+        self.assertEqual("R -1", ui.labelPixelRedValue.text())
+        self.assertEqual("G -1", ui.labelPixelGreenValue.text())
+        self.assertEqual("B -1", ui.labelPixelBlueValue.text())
+        self.assertEqual("L -1", ui.labelPixelLumaValue.text())
         self.assertEqual(-1, ui.widgetHistogram.luma_marker_value())
 
     def test_no_current_image_shows_not_loaded_color_space_info(self) -> None:
@@ -265,10 +267,10 @@ class InfoPanelLoadStateTests(QtWidgetTestCase):
 
         self.assertEqual("Not Loaded", ui.labelImageColorSpaceValue.text())
         self.assertTrue(ui.comboSpecifiedImageColorSpace.isEnabled())
-        self.assertEqual("-1", ui.labelPixelRedValue.text())
-        self.assertEqual("-1", ui.labelPixelGreenValue.text())
-        self.assertEqual("-1", ui.labelPixelBlueValue.text())
-        self.assertEqual("-1", ui.labelPixelLumaValue.text())
+        self.assertEqual("R -1", ui.labelPixelRedValue.text())
+        self.assertEqual("G -1", ui.labelPixelGreenValue.text())
+        self.assertEqual("B -1", ui.labelPixelBlueValue.text())
+        self.assertEqual("L -1", ui.labelPixelLumaValue.text())
         self.assertEqual(-1, ui.widgetHistogram.luma_marker_value())
 
     def test_preview_payload_updates_color_space_info_before_full_load(self) -> None:
