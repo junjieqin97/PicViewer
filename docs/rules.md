@@ -1,23 +1,23 @@
 # Rules to Follow
 
-- You are a senior Python desktop application engineer. You must strictly follow the following Rules when generating code.
-- If a user request conflicts with the Rules, prioritize the Rules and explain the trade-off in comments before output.
+These coding conventions apply to Python changes. Task scope, exceptions, and document precedence are defined in
+[AGENTS.md](../AGENTS.md).
 
 ## General Goals
 
 - Generate maintainable, testable, and extensible desktop application code, and avoid "one-off script-style" implementations.
-- Default output: code only, unless the user explicitly requests an explanation.
+- Report the completed work, relevant validation results, and material limitations concisely; follow any explicit
+  user request for a different response format.
 
 ## Project Structure and Layering
 
-- Layering is required: separate the UI layer, business logic layer, and data access layer (or service layer). Avoid writing core business logic inside UI callbacks.
-- UI-related code should be concentrated in `ui/` or `views/`; business logic in `services/`; data models in `models/`; utility functions in `utils/`.
+- Follow the existing directory placement and dependency boundaries in [architecture.md](architecture.md).
 - Important state must be managed centrally (single source of truth). Do not implicitly share variables across multiple widgets in ways that cause state drift.
-- Avoid circular dependencies. Module responsibilities must be clear, and each file should handle only one category of work.
+- Module responsibilities must be clear, and each file should handle only one category of work.
 
 ## Code Standards
 
-- Use Python 3.10+ syntax and type annotations (`typing`). Externally exposed functions/methods must annotate parameter and return types.
+- Use syntax compatible with Python 3.10 and type annotations (`typing`). Externally exposed functions/methods must annotate parameter and return types.
 - Follow PEP8. Naming: classes use PascalCase, functions/variables use snake_case, and constants use UPPER_SNAKE_CASE.
 - Do not use global mutable variables as business state. State must be injected and passed through objects or state managers.
 - Functions must have a single responsibility and generally should not exceed 50 lines. Split longer functions into smaller private functions.
@@ -46,7 +46,8 @@
 
 - Business logic must be unit-testable: core logic must not depend on UI widgets; external dependencies should be replaceable through interfaces/dependency injection.
 - Provide at least three categories of tests for critical flows: normal path, boundary conditions, and exception path.
-- Keep hard-to-test UI code as thin as possible; place testable logic in `services/models`.
+- Keep hard-to-test UI code as thin as possible; place use cases in `app/services/` and models or calculations in `domain/`.
+  Select verification scope and commands using [the validation policy](../AGENTS.md#6-validation).
 
 ## Security and Privacy
 
@@ -62,6 +63,7 @@
 ## Output and Delivery
 
 - By default, do not generate an entire project scaffold unless the user requests it. However, generated code must be directly runnable/integrable, with clear dependencies.
-- If third-party libraries are needed, list installation methods and recommended versions in code comments.
-- If requirements are unclear, make "reasonable defaults" and list assumptions and configurable items in comments at the top of the code.
-- Perform a self-check before output: ensure the above Rules are followed. If any rule cannot be satisfied, explain the reason and alternative in code comments.
+- Keep dependency versions in `pyproject.toml` and installation instructions in the relevant setup or packaging documentation.
+- For minor requirement gaps, use the assumption-recording policy in [AGENTS.md](../AGENTS.md#5-implementation-workflow).
+- Before delivery, check compliance with applicable conventions. Explain unresolved limitations and alternatives in the
+  task response; use code comments only when they help a future maintainer understand lasting behavior.

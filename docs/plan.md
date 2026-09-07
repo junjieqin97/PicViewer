@@ -1,5 +1,19 @@
 # PicViewer Project Development Plan
 
+## How to Use This Document
+
+Task scope and document precedence are defined in [AGENTS.md](../AGENTS.md).
+This document records feature requirements and current implementation details, not an ordered backlog.
+For a requested change, read the relevant feature requirements and affected pipeline sections; preserve unrelated behavior.
+Internal class names and algorithms in the implementation descriptions explain the current code and may evolve with
+an authorized change. Module responsibilities are maintained in [architecture.md](architecture.md).
+
+Only follow a development sequence when the user requests roadmap work and explicitly ordered, unfinished items are
+available. If a roadmap is added, identify each item, its order or dependencies, status, and acceptance criteria;
+do not treat the feature descriptions below as unfinished work.
+
+## Product Scope
+
 * You are developing a desktop photo preview tool. It supports opening common image formats such as JPG, PNG, and TIFF, and also supports opening RAW files from various cameras.
 
 ## Basic Features
