@@ -24,6 +24,7 @@ from pic_viewer.domain.models.rendering_intent import (
 from pic_viewer.ui.resources import styles
 from pic_viewer.ui.resources.icons import icon_path
 from pic_viewer.ui.widgets.combo_popup_delegate import ComboPopupItemDelegate
+from pic_viewer.ui.widgets.elided_fields import ElidedComboBox, ElidedLabel
 from pic_viewer.ui.widgets.histogram_clipping_label import HistogramClippingLabel
 from pic_viewer.ui.widgets.detachable_tabs import DetachableTabWidget
 from pic_viewer.ui.widgets.image_display_label import ImageDisplayLabel
@@ -43,11 +44,12 @@ class MainWindowUI:
     FILMSTRIP_ITEM_WIDTH = 108
     FILMSTRIP_ITEM_VERTICAL_PADDING = 18
     FILMSTRIP_HEIGHT = 140
-    ANALYSIS_TOOLBAR_HEIGHT = 26
-    ANALYSIS_TOOLBAR_ICON_SIZE = QtCore.QSize(16, 16)
+    ANALYSIS_TOOLBAR_HEIGHT = 30
+    ANALYSIS_TOOLBAR_ICON_SIZE = QtCore.QSize(24, 24)
 
     def __init__(self, system_color_profiles: Sequence[LocalColorProfile] = ()) -> None:
         self._system_color_profiles = tuple(system_color_profiles)
+        self._canvas_color = styles.DEFAULT_CANVAS_COLOR
 
     def setup_ui(self, main_window: QtWidgets.QMainWindow) -> None:
         self._main_window = main_window
@@ -93,6 +95,21 @@ class MainWindowUI:
         self.actAppearanceDark = QtGui.QAction(self._main_window)
         self.actAppearanceDark.setObjectName("actAppearanceDark")
         self.actAppearanceDark.setCheckable(True)
+        self.actCanvasColorPureWhite = QtGui.QAction(self._main_window)
+        self.actCanvasColorPureWhite.setObjectName("actCanvasColorPureWhite")
+        self.actCanvasColorPureWhite.setCheckable(True)
+        self.actCanvasColorDeepNeutral = QtGui.QAction(self._main_window)
+        self.actCanvasColorDeepNeutral.setObjectName("actCanvasColorDeepNeutral")
+        self.actCanvasColorDeepNeutral.setCheckable(True)
+        self.actCanvasColorMiddleGray18 = QtGui.QAction(self._main_window)
+        self.actCanvasColorMiddleGray18.setObjectName("actCanvasColorMiddleGray18")
+        self.actCanvasColorMiddleGray18.setCheckable(True)
+        self.actCanvasColorNearBlack = QtGui.QAction(self._main_window)
+        self.actCanvasColorNearBlack.setObjectName("actCanvasColorNearBlack")
+        self.actCanvasColorNearBlack.setCheckable(True)
+        self.actCanvasColorPureBlack = QtGui.QAction(self._main_window)
+        self.actCanvasColorPureBlack.setObjectName("actCanvasColorPureBlack")
+        self.actCanvasColorPureBlack.setCheckable(True)
 
         self.actToggleInfoPanel = QtGui.QAction(self._main_window)
         self.actToggleInfoPanel.setObjectName("actToggleInfoPanel")
@@ -193,6 +210,13 @@ class MainWindowUI:
         self.actionGroupAppearance.setExclusive(True)
         self.actionGroupAppearance.addAction(self.actAppearanceLight)
         self.actionGroupAppearance.addAction(self.actAppearanceDark)
+        self.actionGroupCanvasColor = QtGui.QActionGroup(self._main_window)
+        self.actionGroupCanvasColor.setExclusive(True)
+        self.actionGroupCanvasColor.addAction(self.actCanvasColorPureWhite)
+        self.actionGroupCanvasColor.addAction(self.actCanvasColorMiddleGray18)
+        self.actionGroupCanvasColor.addAction(self.actCanvasColorDeepNeutral)
+        self.actionGroupCanvasColor.addAction(self.actCanvasColorNearBlack)
+        self.actionGroupCanvasColor.addAction(self.actCanvasColorPureBlack)
         self.actionGroupColorReadoutType = QtGui.QActionGroup(self._main_window)
         self.actionGroupColorReadoutType.setExclusive(True)
         self.actionGroupColorReadoutType.addAction(self.actColorReadoutTypeRgbl)
@@ -205,12 +229,45 @@ class MainWindowUI:
         self.actAppearanceDark.triggered.connect(
             lambda _checked=False: self.apply_appearance_theme(styles.AppearanceTheme.DARK)
         )
+        self.actCanvasColorPureWhite.triggered.connect(
+            lambda _checked=False: self.apply_canvas_color(styles.CanvasColor.PURE_WHITE)
+        )
+        self.actCanvasColorDeepNeutral.triggered.connect(
+            lambda _checked=False: self.apply_canvas_color(styles.CanvasColor.DEEP_NEUTRAL)
+        )
+        self.actCanvasColorMiddleGray18.triggered.connect(
+            lambda _checked=False: self.apply_canvas_color(styles.CanvasColor.MIDDLE_GRAY_18)
+        )
+        self.actCanvasColorNearBlack.triggered.connect(
+            lambda _checked=False: self.apply_canvas_color(styles.CanvasColor.NEAR_BLACK)
+        )
+        self.actCanvasColorPureBlack.triggered.connect(
+            lambda _checked=False: self.apply_canvas_color(styles.CanvasColor.PURE_BLACK)
+        )
 
         self.actModeLuma.setChecked(True)
         self.actChannelAll.setChecked(True)
+        self.actCanvasColorDeepNeutral.setChecked(True)
         self.actColorReadoutTypeRgbl.setChecked(True)
+        self._apply_canvas_color_action_icons()
         self._apply_analysis_action_icons()
         self._apply_shortcuts()
+
+    def _apply_canvas_color_action_icons(self) -> None:
+        """Assign neutral color swatches to the canvas color menu actions."""
+
+        icon_by_action = {
+            self.actCanvasColorPureWhite: "canvas-color-pure-white.svg",
+            self.actCanvasColorMiddleGray18: "canvas-color-middle-gray-18.svg",
+            self.actCanvasColorDeepNeutral: "canvas-color-deep-neutral.svg",
+            self.actCanvasColorNearBlack: "canvas-color-near-black.svg",
+            self.actCanvasColorPureBlack: "canvas-color-pure-black.svg",
+        }
+        for action, file_name in icon_by_action.items():
+            path = icon_path(file_name)
+            if path.is_file():
+                action.setIcon(QtGui.QIcon(str(path)))
+                action.setIconVisibleInMenu(True)
 
     def _apply_analysis_action_icons(
         self,
@@ -329,6 +386,13 @@ class MainWindowUI:
         self.menuAppearance.setObjectName("menuAppearance")
         self.menuAppearance.addAction(self.actAppearanceLight)
         self.menuAppearance.addAction(self.actAppearanceDark)
+        self.menuCanvasColor = self.menuView.addMenu("")
+        self.menuCanvasColor.setObjectName("menuCanvasColor")
+        self.menuCanvasColor.addAction(self.actCanvasColorPureWhite)
+        self.menuCanvasColor.addAction(self.actCanvasColorMiddleGray18)
+        self.menuCanvasColor.addAction(self.actCanvasColorDeepNeutral)
+        self.menuCanvasColor.addAction(self.actCanvasColorNearBlack)
+        self.menuCanvasColor.addAction(self.actCanvasColorPureBlack)
 
         self.menuTools = menu_bar.addMenu("")
         self.menuTools.setObjectName("menuTools")
@@ -414,7 +478,7 @@ class MainWindowUI:
         )
         toolbar_layout = QtWidgets.QHBoxLayout(self.widgetAnalysisToolbar)
         toolbar_layout.setObjectName("layoutAnalysisToolbar")
-        toolbar_layout.setContentsMargins(6, 2, 6, 2)
+        toolbar_layout.setContentsMargins(6, 0, 6, 0)
         toolbar_layout.setSpacing(2)
 
         self.buttonToolbarModeLuma = self._create_analysis_toolbar_button(
@@ -553,40 +617,62 @@ class MainWindowUI:
 
         self.tabAnalysis = QtWidgets.QWidget(self.tabsInfo)
         self.tabAnalysis.setObjectName("tabAnalysis")
-        analysis_layout = QtWidgets.QVBoxLayout(self.tabAnalysis)
-        analysis_layout.setContentsMargins(6, 6, 6, 6)
-        analysis_layout.setSpacing(8)
+        tab_analysis_layout = QtWidgets.QVBoxLayout(self.tabAnalysis)
+        tab_analysis_layout.setObjectName("layoutTabAnalysis")
+        tab_analysis_layout.setContentsMargins(0, 0, 0, 0)
+        tab_analysis_layout.setSpacing(0)
 
-        self.widgetImageColorSpace = QtWidgets.QWidget(self.tabAnalysis)
+        self.scrollAnalysis = QtWidgets.QScrollArea(self.tabAnalysis)
+        self.scrollAnalysis.setObjectName("scrollAnalysis")
+        self.scrollAnalysis.setWidgetResizable(True)
+        self.scrollAnalysis.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
+        self.scrollAnalysis.setHorizontalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.scrollAnalysis.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+        tab_analysis_layout.addWidget(self.scrollAnalysis)
+
+        self.analysisScrollContent = QtWidgets.QWidget()
+        self.analysisScrollContent.setObjectName("analysisScrollContent")
+        self.analysisScrollContent.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Minimum,
+        )
+        self.scrollAnalysis.setWidget(self.analysisScrollContent)
+
+        analysis_layout = QtWidgets.QVBoxLayout(self.analysisScrollContent)
+        analysis_layout.setObjectName("layoutAnalysis")
+        analysis_layout.setContentsMargins(4, 4, 4, 4)
+        analysis_layout.setSpacing(8)
+        analysis_layout.setSizeConstraint(
+            QtWidgets.QLayout.SizeConstraint.SetMinimumSize
+        )
+
+        self.widgetImageColorSpace = QtWidgets.QWidget(self.analysisScrollContent)
         self.widgetImageColorSpace.setObjectName("widgetImageColorSpace")
-        image_space_layout = QtWidgets.QHBoxLayout(self.widgetImageColorSpace)
+        image_space_layout = QtWidgets.QVBoxLayout(self.widgetImageColorSpace)
         image_space_layout.setObjectName("layoutImageColorSpace")
         image_space_layout.setContentsMargins(0, 0, 0, 0)
-        image_space_layout.setSpacing(8)
+        image_space_layout.setSpacing(4)
         self.labelImageColorSpaceTitle = QtWidgets.QLabel(self.widgetImageColorSpace)
         self.labelImageColorSpaceTitle.setObjectName("labelImageColorSpaceTitle")
-        self.labelImageColorSpaceValue = QtWidgets.QLabel(self.widgetImageColorSpace)
+        self.labelImageColorSpaceValue = ElidedLabel(self.widgetImageColorSpace)
         self.labelImageColorSpaceValue.setObjectName("labelImageColorSpaceValue")
-        self.labelImageColorSpaceValue.setTextInteractionFlags(
-            QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
-        )
-        self.labelImageColorSpaceValue.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Expanding,
-            QtWidgets.QSizePolicy.Policy.Fixed,
-        )
         image_space_layout.addWidget(self.labelImageColorSpaceTitle)
         image_space_layout.addWidget(self.labelImageColorSpaceValue, 1)
         analysis_layout.addWidget(self.widgetImageColorSpace)
 
-        self.widgetAnalysisSamplePrecision = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetAnalysisSamplePrecision = QtWidgets.QWidget(self.analysisScrollContent)
         self.widgetAnalysisSamplePrecision.setObjectName("widgetAnalysisSamplePrecision")
-        sample_precision_layout = QtWidgets.QHBoxLayout(self.widgetAnalysisSamplePrecision)
+        sample_precision_layout = QtWidgets.QVBoxLayout(self.widgetAnalysisSamplePrecision)
         sample_precision_layout.setObjectName("layoutAnalysisSamplePrecision")
         sample_precision_layout.setContentsMargins(0, 0, 0, 0)
-        sample_precision_layout.setSpacing(8)
+        sample_precision_layout.setSpacing(4)
         self.labelAnalysisSamplePrecisionTitle = QtWidgets.QLabel(self.widgetAnalysisSamplePrecision)
         self.labelAnalysisSamplePrecisionTitle.setObjectName("labelAnalysisSamplePrecisionTitle")
-        self.comboAnalysisSamplePrecision = QtWidgets.QComboBox(self.widgetAnalysisSamplePrecision)
+        self.comboAnalysisSamplePrecision = ElidedComboBox(self.widgetAnalysisSamplePrecision)
         self.comboAnalysisSamplePrecision.setObjectName("comboAnalysisSamplePrecision")
         self.comboAnalysisSamplePrecision.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
@@ -608,15 +694,15 @@ class MainWindowUI:
         sample_precision_layout.addWidget(self.comboAnalysisSamplePrecision, 1)
         analysis_layout.addWidget(self.widgetAnalysisSamplePrecision)
 
-        self.widgetSpecifiedImageColorSpace = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetSpecifiedImageColorSpace = QtWidgets.QWidget(self.analysisScrollContent)
         self.widgetSpecifiedImageColorSpace.setObjectName("widgetSpecifiedImageColorSpace")
-        specified_space_layout = QtWidgets.QHBoxLayout(self.widgetSpecifiedImageColorSpace)
+        specified_space_layout = QtWidgets.QVBoxLayout(self.widgetSpecifiedImageColorSpace)
         specified_space_layout.setObjectName("layoutSpecifiedImageColorSpace")
         specified_space_layout.setContentsMargins(0, 0, 0, 0)
-        specified_space_layout.setSpacing(8)
+        specified_space_layout.setSpacing(4)
         self.labelSpecifiedImageColorSpaceTitle = QtWidgets.QLabel(self.widgetSpecifiedImageColorSpace)
         self.labelSpecifiedImageColorSpaceTitle.setObjectName("labelSpecifiedImageColorSpaceTitle")
-        self.comboSpecifiedImageColorSpace = QtWidgets.QComboBox(self.widgetSpecifiedImageColorSpace)
+        self.comboSpecifiedImageColorSpace = ElidedComboBox(self.widgetSpecifiedImageColorSpace)
         self.comboSpecifiedImageColorSpace.setObjectName("comboSpecifiedImageColorSpace")
         self.comboSpecifiedImageColorSpace.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
@@ -635,15 +721,15 @@ class MainWindowUI:
         specified_space_layout.addWidget(self.comboSpecifiedImageColorSpace, 1)
         analysis_layout.addWidget(self.widgetSpecifiedImageColorSpace)
 
-        self.widgetRenderingIntent = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetRenderingIntent = QtWidgets.QWidget(self.analysisScrollContent)
         self.widgetRenderingIntent.setObjectName("widgetRenderingIntent")
-        rendering_intent_layout = QtWidgets.QHBoxLayout(self.widgetRenderingIntent)
+        rendering_intent_layout = QtWidgets.QVBoxLayout(self.widgetRenderingIntent)
         rendering_intent_layout.setObjectName("layoutRenderingIntent")
         rendering_intent_layout.setContentsMargins(0, 0, 0, 0)
-        rendering_intent_layout.setSpacing(8)
+        rendering_intent_layout.setSpacing(4)
         self.labelRenderingIntentTitle = QtWidgets.QLabel(self.widgetRenderingIntent)
         self.labelRenderingIntentTitle.setObjectName("labelRenderingIntentTitle")
-        self.comboRenderingIntent = QtWidgets.QComboBox(self.widgetRenderingIntent)
+        self.comboRenderingIntent = ElidedComboBox(self.widgetRenderingIntent)
         self.comboRenderingIntent.setObjectName("comboRenderingIntent")
         self.comboRenderingIntent.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
@@ -659,15 +745,15 @@ class MainWindowUI:
         rendering_intent_layout.addWidget(self.comboRenderingIntent, 1)
         analysis_layout.addWidget(self.widgetRenderingIntent)
 
-        self.widgetDisplayColorSpace = QtWidgets.QWidget(self.tabAnalysis)
+        self.widgetDisplayColorSpace = QtWidgets.QWidget(self.analysisScrollContent)
         self.widgetDisplayColorSpace.setObjectName("widgetDisplayColorSpace")
-        display_space_layout = QtWidgets.QHBoxLayout(self.widgetDisplayColorSpace)
+        display_space_layout = QtWidgets.QVBoxLayout(self.widgetDisplayColorSpace)
         display_space_layout.setObjectName("layoutDisplayColorSpace")
         display_space_layout.setContentsMargins(0, 0, 0, 0)
-        display_space_layout.setSpacing(8)
+        display_space_layout.setSpacing(4)
         self.labelDisplayColorSpaceTitle = QtWidgets.QLabel(self.widgetDisplayColorSpace)
         self.labelDisplayColorSpaceTitle.setObjectName("labelDisplayColorSpaceTitle")
-        self.comboDisplayColorSpace = QtWidgets.QComboBox(self.widgetDisplayColorSpace)
+        self.comboDisplayColorSpace = ElidedComboBox(self.widgetDisplayColorSpace)
         self.comboDisplayColorSpace.setObjectName("comboDisplayColorSpace")
         self.comboDisplayColorSpace.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
@@ -686,7 +772,21 @@ class MainWindowUI:
         display_space_layout.addWidget(self.comboDisplayColorSpace, 1)
         analysis_layout.addWidget(self.widgetDisplayColorSpace)
 
-        self.frameHistogramAnalysis = QtWidgets.QFrame(self.tabAnalysis)
+        for label in (
+            self.labelImageColorSpaceTitle,
+            self.labelAnalysisSamplePrecisionTitle,
+            self.labelSpecifiedImageColorSpaceTitle,
+            self.labelRenderingIntentTitle,
+            self.labelDisplayColorSpaceTitle,
+        ):
+            label.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
+            label.setWordWrap(True)
+            label.setSizePolicy(
+                QtWidgets.QSizePolicy.Policy.Preferred,
+                QtWidgets.QSizePolicy.Policy.Preferred,
+            )
+
+        self.frameHistogramAnalysis = QtWidgets.QFrame(self.analysisScrollContent)
         self.frameHistogramAnalysis.setObjectName("frameHistogramAnalysis")
         self.frameHistogramAnalysis.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
         self.frameHistogramAnalysis.setSizePolicy(
@@ -707,13 +807,21 @@ class MainWindowUI:
         pixel_sample_layout.setObjectName("layoutPixelSampleValues")
         pixel_sample_layout.setContentsMargins(0, 0, 0, 0)
         pixel_sample_layout.setSpacing(0)
-        self.labelPixelRedValue = QtWidgets.QLabel("-1", self.widgetPixelSampleValues)
+        self.labelPixelRedValue = QtWidgets.QLabel(
+            self._tr("R {value}").format(value=-1), self.widgetPixelSampleValues,
+        )
         self.labelPixelRedValue.setObjectName("labelPixelRedValue")
-        self.labelPixelGreenValue = QtWidgets.QLabel("-1", self.widgetPixelSampleValues)
+        self.labelPixelGreenValue = QtWidgets.QLabel(
+            self._tr("G {value}").format(value=-1), self.widgetPixelSampleValues,
+        )
         self.labelPixelGreenValue.setObjectName("labelPixelGreenValue")
-        self.labelPixelBlueValue = QtWidgets.QLabel("-1", self.widgetPixelSampleValues)
+        self.labelPixelBlueValue = QtWidgets.QLabel(
+            self._tr("B {value}").format(value=-1), self.widgetPixelSampleValues,
+        )
         self.labelPixelBlueValue.setObjectName("labelPixelBlueValue")
-        self.labelPixelLumaValue = QtWidgets.QLabel("-1", self.widgetPixelSampleValues)
+        self.labelPixelLumaValue = QtWidgets.QLabel(
+            self._tr("L {value}").format(value=-1), self.widgetPixelSampleValues,
+        )
         self.labelPixelLumaValue.setObjectName("labelPixelLumaValue")
         for label in (
             self.labelPixelRedValue,
@@ -728,6 +836,7 @@ class MainWindowUI:
         self.widgetHistogram = HistogramClippingLabel("", self.frameHistogramAnalysis)
         self.widgetHistogram.setObjectName("widgetHistogram")
         self.widgetHistogram.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.widgetHistogram.setWordWrap(True)
         self.widgetHistogram.setFixedSize(self.info_panel_histogram_size)
         self.widgetHistogram.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         hist_frame_layout.addWidget(self.widgetHistogram)
@@ -737,7 +846,7 @@ class MainWindowUI:
             QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignTop,
         )
 
-        self.frameWaveformAnalysis = QtWidgets.QFrame(self.tabAnalysis)
+        self.frameWaveformAnalysis = QtWidgets.QFrame(self.analysisScrollContent)
         self.frameWaveformAnalysis.setObjectName("frameWaveformAnalysis")
         self.frameWaveformAnalysis.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
         self.frameWaveformAnalysis.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
@@ -747,6 +856,7 @@ class MainWindowUI:
         self.widgetWaveform = QtWidgets.QLabel("", self.frameWaveformAnalysis)
         self.widgetWaveform.setObjectName("widgetWaveform")
         self.widgetWaveform.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.widgetWaveform.setWordWrap(True)
         self.widgetWaveform.setFixedSize(self.info_panel_waveform_size)
         self.widgetWaveform.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         wave_frame_layout.addWidget(self.widgetWaveform)
@@ -821,7 +931,6 @@ class MainWindowUI:
         self.comboFilmstripLensFilter = self._create_filmstrip_filter_combo(
             "comboFilmstripLensFilter"
         )
-        filter_layout.addStretch(1)
         filter_layout.addWidget(self.comboFilmstripExtensionFilter)
         filter_layout.addWidget(self.comboFilmstripCameraFilter)
         filter_layout.addWidget(self.comboFilmstripLensFilter)
@@ -889,9 +998,10 @@ class MainWindowUI:
         button.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly)
         button.setIconSize(self.ANALYSIS_TOOLBAR_ICON_SIZE)
         button.setDefaultAction(action)
+        button.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         button.setFixedSize(
-            self.ANALYSIS_TOOLBAR_HEIGHT - 4,
-            self.ANALYSIS_TOOLBAR_HEIGHT - 4,
+            self.ANALYSIS_TOOLBAR_HEIGHT - 2,
+            self.ANALYSIS_TOOLBAR_HEIGHT - 2,
         )
         return button
 
@@ -913,6 +1023,7 @@ class MainWindowUI:
 
     @staticmethod
     def _apply_combo_popup_delegate(combo: QtWidgets.QComboBox) -> None:
+        combo.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         combo.setItemDelegate(ComboPopupItemDelegate(combo))
 
     @staticmethod
@@ -958,16 +1069,24 @@ class MainWindowUI:
     ) -> styles.AppearanceTheme:
         """Apply an appearance theme and synchronize the menu state."""
 
-        applied_theme = styles.apply_stylesheet(self._main_window, theme)
+        applied_theme = styles.apply_stylesheet(self._main_window, theme, self._canvas_color)
         self._appearance_theme = applied_theme
         self._apply_analysis_action_icons(applied_theme)
         self._sync_appearance_actions(applied_theme)
+        self._sync_canvas_color_actions(self._canvas_color)
         for label in self._main_window.findChildren(ImageDisplayLabel, "lblImage"):
             label.set_color_readout_theme(applied_theme)
         for tabs in (getattr(self, "tabsImages", None), getattr(self, "tabsInfo", None)):
             if hasattr(tabs, "apply_floating_stylesheet"):
                 tabs.apply_floating_stylesheet(self._main_window.styleSheet())
         return applied_theme
+
+    def apply_canvas_color(self, canvas_color: styles.CanvasColor) -> styles.CanvasColor:
+        """Apply a neutral image canvas color without changing the appearance theme."""
+
+        self._canvas_color = canvas_color
+        self.apply_appearance_theme(getattr(self, "_appearance_theme", None))
+        return canvas_color
 
     def _sync_appearance_actions(self, theme: styles.AppearanceTheme) -> None:
         light_blocker = QtCore.QSignalBlocker(self.actAppearanceLight)
@@ -978,6 +1097,21 @@ class MainWindowUI:
         finally:
             del light_blocker
             del dark_blocker
+
+    def _sync_canvas_color_actions(self, canvas_color: styles.CanvasColor) -> None:
+        actions = {
+            styles.CanvasColor.PURE_WHITE: self.actCanvasColorPureWhite,
+            styles.CanvasColor.MIDDLE_GRAY_18: self.actCanvasColorMiddleGray18,
+            styles.CanvasColor.DEEP_NEUTRAL: self.actCanvasColorDeepNeutral,
+            styles.CanvasColor.NEAR_BLACK: self.actCanvasColorNearBlack,
+            styles.CanvasColor.PURE_BLACK: self.actCanvasColorPureBlack,
+        }
+        blockers = [QtCore.QSignalBlocker(action) for action in actions.values()]
+        try:
+            for color, action in actions.items():
+                action.setChecked(color == canvas_color)
+        finally:
+            del blockers
 
     def _create_metadata_table(
         self, parent: QtWidgets.QWidget, object_name: str
@@ -1013,6 +1147,11 @@ class MainWindowUI:
         self.actShowInFolder.setText(self._tr("Show in Folder"))
         self.actAppearanceLight.setText(self._tr("Light"))
         self.actAppearanceDark.setText(self._tr("Dark"))
+        self.actCanvasColorPureWhite.setText(self._tr("Pure White"))
+        self.actCanvasColorDeepNeutral.setText(self._tr("Deep Neutral Gray"))
+        self.actCanvasColorMiddleGray18.setText(self._tr("18% Middle Gray"))
+        self.actCanvasColorNearBlack.setText(self._tr("Near-Black Neutral Gray"))
+        self.actCanvasColorPureBlack.setText(self._tr("Pure Black"))
         self.actToggleInfoPanel.setText(self._tr("Info Panel"))
         self.actToggleAnalysisToolbar.setText(self._tr("Analysis Toolbar"))
         self.actToggleFilmstrip.setText(self._tr("Filmstrip"))
@@ -1064,6 +1203,7 @@ class MainWindowUI:
         self.menuFile.setTitle(self._tr("File"))
         self.menuView.setTitle(self._tr("View"))
         self.menuAppearance.setTitle(self._tr("Appearance"))
+        self.menuCanvasColor.setTitle(self._tr("Canvas Color"))
         self.menuReferenceLines.setTitle(self._tr("Reference Lines"))
         self.menuTools.setTitle(self._tr("Tools"))
         self.menuMode.setTitle(self._tr("Histogram/Waveform Mode"))
@@ -1103,12 +1243,18 @@ class MainWindowUI:
                 self._translated_rendering_intent_label(rendering_intent),
             )
 
-        self.widgetHistogram.setText(self._tr("Histogram Placeholder"))
+        self.widgetHistogram.setText(self._tr("Open an image to view its histogram."))
+        self.widgetHistogram.setAccessibleName(self._tr("Histogram"))
+        self.widgetHistogram.setAccessibleDescription(self._tr(
+            "The corner triangles mirror the exposure warning actions. "
+            "Use Show Underexposed or Show Overexposed in Tools > Pseudo Color "
+            "or the analysis toolbar to toggle them with the keyboard."
+        ))
         self.widgetHistogram.set_triangle_tooltips(
             self._tr("Show/Hide Underexposed Areas"),
             self._tr("Show/Hide Overexposed Areas"),
         )
-        self.widgetWaveform.setText(self._tr("Waveform Placeholder"))
+        self.widgetWaveform.setText(self._tr("Open an image to view its waveform."))
         self._set_metadata_headers()
 
     def _sync_analysis_action_tooltips(self) -> None:
@@ -1135,7 +1281,8 @@ class MainWindowUI:
             self.actToggleMetadataOverlay,
         )
         for action in actions:
-            action.setToolTip(action.text())
+            shortcut = action.shortcut().toString(QtGui.QKeySequence.SequenceFormat.NativeText)
+            action.setToolTip(f"{action.text()} ({shortcut})" if shortcut else action.text())
 
     def _translated_rendering_intent_label(self, rendering_intent: RenderingIntent) -> str:
         labels = {

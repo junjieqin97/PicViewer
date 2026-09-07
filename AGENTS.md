@@ -99,6 +99,7 @@ PicViewer/
 │
 ├─ tests/
 │  ├─ unit/                      # Unit tests for the domain/app layers
+│  ├─ pictures/                  # Pictures for tests
 │  ├─ integration/               # Integration tests for the infra layer
 │  └─ e2e/                       # Optional: UI automation
 │
