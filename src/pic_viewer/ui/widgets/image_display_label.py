@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from pic_viewer.domain.rules.pixel_sample import ColorReadout
+from pic_viewer.domain.rules.pixel_sample import (
+    DEFAULT_COLOR_READOUT_TYPE,
+    ColorReadout,
+    ColorReadoutType,
+)
 from pic_viewer.domain.rules.reference_lines import (
     ReferenceLineSettings,
     build_reference_line_segments,
@@ -42,6 +46,7 @@ class ImageDisplayLabel(QtWidgets.QLabel):
         self._color_readouts: tuple[ColorReadout, ...] = tuple()
         self._color_readout_image_size: tuple[int, int] | None = None
         self._color_readout_theme = styles.AppearanceTheme.DARK
+        self._color_readout_type = DEFAULT_COLOR_READOUT_TYPE
 
     def set_reference_line_settings(self, settings: ReferenceLineSettings) -> None:
         """Apply reference line settings and repaint without changing the pixmap."""
@@ -108,6 +113,19 @@ class ImageDisplayLabel(QtWidgets.QLabel):
         """Return the theme used for persistent color readout labels."""
 
         return self._color_readout_theme
+
+    def set_color_readout_type(self, readout_type: ColorReadoutType) -> None:
+        """Apply the display format used to paint persistent color readouts."""
+
+        if self._color_readout_type is readout_type:
+            return
+        self._color_readout_type = readout_type
+        self.update()
+
+    def color_readout_type(self) -> ColorReadoutType:
+        """Return the active persistent color readout display format."""
+
+        return self._color_readout_type
 
     def color_readout_id_at(self, pos: QtCore.QPoint) -> int | None:
         """Return the topmost color readout id at a widget-local position."""
@@ -241,13 +259,11 @@ class ImageDisplayLabel(QtWidgets.QLabel):
     def color_readout_text_runs(self, readout: ColorReadout) -> tuple[tuple[str, str], ...]:
         """Return display values with their color keys in visual order."""
 
-        red, green, blue, luma = readout.display_values()
-        return (
-            (red, "red"),
-            (green, "green"),
-            (blue, "blue"),
-            (luma, "luma"),
-        )
+        values = readout.display_values(self._color_readout_type)
+        if self._color_readout_type is not ColorReadoutType.RGBL:
+            return tuple((value, "luma") for value in values)
+        red, green, blue, luma = values
+        return ((red, "red"), (green, "green"), (blue, "blue"), (luma, "luma"))
 
     def color_readout_text_colors(self) -> dict[str, QtGui.QColor]:
         """Return channel colors for readout text in the active theme."""

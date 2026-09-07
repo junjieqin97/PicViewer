@@ -16,7 +16,11 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from pic_viewer.domain.rules.reference_lines import ReferenceLineSettings  # noqa: E402
-from pic_viewer.domain.rules.pixel_sample import ColorReadout, PixelSample  # noqa: E402
+from pic_viewer.domain.rules.pixel_sample import (  # noqa: E402
+    ColorReadout,
+    ColorReadoutType,
+    PixelSample,
+)
 from pic_viewer.ui.resources import styles  # noqa: E402
 from pic_viewer.ui.widgets.image_display_label import ImageDisplayLabel  # noqa: E402
 
@@ -186,6 +190,35 @@ class ImageDisplayLabelTests(QtWidgetTestCase):
         label.set_color_readout_theme(styles.AppearanceTheme.LIGHT)
         light_colors = label.color_readout_text_colors()
         self.assertEqual(QtGui.QColor(0, 0, 0), light_colors["luma"])
+
+    def test_hsb_hsl_and_lab_readout_text_runs_use_neutral_theme_color(self) -> None:
+        label = ImageDisplayLabel()
+        self.addCleanup(label.deleteLater)
+        readout = ColorReadout(
+            readout_id=1,
+            x=0,
+            y=0,
+            sample=PixelSample(red=0, green=128, blue=255, luma=105),
+        )
+
+        label.set_color_readout_type(ColorReadoutType.HSB)
+        self.assertEqual(ColorReadoutType.HSB, label.color_readout_type())
+        self.assertEqual(
+            (("H 210°", "luma"), ("S 100%", "luma"), ("B 100%", "luma")),
+            label.color_readout_text_runs(readout),
+        )
+
+        label.set_color_readout_type(ColorReadoutType.HSL)
+        self.assertEqual(
+            (("H 210°", "luma"), ("S 100%", "luma"), ("L 50%", "luma")),
+            label.color_readout_text_runs(readout),
+        )
+
+        label.set_color_readout_type(ColorReadoutType.LAB)
+        self.assertEqual(
+            (("L 55", "luma"), ("a 19", "luma"), ("b -71", "luma")),
+            label.color_readout_text_runs(readout),
+        )
 
     def test_color_readout_background_is_nearly_transparent(self) -> None:
         label = ImageDisplayLabel()

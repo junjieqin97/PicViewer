@@ -3,6 +3,12 @@ QMainWindow {
     color: #1f252d;
 }
 
+/* Reserve item borders so moving keyboard focus never shifts content. */
+QTableWidget::item {
+    border: 1px solid transparent;
+}
+
+
 QMenuBar {
     background: #f8fafc;
     color: #1f252d;
@@ -41,13 +47,19 @@ QSplitter::handle:hover {
 QTabWidget#tabsImages::pane,
 QTabWidget#tabsInfo::pane,
 QTabWidget#tabsMetadata::pane {
-    border: 1px solid #d4dce7;
+    border: none;
     background: #ffffff;
 }
 
 QWidget#tabAnalysis,
 QWidget#tabMetadata {
     background: #ffffff;
+}
+
+QScrollArea#scrollAnalysis,
+QWidget#analysisScrollContent {
+    background: #ffffff;
+    border: none;
 }
 
 QTabWidget#tabsImages::tab-bar {
@@ -112,7 +124,7 @@ QWidget#floatingTabWindow {
 
 QWidget#floatingTabContent {
     background: #ffffff;
-    border: 1px solid #d4dce7;
+    border: none;
 }
 
 QWidget#tabImagePlaceholder,
@@ -123,7 +135,6 @@ QWidget#widgetImageLoadState {
 }
 
 QWidget#pageImagePreview {
-    background: #ffffff;
     color: #263241;
 }
 
@@ -150,7 +161,7 @@ QLabel#labelEmptyFormats,
 QLabel#labelEmptyOpenFileShortcut,
 QLabel#labelEmptyOpenFolderShortcut,
 QLabel#labelImageLoadStateFileName {
-    color: #66758a;
+    color: #5f6d80;
 }
 
 QLabel#labelImageLoadStateReason {
@@ -174,12 +185,7 @@ QPushButton#buttonImageLoadRetry:hover {
 }
 
 QScrollArea#scrollImage {
-    background: #ffffff;
     border: 1px solid #c6d2df;
-}
-
-QWidget#viewportImageCanvas {
-    background: #ffffff;
 }
 
 QLabel#lblImage {
@@ -234,7 +240,7 @@ QScrollArea#scrollImage QScrollBar::sub-page {
 
 QWidget#scrollInfo {
     background: #f7f9fc;
-    border-left: 1px solid #d3dce8;
+    border: none;
 }
 
 QFrame#widgetAnalysisToolbar {
@@ -292,6 +298,9 @@ QWidget#widgetFilmstripFilterToolbar QComboBox {
     border: 1px solid #cbd6e3;
     border-radius: 4px;
     padding: 3px 6px;
+}
+
+QWidget#widgetFilmstripFilterToolbar QComboBox {
     min-width: 144px;
     max-width: 144px;
 }
@@ -373,7 +382,7 @@ QLabel#labelPixelLumaValue {
 QFrame#frameHistogramAnalysis,
 QFrame#frameWaveformAnalysis {
     background: #f4f7fb;
-    border: 1px solid #cbd6e3;
+    border: none;
     border-radius: 4px;
 }
 
@@ -394,7 +403,8 @@ QPlainTextEdit#textLicenseDocument {
 
 QFrame#frameFilmstrip {
     background: #edf2f7;
-    border: 1px solid #d1dbe7;
+    border: none;
+    border-top: 1px solid #d1dbe7;
 }
 
 QWidget#widgetFilmstripFilterToolbar {
@@ -404,7 +414,7 @@ QWidget#widgetFilmstripFilterToolbar {
 QListWidget#listFilmstrip {
     background: #ffffff;
     color: #334155;
-    border: 1px solid #cbd6e3;
+    border: 1px solid transparent;
     outline: none;
 }
 
@@ -495,4 +505,21 @@ QLabel#labelFilmstripSummary {
     border: 1px solid #b8c7d9;
     border-radius: 4px;
     padding: 2px 8px;
+}
+
+/* Keep focus after hover/checked rules and distinct from persistent selection. */
+QToolButton:focus:enabled,
+QFrame#widgetAnalysisToolbar QToolButton:focus:enabled,
+QPushButton:focus:enabled,
+QPushButton#buttonEmptyOpenFile:focus:enabled,
+QPushButton#buttonEmptyOpenFolder:focus:enabled,
+QPushButton#buttonImageLoadRetry:focus:enabled,
+QWidget#tabAnalysis QComboBox:focus:enabled,
+QWidget#widgetFilmstripFilterToolbar QComboBox:focus:enabled,
+QTabBar::tab:focus,
+QTableWidget:focus,
+QTableWidget::item:focus,
+QListWidget#listFilmstrip:focus,
+QListWidget#listFilmstrip::item:focus {
+    border: 1px dashed #805000;
 }

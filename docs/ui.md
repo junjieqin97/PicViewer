@@ -1,5 +1,8 @@
 # PicViewer UI Design Specification
 
+Task scope and document precedence are defined in [AGENTS.md](../AGENTS.md).
+Read the sections affected by the current task; the component inventory is not a sequence of unfinished work.
+
 ## 0. General Rules (Mandatory)
 
 - Implement the UI structure and component names strictly according to this document; do not add or remove areas, buttons, or panels without authorization.
@@ -8,6 +11,22 @@
 - UI component styles must be defined uniformly in `src/pic_viewer/ui/resources/styles/*.qss` files; do not hardcode colors, borders, spacing, or other styles in Python code via `setStyleSheet(...)` or string constants.
 
 ## 1. Main Window Layout Structure (Information Architecture)
+
+### Panel Backgrounds and Separators
+
+- Both themes use existing background levels to distinguish application chrome, content panes, analysis charts, and the Filmstrip thumbnail surface. Image, info, and nested metadata tab panes have no visible outer border.
+- The info panel has no additional left border; the splitter and its hover feedback provide the boundary between the image and info areas.
+- Histogram and waveform containers retain their backgrounds, corner radii, and layout spacing without an outline. Chart dimensions and rendering remain unchanged.
+- The Filmstrip frame has only a 1 px top separator, using the theme's existing frame border color. Its list retains a transparent 1 px border to reserve space for keyboard focus, without a visible outline at rest.
+- Detached tab content follows the same borderless pane treatment. Existing focus, hover, selection, toolbar separators, and user-selected neutral canvas colors are preserved.
+
+### Keyboard Focus and Accessibility
+
+- Empty/loading state text, including shortcut and supported-format hints, must retain at least 4.5:1 foreground/background contrast in both themes.
+- Tool buttons, push buttons, combo boxes, tab bars, metadata tables, and the Filmstrip support keyboard focus. Tab and Shift+Tab skip hidden and disabled controls; standard Qt arrow-key and activation behavior is retained.
+- Both themes use a contrasting dashed focus border, distinct from hover and selection. Focus never changes control geometry or the 30 px toolbar height. The current tab, metadata cell, and Filmstrip item show focus only while their container has focus; selection remains visible after focus leaves.
+- Focus styling applies to detached windows as well. Colors and borders are defined in the theme QSS resources.
+- Histogram triangles remain mouse-clickable visual mirrors of the shared exposure actions, without independent keyboard focus. A localized accessible description directs keyboard and assistive-technology users to Tools > Pseudo Color or the analysis toolbar. The toolbar exposes the action names and checked states through standard Qt buttons.
 
 The main window uses a typical four-area structure:
 
@@ -26,14 +45,15 @@ The main window uses a typical four-area structure:
 - The menu bar is the entry point for all features.
 - It must contain at least these top-level menus (names must be consistent):
   - File: Open Image, Open Folder, Close Current Tab, Exit
-  - View: Zoom, Fit to Window, Show Metadata Overlay (checkable, checked = visible), Info Panel (checkable, checked = visible), Analysis Toolbar (checkable, checked = visible), Filmstrip Pane (checkable, checked = visible), Appearance (Light/Dark, mutually exclusive)
+  - View: Zoom, Fit to Window, Show Metadata Overlay (checkable, checked = visible), Info Panel (checkable, checked = visible), Analysis Toolbar (checkable, checked = visible), Filmstrip Pane (checkable, checked = visible), Appearance (Light/Dark, mutually exclusive), Canvas Color (Pure White/18% Middle Gray/Deep Neutral Gray/Near-Black Neutral Gray/Pure Black, mutually exclusive and ordered from light to dark)
   - Tools: Histogram/Waveform options + pseudo color options + reference line options
     - Pseudo Color: Show Underexposed (checkable), Show Overexposed (checkable), Show Peaking (High/Medium/Low, checkable, three levels are mutually exclusive and clicking the current level turns it off)
     - Reference Lines: Crosshair Reference Line, Diagonal Reference Line, Rule-of-Thirds Grid Reference Line (all checkable; can be toggled independently and displayed as overlays together)
     - Color Readouts: Add Color Readout, Delete Color Readout (checkable tool modes; activating one deactivates the other, and clicking the active tool again exits the mode), Delete All Readouts (clears all readouts from the current image only)
+    - Color Readouts Type: RGBL, HSB, HSL, Lab (mutually exclusive global session setting; RGBL is selected by default)
   - Help: About, Third-Party Library License Information
 - In the `Third-Party Library License Information` dialog, recognizable license names must be displayed as hyperlinks; clicking a license name opens a read-only dialog showing the original English text of that license.
-- Requirement: create and name each menu item with `QAction` (see "Component Checklist").
+- Requirement: create and name each menu item with `QAction` (see "Component Inventory and Naming").
 
 ## 2. Central Area (CentralWidget)
 
@@ -52,10 +72,11 @@ The main window uses a typical four-area structure:
   - The toolbar is a shortcut entry point for menu actions and does not replace the menu bar; luma/RGB, RGB channels, pseudo color, and reference line features must still remain in the `Tools` menu.
   - Toolbar buttons must reuse the corresponding `QAction` objects to ensure the menu, shortcuts, and toolbar states stay synchronized.
 - Visual:
-  - Fixed low height, recommended to be no more than 30 logical pixels.
+  - Fixed height of 30 logical pixels, including the frame border.
   - Button groups must be horizontally centered inside the toolbar.
-  - Buttons show only small icons and no text; feature descriptions are provided through tooltips.
-  - Recommended icon size is no more than 18 x 18 logical pixels.
+  - Icon-only buttons use 28 x 28 logical pixel targets and 24 x 24 icons, filling the available height after frame borders and button padding. Vertical layout margins are zero.
+  - Tooltips include the localized action description followed by its shortcut in platform-native notation when available; actions without shortcuts show only the description.
+  - Preserve visible vertical separators and spacing between functional groups.
 - Tool buttons must include:
   - Luma Mode, RGB Mode
   - All RGB Channels, Red Channel Only, Green Channel Only, Blue Channel Only
@@ -66,7 +87,7 @@ The main window uses a typical four-area structure:
   - Show Metadata Overlay
 - The Show Metadata Overlay button is pinned to the far right side of the toolbar. The centered analysis button group must remain visually centered by reserving equal space on the left side.
 - The Show Metadata Overlay button is enabled by default. When enabled, the current image shows up to three metadata lines at the upper-left corner of the actual displayed image: camera/lens, exposure settings, and resolution. The camera name combines camera maker and camera model when both are available. Missing metadata fields are omitted instead of shown as placeholders. The text is drawn in semi-transparent white.
-- The Add Color Readout, Delete Color Readout, and Delete All Readouts buttons reuse the corresponding `Tools > Color Readouts` actions. Add mode uses a plus-style cursor over the analyzed image and can add multiple persistent labels. Delete mode uses a minus-style cursor and removes a readout only when the user clicks an existing readout label. Delete All Readouts is a one-shot action that clears all readouts from the current image only. Labels use the active light/dark appearance style with a nearly transparent background and display only four numeric values: red, green, blue, and luma. The red, green, and blue numbers use matching channel text colors; luma uses black text in light mode and white text in dark mode.
+- The Add Color Readout, Delete Color Readout, and Delete All Readouts buttons reuse the corresponding `Tools > Color Readouts` actions. Add mode uses a plus-style cursor over the analyzed image and can add multiple persistent labels. Delete mode uses a minus-style cursor and removes a readout only when the user clicks an existing readout label. Delete All Readouts is a one-shot action that clears all readouts from the current image only. `Tools > Color Readouts Type` globally selects RGBL, HSB, HSL, or Lab for all existing and future labels during the current session. RGBL labels retain four unprefixed red, green, blue, and luma integer values with the existing channel colors. HSB/HSL labels use three prefixed values (`H n°`, `S n%`, and `B n%` or `L n%`). Lab labels use three prefixed integer D65 CIE L\*a\*b\* values (`L n`, `a n`, and `b n`). HSB, HSL, and Lab values use theme-aware neutral text. Labels use the active light/dark appearance style with a nearly transparent background.
 
 ## 3. Upper Content Area: Image Tabs + Right Info Area (QSplitter)
 
@@ -101,6 +122,7 @@ Constraint: the right info area width is adjustable by default; when the main wi
 - The display control inside a tab is named `viewImage` (if using `QGraphicsView`) or `lblImage` (if using `QLabel` as a placeholder).
 - Context menu: right-clicking in the `image display area` opens a context menu containing `Zoom In`, `Zoom Out`, `Fit to Window`, and `Show in Folder`; zoom behavior must remain consistent with the `top menu bar` actions, and `Show in Folder` opens the current image's parent directory. See `5.2 MenuBar Actions`.
 - Mouse wheel: scrolling up in the `image display area` performs `Zoom In`, and scrolling down performs `Zoom Out`; the implementation must reuse the zoom logic from the `top menu bar`.
+- Canvas color: the area surrounding a loaded image uses an achromatic RGB background independent of the Light/Dark appearance theme. `View > Canvas Color` lists its options from light to dark: `Pure White` (`#FFFFFF`), `18% Middle Gray` (`#777777`), `Deep Neutral Gray` (`#202020`), `Near-Black Neutral Gray` (`#101010`), and `Pure Black` (`#000000`). Every option displays a small square swatch of its canvas color, with a neutral outline so pure white and pure black remain visible in either appearance theme. `Deep Neutral Gray` is selected by default. The selection applies immediately to attached and detached image views, remains active when the appearance theme changes, and is kept only for the current application session. Empty, loading, and error states continue to use their appearance-theme backgrounds.
 
 ### 3.2 Right Info Area (Info Panel)
 
@@ -124,14 +146,14 @@ Inside the info area, use `DetachableTabWidget` (`QTabWidget` subclass):
 - Detached info tabs can only be dropped back into `tabsInfo`; they must not be accepted by the image tab widget.
 - Nested metadata tabs (`General`, `Exif`, `IPTC`, `TIFF`) remain regular tabs and are not detachable in this version.
 
-Each info tab is first implemented with placeholder controls (the metadata table may scroll internally):
+The info tabs display analysis charts and metadata tables (the metadata table may scroll internally):
 
-- Analysis: `tabAnalysis` uses a vertical layout. From top to bottom it displays the current source image color space status, the `Analysis Sample Precision` selector, a `Specify Image Color Space` selector, the `Rendering Intent` selector, the `Display Color Space` selector, the histogram, and the waveform. Both analysis charts should be centered horizontally and aligned near the top.
+- Analysis: `tabAnalysis` contains a borderless `scrollAnalysis: QScrollArea` whose vertical scrollbar appears only when needed and whose horizontal scrollbar is disabled. The outer `scrollInfo` panel remains non-scrollable. `scrollAnalysis` owns a resizable `analysisScrollContent` widget with a vertical layout. From top to bottom, that layout displays the current source image color space status, the `Analysis Sample Precision` selector, a `Specify Image Color Space` selector, the `Rendering Intent` selector, the `Display Color Space` selector, the histogram, and the waveform. Both analysis charts remain centered horizontally, aligned near the top, and keep their fixed logical sizes. At short supported window heights, including `900 x 600`, users scroll only the Analysis page to reach the complete waveform. Analysis fields always use a stacked layout: a left-aligned title above a full-width selector or source color-space value. Titles may wrap at narrow widths. The source color-space value occupies its own single line. Long status values and selected option text are elided on the right and expose their full text in a tooltip. Elision affects painting only, preserves the original text and option data, and updates when the available width changes. The existing minimum panel width and internal vertical scrolling remain unchanged.
   - `Analysis Sample Precision` uses `8-bit/channel` and `16-bit/channel (if available)`; `8-bit/channel` is selected by default. Choosing 16-bit preserves 16-bit/channel analysis only when the ICC-converted display source is 16-bit. 8-bit sources remain 8-bit and are not artificially expanded.
   - `Specify Image Color Space` uses `sRGB`, `Display P3`, `Adobe RGB (1998)`, `ProPhoto RGB`, startup-loaded system ICC profiles when supported, and `Choose a local ICC...`; `sRGB` is selected by default. System ICC profiles are inserted after the built-in presets and before the chooser entry. `Choose a local ICC...` opens a file dialog for `.icc` and `.icm` files, validates the profile, inserts the selected local profile before the chooser entry, and keeps it only for the current application session. It is a global fallback source color space selector used only when no embedded ICC profile is present, the embedded ICC profile cannot be read, or embedded ICC conversion fails. It is disabled with a gray style and blank visible text when the current image has a valid embedded ICC profile. For RAW images, it is disabled with a gray style and fixed visible text `ProPhoto RGB`; this per-image display state does not change the global fallback selection. It is restored to the selected fallback value when fallback, loading, failed, or empty states enable it again.
   - `Rendering Intent` uses `Perceptual`, `Relative Colorimetric`, `Saturation`, and `Absolute Colorimetric`; `Perceptual` is selected by default. It is a global ICC gamut mapping selector used for image-to-display-space conversion.
   - `Display Color Space` uses `sRGB`, `Display P3`, `Adobe RGB (1998)`, `ProPhoto RGB`, startup-loaded system ICC profiles when supported, and `Choose a local ICC...`; `sRGB` is selected by default. System ICC profiles are inserted after the built-in presets and before the chooser entry. `Choose a local ICC...` opens the same `.icc`/`.icm` file dialog, validates the profile, inserts the selected local profile before the chooser entry, and keeps it only for the current application session.
-- Histogram: `widgetHistogram` (may initially be a `QLabel` with "Histogram Placeholder")
+- Histogram: `widgetHistogram` (`HistogramClippingLabel`)
   - Fixed display size: height 100 x width 256 (logical pixels)
   - Above the histogram widget, `widgetPixelSampleValues` displays four numeric labels from left to right:
     - `labelPixelRedValue`: red channel value, shown in red.
@@ -144,8 +166,15 @@ Each info tab is first implemented with placeholder controls (the metadata table
     - The upper-left triangle toggles the `underexposed` warning: underexposed areas are displayed on the main image with a semi-transparent `green` pseudo-color overlay.
     - The upper-right triangle toggles the `overexposed` warning: overexposed areas are displayed on the main image with a semi-transparent `red` pseudo-color overlay.
   - The underexposed/overexposed triangle state is shared globally (the current toggle state is preserved after switching images).
-- Waveform: `widgetWaveform` (may initially be a `QLabel` with "Waveform Placeholder")
+- Hover pixel readouts always include channel prefixes: `R {value}`, `G {value}`, `B {value}`, and `L {value}`. Invalid samples display `R -1`, `G -1`, `B -1`, and `L -1`, including startup, loading, failure, and pointer exit. English and Chinese retain these channel abbreviations, with existing semantic channel colors as secondary cues. Both 8-bit and 16-bit values must fit at the minimum info-panel width.
+- Waveform: `widgetWaveform` (`QLabel`)
   - Fixed display size: height 256 x width 256 (logical pixels)
+- Both charts use centered, word-wrapped, localized state text within their fixed sizes:
+  - Empty, including startup and closing the last image: `Open an image to view its histogram.` and `Open an image to view its waveform.`
+  - Loading: `Generating histogram...` and `Generating waveform...`.
+  - Failure: `Histogram unavailable` and `Waveform unavailable`. The image page retains the detailed error and retry action.
+  - Entering any non-loaded state clears previous chart pixmaps, hover pixel samples, and the luma marker. Successful loading replaces state text with the current charts.
+  - Histogram clipping triangles retain their existing interaction and shared toggle states.
 - Metadata: `tableMetadata: QTableWidget` (two columns: Key/Value; a `QLabel` placeholder is also allowed, but a table is recommended)
   - The metadata container height adaptively fills the info area, and its width follows the info area; the internal table may scroll.
 
@@ -159,6 +188,7 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - Container: `frameFilmstrip: QFrame` (or `QWidget`)
 - Fixed height: `h=140`; height adjustment by vertical dragging is not supported.
 - Lightweight filter toolbar: `widgetFilmstripFilterToolbar` sits above the thumbnail list and contains three single-select combo boxes:
+  - The controls are left-aligned with the thumbnail list's outer left layout boundary, with flexible space only after the last control. The toolbar stays fixed when thumbnails scroll horizontally; control widths, spacing, and Filmstrip height remain unchanged.
   - `comboFilmstripExtensionFilter`: filters by file extension case-insensitively; suffixes are displayed in normalized lowercase form such as `.jpg`.
   - `comboFilmstripCameraFilter`: filters by camera model.
   - `comboFilmstripLensFilter`: filters by lens model.
@@ -185,7 +215,7 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
   `name` is the full file name, `index` and `total` count only currently visible filtered Filmstrip items, and the tooltip displays the full path. When the filmstrip pane is shown again or there is no current visible image, this summary must be hidden.
 - Selected state requirement: clearly visible (system default selection style may be used first).
 
-## 5. Component Checklist (Must Be Created One by One and Named Consistently)
+## 5. Component Inventory and Naming
 
 ### 5.1 MainWindow & Layout
 
@@ -217,6 +247,8 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `buttonToolbarMetadataOverlay: QToolButton`
 - `tabsInfo: DetachableTabWidget`
 - `tabAnalysis: QWidget`
+- `scrollAnalysis: QScrollArea`
+- `analysisScrollContent: QWidget`
 - `tabMetadata: QWidget`
 - `widgetImageColorSpace: QWidget`
 - `labelImageColorSpaceTitle: QLabel`
@@ -243,12 +275,13 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `listFilmstrip: QListWidget`
 - `labelFilmstripSummary: QLabel` (right side of the status bar; displays the current file summary when the filmstrip pane is hidden)
 
-### 5.2 MenuBar Actions (skeleton first)
+### 5.2 MenuBar Actions
 
 Top-level menus: `menuFile` `menuView` `menuTools` `menuHelp`
-Submenus: `menuAppearance`
-Tools submenus: `menuColorReadouts`
-Actions (names must be consistent; copy may mix Chinese and English, but consistency is recommended):
+Submenus: `menuAppearance` `menuCanvasColor`
+Tools submenus: `menuColorReadouts` `menuColorReadoutsType`
+Action names must remain consistent. User-visible copy uses English source text and the translation workflow in
+[i18n.md](i18n.md); do not mix untranslated English and Chinese literals in display paths.
 
 - `actOpenFile`: Open Image...
 - `actOpenFolder`: Open Folder...
@@ -260,6 +293,11 @@ Actions (names must be consistent; copy may mix Chinese and English, but consist
 - `actShowInFolder`: Show in Folder (image context menu only)
 - `actAppearanceLight`: Light (checkable, mutually exclusive with Dark)
 - `actAppearanceDark`: Dark (checkable, mutually exclusive with Light)
+- `actCanvasColorPureWhite`: Pure White (checkable, mutually exclusive with the other canvas colors)
+- `actCanvasColorMiddleGray18`: 18% Middle Gray (checkable, mutually exclusive with the other canvas colors)
+- `actCanvasColorDeepNeutral`: Deep Neutral Gray (checkable, mutually exclusive with the other canvas colors; selected by default)
+- `actCanvasColorNearBlack`: Near-Black Neutral Gray (checkable, mutually exclusive with the other canvas colors)
+- `actCanvasColorPureBlack`: Pure Black (checkable, mutually exclusive with the other canvas colors)
 - `actToggleInfoPanel`: Info Panel (checkable, checked = visible)
 - `actToggleAnalysisToolbar`: Analysis Toolbar (checkable, checked = visible)
 - `actToggleFilmstrip`: Filmstrip Pane (checkable, checked = visible)
@@ -275,6 +313,10 @@ Actions (names must be consistent; copy may mix Chinese and English, but consist
 - `actAddColorReadout`: Add Color Readout (checkable)
 - `actDeleteColorReadout`: Delete Color Readout (checkable)
 - `actDeleteAllColorReadouts`: Delete All Readouts
+- `actColorReadoutTypeRgbl`: RGBL (checkable, selected by default)
+- `actColorReadoutTypeHsb`: HSB (checkable)
+- `actColorReadoutTypeHsl`: HSL (checkable)
+- `actColorReadoutTypeLab`: Lab (checkable)
 - `actAbout`: About
 - `actThirdPartyLicenses`: Third-Party Library License Information
 
@@ -325,11 +367,12 @@ Shortcuts for common features must be set as follows:
 
 Performance constraint: background image loading uses a thread pool with a default maximum concurrency of 8.
 
-Note: this version allows "placeholder refresh" in the right info area, but the interface `update_info_for_image(image_path)` must be preserved.
+The interface `update_info_for_image(image_path)` must be preserved and must display the appropriate empty, loading, failure, or loaded state.
 
-## 8. Code Structure Requirements (Delivery Format, Avoid UI Disorder)
+## 8. UI Assembly and Controller Integration
 
-Code must be output according to the following structure (or an equivalent split):
+Follow [architecture.md](architecture.md) for module responsibilities. Preserve these existing UI assembly points
+unless the requested change requires an equivalent split:
 
 - `ui/windows/main_window.py`
 - `class MainWindowUI:`
@@ -343,19 +386,23 @@ Code must be output according to the following structure (or an equivalent split
 - `main.py`
 - Startup entry point
 
-Do not write business logic inside UI files; TODO/placeholder implementations are allowed in the controller first.
+Controllers coordinate presentation and service calls as described in the architecture document. Temporary development
+placeholders do not satisfy acceptance criteria for requested behavior. Choose relevant validation using
+[AGENTS.md](../AGENTS.md#6-validation) and [visual-testing.md](visual-testing.md).
 
 ## 9. Acceptance Checklist (Codex Self-Check)
 
 - The UI structure is strictly: MenuBar + (top AnalysisToolbar) + (upper Splitter) + (bottom Filmstrip).
 - The image display area is a `QTabWidget`, and each tab title = file name.
-- The right info area contains two tabs: Analysis/Metadata; the Analysis tab displays both the histogram and waveform at the same time (placeholders are acceptable).
+- The right info area contains two tabs: Analysis/Metadata; the Analysis tab displays both the histogram and waveform, with localized empty, loading, and failure text when charts are unavailable.
 - The bottom filmstrip is a horizontal thumbnail list, and clicking an item switches tabs.
 - Tabs and filmstrip selected states are synchronized bidirectionally.
 - The tab titles in the `image display area` are left-aligned (the tab label group is left-aligned and not stretched evenly to fill the width).
 - No absolute positioning with `move()`/`resize()`.
 - The `right info area` and `bottom filmstrip pane` can be hidden.
+- A loaded image is surrounded by the selected neutral canvas color in both appearance themes; switching the appearance theme preserves the canvas selection, and detached image views update immediately.
 - Image file names are displayed in full in the `tab title`, `bottom filmstrip`, and hidden-filmstrip status summary.
 - When the mouse pointer is at the boundary between the `image display area` and the `right info area`, the pointer `style` must automatically change to a `double arrow` (that is, a `move arrow`).
 - Hovering the mouse over the `image display area` should immediately change the pointer to a `hand`, and holding the mouse button should allow dragging to pan a zoomed image.
 - When Add Color Readout is active, hovering over a loaded analyzed image uses a plus-style cursor, and left-clicking a displayed image pixel adds a persistent readout label for that image. When Delete Color Readout is active, hovering uses a minus-style cursor, and left-clicking a readout label deletes only that label. Delete All Readouts clears every readout for the current image only and leaves other images' readouts unchanged. If the current image is not fully loaded, all Color Readouts actions are disabled. If the current image has no readouts, Delete Color Readout and Delete All Readouts are disabled, and Delete Color Readout mode is cleared.
+- Color Readouts Type remains selectable when no image is loaded. RGBL is selected on startup, and changing to RGBL, HSB, HSL, or Lab immediately updates every existing fixed readout label across attached and detached image views without changing the hover sample display.
