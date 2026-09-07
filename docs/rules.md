@@ -1,69 +1,79 @@
-# Rules to Follow
+# Python Coding Conventions
 
-These coding conventions apply to Python changes. Task scope, exceptions, and document precedence are defined in
-[AGENTS.md](../AGENTS.md).
+These conventions apply to Python changes. Task scope, precedence, assumptions, dependency management, and delivery
+follow [AGENTS.md](../AGENTS.md). Module placement, layer responsibilities, and dependency boundaries are defined in
+[architecture.md](architecture.md).
 
-## General Goals
+## Code Clarity and Compatibility
 
-- Generate maintainable, testable, and extensible desktop application code, and avoid "one-off script-style" implementations.
-- Report the completed work, relevant validation results, and material limitations concisely; follow any explicit
-  user request for a different response format.
+- Use Python 3.10-compatible syntax. Public functions and methods must annotate parameter and return types.
+- Follow PEP 8 for new Python identifiers: PascalCase classes, snake_case functions and variables, and UPPER_SNAKE_CASE
+  constants. Preserve framework-required method names, existing public interfaces, and names specified in [ui.md](ui.md),
+  including Qt overrides such as `paintEvent` and UI attributes such as `actOpenFile`.
+- Give modules and functions clear responsibilities. Treat 50 lines as a review prompt; split functions when doing so
+  improves cohesion, branching complexity, or readability. Do not fragment coherent UI assembly solely to meet a line limit.
+- Document public APIs and non-obvious contracts, side effects, or failure conditions. Simple functions may use a brief
+  docstring; do not repeat type annotations or fill in sections that add no useful information. For image operations,
+  document relevant array shape, RGB/BGR order, dtype, bit depth, value range, and whether inputs are modified in place.
+- Keep application logic modular and maintainable. Development and maintenance scripts may remain simple and task-specific
+  without reproducing application layers.
 
-## Project Structure and Layering
+## State, Configuration, and Input Contracts
 
-- Follow the existing directory placement and dependency boundaries in [architecture.md](architecture.md).
-- Important state must be managed centrally (single source of truth). Do not implicitly share variables across multiple widgets in ways that cause state drift.
-- Module responsibilities must be clear, and each file should handle only one category of work.
+- Give each shared state value one authoritative owner and pass it explicitly to consumers. Keep component-local state
+  with that component; do not introduce a global state manager for all state or use global mutable variables as business state.
+- Use the existing configuration module for externally configurable settings. Add environment variables, configuration
+  files, or persistence only when the requested behavior requires them; transient view and session state can remain local
+  to its owner.
+- Use dataclasses or explicit model classes for structured business data. Validate external inputs at entry points and
+  enforce important business invariants where values are created or changed. Check applicable types, ranges, missing values,
+  and formats; reuse established contracts instead of repeating the same checks in every internal call.
+- For text file I/O, specify the encoding explicitly, defaulting to UTF-8 unless the format requires another encoding.
+  Use binary mode for bytes and let the format or serialization library handle encoding when appropriate. Use `pathlib`
+  for filesystem paths and avoid hardcoded platform path separators.
 
-## Code Standards
+## Exceptions, Logging, and Privacy
 
-- Use syntax compatible with Python 3.10 and type annotations (`typing`). Externally exposed functions/methods must annotate parameter and return types.
-- Follow PEP8. Naming: classes use PascalCase, functions/variables use snake_case, and constants use UPPER_SNAKE_CASE.
-- Do not use global mutable variables as business state. State must be injected and passed through objects or state managers.
-- Functions must have a single responsibility and generally should not exceed 50 lines. Split longer functions into smaller private functions.
-- Key functions must include docstrings describing purpose, parameters, return values, exceptions, and boundary conditions.
+- Catch exceptions where a layer can recover, translate an error into its own contract, or terminate a task cleanly.
+  Otherwise, let them propagate to that boundary. Preserve the original cause when translating exceptions, for example
+  with `raise ImageLoadError(...) from exc`; do not require a try/except around every I/O call.
+- Do not use bare `except`. Prefer specific exceptions; reserve `except Exception` for deliberate safety boundaries such
+  as worker entry points or third-party adapters. Distinguish expected failures from unexpected defects and do not silently
+  discard unexpected errors.
+- Use `logging` for runtime diagnostics, with English messages and context relevant to the event. Record unexpected
+  exception tracebacks at the responsible boundary, avoiding duplicate stack traces at every layer. Choose log severity
+  according to the failure and recovery outcome.
+- Intentional command-line results or summaries may use standard output, including `print`; diagnostic logging must not
+  be mixed into machine-readable command output.
+- Omit or mask sensitive information in logs, including credentials and private metadata. Include paths and parameters
+  only when useful for diagnosis and appropriate for disclosure.
 
-## Error Handling and Logging
+## UI Responsiveness and Failure Recovery
 
-- Any I/O operation (files, network, database) must catch exceptions and provide user-understandable messages, while also recording logs for troubleshooting.
-- Do not use bare `except`. Catch specific exceptions, or use `except Exception as e` and record the stack trace with `logging.exception`.
-- Use `logging` for unified logging; do not use `print`. Logs must include key context such as feature, parameters, paths, elapsed time, etc. All log output must be in English.
+- Keep expensive I/O and computation off the UI thread using the existing worker and signal flow in the architecture.
+  Apply widget updates on the UI thread; a callback alone does not establish thread safety.
+- Map backend errors to concise, appropriately classified user messages in the presentation layer, following
+  [i18n.md](i18n.md). Avoid exposing raw tracebacks or unnecessary implementation details in dialogs and status text.
+- Preserve user data and provide recovery appropriate to the operation, using existing error states and actions where
+  possible. A failed image load may offer retry or allow selecting another image; rollback, drafts, or other new recovery
+  features are needed only when the requested workflow calls for them.
 
-## UI and Interaction Experience
+## Performance and Resource Ownership
 
-- UI operations must remain responsive. Long-running tasks must not block the main thread; use threads, task queues, or asynchronous mechanisms, and safely return to the UI thread through signals/callbacks to update the interface.
-- All UI event handlers should only "collect input + call the business layer + display results"; they must not directly perform complex calculations or I/O.
-- User messages should be categorized as information, warning, or error. Text should be concise and clear, avoiding an overload of technical terms.
-- Provide recoverable paths for operations that may fail, such as retry, cancel, rollback, or keeping drafts, and avoid causing user data loss.
+- Choose optimizations from an observed bottleneck or a clear workload requirement. Keep large-image processing and
+  rendering responsive with appropriate memory use; choose lazy loading, virtualization, or reuse when they address the
+  actual problem. Do not add pagination, caches, or connection pools solely to satisfy a generic performance rule.
+- When adding or changing a cache, define its key, capacity or memory bound, lifetime, and invalidation conditions.
+  Avoid repeated expensive image allocation where reuse is safe and useful.
+- Give resources explicit owners and lifetimes. Prefer context managers for owned resources that support them, such as
+  files. Respect Qt parent-child ownership and thread-pool auto-deletion instead of requiring manual deletion of every
+  object; use appropriate Qt lifetime APIs when objects need earlier cleanup.
+- Treat stopping active work separately from object destruction. The owner must coordinate task completion or shutdown
+  and prevent callbacks from updating disposed views; object ownership alone does not define a task's cancellation policy.
 
-## Data and Configuration
+## Test Design
 
-- Configuration must be managed centrally (through a `config` module or configuration class) and support loading from environment variables/configuration files. Do not scatter configuration throughout the code.
-- Data models should use `dataclass` or explicit model classes. Validate inputs for type, range, null values, and format.
-- File reads and writes must specify an encoding (default `utf-8`). Use `pathlib` for paths and avoid hardcoding platform path separators.
-
-## Testability
-
-- Business logic must be unit-testable: core logic must not depend on UI widgets; external dependencies should be replaceable through interfaces/dependency injection.
-- Provide at least three categories of tests for critical flows: normal path, boundary conditions, and exception path.
-- Keep hard-to-test UI code as thin as possible; place use cases in `app/services/` and models or calculations in `domain/`.
-  Select verification scope and commands using [the validation policy](../AGENTS.md#6-validation).
-
-## Security and Privacy
-
-- Do not output sensitive information in logs, such as passwords, tokens, or personal privacy data. Such data must be masked or omitted.
-- Validate all external input, including file contents, network responses, and user input. Do not trust input.
-
-## Performance and Resources
-
-- Rendering large data volumes should use pagination/virtualization, such as lazy loading lists. Avoid loading everything at once and causing freezes.
-- Resources must be released explicitly, including file handles, threads, timers, and network connections. Prefer context managers (`with`).
-- Avoid frequently creating/destroying heavyweight objects such as large images or database connections. Use caching or connection pools where applicable.
-
-## Output and Delivery
-
-- By default, do not generate an entire project scaffold unless the user requests it. However, generated code must be directly runnable/integrable, with clear dependencies.
-- Keep dependency versions in `pyproject.toml` and installation instructions in the relevant setup or packaging documentation.
-- For minor requirement gaps, use the assumption-recording policy in [AGENTS.md](../AGENTS.md#5-implementation-workflow).
-- Before delivery, check compliance with applicable conventions. Explain unresolved limitations and alternatives in the
-  task response; use code comments only when they help a future maintainer understand lasting behavior.
+Verification scope and commands follow [the validation policy](../AGENTS.md#6-validation).
+For critical behavior, consider normal operation, boundaries, and failure paths and cover the applicable cases.
+These are review dimensions, not a fixed number of tests per function. Assert observable behavior and regression outcomes
+rather than duplicating implementation details in tests.
