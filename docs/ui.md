@@ -1,5 +1,8 @@
 # PicViewer UI Design Specification
 
+Task scope and document precedence are defined in [AGENTS.md](../AGENTS.md).
+Read the sections affected by the current task; the component inventory is not a sequence of unfinished work.
+
 ## 0. General Rules (Mandatory)
 
 - Implement the UI structure and component names strictly according to this document; do not add or remove areas, buttons, or panels without authorization.
@@ -50,7 +53,7 @@ The main window uses a typical four-area structure:
     - Color Readouts Type: RGBL, HSB, HSL, Lab (mutually exclusive global session setting; RGBL is selected by default)
   - Help: About, Third-Party Library License Information
 - In the `Third-Party Library License Information` dialog, recognizable license names must be displayed as hyperlinks; clicking a license name opens a read-only dialog showing the original English text of that license.
-- Requirement: create and name each menu item with `QAction` (see "Component Checklist").
+- Requirement: create and name each menu item with `QAction` (see "Component Inventory and Naming").
 
 ## 2. Central Area (CentralWidget)
 
@@ -212,7 +215,7 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
   `name` is the full file name, `index` and `total` count only currently visible filtered Filmstrip items, and the tooltip displays the full path. When the filmstrip pane is shown again or there is no current visible image, this summary must be hidden.
 - Selected state requirement: clearly visible (system default selection style may be used first).
 
-## 5. Component Checklist (Must Be Created One by One and Named Consistently)
+## 5. Component Inventory and Naming
 
 ### 5.1 MainWindow & Layout
 
@@ -272,12 +275,13 @@ The bottom area is a Lightroom-style filmstrip: a horizontal thumbnail list. Cli
 - `listFilmstrip: QListWidget`
 - `labelFilmstripSummary: QLabel` (right side of the status bar; displays the current file summary when the filmstrip pane is hidden)
 
-### 5.2 MenuBar Actions (skeleton first)
+### 5.2 MenuBar Actions
 
 Top-level menus: `menuFile` `menuView` `menuTools` `menuHelp`
 Submenus: `menuAppearance` `menuCanvasColor`
 Tools submenus: `menuColorReadouts` `menuColorReadoutsType`
-Actions (names must be consistent; copy may mix Chinese and English, but consistency is recommended):
+Action names must remain consistent. User-visible copy uses English source text and the translation workflow in
+[i18n.md](i18n.md); do not mix untranslated English and Chinese literals in display paths.
 
 - `actOpenFile`: Open Image...
 - `actOpenFolder`: Open Folder...
@@ -365,9 +369,10 @@ Performance constraint: background image loading uses a thread pool with a defau
 
 The interface `update_info_for_image(image_path)` must be preserved and must display the appropriate empty, loading, failure, or loaded state.
 
-## 8. Code Structure Requirements (Delivery Format, Avoid UI Disorder)
+## 8. UI Assembly and Controller Integration
 
-Code must be output according to the following structure (or an equivalent split):
+Follow [architecture.md](architecture.md) for module responsibilities. Preserve these existing UI assembly points
+unless the requested change requires an equivalent split:
 
 - `ui/windows/main_window.py`
 - `class MainWindowUI:`
@@ -381,7 +386,9 @@ Code must be output according to the following structure (or an equivalent split
 - `main.py`
 - Startup entry point
 
-Do not write business logic inside UI files; TODO/placeholder implementations are allowed in the controller first.
+Controllers coordinate presentation and service calls as described in the architecture document. Temporary development
+placeholders do not satisfy acceptance criteria for requested behavior. Choose relevant validation using
+[AGENTS.md](../AGENTS.md#6-validation) and [visual-testing.md](visual-testing.md).
 
 ## 9. Acceptance Checklist (Codex Self-Check)
 
