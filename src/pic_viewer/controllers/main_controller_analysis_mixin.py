@@ -619,8 +619,8 @@ class MainControllerAnalysisMixin:
         self._set_image_color_space_value(self._tr("Not Loaded"))
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
-        self._ui.widgetHistogram.setText(self._tr("Histogram Placeholder"))
-        self._ui.widgetWaveform.setText(self._tr("Waveform Placeholder"))
+        self._ui.widgetHistogram.setText(self._tr("Open an image to view its histogram."))
+        self._ui.widgetWaveform.setText(self._tr("Open an image to view its waveform."))
 
     def _set_info_loading_placeholders(self) -> None:
         self._current_analysis_render_key = None
@@ -641,11 +641,10 @@ class MainControllerAnalysisMixin:
             self._sync_color_readout_actions()
         self._set_specified_image_color_space_enabled(True)
         self._set_image_color_space_value(self._tr("Unavailable"))
-        message = self._tr("Image failed to load. Analysis is unavailable.")
         self._ui.widgetHistogram.setPixmap(QtGui.QPixmap())
         self._ui.widgetWaveform.setPixmap(QtGui.QPixmap())
-        self._ui.widgetHistogram.setText(message)
-        self._ui.widgetWaveform.setText(message)
+        self._ui.widgetHistogram.setText(self._tr("Histogram unavailable"))
+        self._ui.widgetWaveform.setText(self._tr("Waveform unavailable"))
 
     def _set_image_color_space_value(self, text: str) -> None:
         if not hasattr(self._ui, "labelImageColorSpaceValue"):

@@ -72,10 +72,9 @@ class MainWindowReferenceLineTests(QtWidgetTestCase):
             with self.subTest(button=button.objectName()):
                 self.assertIs(action, button.defaultAction())
                 self.assertEqual(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly, button.toolButtonStyle())
-                self.assertLessEqual(button.iconSize().height(), 18)
-                self.assertLessEqual(button.iconSize().width(), 18)
+                self.assertEqual(QtCore.QSize(24, 24), button.iconSize())
                 self.assertFalse(button.icon().isNull())
-                self.assertEqual(action.text(), button.toolTip())
+                self.assertEqual(action.toolTip(), button.toolTip())
 
     def test_image_preview_uses_label_compatible_display_widget(self) -> None:
         window = QtWidgets.QMainWindow()

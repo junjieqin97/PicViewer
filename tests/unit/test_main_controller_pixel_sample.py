@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 import os
 import sys
 from pathlib import Path
@@ -21,7 +22,12 @@ if str(SRC_ROOT) not in sys.path:
 from pic_viewer.app.dto.image_analysis import ImageAnalysis, ImageLoadResult  # noqa: E402
 from pic_viewer.app.dto.metadata import ImageMetadata  # noqa: E402
 from pic_viewer.controllers.main_controller import MainController  # noqa: E402
-from pic_viewer.domain.rules.pixel_sample import ColorReadout, PixelSample  # noqa: E402
+from pic_viewer.domain.models.bit_depth import ChannelBitDepth  # noqa: E402
+from pic_viewer.domain.rules.pixel_sample import (  # noqa: E402
+    ColorReadout,
+    ColorReadoutType,
+    PixelSample,
+)
 from pic_viewer.domain.rules.reference_lines import ReferenceLineSettings  # noqa: E402
 from pic_viewer.ui.windows.main_window import MainWindowUI  # noqa: E402
 
@@ -50,27 +56,59 @@ class MainControllerPixelSampleTests(QtWidgetTestCase):
         MainController.eventFilter(controller, label, event)
 
         self.assertEqual(path, controller._current_image_path())
-        self.assertEqual("30", ui.labelPixelRedValue.text())
-        self.assertEqual("20", ui.labelPixelGreenValue.text())
-        self.assertEqual("10", ui.labelPixelBlueValue.text())
-        self.assertEqual(str(expected_luma), ui.labelPixelLumaValue.text())
+        self.assertEqual("R 30", ui.labelPixelRedValue.text())
+        self.assertEqual("G 20", ui.labelPixelGreenValue.text())
+        self.assertEqual("B 10", ui.labelPixelBlueValue.text())
+        self.assertEqual(f"L {expected_luma}", ui.labelPixelLumaValue.text())
         self.assertEqual(expected_luma, ui.widgetHistogram.luma_marker_value())
+
+    def test_hover_sample_boundaries_preserve_precision_and_marker(self) -> None:
+        """Show channel prefixes without truncating 8-bit or 16-bit samples."""
+        window, ui, controller, path, label, _bgr = self._build_loaded_image_controller()
+        self.addCleanup(window.deleteLater)
+        analysis = controller._images_by_path[str(path)].analysis
+        for depth, dtype, value in (
+            (ChannelBitDepth.EIGHT, np.uint8, 0),
+            (ChannelBitDepth.EIGHT, np.uint8, 255),
+            (ChannelBitDepth.SIXTEEN, np.uint16, 65535),
+        ):
+            with self.subTest(value=value):
+                controller._images_by_path[str(path)] = replace(
+                    controller._images_by_path[str(path)],
+                    analysis=replace(
+                        analysis,
+                        analysis_bgr=np.full((4, 4, 3), value, dtype=dtype),
+                        analysis_bit_depth=depth,
+                    ),
+                )
+                event = QtGui.QMouseEvent(
+                    QtCore.QEvent.Type.MouseMove, QtCore.QPointF(2, 1),
+                    QtCore.Qt.MouseButton.NoButton, QtCore.Qt.MouseButton.NoButton,
+                    QtCore.Qt.KeyboardModifier.NoModifier,
+                )
+                MainController.eventFilter(controller, label, event)
+                for prefix, readout in zip("RGBL", (
+                    ui.labelPixelRedValue, ui.labelPixelGreenValue,
+                    ui.labelPixelBlueValue, ui.labelPixelLumaValue,
+                )):
+                    self.assertEqual(f"{prefix} {value}", readout.text())
+                self.assertEqual(value, ui.widgetHistogram.luma_marker_value())
 
     def test_mouse_leave_image_resets_sample_values_and_marker(self) -> None:
         _window, ui, controller, _path, label, _bgr = self._build_loaded_image_controller()
         self.addCleanup(_window.deleteLater)
-        ui.labelPixelRedValue.setText("30")
-        ui.labelPixelGreenValue.setText("20")
-        ui.labelPixelBlueValue.setText("10")
-        ui.labelPixelLumaValue.setText("22")
+        ui.labelPixelRedValue.setText("R 30")
+        ui.labelPixelGreenValue.setText("G 20")
+        ui.labelPixelBlueValue.setText("B 10")
+        ui.labelPixelLumaValue.setText("L 22")
         ui.widgetHistogram.set_luma_marker_value(22)
 
         MainController.eventFilter(controller, label, QtCore.QEvent(QtCore.QEvent.Type.Leave))
 
-        self.assertEqual("-1", ui.labelPixelRedValue.text())
-        self.assertEqual("-1", ui.labelPixelGreenValue.text())
-        self.assertEqual("-1", ui.labelPixelBlueValue.text())
-        self.assertEqual("-1", ui.labelPixelLumaValue.text())
+        self.assertEqual("R -1", ui.labelPixelRedValue.text())
+        self.assertEqual("G -1", ui.labelPixelGreenValue.text())
+        self.assertEqual("B -1", ui.labelPixelBlueValue.text())
+        self.assertEqual("L -1", ui.labelPixelLumaValue.text())
         self.assertEqual(-1, ui.widgetHistogram.luma_marker_value())
 
     def test_add_color_readout_mode_clicks_add_multiple_readouts(self) -> None:
@@ -108,6 +146,27 @@ class MainControllerPixelSampleTests(QtWidgetTestCase):
         self.assertEqual(tuple(), label.color_readouts())
         self.assertFalse(ui.actDeleteColorReadout.isChecked())
         self.assertFalse(ui.actDeleteColorReadout.isEnabled())
+
+    def test_color_readout_tool_cursors_use_circled_plus_and_minus(self) -> None:
+        (
+            window,
+            _ui,
+            controller,
+            _path,
+            label,
+            _bgr,
+        ) = self._build_loaded_image_controller()
+        self.addCleanup(window.deleteLater)
+        self._set_large_display_pixmap(label)
+
+        MainController._on_add_color_readout_triggered(controller, True)
+        add_cursor = label.cursor()
+        MainController.eventFilter(controller, label, self._mouse_press_at(50, 15))
+        MainController._on_delete_color_readout_triggered(controller, True)
+        delete_cursor = label.cursor()
+
+        self._assert_color_readout_cursor(add_cursor, has_vertical_stroke=True)
+        self._assert_color_readout_cursor(delete_cursor, has_vertical_stroke=False)
 
     def test_delete_all_color_readouts_clears_only_current_image(self) -> None:
         window, ui, controller, path, label, _bgr = self._build_loaded_image_controller()
@@ -153,6 +212,47 @@ class MainControllerPixelSampleTests(QtWidgetTestCase):
         self.assertEqual(70, readout.sample.blue)
         self.assertEqual(tuple(controller._color_readouts_by_path[str(path)]), label.color_readouts())
 
+    def test_color_readout_type_switch_updates_existing_and_future_readouts(self) -> None:
+        window, ui, controller, path, label, _bgr = self._build_loaded_image_controller()
+        self.addCleanup(window.deleteLater)
+        self._set_large_display_pixmap(label)
+        controller._color_readout_type = ColorReadoutType.RGBL
+        detached_container = QtWidgets.QWidget()
+        detached_label = type(label)(detached_container)
+        detached_label.setObjectName("lblImage")
+        self.addCleanup(detached_container.deleteLater)
+        controller._all_image_tab_widgets = (  # type: ignore[method-assign]
+            lambda: [window, detached_container]
+        )
+
+        MainController._on_add_color_readout_triggered(controller, True)
+        MainController.eventFilter(controller, label, self._mouse_press_at(50, 15))
+        original_readout = controller._color_readouts_by_path[str(path)][0]
+
+        MainController._set_color_readout_type(controller, ColorReadoutType.LAB)
+
+        self.assertEqual(ColorReadoutType.LAB, label.color_readout_type())
+        self.assertEqual(ColorReadoutType.LAB, detached_label.color_readout_type())
+        self.assertTrue(ui.actColorReadoutTypeLab.isChecked())
+        self.assertIs(original_readout, controller._color_readouts_by_path[str(path)][0])
+        self.assertEqual(
+            ("L 7", "a 3", "b 7"),
+            original_readout.display_values(label.color_readout_type()),
+        )
+
+        MainController.eventFilter(controller, label, self._mouse_press_at(30, 15))
+        self.assertEqual(2, len(controller._color_readouts_by_path[str(path)]))
+        self.assertTrue(
+            all(
+                len(readout.display_values(label.color_readout_type())) == 3
+                for readout in controller._color_readouts_by_path[str(path)]
+            )
+        )
+
+        MainController._set_color_readout_type(controller, ColorReadoutType.RGBL)
+
+        self.assertEqual(("30", "20", "10", "22"), original_readout.display_values())
+
     def _mouse_press_at(self, x: int, y: int) -> QtGui.QMouseEvent:
         return QtGui.QMouseEvent(
             QtCore.QEvent.Type.MouseButtonPress,
@@ -167,6 +267,23 @@ class MainControllerPixelSampleTests(QtWidgetTestCase):
         pixmap = QtGui.QPixmap(80, 40)
         pixmap.fill(QtGui.QColor(0, 0, 0))
         label.setPixmap(pixmap)
+
+    def _assert_color_readout_cursor(
+        self,
+        cursor: QtGui.QCursor,
+        *,
+        has_vertical_stroke: bool,
+    ) -> None:
+        pixmap = cursor.pixmap()
+        image = pixmap.toImage()
+        self.assertEqual(QtCore.QPoint(12, 12), cursor.hotSpot())
+        self.assertEqual(QtCore.QSize(24, 24), pixmap.size())
+        self.assertGreater(image.pixelColor(12, 4).alpha(), 0)
+        self.assertGreater(image.pixelColor(12, 12).alpha(), 0)
+        if has_vertical_stroke:
+            self.assertGreater(image.pixelColor(12, 8).alpha(), 0)
+        else:
+            self.assertEqual(0, image.pixelColor(12, 8).alpha())
 
     def _build_loaded_image_controller(
         self,
